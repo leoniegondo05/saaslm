@@ -1,26 +1,153 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/*
+  Palette de couleurs de la marque "Livre Moi" (LM), reprise du fichier Figma.
+  On les déclare ici une seule fois, puis on les réutilise partout dans le
+  site avec des classes Tailwind comme "bg-brand-bg" ou "text-brand-pink".
+*/
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-brand-bg: #000717; /* fond principal, bleu nuit très sombre */
+  --color-brand-pink: #ec0c8c; /* rose fuchsia, couleur d'accent */
+  --color-brand-purple: #3a1d8a; /* violet, utilisé dans les dégradés */
+  --color-brand-white: #faf7fc; /* blanc légèrement teinté */
+  --font-sans: var(--font-sora);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-brand-bg);
+  color: var(--color-brand-white);
+}
+
+/*
+  Animation du "point rose" qui rebondit et s'illumine, demandée dans les
+  commentaires de la maquette Figma ("il faut que le point rose soit
+  glowing à chaque fois qu'il bondit"). On agrandit légèrement le point
+  tout en augmentant son halo lumineux (box-shadow), en boucle.
+*/
+@keyframes brand-glow-bounce {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px 6px rgba(236, 12, 140, 0.5);
+  }
+  50% {
+    transform: scale(1.4);
+    box-shadow: 0 0 34px 12px rgba(236, 12, 140, 0.85);
+  }
+}
+
+.animate-brand-glow {
+  animation: brand-glow-bounce 2.2s ease-in-out infinite;
+}
+
+/*
+  Illustration du Hero : cerveau en 5 pièces distinctes, écartées au repos
+  (voir HeroBrain.tsx) — c'est la disposition d'origine issue de Figma, qui
+  n'a pas de variante "assemblée". L'animation ci-dessous en construit une :
+  les pièces se rapprochent (hero-brain-piece-gather, via --piece-dx/
+  --piece-dy calculés dans HeroBrain.tsx) pendant que hero-brain-cluster-
+  scale agrandit l'ensemble en même temps, pour qu'au moment où les pièces
+  se croisent elles forment un cerveau complet, bien grand — puis les deux
+  animations repartent en sens inverse et les pièces se séparent à nouveau.
+  Le point rose + traits en zigzag (hero-brain-connector) est un export
+  Figma, pas du CSS dessiné à la main. Le halo (hero-brain-dot) est
+  indépendant de tout ça : il clignote via .animate-brand-glow.
+*/
+
+.hero-brain {
+  /* Rend cqw/cqh disponibles pour --piece-dx/--piece-dy (HeroBrain.tsx) :
+     1cqw/1cqh = 1% de la largeur/hauteur de cette boîte, donc les mêmes
+     unités que les left/top en % utilisés partout dans HeroBrain.tsx. */
+  container-type: size;
+  position: relative;
+}
+
+.hero-brain-cluster {
+  /* position absolute + inset 0 : donne à ce conteneur une boîte propre
+     (donc un containing block stable pour les pièces en absolute/%),
+     indépendante de l'animation "transform: scale(...)" ci-dessous — sans
+     ça, dès que transform devient actif, les % de hero-brain-piece
+     s'effondrent (containing block sans hauteur définie). */
+  position: absolute;
+  inset: 0;
+  animation: hero-brain-cluster-scale 5s ease-in-out infinite;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@keyframes hero-brain-cluster-scale {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30%,
+  70% {
+    /* cerveau assemblé, agrandi pour bien se lire comme un seul volume */
+    transform: scale(1.6);
+  }
+}
+
+/*
+  Rassemblement des pièces vers leur position "assemblée" (voir
+  HeroBrain.tsx pour le calcul de --piece-dx/--piece-dy et ASSEMBLED,
+  propre à chaque pièce — pas un simple point de convergence) puis retour
+  à la position d'origine, en boucle. Mêmes repères temporels que
+  hero-brain-cluster-scale ci-dessus, pour que le zoom et le rapprochement
+  des pièces arrivent ensemble.
+
+  Chaque pièce garde sa taille d'origine ici (translate seul, pas de
+  scale par pièce) : les cibles ASSEMBLED sont resserrées juste assez
+  pour que les découpes se recouvrent sans grandir.
+*/
+.hero-brain-piece {
+  position: absolute;
+  animation: hero-brain-piece-gather 5s ease-in-out infinite;
+  will-change: translate;
+}
+
+@keyframes hero-brain-piece-gather {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  30%,
+  70% {
+    translate: var(--piece-dx) var(--piece-dy);
+  }
+}
+
+.hero-brain-connector {
+  position: absolute;
+  pointer-events: none;
+}
+
+.hero-brain-dot {
+  position: absolute;
+  z-index: 10;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.hero-brain-dot-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: var(--color-brand-pink);
+}
+
+/* ── Accessibilité : respecte prefers-reduced-motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .hero-brain-cluster,
+  .hero-brain-dot-core,
+  .hero-brain-piece {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    translate: none !important;
+    scale: 1 !important;
+  }
 }
