@@ -41,84 +41,22 @@ body {
 }
 
 /*
-  Illustration du Hero : cerveau en 5 pièces distinctes, écartées au repos
-  (voir HeroBrain.tsx) — c'est la disposition d'origine issue de Figma, qui
-  n'a pas de variante "assemblée". L'animation ci-dessous en construit une :
-  les pièces se rapprochent (hero-brain-piece-gather, via --piece-dx/
-  --piece-dy calculés dans HeroBrain.tsx) pendant que hero-brain-cluster-
-  scale agrandit l'ensemble en même temps, pour qu'au moment où les pièces
-  se croisent elles forment un cerveau complet, bien grand — puis les deux
-  animations repartent en sens inverse et les pièces se séparent à nouveau.
-  Le point rose + traits en zigzag (hero-brain-connector) est un export
-  Figma, pas du CSS dessiné à la main. Le halo (hero-brain-dot) est
-  indépendant de tout ça : il clignote via .animate-brand-glow.
+  Illustration du Hero : cerveau en 5 pièces distinctes (voir HeroBrain.tsx).
+  Le mouvement des pièces (boucle auto continue, éclaté ↔ assemblé) et les
+  traits reliant chaque pièce au point rose central sont désormais pilotés
+  par framer-motion, directement dans HeroBrain.tsx
+  (pièces = <motion.div>, traits = <motion.line>/<motion.circle> en SVG) —
+  ça remplace l'ancien couple de keyframes CSS (hero-brain-cluster-scale /
+  hero-brain-piece-gather) + l'export Figma statique des traits. framer-
+  motion respecte prefers-reduced-motion via useReducedMotion() dans le
+  composant, donc plus besoin d'une media query dédiée ici.
+
+  Ce qui reste en CSS : la boîte englobante (ratio Figma) et le point rose
+  + son halo, qui clignote via .animate-brand-glow indépendamment du reste.
 */
 
 .hero-brain {
-  /* Rend cqw/cqh disponibles pour --piece-dx/--piece-dy (HeroBrain.tsx) :
-     1cqw/1cqh = 1% de la largeur/hauteur de cette boîte, donc les mêmes
-     unités que les left/top en % utilisés partout dans HeroBrain.tsx. */
-  container-type: size;
   position: relative;
-}
-
-.hero-brain-cluster {
-  /* position absolute + inset 0 : donne à ce conteneur une boîte propre
-     (donc un containing block stable pour les pièces en absolute/%),
-     indépendante de l'animation "transform: scale(...)" ci-dessous — sans
-     ça, dès que transform devient actif, les % de hero-brain-piece
-     s'effondrent (containing block sans hauteur définie). */
-  position: absolute;
-  inset: 0;
-  animation: hero-brain-cluster-scale 5s ease-in-out infinite;
-  transform-origin: center center;
-  will-change: transform;
-}
-
-@keyframes hero-brain-cluster-scale {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  30%,
-  70% {
-    /* cerveau assemblé, agrandi pour bien se lire comme un seul volume */
-    transform: scale(1.6);
-  }
-}
-
-/*
-  Rassemblement des pièces vers leur position "assemblée" (voir
-  HeroBrain.tsx pour le calcul de --piece-dx/--piece-dy et ASSEMBLED,
-  propre à chaque pièce — pas un simple point de convergence) puis retour
-  à la position d'origine, en boucle. Mêmes repères temporels que
-  hero-brain-cluster-scale ci-dessus, pour que le zoom et le rapprochement
-  des pièces arrivent ensemble.
-
-  Chaque pièce garde sa taille d'origine ici (translate seul, pas de
-  scale par pièce) : les cibles ASSEMBLED sont resserrées juste assez
-  pour que les découpes se recouvrent sans grandir.
-*/
-.hero-brain-piece {
-  position: absolute;
-  animation: hero-brain-piece-gather 5s ease-in-out infinite;
-  will-change: translate;
-}
-
-@keyframes hero-brain-piece-gather {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-  30%,
-  70% {
-    translate: var(--piece-dx) var(--piece-dy);
-  }
-}
-
-.hero-brain-connector {
-  position: absolute;
-  pointer-events: none;
 }
 
 .hero-brain-dot {
@@ -139,15 +77,409 @@ body {
   background: var(--color-brand-pink);
 }
 
-/* ── Accessibilité : respecte prefers-reduced-motion ── */
+/*
+  Section "Comment ça marche" (HowItWorks.tsx) : recréation d'une vidéo de
+  référence (ligne sinueuse + point rose qui descend en laissant une
+  traînée + étapes qui se révèlent l'une après l'autre + climax final)
+  entièrement en CSS/SVG plutôt qu'en important le fichier vidéo.
+
+  Tout partage la même durée (18s, boucle infinie) : le timing de chaque
+  élément est donc encodé dans les pourcentages de son propre @keyframes,
+  plutôt que via `animation-delay` (qui ne resterait pas synchronisé d'une
+  itération à l'autre). Chaque étape a son propre connecteur + badge (au
+  lieu d'un délai partagé) car leur moment de révélation diffère.
+*/
+.how-it-works-trail {
+  stroke-dasharray: 100; /* pathLength=100 sur le <path> (HowItWorks.tsx) */
+  animation: how-it-works-trail-reveal 18s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(236, 12, 140, 0.8));
+}
+
+@keyframes how-it-works-trail-reveal {
+  0%,
+  4% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  6% {
+    opacity: 0.9;
+  }
+  78% {
+    stroke-dashoffset: 0;
+    opacity: 0.9;
+  }
+  90% {
+    opacity: 0.9;
+  }
+  96%,
+  100% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+}
+
+.how-it-works-dot {
+  animation: how-it-works-dot-move 18s ease-in-out infinite;
+}
+
+@keyframes how-it-works-dot-move {
+  0%,
+  4% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  78% {
+    offset-distance: 100%;
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+/*
+  Le mot de chaque étape (badge-N) reste calé sur le passage du point rose
+  sous son sommet, comme à l'origine — il tombe doucement en place avec un
+  flash de glow (box-shadow rose) qui retombe ensuite à un halo plus discret,
+  pendant que le fil est encore en train de se dessiner.
+
+  Le rayon vers le hub (ray-N), lui, ne se "dessine" (stroke-dashoffset, même
+  technique que .how-it-works-trail) qu'une fois le fil ENTIÈREMENT dessiné
+  (78%) — jamais pendant que le fil se trace encore. Les 4 rayons s'enchaînent
+  alors en rafale (78→82%), et sont tous posés avant que le texte "sans
+  affiliation" + le CTA ne remontent du bas (.how-it-works-cta, 83%).
+*/
+
+/* Étape 1 : "Créer" */
+.how-it-works-ray-1 {
+  stroke-dasharray: 100;
+  animation: how-it-works-ray-1 18s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(236, 12, 140, 0.7));
+}
+@keyframes how-it-works-ray-1 {
+  0%,
+  78% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  79%,
+  90% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  96%,
+  100% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+}
+.how-it-works-badge-1 {
+  opacity: 0;
+  transform: translate(-50%, calc(-50% - 10px));
+  animation: how-it-works-badge-1 18s ease-in-out infinite;
+}
+@keyframes how-it-works-badge-1 {
+  0%,
+  15% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 10px));
+    box-shadow: none;
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 24px 6px rgba(236, 12, 140, 0.55);
+  }
+  26%,
+  90% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px 2px rgba(236, 12, 140, 0.25);
+  }
+  96%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 10px));
+    box-shadow: none;
+  }
+}
+
+/* Étape 2 : "Personnaliser" */
+.how-it-works-ray-2 {
+  stroke-dasharray: 100;
+  animation: how-it-works-ray-2 18s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(236, 12, 140, 0.7));
+}
+@keyframes how-it-works-ray-2 {
+  0%,
+  79% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  80%,
+  90% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  96%,
+  100% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+}
+.how-it-works-badge-2 {
+  opacity: 0;
+  transform: translate(-50%, calc(-50% - 10px));
+  animation: how-it-works-badge-2 18s ease-in-out infinite;
+}
+@keyframes how-it-works-badge-2 {
+  0%,
+  35% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 10px));
+    box-shadow: none;
+  }
+  38% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 24px 6px rgba(236, 12, 140, 0.55);
+  }
+  46%,
+  90% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px 2px rgba(236, 12, 140, 0.25);
+  }
+  96%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 10px));
+    box-shadow: none;
+  }
+}
+
+/* Étape 3 : "Publier" */
+.how-it-works-ray-3 {
+  stroke-dasharray: 100;
+  animation: how-it-works-ray-3 18s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(236, 12, 140, 0.7));
+}
+@keyframes how-it-works-ray-3 {
+  0%,
+  80% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  81%,
+  90% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  96%,
+  100% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+}
+.how-it-works-badge-3 {
+  opacity: 0;
+  transform: translate(-50%, calc(-50% - 10px));
+  animation: how-it-works-badge-3 18s ease-in-out infinite;
+}
+@keyframes how-it-works-badge-3 {
+  0%,
+  55% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 10px));
+    box-shadow: none;
+  }
+  58% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 24px 6px rgba(236, 12, 140, 0.55);
+  }
+  66%,
+  90% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px 2px rgba(236, 12, 140, 0.25);
+  }
+  96%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 10px));
+    box-shadow: none;
+  }
+}
+
+/* Étape 4 : "Commencer" */
+.how-it-works-ray-4 {
+  stroke-dasharray: 100;
+  animation: how-it-works-ray-4 18s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(236, 12, 140, 0.7));
+}
+@keyframes how-it-works-ray-4 {
+  0%,
+  81% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  82%,
+  90% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  96%,
+  100% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+}
+.how-it-works-badge-4 {
+  opacity: 0;
+  transform: translate(-50%, calc(-50% - 10px));
+  animation: how-it-works-badge-4 18s ease-in-out infinite;
+}
+@keyframes how-it-works-badge-4 {
+  0%,
+  75% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 10px));
+    box-shadow: none;
+  }
+  78% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 24px 6px rgba(236, 12, 140, 0.55);
+  }
+  90% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px 2px rgba(236, 12, 140, 0.25);
+  }
+  96%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 10px));
+    box-shadow: none;
+  }
+}
+
+/* Hub : glow doux et diffus (pas le pulse marqué de .animate-brand-glow
+   utilisé côté Hero) — légère respiration + double halo (un proche, net et
+   discret ; un large, très diffus) pour rester premium/minimaliste. */
+.how-it-works-hub-glow {
+  animation: how-it-works-hub-glow 2.6s ease-in-out infinite;
+}
+@keyframes how-it-works-hub-glow {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 8px 2px rgba(236, 12, 140, 0.35),
+      0 0 22px 10px rgba(122, 14, 92, 0.18);
+  }
+  50% {
+    transform: scale(1.12);
+    box-shadow:
+      0 0 12px 3px rgba(236, 12, 140, 0.5),
+      0 0 28px 13px rgba(122, 14, 92, 0.25);
+  }
+}
+
+/* Climax : "sans affiliation" + CTA, point culminant où tout reste
+   connecté simultanément (les 4 rayons + le hub sont déjà tous actifs). */
+.how-it-works-cta {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: how-it-works-cta 18s ease-in-out infinite;
+}
+@keyframes how-it-works-cta {
+  0%,
+  83% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  88%,
+  94% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/*
+  Texte superposé sur le visuel des pages Connexion/Inscription
+  (app/login/page.tsx, app/inscription/page.tsx) : légère entrée en
+  fondu + glissement vers le haut, demandée dans les commentaires de la
+  maquette Figma ("un peu d'animation").
+*/
+@keyframes auth-overlay-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.animate-auth-overlay {
+  animation: auth-overlay-in 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .hero-brain-cluster,
-  .hero-brain-dot-core,
-  .hero-brain-piece {
+  .animate-auth-overlay {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
-    translate: none !important;
-    scale: 1 !important;
+    filter: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .how-it-works-trail,
+  .how-it-works-dot,
+  .how-it-works-ray-1,
+  .how-it-works-ray-2,
+  .how-it-works-ray-3,
+  .how-it-works-ray-4,
+  .how-it-works-badge-1,
+  .how-it-works-badge-2,
+  .how-it-works-badge-3,
+  .how-it-works-badge-4,
+  .how-it-works-cta {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: translate(-50%, -50%) !important;
+    stroke-dashoffset: 0 !important;
+    offset-distance: 100% !important;
+    box-shadow: 0 0 10px 2px rgba(236, 12, 140, 0.25) !important;
+  }
+
+  .how-it-works-cta {
+    transform: none !important;
+  }
+
+  .how-it-works-hub-glow {
+    animation: none !important;
+    transform: scale(1) !important;
+    box-shadow:
+      0 0 8px 2px rgba(236, 12, 140, 0.35),
+      0 0 22px 10px rgba(122, 14, 92, 0.18) !important;
   }
 }

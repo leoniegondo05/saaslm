@@ -1,3 +1,4 @@
+import Link from "next/link";
 import HeroBrain from "./HeroBrain";
 
 export default function Hero() {
@@ -29,13 +30,15 @@ export default function Hero() {
           </p>
 
           <div className="mt-8 flex flex-col items-start gap-3">
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.02] px-[18px] py-4 text-sm font-semibold transition hover:bg-white/[0.06]"
-            >
-              commencer maintenant
-              <span aria-hidden>»</span>
-            </button>
+            <span className="inline-block rounded-xl bg-[linear-gradient(90deg,var(--color-brand-pink),var(--color-brand-purple))] p-px">
+              <Link
+                href="/login"
+                className="flex items-center gap-2 rounded-[11px] bg-[#0a0e1c] px-[18px] py-4 text-sm font-semibold transition hover:opacity-90"
+              >
+                commencer maintenant
+                <span aria-hidden>»</span>
+              </Link>
+            </span>
             <span className="text-xs text-brand-white/40">
               Sans s'engager
             </span>

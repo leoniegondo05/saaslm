@@ -1,12 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { sections, type SectionInfo } from "./sections-data";
 
 // Les liens affichés à droite de la barre de navigation principale.
 const NAV_LINKS = [
-  { label: "Ce que nous construisons", href: "#comment-ca-marche" },
+  { label: "Ce que nous construisons", href: "/vision" },
   { label: "Partenaire agréée LM", href: "#cta" },
 ];
 
@@ -23,6 +25,13 @@ export default function Navbar() {
     sections[0]
   );
 
+  // Les ids de `sections` n'existent que sur la page d'accueil : sur les
+  // autres pages (ex. /vision), pas de scroll-spy à faire, et le logo /
+  // bouton "La solution LM" doivent ramener à l'accueil via un vrai lien
+  // plutôt qu'un scroll vers une ancre absente.
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+
   useEffect(() => {
     // On écoute l'évènement "scroll" du navigateur pour savoir si on a
     // commencé à descendre la page (au-delà de 80px, pour éviter que la
@@ -33,6 +42,8 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    if (!isHome) return;
+
     // Un IntersectionObserver surveille quelle section occupe le centre de
     // l'écran. Dès qu'une nouvelle section arrive au centre, on met à jour
     // le titre affiché dans la barre flottante.
@@ -53,9 +64,10 @@ export default function Navbar() {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [isHome]);
 
-  // Fait remonter la page en douceur jusqu'au Hero (tout en haut).
+  // Fait remonter la page en douceur jusqu'au Hero (tout en haut) — sur la
+  // page d'accueil uniquement, ailleurs on utilise un vrai <Link href="/">.
   const scrollToHero = () => {
     document
       .getElementById("hero")
@@ -72,28 +84,54 @@ export default function Navbar() {
         }`}
       >
         <div className="mx-auto flex max-w-[1320px] items-center justify-between px-6 py-6 md:px-16">
-          <a
-            href="#hero"
-            aria-label="Retour à l'accueil"
-            className="flex items-center justify-center rounded-lg p-1"
-          >
-            <Image
-              src="/images/logo.svg"
-              alt="Logo Livre Moi"
-              width={40}
-              height={40}
-              className="h-10 w-10 object-contain"
-            />
-          </a>
+          {isHome ? (
+            <a
+              href="#hero"
+              aria-label="Retour à l'accueil"
+              className="flex items-center justify-center rounded-lg p-1"
+            >
+              <Image
+                src="/images/logo.svg"
+                alt="Logo Livre Moi"
+                width={40}
+                height={40}
+                className="h-10 w-10 object-contain"
+              />
+            </a>
+          ) : (
+            <Link
+              href="/"
+              aria-label="Retour à l'accueil"
+              className="flex items-center justify-center rounded-lg p-1"
+            >
+              <Image
+                src="/images/logo.svg"
+                alt="Logo Livre Moi"
+                width={40}
+                height={40}
+                className="h-10 w-10 object-contain"
+              />
+            </Link>
+          )}
 
-          <button
-            type="button"
-            onClick={scrollToHero}
-            className="flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm text-brand-white/90"
-          >
-            <span className="h-2 w-2 rounded-full bg-brand-pink" />
-            <span className="hidden sm:inline">La solution LM</span>
-          </button>
+          {isHome ? (
+            <button
+              type="button"
+              onClick={scrollToHero}
+              className="flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm text-brand-white/90"
+            >
+              <span className="h-2 w-2 rounded-full bg-brand-pink" />
+              <span className="hidden sm:inline">La solution LM</span>
+            </button>
+          ) : (
+            <Link
+              href="/"
+              className="flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm text-brand-white/90 transition hover:bg-white/[0.06]"
+            >
+              <span aria-hidden>←</span>
+              <span className="hidden sm:inline">Retour à l&apos;accueil</span>
+            </Link>
+          )}
 
           <nav className="hidden items-center gap-6 text-sm text-brand-white/70 md:flex">
             {NAV_LINKS.map((link) => (
@@ -119,6 +157,7 @@ export default function Navbar() {
             : "pointer-events-none -translate-y-6 opacity-0"
         }`}
       >
+        {isHome ? (
         <button
           type="button"
           onClick={scrollToHero}
@@ -136,6 +175,17 @@ export default function Navbar() {
             )}
           </span>
         </button>
+        ) : (
+        <Link
+          href="/"
+          className="flex max-w-full items-center gap-3 rounded-full border border-white/10 bg-brand-bg/90 px-5 py-2.5 text-left shadow-lg shadow-black/40 backdrop-blur"
+        >
+          <span aria-hidden className="text-brand-white/70">←</span>
+          <span className="truncate text-sm font-semibold text-brand-white">
+            Retour à l&apos;accueil
+          </span>
+        </Link>
+        )}
       </div>
     </>
   );

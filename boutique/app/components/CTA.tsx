@@ -1,9 +1,13 @@
 import Image from "next/image";
+import Link from "next/link";
 import SectionBadge from "./SectionBadge";
 
 export default function CTA() {
   return (
-    <section id="cta" className="px-6 py-24 md:px-16">
+    <section
+      id="cta"
+      className="bg-[linear-gradient(to_bottom,#000717_0%,#101625_25%,#3f4350_50%,#7b7d87_70%,#b5b4bd_85%,#faf7fc_100%)] px-6 py-24 md:px-16"
+    >
       <div className="mx-auto grid max-w-[1320px] items-center gap-12 lg:grid-cols-2">
         <div>
           <SectionBadge />
@@ -19,12 +23,12 @@ export default function CTA() {
           </h2>
 
           <div className="mt-8 flex flex-wrap gap-4">
-            <button
-              type="button"
+            <Link
+              href="/login"
               className="rounded-xl bg-brand-pink px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
             >
               Créer ma boutique gratuitement
-            </button>
+            </Link>
             <button
               type="button"
               className="rounded-xl border border-white/20 px-6 py-3 text-sm font-semibold transition hover:bg-white/5"

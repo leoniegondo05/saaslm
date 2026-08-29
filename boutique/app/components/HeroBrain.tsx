@@ -1,55 +1,41 @@
+"use client";
+
 import Image from "next/image";
+import { motion, useReducedMotion, type Transition } from "framer-motion";
 
 /*
-  Illustration statique du Hero : un cerveau composé de 5 pièces distinctes,
-  écartées en cercle autour d'un point rose central, reliées par 5 traits.
-  Positions et rotation (-12.53deg, uniforme sur toutes les pièces) copiées
-  du fichier Figma (frame "point de liaison", node 10944:192).
+  Illustration du Hero : un cerveau composé de 5 pièces distinctes, écartées
+  en cercle autour d'un point rose central, reliées par 5 traits.
 
-  Le fichier Figma statique (node 10944:192) ne contenait qu'un pulse
-  d'opacité sur l'ensemble du groupe (pièces + traits), voir
-  .hero-brain-cluster / @keyframes hero-brain-pulse dans globals.css.
+  Réécrit avec framer-motion (à partir d'un essai fourni par l'utilisateur,
+  bâti sur un composant BrainHero en framer-motion + <motion.img> + traits
+  SVG dessinés à la main) : on garde les mêmes 5 images et les mêmes deux
+  jeux de positions (PIECES = éclaté, position d'origine Figma ; ASSEMBLED =
+  rassemblé, cibles choisies à la main pour que les lobes s'emboîtent) que
+  l'ancienne version CSS, mais c'est maintenant framer-motion qui anime le
+  passage de l'un à l'autre — plus besoin de --piece-dx/--piece-dy en
+  variables CSS ni de @keyframes séparés.
 
-  Ajout demandé (hors export Figma statique, inspiré du prototype Figma /
-  export Jitter fournis en référence) : les 5 pièces se rapprochent et se
-  croisent pour former un seul cerveau assemblé, bien plus grand, puis
-  repartent à leur position d'origine — en boucle continue. Le
-  déplacement de chaque pièce (--piece-dx / --piece-dy, en cqw/cqh = %
-  de la boîte 965×926) est calculé ici à partir de ASSEMBLED[id] -
-  position d'origine de la pièce (cibles choisies à la main, pièce par
-  pièce, pour que les lobes s'emboîtent plutôt que de tous converger vers
-  un même point) ; l'agrandissement (scale) qui accompagne ce
-  rapprochement vit sur .hero-brain-cluster (globals.css,
-  hero-brain-cluster-scale). L'animation des pièces elle-même
-  (hero-brain-piece-gather, globals.css) utilise la propriété `translate`
-  séparée du `transform` inline (translate(-50%,-50%) + rotation), donc
-  les deux se cumulent sans interférer.
+  Animation 100% automatique, boucle infinie (LOOP ci-dessous), partout —
+  pas de bouton Assembler/Désassembler : le déclenchement au clic (essai
+  d'origine) a été retiré à la demande de l'utilisateur.
 
-  Le point rose + les 5 traits en zigzag viennent d'un export Figma
-  (hero-brain-connector.png, 512×540 = taille exacte de la frame "point de
-  liaison" node 10944:192) plutôt que d'être redessinés en CSS — le zigzag
-  et les angles sont donc pixel-perfect. CONNECTOR positionne cet export
-  dans la boîte 965×926 ; il rend derrière les pièces (ordre DOM), comme
-  dans Figma.
+  Autre différence avec l'ancienne version : les 5 traits ne viennent plus
+  d'un export Figma statique (hero-brain-connector.png, calé uniquement sur
+  la position éclatée) mais sont dessinés en SVG (<BrainLines>) à partir des
+  mêmes coordonnées PIECES/ASSEMBLED que les pièces elles-mêmes — les traits
+  suivent donc exactement chaque pièce, dans les deux états.
 
-  Repère : tout est positionné en % à l'intérieur d'une boîte dont le
-  ratio (965 / 926) reprend celui de la frame Figma d'origine.
+  Repère : tout est positionné en % à l'intérieur d'une boîte dont le ratio
+  (965 / 926) reprend celui de la frame Figma d'origine.
 */
 
-const CONNECTOR = { left: 16.34, top: 21.56, width: 53.06, height: 58.3 }; // % de la boîte 965×926
-const DOT_CENTER = { left: 40.67, top: 39.45 }; // centre du point rose dans l'export, % de la boîte
+const DOT_CENTER = { left: 40.67, top: 39.45 }; // centre du point rose, % de la boîte
 const ROTATION = -12.53; // deg, tilt uniforme de toutes les pièces (Figma)
 
 // Position de chaque pièce une fois le cerveau assemblé (% de la boîte,
-// centre de la pièce) — choisies à la main par essais visuels (capture
-// d'écran + ajustements) pour que les lobes s'emboîtent en un seul volume
-// reconnaissable, plutôt que de toutes converger vers DOT_CENTER. Combinée
-// au scale(1.65) de hero-brain-cluster-scale (globals.css) au même moment.
-// Chaque pièce garde sa taille d'origine (aucun scale individuel) : ces
-// cibles sont volontairement resserrées vers DOT_CENTER (bien plus que la
-// disposition éclatée) pour que les 5 pièces, à taille inchangée, se
-// recouvrent assez pour lire comme un seul volume plutôt que 5 taches qui
-// se touchent à peine.
+// centre de la pièce) — choisies à la main par essais visuels pour que les
+// lobes s'emboîtent en un seul volume reconnaissable.
 const ASSEMBLED: Record<string, { left: number; top: number }> = {
   top: { left: 43.8, top: 35.2 },
   left: { left: 38.3, top: 40.7 },
@@ -62,8 +48,8 @@ type Piece = {
   id: string;
   src: string;
   alt: string;
-  left: number; // % de la boîte, centre de la pièce
-  top: number; // % de la boîte, centre de la pièce
+  left: number; // % de la boîte, centre de la pièce (position éclatée)
+  top: number; // % de la boîte, centre de la pièce (position éclatée)
   width: number; // % de la largeur de la boîte
   height: number; // % de la hauteur de la boîte
   zIndex: number;
@@ -122,66 +108,94 @@ const PIECES: Piece[] = [
   },
 ];
 
+// Boucle automatique, seule et unique animation désormais (plus de bouton
+// Assembler/Désassembler) : va-et-vient continu entre éclaté → assemblé →
+// éclaté, en fond comme dans la colonne desktop de Hero.tsx.
+const LOOP: Transition = {
+  duration: 2.6,
+  times: [0, 0.5, 1],
+  ease: "easeInOut",
+  repeat: Infinity,
+  repeatDelay: 0.7,
+};
+
 export default function HeroBrain({ className = "" }: { className?: string }) {
+  const reduceMotion = useReducedMotion();
+
+  // Transition + valeurs cibles utilisées pour chaque pièce ET pour les
+  // traits qui la relient au point rose (mêmes coordonnées, donc les traits
+  // suivent toujours exactement les pièces). prefers-reduced-motion : pas
+  // de boucle, cerveau affiché assemblé (état fixe).
+  const transition: Transition = reduceMotion ? { duration: 0 } : LOOP;
+
+  const targetFor = (piece: Piece) => {
+    const gathered = ASSEMBLED[piece.id];
+    const base = { left: piece.left, top: piece.top };
+    if (reduceMotion) return gathered;
+    // boucle : éclaté → assemblé → éclaté
+    return {
+      left: [base.left, gathered.left, base.left],
+      top: [base.top, gathered.top, base.top],
+    };
+  };
+
+  // Même logique que targetFor, mais pour une valeur scalaire (rayon des
+  // cercles du halo central en SVG) plutôt qu'une position par pièce.
+  const scalarFor = (base: number, gathered: number) =>
+    reduceMotion ? gathered : [base, gathered, base];
+
   return (
     <div
       className={`hero-brain relative w-full ${className}`}
       style={{ aspectRatio: "965 / 926" }}
-      aria-label="Réseau de connexions animé par un point central rose, symbolisant la solution LM"
-      role="img"
     >
-      {/* Point rose + traits (export Figma) et pièces : pulsent ensemble en opacité */}
-      <div className="hero-brain-cluster">
-        <div
-          className="hero-brain-connector"
-          style={{
-            left: `${CONNECTOR.left}%`,
-            top: `${CONNECTOR.top}%`,
-            width: `${CONNECTOR.width}%`,
-            height: `${CONNECTOR.height}%`,
-          }}
-        >
-          <Image
-            src="/images/hero-brain/hero-brain-connector.png"
-            alt=""
-            fill
-            className="object-contain"
-            sizes="(max-width: 1024px) 45vw, 25vw"
-            aria-hidden="true"
-          />
-        </div>
+      <div
+        className="absolute inset-0"
+        aria-label="Réseau de connexions animé par un point central rose, symbolisant la solution LM"
+        role="img"
+      >
+        <BrainLines
+          pieces={PIECES}
+          targetFor={targetFor}
+          scalarFor={scalarFor}
+          transition={transition}
+        />
 
-        {PIECES.map((piece) => (
-          <div
-            key={piece.id}
-            className="hero-brain-piece"
-            style={{
-              left: `${piece.left}%`,
-              top: `${piece.top}%`,
-              width: `${piece.width}%`,
-              height: `${piece.height}%`,
-              zIndex: piece.zIndex,
-              transform: `translate(-50%, -50%) rotate(${ROTATION}deg)`,
-              // Déplacement vers la position assemblée de cette pièce
-              // (ASSEMBLED), consommé par @keyframes hero-brain-piece-gather
-              // (globals.css) via `translate`.
-              ["--piece-dx" as string]: `${ASSEMBLED[piece.id].left - piece.left}cqw`,
-              ["--piece-dy" as string]: `${ASSEMBLED[piece.id].top - piece.top}cqh`,
-            }}
-          >
-            <Image
-              src={piece.src}
-              alt={piece.alt}
-              fill
-              className="object-contain"
-              sizes="(max-width: 1024px) 45vw, 25vw"
-              priority
-            />
-          </div>
-        ))}
+        {PIECES.map((piece) => {
+          const target = targetFor(piece);
+          return (
+            <motion.div
+              key={piece.id}
+              className="absolute"
+              style={{
+                width: `${piece.width}%`,
+                height: `${piece.height}%`,
+                zIndex: piece.zIndex,
+                x: "-50%",
+                y: "-50%",
+                rotate: ROTATION,
+              }}
+              initial={{ left: `${piece.left}%`, top: `${piece.top}%` }}
+              animate={{
+                left: toPercent(target.left),
+                top: toPercent(target.top),
+              }}
+              transition={transition}
+            >
+              <Image
+                src={piece.src}
+                alt={piece.alt}
+                fill
+                className="object-contain"
+                sizes="(max-width: 1024px) 45vw, 25vw"
+                priority
+              />
+            </motion.div>
+          );
+        })}
       </div>
 
-      {/* Halo du point rose : indépendant du pulse, clignote en continu */}
+      {/* Halo du point rose : indépendant du reste, clignote en continu */}
       <div
         className="hero-brain-dot"
         style={{ left: `${DOT_CENTER.left}%`, top: `${DOT_CENTER.top}%` }}
@@ -190,5 +204,156 @@ export default function HeroBrain({ className = "" }: { className?: string }) {
         <span className="hero-brain-dot-core animate-brand-glow" />
       </div>
     </div>
+  );
+}
+
+// framer-motion accepte un nombre, une chaîne ("42%") ou un tableau de ces
+// deux (pour la boucle) comme valeur de style animée — cette fonction
+// convertit nos valeurs (nombre ou tableau de nombres, en % de la boîte)
+// dans le format attendu.
+function toPercent(value: number | number[]): string | string[] {
+  return Array.isArray(value) ? value.map((v) => `${v}%`) : `${value}%`;
+}
+
+// Nuances néon dérivées du rose de marque (var(--color-brand-pink),
+// #ec0c8c) : pas de token dédié pour celles-ci, elles ne servent qu'au
+// glow SVG ci-dessous (halo flou + cœur brillant).
+const NEON_BRIGHT = "#ff4da6";
+const NEON_PALE = "#ffb3d9";
+
+/*
+  Traits reliant chaque pièce au point rose central, en SVG plutôt qu'en
+  export Figma : le viewBox reprend exactement l'espace en % (0-100 sur
+  chaque axe, indépendamment étirés via preserveAspectRatio="none") utilisé
+  par PIECES/ASSEMBLED, donc chaque trait part du point rose et arrive
+  pile au centre de sa pièce, dans les deux états.
+
+  Style "néon" (repris d'un essai fourni par l'utilisateur) : chaque trait
+  est dessiné deux fois — une passe floue (filter="url(#neonGlow)", plus
+  épaisse) derrière une passe nette par-dessus — et s'épaissit/s'illumine
+  quand le cerveau est assemblé. Même traitement pour les points aux
+  extrémités et pour le halo central (3 cercles imbriqués + cœur clair).
+*/
+function BrainLines({
+  pieces,
+  targetFor,
+  scalarFor,
+  transition,
+}: {
+  pieces: Piece[];
+  targetFor: (piece: Piece) => { left: number | number[]; top: number | number[] };
+  scalarFor: (base: number, gathered: number) => number | number[];
+  transition: Transition;
+}) {
+  return (
+    <svg
+      className="absolute inset-0 h-full w-full"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <defs>
+        <filter id="hero-brain-neon-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="0.6" result="blur1" />
+          <feGaussianBlur stdDeviation="1.2" result="blur2" />
+          <feMerge>
+            <feMergeNode in="blur2" />
+            <feMergeNode in="blur1" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <filter id="hero-brain-center-glow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="1.8" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      {pieces.map((piece) => {
+        const target = targetFor(piece);
+        const strokeWidth = scalarFor(0.3, 0.85);
+        const glowOpacity = scalarFor(0.25, 0.9);
+        const lineOpacity = scalarFor(0.4, 1);
+        return (
+          <g key={piece.id}>
+            {/* passe floue, derrière */}
+            <motion.line
+              x1={DOT_CENTER.left}
+              y1={DOT_CENTER.top}
+              animate={{ x2: target.left, y2: target.top, strokeWidth, opacity: glowOpacity }}
+              transition={transition}
+              stroke="var(--color-brand-pink)"
+              strokeLinecap="round"
+              filter="url(#hero-brain-neon-glow)"
+            />
+            {/* passe nette, par-dessus */}
+            <motion.line
+              x1={DOT_CENTER.left}
+              y1={DOT_CENTER.top}
+              animate={{
+                x2: target.left,
+                y2: target.top,
+                strokeWidth: scalarFor(0.14, 0.3),
+                opacity: lineOpacity,
+              }}
+              transition={transition}
+              stroke={NEON_BRIGHT}
+              strokeLinecap="round"
+            />
+            {/* point à l'extrémité : halo + cœur clair */}
+            <motion.circle
+              animate={{ cx: target.left, cy: target.top, r: scalarFor(0.6, 1.1), opacity: glowOpacity }}
+              transition={transition}
+              fill="var(--color-brand-pink)"
+              filter="url(#hero-brain-neon-glow)"
+            />
+            <motion.circle
+              animate={{ cx: target.left, cy: target.top, r: scalarFor(0.3, 0.55), opacity: lineOpacity }}
+              transition={transition}
+              fill={NEON_PALE}
+            />
+          </g>
+        );
+      })}
+
+      {/* halo central : 3 cercles imbriqués (externe très flou, moyen glow,
+          anneau) + cœur clair — s'agrandissent et s'illuminent à l'assemblage. */}
+      <g>
+        <motion.circle
+          cx={DOT_CENTER.left}
+          cy={DOT_CENTER.top}
+          animate={{ r: scalarFor(3.5, 7), opacity: scalarFor(0.08, 0.25) }}
+          transition={transition}
+          fill="var(--color-brand-pink)"
+          filter="url(#hero-brain-center-glow)"
+        />
+        <motion.circle
+          cx={DOT_CENTER.left}
+          cy={DOT_CENTER.top}
+          animate={{ r: scalarFor(1.7, 3.1), opacity: scalarFor(0.4, 0.9) }}
+          transition={transition}
+          fill="var(--color-brand-pink)"
+          filter="url(#hero-brain-neon-glow)"
+        />
+        <motion.circle
+          cx={DOT_CENTER.left}
+          cy={DOT_CENTER.top}
+          animate={{ r: scalarFor(2.3, 4), opacity: scalarFor(0.3, 1) }}
+          transition={transition}
+          fill="none"
+          stroke="var(--color-brand-pink)"
+          strokeWidth={0.28}
+        />
+        <motion.circle
+          cx={DOT_CENTER.left}
+          cy={DOT_CENTER.top}
+          animate={{ r: scalarFor(0.7, 1.4) }}
+          transition={transition}
+          fill={NEON_PALE}
+        />
+      </g>
+    </svg>
   );
 }
