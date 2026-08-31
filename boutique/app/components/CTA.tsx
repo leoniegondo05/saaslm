@@ -23,15 +23,18 @@ export default function CTA() {
           </h2>
 
           <div className="mt-8 flex flex-wrap gap-4">
-            <Link
-              href="/login"
-              className="rounded-xl bg-brand-pink px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
-            >
-              Créer ma boutique gratuitement
-            </Link>
+            <span className="inline-block rounded-xl bg-[linear-gradient(90deg,var(--color-brand-pink),var(--color-brand-purple))] p-px">
+              <Link
+                href="/login"
+                className="flex items-center gap-2 rounded-[11px] bg-[#0a0e1c] px-[18px] py-4 text-sm font-semibold transition hover:opacity-90"
+              >
+                Créer ma boutique gratuitement
+                <span aria-hidden>»</span>
+              </Link>
+            </span>
             <button
               type="button"
-              className="rounded-xl border border-white/20 px-6 py-3 text-sm font-semibold transition hover:bg-white/5"
+              className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition hover:opacity-90"
             >
               Devenir partenaire agréé
             </button>

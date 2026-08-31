@@ -148,6 +148,8 @@ export default function InscriptionForm() {
             name="shop-slug"
             type="text"
             required
+            pattern="[a-z0-9-]+"
+            title="Uniquement des lettres minuscules sans accent, chiffres et tirets"
             value={shopSlug}
             onChange={(event) => setShopSlug(event.target.value)}
             placeholder="Ma boutique"
@@ -173,6 +175,7 @@ export default function InscriptionForm() {
             type="password"
             autoComplete="new-password"
             required
+            minLength={8}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="********"
@@ -193,6 +196,7 @@ export default function InscriptionForm() {
             type="password"
             autoComplete="new-password"
             required
+            minLength={8}
             value={passwordConfirmation}
             onChange={(event) => setPasswordConfirmation(event.target.value)}
             placeholder="********"
