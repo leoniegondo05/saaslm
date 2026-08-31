@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import AuthOverlayText from "../components/AuthOverlayText";
+import LoginMobileFlow from "../components/LoginMobileFlow";
+import LoginForm from "../components/LoginForm";
 
 export const metadata: Metadata = {
   title: "Connexion — Livre Moi",
@@ -26,16 +28,30 @@ export const metadata: Metadata = {
 */
 export default function LoginPage() {
   return (
-    <main className="flex h-dvh overflow-hidden">
-      {/* ── Colonne visuel (image Figma) ── plein bord, moitié d'écran, sans marge ni coin arrondi */}
-      <div className="relative hidden h-full w-1/2 overflow-hidden lg:block">
+    <main className="relative flex h-dvh overflow-hidden lg:h-auto lg:min-h-dvh lg:overflow-visible">
+      {/* ── Colonne visuel (image Figma) ── plein bord, moitié d'écran, sans marge ni coin arrondi.
+          Pas de h-full : en lg elle s'étire (align-items: stretch, comportement flex par défaut)
+          à la hauteur naturelle de la colonne formulaire en face, donc grandit avec elle et
+          défile avec la page (plus de cage figée à h-dvh/overflow-hidden côté desktop). */}
+      <div className="relative hidden w-1/2 self-stretch overflow-hidden bg-brand-bg lg:flex lg:items-center">
         <Image
           src="/images/Login.png"
           alt="Carte visuelle décorative aux dégradés violet et rose de Livre Moi"
-          fill
-          className="object-cover"
+          width={704}
+          height={1029}
+          className="h-auto w-full"
           priority
         />
+
+        {/* La carte (marge sombre, bordure fine, point rose) est déjà cuite
+            dans l'image, pas besoin de la reconstruire en CSS comme sur
+            mobile (voir LoginMobileFlow.tsx, qui lui utilise Rectangle.png —
+            sans carte — car sa carte est plus petite que l'écran).
+            Pas de "fill" : l'image garde son ratio 704×1029 et s'étire en
+            largeur pleine (w-full h-auto) au lieu d'être recadrée. Ce qui
+            dépasse en hauteur (colonne plus grande que l'image à cette
+            largeur) devient de l'espace haut/bas, centré par items-center
+            sur le conteneur, comblé par bg-brand-bg posé dessus. */}
 
         <AuthOverlayText
           label="Bienvenue sur votre boutique"
@@ -49,9 +65,14 @@ export default function LoginPage() {
         />
       </div>
 
-      {/* ── Colonne formulaire ── viewport fixe (h-dvh + overflow-hidden sur <main>) : elle seule
-          scrolle (overflow-y-auto) si le contenu dépasse un petit écran, la page ne bouge jamais. */}
-      <div className="flex w-full flex-1 flex-col gap-4 overflow-y-auto px-6 py-6 sm:gap-6 md:px-16 md:py-10">
+      {/* ── Colonne formulaire ── sur mobile : viewport fixe (h-dvh + overflow-hidden sur
+          <main>), elle seule scrolle (overflow-y-auto) si le contenu dépasse un petit écran.
+          Sur desktop (lg:) : plus de cage, <main> grandit avec le contenu (lg:h-auto,
+          lg:overflow-visible) et c'est la page entière qui défile, image comprise (voir
+          lg:overflow-visible plus bas dans LoginMobileFlow.tsx).
+          Sur mobile, LoginMobileFlow la masque tant que l'étape "Continuer" n'est pas passée
+          (voir app/components/LoginMobileFlow.tsx) ; sur desktop elle reste toujours visible. */}
+      <LoginMobileFlow>
         <Link
           href="/"
           className="inline-flex shrink-0 items-center gap-2 text-sm text-brand-white/60 transition hover:text-brand-white"
@@ -60,112 +81,15 @@ export default function LoginPage() {
         </Link>
 
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
-          <Link
-            href="/"
-            aria-label="Retour à l'accueil"
-            className="mb-6 inline-flex items-center justify-center rounded-lg sm:mb-8"
-          >
-            <Image
-              src="/images/logo.svg"
-              alt="Logo Livre Moi"
-              width={40}
-              height={40}
-              className="h-10 w-10 object-contain"
-            />
-          </Link>
-
+          {/* Pas de logo au-dessus de "Connexion" : absent de la maquette Figma. */}
           <h1 className="text-2xl font-bold sm:text-3xl">Connexion</h1>
           <p className="mt-2 text-sm text-brand-white/60">
             Accédez au tableau de bord de votre boutique.
           </p>
 
-          <form className="mt-6 space-y-4 sm:mt-8 sm:space-y-5">
-            <div>
-              <label
-                htmlFor="email"
-                className="text-sm font-semibold text-brand-white"
-              >
-                Addresse Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder="Ex : info@example.com"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-5 py-3 text-sm text-brand-white placeholder-brand-white/30 outline-none transition focus:border-brand-pink/60 sm:mt-3 sm:py-4"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="text-sm font-semibold text-brand-white"
-              >
-                Mot de passe
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="********"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-5 py-3 text-sm text-brand-white placeholder-brand-white/30 outline-none transition focus:border-brand-pink/60 sm:mt-3 sm:py-4"
-              />
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
-              <label className="inline-flex cursor-pointer items-center gap-3">
-                <span className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-brand-white">
-                  <input
-                    type="checkbox"
-                    name="remember"
-                    className="peer absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-md"
-                  />
-                  <svg
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    className="hidden h-3.5 w-3.5 text-brand-bg peer-checked:block"
-                    aria-hidden
-                  >
-                    <path
-                      d="M13 4L6 11L3 8"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-                <span className="text-sm text-brand-white/80">
-                  Se rapeller de moi
-                </span>
-              </label>
-
-              <a
-                href="#"
-                className="text-sm font-medium text-brand-pink hover:opacity-80"
-              >
-                Mot de passe oublié ?
-              </a>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full rounded-xl bg-brand-white px-6 py-3 text-sm font-semibold text-brand-bg transition hover:opacity-90 sm:py-4"
-            >
-              Connexion
-            </button>
-
-            <Link
-              href="/inscription"
-              className="block w-full rounded-xl border border-white/15 px-6 py-3 text-center text-sm font-semibold transition hover:bg-white/5 sm:py-4"
-            >
-              Pas de compte ? Inscription
-            </Link>
-          </form>
+          <LoginForm />
         </div>
-      </div>
+      </LoginMobileFlow>
     </main>
   );
 }

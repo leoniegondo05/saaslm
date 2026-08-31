@@ -80,7 +80,7 @@ export default function Footer() {
             notre plateforme.
           </p>
 
-          <form onSubmit={handleSubscribe} className="mt-4 flex gap-2">
+          <form onSubmit={handleSubscribe} className="mt-4 flex flex-col gap-2 sm:flex-row">
             <label htmlFor="newsletter-email" className="sr-only">
               Votre adresse email
             </label>
@@ -89,11 +89,11 @@ export default function Footer() {
               type="email"
               required
               placeholder="Votre adresse email"
-              className="w-full rounded-lg border border-black/10 bg-transparent px-4 py-2 text-sm outline-none focus:border-brand-pink"
+              className="w-full rounded-full border border-black/10 bg-black/5 px-4 py-2 text-sm text-brand-bg/70 outline-none focus:border-brand-pink"
             />
             <button
               type="submit"
-              className="shrink-0 rounded-lg bg-brand-bg px-4 py-2 text-sm font-semibold text-white"
+              className="w-full shrink-0 rounded-full bg-white px-4 py-2 text-sm font-semibold text-black sm:w-auto"
             >
               S'abonner
             </button>
@@ -112,19 +112,8 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto mt-16 flex max-w-[1320px] flex-col items-center justify-between gap-4 border-t border-black/10 pt-6 text-xs text-brand-bg/50 sm:flex-row">
-        <div className="flex items-center gap-2">
-          <Image
-            src="/images/logo.svg"
-            alt="Logo Livre Moi"
-            width={28}
-            height={28}
-            className="h-7 w-7 object-contain opacity-70"
-          />
-          <p>© 2026 Livre Moi. Tous droits réservés.</p>
-        </div>
-
-        <nav className="flex flex-wrap justify-center gap-4">
+      <div className="mx-auto mt-16 flex max-w-[1320px] flex-col items-start justify-between gap-6 border-t border-black/10 pt-6 text-xs text-brand-bg/50 sm:flex-row sm:items-center sm:gap-4">
+        <nav className="order-1 flex flex-col items-start gap-4 sm:order-2 sm:flex-row sm:flex-wrap sm:justify-center">
           {LEGAL_LINKS.map((link) => (
             <a
               key={link}
@@ -136,8 +125,19 @@ export default function Footer() {
           ))}
         </nav>
 
+        <div className="order-2 flex items-center gap-2 sm:order-1">
+          <Image
+            src="/images/logo.svg"
+            alt="Logo LiivreMoi"
+            width={28}
+            height={28}
+            className="hidden h-7 w-7 object-contain opacity-70 sm:block"
+          />
+          <p>© 2026 LiivreMoi. Tous droits réservés.</p>
+        </div>
+
         {/* Icônes réseaux sociaux réelles avec couleur violette */}
-        <div className="flex gap-4">
+        <div className="order-3 hidden gap-4 sm:flex">
           {SOCIALS.map(({ name, href, Icon }) => (
             <a
               key={name}

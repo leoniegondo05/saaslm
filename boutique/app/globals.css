@@ -483,3 +483,13 @@ body {
       0 0 22px 10px rgba(122, 14, 92, 0.18) !important;
   }
 }
+
+/*
+  Point lumineux qui parcourt les courbes "Cash" (Features.tsx) — décoratif
+  uniquement, donc simplement masqué plutôt que figé en prefers-reduced-motion.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .flow-dot {
+    display: none;
+  }
+}

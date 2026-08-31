@@ -5,7 +5,7 @@
 export default function SectionBadge() {
   return (
     <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/15 px-4 py-1.5 text-xs text-brand-white/80">
-      <span className="h-1.5 w-1.5 rounded-full bg-brand-pink" />
+      <span className="h-1.5 w-1.5 rounded-full bg-brand-pink animate-brand-glow" />
       La solution LM
     </span>
   );
