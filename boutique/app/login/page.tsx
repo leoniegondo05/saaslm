@@ -6,8 +6,8 @@ import LoginMobileFlow from "../components/LoginMobileFlow";
 import LoginForm from "../components/LoginForm";
 
 export const metadata: Metadata = {
-  title: "Connexion — Livre Moi",
-  description: "Connectez-vous pour gérer votre boutique Livre Moi.",
+  title: "Connexion — LIIVRE MOI",
+  description: "Connectez-vous pour gérer votre boutique LIIVRE MOI.",
 };
 
 /*
@@ -36,7 +36,7 @@ export default function LoginPage() {
       <div className="relative hidden w-1/2 self-stretch overflow-hidden bg-brand-bg lg:flex lg:items-center">
         <Image
           src="/images/Login.png"
-          alt="Carte visuelle décorative aux dégradés violet et rose de Livre Moi"
+          alt="Carte visuelle décorative aux dégradés violet et rose de LIIVRE MOI"
           width={704}
           height={1029}
           className="h-auto w-full"

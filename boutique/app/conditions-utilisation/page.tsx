@@ -3,13 +3,13 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 export const metadata: Metadata = {
-  title: "Conditions d'utilisation — Livre Moi",
-  description: "Conditions générales d'utilisation de Livre Moi.",
+  title: "Conditions d'utilisation — LIIVRE MOI",
+  description: "Conditions générales d'utilisation de LIIVRE MOI.",
 };
 
 // Page placeholder — remplace le lien href="#" du footer (voir Footer.tsx).
 // Conditions générales définitives à rédiger (objet du service, obligations
-// des utilisateurs et de Livre Moi, responsabilité, résiliation...).
+// des utilisateurs et de LIIVRE MOI, responsabilité, résiliation...).
 export default function ConditionsUtilisationPage() {
   return (
     <>

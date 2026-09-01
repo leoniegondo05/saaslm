@@ -164,12 +164,12 @@ export default function Footer() {
         <div className="order-2 flex items-center gap-2 sm:order-1">
           <Image
             src="/images/logo.svg"
-            alt="Logo LiivreMoi"
+            alt="Logo LIIVRE MOI"
             width={28}
             height={28}
             className="hidden h-7 w-7 object-contain opacity-70 sm:block"
           />
-          <p>© 2026 LiivreMoi. Tous droits réservés.</p>
+          <p>© 2026 LIIVRE MOI. Tous droits réservés.</p>
           <button
             type="button"
             aria-label="Changer de langue"

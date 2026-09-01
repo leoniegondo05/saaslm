@@ -47,11 +47,9 @@ const CHAR_WIDTH = 9; // largeur moyenne d'un caractère (text-xs, Sora)
 
 const STEP_LABELS = ["Créer", "Personnaliser", "Publier", "Commencer"];
 
-// Bleu néon du fil conducteur (spec anim "session 2" : "fine ligne ondulée
-// bleu néon") — pas de token dédié pour celui-ci (comme NEON_BRIGHT/PALE
-// dans HeroBrain.tsx), il ne sert qu'à ce dégradé.
-const NEON_BLUE = "#22d3ee";
-const NEON_BLUE_DEEP = "#0891ff";
+// Couleur du fil conducteur (violet, #3A1D8A à ~67% d'opacité) — pas de
+// token dédié pour celle-ci (comme NEON_BRIGHT/PALE dans HeroBrain.tsx).
+const WAVE_COLOR = "#3A1D8AA8";
 
 // Demi-largeur estimée du badge (padding + texte), pour caler son centre
 // à GAPS[i] de son voisin plutôt que de coller leurs centres bruts.
@@ -221,13 +219,9 @@ export default function HowItWorks() {
             aria-hidden="true"
           >
             {/* Dégradé violet → rose repris de la vidéo de référence, pour
-                le fil et les rayons "structure" (au lieu du blanc uni). */}
+                les rayons "structure" (au lieu du blanc uni) — le fil,
+                lui, est en couleur unie (WAVE_COLOR), plus de dégradé. */}
             <defs>
-              <linearGradient id="how-it-works-wave-gradient" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor={NEON_BLUE_DEEP} />
-                <stop offset="100%" stopColor={NEON_BLUE} />
-              </linearGradient>
-
               {/* Dégradé du rayon (coordonnées réelles de la ligne, pas
                   objectBoundingBox) : part du hub (opaque, rose) et s'efface
                   progressivement en remontant vers la courbe — invisible
@@ -276,24 +270,10 @@ export default function HowItWorks() {
               </g>
             ))}
 
-            {/* Fil conducteur : ligne sinueuse fixe + copie rose qui se
-                "dessine" progressivement, traînée du point. */}
-            <path
-              d={WAVE_PATH_D}
-              fill="none"
-              stroke="url(#how-it-works-wave-gradient)"
-              strokeOpacity={0.35}
-              strokeWidth={1.5}
-            />
-            <path
-              className="how-it-works-trail"
-              d={WAVE_PATH_D}
-              fill="none"
-              stroke="var(--color-brand-pink)"
-              strokeWidth={1.5}
-              strokeLinecap="round"
-              pathLength={100}
-            />
+            {/* Fil conducteur : ligne sinueuse fixe, couleur unie WAVE_COLOR
+                (la copie rose qui se "dessinait" en traînée derrière le
+                point a été retirée). */}
+            <path d={WAVE_PATH_D} fill="none" stroke={WAVE_COLOR} strokeWidth={1.5} />
 
             {/* Point rose qui avance sur le fil conducteur (offset-path).
                 DOIT rester un élément SVG (pas un <span> HTML posé par-dessus) :
@@ -368,9 +348,9 @@ export default function HowItWorks() {
         </div>
 
         {/* Climax : message + CTA, comme à la fin de la vidéo de référence. */}
-        <div className="how-it-works-cta mt-10 flex flex-col items-center gap-4 text-center">
+        <div className="how-it-works-cta -mt-2 flex flex-col items-center gap-2 text-center">
           <p className="text-xl font-bold sm:text-2xl">
-            Débuter gratuitement{" "}
+            Rejoindre la solution LM{" "}
             <span className="font-medium text-brand-pink">
               sans affiliation
             </span>

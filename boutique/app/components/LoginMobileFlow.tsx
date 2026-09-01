@@ -30,7 +30,7 @@ export default function LoginMobileFlow({ children }: { children: ReactNode }) {
         <div className="absolute inset-0 z-10 lg:hidden">
           <Image
             src="/images/Rectangle.png"
-            alt="Fond décoratif aux dégradés violet et rose de Livre Moi"
+            alt="Fond décoratif aux dégradés violet et rose de LIIVRE MOI"
             fill
             className="object-cover"
             priority
@@ -38,7 +38,7 @@ export default function LoginMobileFlow({ children }: { children: ReactNode }) {
 
           <div className="absolute inset-x-5 inset-y-20 rounded-3xl border border-white/25 sm:inset-x-6 sm:inset-y-24">
             {/* Badge haut-gauche (logo dans un carré arrondi), repris de la
-                maquette Figma — c'est le logo Livre Moi, pas un simple point.
+                maquette Figma — c'est le logo LIIVRE MOI, pas un simple point.
                 Le SVG a une bonne marge interne intégrée à son viewBox : même
                 agrandi, le tracé reste petit dedans. Le liseré blanc + le
                 scale-150 (recadré par overflow-hidden) compensent : ça
@@ -47,7 +47,7 @@ export default function LoginMobileFlow({ children }: { children: ReactNode }) {
             <span className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-white/40 bg-black/30 backdrop-blur">
               <Image
                 src="/images/logo.svg"
-                alt="Logo Livre Moi"
+                alt="Logo LIIVRE MOI"
                 width={40}
                 height={40}
                 className="h-full w-full scale-150 object-contain"

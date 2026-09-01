@@ -7,7 +7,7 @@ import VisionEffects from "../components/vision/VisionEffects";
 import VisionConstat from "../components/vision/VisionConstat";
 
 export const metadata: Metadata = {
-  title: "Ce que nous construisons — Livre Moi",
+  title: "Ce que nous construisons — LIIVRE MOI",
   description:
     "Nous bâtissons le plus grand réseau commercial digital d'Afrique.",
 };

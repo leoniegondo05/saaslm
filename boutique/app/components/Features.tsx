@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import ScrollReveal from "./ScrollReveal";
 import SectionHeader from "./SectionHeader";
 
 /*
@@ -273,9 +274,14 @@ export default function Features() {
       className="px-6 py-16 md:px-16 xl:px-[122px] xl:pb-[188px] xl:pt-[18px]"
     >
       <div className="mx-auto flex max-w-[1196px] flex-col gap-16 xl:gap-[91px]">
-        <SectionHeader title="Vos flux financiers se simplifient" />
+        <ScrollReveal>
+          <SectionHeader title="Vos flux financiers se simplifient" />
+        </ScrollReveal>
 
-        <div className="relative mx-auto flex w-full max-w-[1093px] flex-col items-center gap-16 sm:gap-20 xl:flex-row xl:items-center xl:justify-between xl:gap-0">
+        <ScrollReveal
+          delay={100}
+          className="relative mx-auto flex w-full max-w-[1093px] flex-col items-center gap-16 sm:gap-20 xl:flex-row xl:items-center xl:justify-between xl:gap-0"
+        >
           {/* Les deux routes restent toujours empilées (jamais côte à côte),
               comme sur la maquette Figma : la 2e est le miroir de la 1re.
               Pas de carte/bordure autour de chaque route — les deux flottent
@@ -375,7 +381,7 @@ export default function Features() {
               <div className="absolute bottom-2 left-1/2 h-1 w-24 -translate-x-1/2 rounded-full bg-white/40" />
             </div>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

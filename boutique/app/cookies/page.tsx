@@ -3,8 +3,8 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 export const metadata: Metadata = {
-  title: "Paramètres cookies — Livre Moi",
-  description: "Gestion des cookies sur Livre Moi.",
+  title: "Paramètres cookies — LIIVRE MOI",
+  description: "Gestion des cookies sur LIIVRE MOI.",
 };
 
 // Page placeholder — remplace le lien href="#" du footer (voir Footer.tsx).

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Sora } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 
 // On charge la police "Sora" (celle utilisée dans la maquette Figma) depuis
@@ -16,7 +17,7 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "Livre Moi — La solution LM",
+  title: "LIIVRE MOI — La solution LM",
   description:
     "Toute votre logistique e-commerce, une seule plateforme.",
   icons: {
@@ -27,11 +28,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Lecture obligatoire pour que Next.js applique le nonce (middleware.ts)
+  // à ses propres scripts de bootstrap — cf. commentaire dans middleware.ts.
+  await headers();
+
   return (
     <html lang="fr" className={sora.variable}>
       <body className="flex min-h-screen flex-col bg-brand-bg font-sans text-brand-white antialiased">

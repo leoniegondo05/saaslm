@@ -9,7 +9,7 @@ import { sections, type SectionInfo } from "./sections-data";
 // Les liens affichés à droite de la barre de navigation principale.
 const NAV_LINKS = [
   { label: "Ce que nous construisons", href: "/vision" },
-  { label: "Partenaire agréée LM", href: "#cta" },
+  { label: "Partenaire agréé LM", href: "/partenaire-agree" },
 ];
 
 export default function Navbar() {
@@ -88,29 +88,31 @@ export default function Navbar() {
             <a
               href="#hero"
               aria-label="Retour à l'accueil"
-              className="flex items-center justify-center rounded-lg p-1"
+              className="flex items-center gap-3 rounded-lg py-1 transition hover:opacity-90"
             >
               <Image
                 src="/images/logo.svg"
-                alt="Logo Livre Moi"
-                width={40}
-                height={40}
-                className="h-10 w-10 object-contain"
+                alt="Logo LIIVRE MOI"
+                width={38}
+                height={38}
+                className="h-[38px] w-[38px] object-contain"
               />
+              <span className="text-[15px] font-bold tracking-tight text-white">LIIVRE MOI</span>
             </a>
           ) : (
             <Link
               href="/"
               aria-label="Retour à l'accueil"
-              className="flex items-center justify-center rounded-lg p-1"
+              className="flex items-center gap-3 rounded-lg py-1 transition hover:opacity-90"
             >
               <Image
                 src="/images/logo.svg"
-                alt="Logo Livre Moi"
-                width={40}
-                height={40}
-                className="h-10 w-10 object-contain"
+                alt="Logo LIIVRE MOI"
+                width={38}
+                height={38}
+                className="h-[38px] w-[38px] object-contain"
               />
+              <span className="text-[15px] font-bold tracking-tight text-white">LIIVRE MOI</span>
             </Link>
           )}
 
@@ -118,30 +120,34 @@ export default function Navbar() {
             <button
               type="button"
               onClick={scrollToHero}
-              className="flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm text-brand-white/90"
+              className="flex items-center gap-2.5 rounded-full border border-white/15 bg-white/[0.04] px-5 py-2 text-sm text-white/90 shadow-[0_0_20px_rgba(236,12,140,0.12)] transition hover:bg-white/[0.08]"
             >
-              <span className="h-2 w-2 rounded-full bg-brand-pink" />
+              <span className="h-2 w-2 rounded-full bg-[#EC0C8C] shadow-[0_0_8px_#EC0C8C]" />
               <span className="hidden sm:inline">La solution LM</span>
             </button>
           ) : (
             <Link
               href="/"
-              className="flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm text-brand-white/90 transition hover:bg-white/[0.06]"
+              className="flex items-center gap-2.5 rounded-full border border-white/15 bg-white/[0.04] px-5 py-2 text-sm text-white/90 shadow-[0_0_20px_rgba(236,12,140,0.12)] transition hover:bg-white/[0.08]"
             >
-              <span aria-hidden>←</span>
-              <span className="hidden sm:inline">Retour à l&apos;accueil</span>
+              <span className="h-2 w-2 rounded-full bg-[#EC0C8C] shadow-[0_0_8px_#EC0C8C]" />
+              <span className="hidden sm:inline">La solution LM</span>
             </Link>
           )}
 
-          <nav className="hidden items-center gap-6 text-sm text-brand-white/70 md:flex">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                className="transition hover:text-brand-white"
-              >
-                {link.label}
-              </a>
+          <nav className="hidden items-center gap-4 text-sm font-medium text-white/80 md:flex">
+            {NAV_LINKS.map((link, index) => (
+              <span key={link.label} className="flex items-center gap-4">
+                {index > 0 && (
+                  <span className="inline-block h-1 w-1 rounded-full bg-[#EC0C8C]" aria-hidden="true" />
+                )}
+                <Link
+                  href={link.href}
+                  className="transition hover:text-white"
+                >
+                  {link.label}
+                </Link>
+              </span>
             ))}
           </nav>
         </div>

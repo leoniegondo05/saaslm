@@ -6,8 +6,8 @@ import InscriptionMobileFlow from "../components/InscriptionMobileFlow";
 import InscriptionForm from "../components/InscriptionForm";
 
 export const metadata: Metadata = {
-  title: "Inscription — Livre Moi",
-  description: "Créez votre compte pour lancer votre boutique Livre Moi.",
+  title: "Inscription — LIIVRE MOI",
+  description: "Créez votre compte pour lancer votre boutique LIIVRE MOI.",
 };
 
 /*
@@ -25,7 +25,7 @@ export default function InscriptionPage() {
       <div className="relative hidden w-1/2 self-stretch overflow-hidden bg-brand-bg lg:flex lg:items-center">
         <Image
           src="/images/Login.png"
-          alt="Carte visuelle décorative aux dégradés violet et rose de Livre Moi"
+          alt="Carte visuelle décorative aux dégradés violet et rose de LIIVRE MOI"
           width={704}
           height={1029}
           className="h-auto w-full"
@@ -44,7 +44,7 @@ export default function InscriptionPage() {
             sur le conteneur, comblé par bg-brand-bg posé dessus. */}
 
         <AuthOverlayText
-          label="Bienvenue sur LiivreMoi"
+          label="Bienvenue sur LIIVRE MOI"
           heading="Ici commence votre indépendance commerciale."
         />
       </div>

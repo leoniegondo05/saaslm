@@ -1,3 +1,4 @@
+import ScrollReveal from "./ScrollReveal";
 import SectionBadge from "./SectionBadge";
 
 // Une courte section "citation" au centre de la page, comme dans la
@@ -8,12 +9,14 @@ export default function Statement() {
       id="commerce-digital"
       className="px-6 py-32 text-center md:px-16"
     >
-      <div className="flex justify-center">
-        <SectionBadge />
-      </div>
-      <p className="mx-auto mt-8 max-w-3xl text-2xl font-semibold sm:text-4xl">
-        Le commerce digital orchestré de bout en bout.
-      </p>
+      <ScrollReveal>
+        <div className="flex justify-center">
+          <SectionBadge />
+        </div>
+        <p className="mx-auto mt-8 max-w-3xl text-2xl font-semibold sm:text-4xl">
+          Le commerce digital orchestré de bout en bout.
+        </p>
+      </ScrollReveal>
     </section>
   );
 }

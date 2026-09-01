@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
-  Palette de couleurs de la marque "Livre Moi" (LM), reprise du fichier Figma.
+  Palette de couleurs de la marque "LIIVRE MOI" (LM), reprise du fichier Figma.
   On les déclare ici une seule fois, puis on les réutilise partout dans le
   site avec des classes Tailwind comme "bg-brand-bg" ou "text-brand-pink".
 */
@@ -42,17 +42,25 @@ body {
 
 /*
   Illustration du Hero : cerveau en 5 pièces distinctes (voir HeroBrain.tsx).
-  Le mouvement des pièces (boucle auto continue, éclaté ↔ assemblé) et les
-  traits reliant chaque pièce au point rose central sont désormais pilotés
-  par framer-motion, directement dans HeroBrain.tsx
-  (pièces = <motion.div>, traits = <motion.line>/<motion.circle> en SVG) —
-  ça remplace l'ancien couple de keyframes CSS (hero-brain-cluster-scale /
-  hero-brain-piece-gather) + l'export Figma statique des traits. framer-
-  motion respecte prefers-reduced-motion via useReducedMotion() dans le
-  composant, donc plus besoin d'une media query dédiée ici.
+  Le mouvement des pièces (boucle auto continue, éclaté ↔ assemblé) est
+  désormais piloté par framer-motion, directement dans HeroBrain.tsx
+  (pièces = <motion.div>) — ça remplace l'ancien couple de keyframes CSS
+  (hero-brain-cluster-scale / hero-brain-piece-gather). framer-motion
+  respecte prefers-reduced-motion via useReducedMotion() dans le composant,
+  donc plus besoin d'une media query dédiée ici. Pas de traits/flèches entre
+  les pièces et le centre (retirés à la demande de l'utilisateur).
 
-  Ce qui reste en CSS : la boîte englobante (ratio Figma) et le point rose
-  + son halo, qui clignote via .animate-brand-glow indépendamment du reste.
+  Ce qui reste en CSS : la boîte englobante (ratio Figma) et le
+  positionnement du point de relai (image hero-brain-connector.png) — son
+  opacité, elle, est animée par framer-motion (1 → 0 à mesure que les pièces
+  se rassemblent, voir HeroBrain.tsx).
+
+  Cadrage du point de relai recalé le 01/09/2026 sur le cadre Figma fourni
+  par l'utilisateur (remplace l'ancien `inset: 18%` symétrique,
+  approximatif) : régression linéaire à partir du centre du point + des 5
+  pointes de trait détectées par scan de pixels dans le PNG (512×540),
+  mises en correspondance avec le centre de chaque pièce — voir le
+  commentaire détaillé dans HeroBrain.tsx au-dessus de PIECES.
 */
 
 .hero-brain {
@@ -61,65 +69,43 @@ body {
 
 .hero-brain-dot {
   position: absolute;
+  left: 7.76%;
+  top: 12.46%;
+  width: 84.55%;
+  height: 97.71%;
   z-index: 10;
-  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
 .hero-brain-dot-core {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 10px;
-  height: 10px;
-  transform: translate(-50%, -50%);
-  border-radius: 999px;
-  background: var(--color-brand-pink);
+  display: block;
+  filter: brightness(0.7) saturate(1.6);
+}
+
+.hero-brain-dot-core {
+  display: block;
+  filter: brightness(0.7) saturate(1.6);
 }
 
 /*
   Section "Comment ça marche" (HowItWorks.tsx) : recréation d'une vidéo de
-  référence (ligne sinueuse + point rose qui descend en laissant une
-  traînée + étapes qui se révèlent l'une après l'autre + climax final)
-  entièrement en CSS/SVG plutôt qu'en important le fichier vidéo.
+  référence (ligne sinueuse + point rose qui descend + étapes qui se
+  révèlent l'une après l'autre + climax final) entièrement en CSS/SVG
+  plutôt qu'en important le fichier vidéo. (La traînée rose qui se
+  "dessinait" derrière le point a été retirée — il ne reste que le fil
+  bleu fixe, voir <path> dans HowItWorks.tsx.)
 
-  Tout partage la même durée (18s, boucle infinie) : le timing de chaque
-  élément est donc encodé dans les pourcentages de son propre @keyframes,
-  plutôt que via `animation-delay` (qui ne resterait pas synchronisé d'une
-  itération à l'autre). Chaque étape a son propre connecteur + badge (au
-  lieu d'un délai partagé) car leur moment de révélation diffère.
+  Tout partage la même durée (14.14s, boucle infinie — minutage en secondes
+  réelles détaillé plus bas, au-dessus de @keyframes how-it-works-dot-move) :
+  le timing de chaque élément est donc encodé dans les pourcentages de son
+  propre @keyframes, plutôt que via `animation-delay` (qui ne resterait pas
+  synchronisé d'une itération à l'autre). Chaque étape a son propre
+  connecteur + badge (au lieu d'un délai partagé) car leur moment de
+  révélation diffère.
 */
-.how-it-works-trail {
-  stroke-dasharray: 100; /* pathLength=100 sur le <path> (HowItWorks.tsx) */
-  animation: how-it-works-trail-reveal 18s ease-in-out infinite;
-  filter: drop-shadow(0 0 6px rgba(236, 12, 140, 0.8));
-}
-
-@keyframes how-it-works-trail-reveal {
-  0%,
-  4% {
-    stroke-dashoffset: 100;
-    opacity: 0;
-  }
-  6% {
-    opacity: 0.9;
-  }
-  78% {
-    stroke-dashoffset: 0;
-    opacity: 0.9;
-  }
-  90% {
-    opacity: 0.9;
-  }
-  96%,
-  100% {
-    stroke-dashoffset: 100;
-    opacity: 0;
-  }
-}
 
 .how-it-works-dot {
-  animation: how-it-works-dot-move 18s cubic-bezier(0.5, 0, 0, 1) infinite;
+  animation: how-it-works-dot-move 14.14s cubic-bezier(0.5, 0, 0, 1) infinite;
   /* Le scale du flash (keyframes ci-dessous) doit grossir depuis le centre
      du cercle, pas depuis le coin de sa bounding box (défaut SVG). */
   transform-box: fill-box;
@@ -127,214 +113,206 @@ body {
 }
 
 /*
-  Glow de base (repris de l'inline style JSX) + VRAI double rebond façon
-  balle de tennis à chaque passage de sommet (10% / 30% / 51% / 72%, mêmes
-  instants que l'allumage des badges — how-it-works-badge-N ci-dessus) :
-  un grand saut, un petit atterrissage-écrasement, un second saut plus
-  petit qui s'amortit, puis repos — comme une vraie balle qui rebondit deux
-  fois avant de s'arrêter (au lieu d'un unique aller-retour). 6 phases par
-  sommet (squash & stretch), toutes au même décalage relatif (peak −1 / +0
-  / +1 / +2 / +3 / +4) :
-    peak-1 écrasement à l'approche (scaleY↓ scaleX↑, translateY vers le bas)
-           — la balle touche la courbe une 1ère fois ;
-    peak   grand saut : étirement vertical + translateY -15px + flash net
-           (glow blanc, le plus lumineux) ;
-    peak+1 2e contact, écrasement plus marqué (freine la chute) ;
-    peak+2 petit saut (translateY -6px), flash plus discret (2e rebond,
-           plus faible que le 1er, comme une vraie balle qui perd de
-           l'énergie) ;
-    peak+3 3e contact, écrasement léger (amortissement final) ;
-    peak+4 immobile, forme et glow revenus à la base.
+  Minutage en secondes réelles (spec utilisateur), boucle totale 14.14s —
+  tout le reste ci-dessous (rayons/badges/hub/CTA) est calé sur les MÊMES
+  instants, convertis en % de 14.14s :
+    0.00s   départ, point invisible
+    0.10s   point visible, glisse vers le 1er sommet
+    0.90s   point ATTEINT le 1er sommet → double rebond démarre
+    2.25s   rebond fini (1.35s de rebond, comme demandé), repart glisser
+    3.15s   atteint le 2e sommet (0.90s de glisse depuis 2.25s) → rebond
+    4.50s   rebond fini, repart
+    5.40s   atteint le 3e sommet → rebond
+    6.75s   rebond fini, repart
+    7.65s   atteint le 4e sommet → rebond
+    9.00s   rebond fini, repart
+    9.90s   fil ENTIÈREMENT dessiné (0.90s depuis le 4e sommet)
+    9.90→11.34s  les 4 rayons sortent un à un rejoindre le hub (0.18s de
+                 décalage entre chacun, 0.9s de tracé chacun — inchangé)
+    11.34s  TOUS les rayons sont arrivés au hub
+    11.34→11.52s  le point du hub (invisible jusqu'ici) apparaît
+    11.52→12.24s  le texte "sans affiliation" + le CTA remontent
+    13.74s  fin du palier (tout reste affiché)
+    13.74→14.14s  fondu de sortie (point + badges), la boucle reprend
 
-  offset-distance : n'était fixé qu'au départ (0%) et à l'arrivée au hub
-  (78%) — entre les deux, une seule interpolation continue sur toute la
-  plage, sans lien avec les rebonds ci-dessus. Résultat : le rebond tombait
-  à un % de TEMPS fixe, pas au % d'ARC réel du sommet (les étapes ne sont
-  pas régulièrement espacées le long de la courbe, voir GAPS dans
-  HowItWorks.tsx) — le point bondissait en plein vol, décalé du mot.
-  Fixé en posant offset-distance: var(--dot-peak-N) aux deux bornes du
-  double rebond (peak-1 et peak+4 ; N = 0..3, calculées par vraie longueur
+  Même cadence (0.90s de glisse + 1.35s de rebond) répétée aux 4 sommets,
+  comme demandé — le rythme est donc identique à chaque étape.
+
+  Glow de base (repris de l'inline style JSX) + VRAI double rebond façon
+  balle de tennis à chaque sommet (0.90s / 3.15s / 5.40s / 7.65s ci-dessus,
+  mêmes instants que l'allumage des badges — how-it-works-badge-N
+  ci-dessous). 6 phases (squash & stretch) par sommet, réparties sur les
+  1.35s de rebond (mêmes proportions relatives aux 4 sommets) :
+    contact 1  écrasement à l'approche (scaleY↓ scaleX↑, translateY vers
+               le bas) — la balle touche la courbe une 1ère fois ;
+    grand saut étirement vertical + translateY -34px + flash net (glow
+               blanc, le plus lumineux) — décollage net de la courbe ;
+    contact 2  2e contact, écrasement plus marqué (freine la chute) ;
+    petit saut translateY -14px, flash plus discret (2e rebond, plus
+               faible que le 1er, comme une vraie balle qui perd de
+               l'énergie) ;
+    contact 3  3e contact, écrasement léger (amortissement final) ;
+    repos      immobile, forme et glow revenus à la base.
+
+  offset-distance : fixé aux DEUX bornes de chaque rebond (contact 1 et
+  repos) via var(--dot-peak-N) — N = 0..3, calculées par vraie longueur
   d'arc dans HowItWorks.tsx, injectées en custom properties sur l'élément
-  animé) : le point glisse en continu jusqu'au sommet, s'immobilise pile
-  dessus tout le temps du double rebond (position figée, seul le transform
-  vertical bouge), puis repart glisser vers le suivant.
-  `animation-timing-function` n'étant pas surchargée par arrêt, la courbe
-  globale (cubic-bezier(0.5,0,0,1)) s'applique à CHAQUE intervalle
+  animé — plutôt qu'à un % de TEMPS arbitraire : les étapes ne sont pas
+  régulièrement espacées le long de la courbe (voir GAPS dans
+  HowItWorks.tsx), donc caler sur le temps aurait fait bondir le point en
+  plein vol, décalé du mot. Résultat : le point glisse en continu jusqu'au
+  sommet, s'immobilise pile dessus tout le temps du double rebond (position
+  figée, seul le transform vertical bouge), puis repart glisser vers le
+  suivant. `animation-timing-function` n'étant pas surchargée par arrêt, la
+  courbe globale (cubic-bezier(0.5,0,0,1)) s'applique à CHAQUE intervalle
   indépendamment (ease-out en approche, ease-in en sortie) — glisse fluide,
   sans à-coup, sans rien à ajouter ici.
 */
 @keyframes how-it-works-dot-move {
-  0%,
-  4% {
+  0% {
     offset-distance: 0%;
     opacity: 0;
     transform: scale(1);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  6%,
-  8% {
+  0.71% {
     opacity: 1;
     transform: scale(1);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  9% {
+  6.36% {
     offset-distance: var(--dot-peak-0);
     transform: scale(1.28, 0.68) translateY(6px);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  10% {
+  8.27% {
     transform: scale(0.72, 1.45) translateY(-34px);
     filter:
       drop-shadow(0 0 6px rgba(255, 255, 255, 0.9))
       drop-shadow(0 0 16px rgba(236, 12, 140, 1))
       drop-shadow(0 0 34px rgba(236, 12, 140, 0.85));
   }
-  11% {
+  10.18% {
     transform: scale(1.22, 0.74) translateY(4px);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  12% {
+  12.09% {
     transform: scale(0.88, 1.2) translateY(-14px);
     filter:
       drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))
       drop-shadow(0 0 12px rgba(236, 12, 140, 0.9));
-  }
-  13% {
-    transform: scale(1.1, 0.88) translateY(2px);
-    filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
   14% {
+    transform: scale(1.1, 0.88) translateY(2px);
+    filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
+  }
+  15.91% {
     offset-distance: var(--dot-peak-0);
     transform: scale(1);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  16% {
-    transform: scale(1);
-    filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
-  }
-  28% {
-    transform: scale(1);
-    filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
-  }
-  29% {
+  22.28% {
     offset-distance: var(--dot-peak-1);
     transform: scale(1.28, 0.68) translateY(6px);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  30% {
+  24.19% {
     transform: scale(0.72, 1.45) translateY(-34px);
     filter:
       drop-shadow(0 0 6px rgba(255, 255, 255, 0.9))
       drop-shadow(0 0 16px rgba(236, 12, 140, 1))
       drop-shadow(0 0 34px rgba(236, 12, 140, 0.85));
   }
-  31% {
+  26.1% {
     transform: scale(1.22, 0.74) translateY(4px);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  32% {
+  28.01% {
     transform: scale(0.88, 1.2) translateY(-14px);
     filter:
       drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))
       drop-shadow(0 0 12px rgba(236, 12, 140, 0.9));
   }
-  33% {
+  29.92% {
     transform: scale(1.1, 0.88) translateY(2px);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  34% {
+  31.82% {
     offset-distance: var(--dot-peak-1);
     transform: scale(1);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  36% {
-    transform: scale(1);
-    filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
-  }
-  49% {
-    transform: scale(1);
-    filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
-  }
-  50% {
+  38.19% {
     offset-distance: var(--dot-peak-2);
     transform: scale(1.28, 0.68) translateY(6px);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  51% {
+  40.1% {
     transform: scale(0.72, 1.45) translateY(-34px);
     filter:
       drop-shadow(0 0 6px rgba(255, 255, 255, 0.9))
       drop-shadow(0 0 16px rgba(236, 12, 140, 1))
       drop-shadow(0 0 34px rgba(236, 12, 140, 0.85));
   }
-  52% {
+  42.01% {
     transform: scale(1.22, 0.74) translateY(4px);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  53% {
+  43.92% {
     transform: scale(0.88, 1.2) translateY(-14px);
     filter:
       drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))
       drop-shadow(0 0 12px rgba(236, 12, 140, 0.9));
   }
-  54% {
+  45.83% {
     transform: scale(1.1, 0.88) translateY(2px);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  55% {
+  47.74% {
     offset-distance: var(--dot-peak-2);
     transform: scale(1);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  57% {
-    transform: scale(1);
-    filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
-  }
-  70% {
-    transform: scale(1);
-    filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
-  }
-  71% {
+  54.1% {
     offset-distance: var(--dot-peak-3);
     transform: scale(1.28, 0.68) translateY(6px);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  72% {
+  56.01% {
     transform: scale(0.72, 1.45) translateY(-34px);
     filter:
       drop-shadow(0 0 6px rgba(255, 255, 255, 0.9))
       drop-shadow(0 0 16px rgba(236, 12, 140, 1))
       drop-shadow(0 0 34px rgba(236, 12, 140, 0.85));
   }
-  73% {
+  57.92% {
     transform: scale(1.22, 0.74) translateY(4px);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  74% {
+  59.83% {
     transform: scale(0.88, 1.2) translateY(-14px);
     filter:
       drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))
       drop-shadow(0 0 12px rgba(236, 12, 140, 0.9));
   }
-  75% {
+  61.74% {
     transform: scale(1.1, 0.88) translateY(2px);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  76% {
+  63.65% {
     offset-distance: var(--dot-peak-3);
     transform: scale(1);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  78% {
+  70.01% {
     offset-distance: 100%;
     opacity: 1;
     transform: scale(1);
     filter: drop-shadow(0 0 8px rgba(236, 12, 140, 0.8));
   }
-  90% {
+  97.17% {
     opacity: 1;
   }
-  96%,
   100% {
     offset-distance: 100%;
     opacity: 0;
@@ -345,39 +323,41 @@ body {
   Le mot de chaque étape (badge-N) reste calé sur le passage du point rose
   sous son sommet, comme à l'origine — il tombe doucement en place avec un
   flash de glow (box-shadow rose) qui retombe ensuite à un halo plus discret,
-  pendant que le fil est encore en train de se dessiner.
+  pendant que le point continue son trajet.
 
-  Le rayon vers le hub (ray-N), lui, ne se "dessine" (stroke-dashoffset, même
-  technique que .how-it-works-trail) qu'une fois le fil ENTIÈREMENT dessiné
-  (78%) — jamais pendant que le fil se trace encore. Chaque rayon se dessine
-  sur 5% (~0.9s), en `animation-timing-function: linear` (posé sur le stop
-  0%/78% du keyframe : gouverne le segment QUI EN SORT, donc le tracé) —
-  vitesse constante, pas d'ease-in-out qui, sur une fenêtre courte, se
-  percevait comme un pop brutal plutôt qu'un tracé. Les 4 rayons s'enchaînent
-  en cascade, décalés d'1% chacun (78→83, 79→84, 80→85, 81→86), et sont tous
-  finis avant que le texte "sans affiliation" + le CTA ne remontent du bas
-  (.how-it-works-cta, 87%).
+  Le rayon vers le hub (ray-N), lui, ne se "dessine" (stroke-dashoffset)
+  qu'une fois le point arrivé au bout du fil (9.90s / 70.01%) — jamais
+  avant. Chaque rayon se dessine sur 0.9s, en `animation-timing-function:
+  linear` (posé sur le stop de départ du keyframe : gouverne le segment
+  QUI EN SORT, donc
+  le tracé) — vitesse constante, pas d'ease-in-out qui, sur une fenêtre
+  courte, se percevait comme un pop brutal plutôt qu'un tracé. Les 4 rayons
+  s'enchaînent en cascade, décalés de 0.18s chacun (9.90/10.08/10.26/10.44s
+  → 70.01/71.29/72.56/73.84%), tous arrivés au hub par 11.34s (80.20%) —
+  c'est CE moment précis qui déclenche le point du hub (how-it-works-hub-
+  glow ci-dessous), qui n'apparaît pas avant. Le texte "sans affiliation" +
+  le CTA ne remontent qu'une fois le hub visible (.how-it-works-cta,
+  11.52s / 81.47%).
 */
 
 /* Étape 1 : "Créer" */
 .how-it-works-ray-1 {
   stroke-dasharray: 100;
-  animation: how-it-works-ray-1 18s ease-in-out infinite;
+  animation: how-it-works-ray-1 14.14s ease-in-out infinite;
   filter: drop-shadow(0 0 4px rgba(236, 12, 140, 0.7));
 }
 @keyframes how-it-works-ray-1 {
   0%,
-  78% {
+  70.01% {
     stroke-dashoffset: 100;
     opacity: 0;
     animation-timing-function: linear;
   }
-  83%,
-  90% {
+  76.38%,
+  97.17% {
     stroke-dashoffset: 0;
     opacity: 1;
   }
-  96%,
   100% {
     stroke-dashoffset: 100;
     opacity: 0;
@@ -386,27 +366,26 @@ body {
 .how-it-works-badge-1 {
   opacity: 0;
   transform: translate(-50%, calc(-50% - 10px));
-  animation: how-it-works-badge-1 18s ease-in-out infinite;
+  animation: how-it-works-badge-1 14.14s ease-in-out infinite;
 }
 @keyframes how-it-works-badge-1 {
   0%,
-  9% {
+  7% {
     opacity: 0;
     transform: translate(-50%, calc(-50% - 10px));
     box-shadow: none;
   }
-  10% {
+  8.27% {
     opacity: 1;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 24px 6px rgba(236, 12, 140, 0.55);
   }
-  18%,
-  90% {
+  18.46%,
+  97.17% {
     opacity: 1;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 10px 2px rgba(236, 12, 140, 0.25);
   }
-  96%,
   100% {
     opacity: 0;
     transform: translate(-50%, calc(-50% - 10px));
@@ -417,22 +396,21 @@ body {
 /* Étape 2 : "Personnaliser" */
 .how-it-works-ray-2 {
   stroke-dasharray: 100;
-  animation: how-it-works-ray-2 18s ease-in-out infinite;
+  animation: how-it-works-ray-2 14.14s ease-in-out infinite;
   filter: drop-shadow(0 0 4px rgba(236, 12, 140, 0.7));
 }
 @keyframes how-it-works-ray-2 {
   0%,
-  79% {
+  71.29% {
     stroke-dashoffset: 100;
     opacity: 0;
     animation-timing-function: linear;
   }
-  84%,
-  90% {
+  77.65%,
+  97.17% {
     stroke-dashoffset: 0;
     opacity: 1;
   }
-  96%,
   100% {
     stroke-dashoffset: 100;
     opacity: 0;
@@ -441,27 +419,26 @@ body {
 .how-it-works-badge-2 {
   opacity: 0;
   transform: translate(-50%, calc(-50% - 10px));
-  animation: how-it-works-badge-2 18s ease-in-out infinite;
+  animation: how-it-works-badge-2 14.14s ease-in-out infinite;
 }
 @keyframes how-it-works-badge-2 {
   0%,
-  29% {
+  22.91% {
     opacity: 0;
     transform: translate(-50%, calc(-50% - 10px));
     box-shadow: none;
   }
-  30% {
+  24.19% {
     opacity: 1;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 24px 6px rgba(236, 12, 140, 0.55);
   }
-  38%,
-  90% {
+  34.37%,
+  97.17% {
     opacity: 1;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 10px 2px rgba(236, 12, 140, 0.25);
   }
-  96%,
   100% {
     opacity: 0;
     transform: translate(-50%, calc(-50% - 10px));
@@ -472,22 +449,21 @@ body {
 /* Étape 3 : "Publier" */
 .how-it-works-ray-3 {
   stroke-dasharray: 100;
-  animation: how-it-works-ray-3 18s ease-in-out infinite;
+  animation: how-it-works-ray-3 14.14s ease-in-out infinite;
   filter: drop-shadow(0 0 4px rgba(236, 12, 140, 0.7));
 }
 @keyframes how-it-works-ray-3 {
   0%,
-  80% {
+  72.56% {
     stroke-dashoffset: 100;
     opacity: 0;
     animation-timing-function: linear;
   }
-  85%,
-  90% {
+  78.93%,
+  97.17% {
     stroke-dashoffset: 0;
     opacity: 1;
   }
-  96%,
   100% {
     stroke-dashoffset: 100;
     opacity: 0;
@@ -496,27 +472,26 @@ body {
 .how-it-works-badge-3 {
   opacity: 0;
   transform: translate(-50%, calc(-50% - 10px));
-  animation: how-it-works-badge-3 18s ease-in-out infinite;
+  animation: how-it-works-badge-3 14.14s ease-in-out infinite;
 }
 @keyframes how-it-works-badge-3 {
   0%,
-  50% {
+  38.83% {
     opacity: 0;
     transform: translate(-50%, calc(-50% - 10px));
     box-shadow: none;
   }
-  51% {
+  40.1% {
     opacity: 1;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 24px 6px rgba(236, 12, 140, 0.55);
   }
-  59%,
-  90% {
+  50.28%,
+  97.17% {
     opacity: 1;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 10px 2px rgba(236, 12, 140, 0.25);
   }
-  96%,
   100% {
     opacity: 0;
     transform: translate(-50%, calc(-50% - 10px));
@@ -527,22 +502,21 @@ body {
 /* Étape 4 : "Commencer" */
 .how-it-works-ray-4 {
   stroke-dasharray: 100;
-  animation: how-it-works-ray-4 18s ease-in-out infinite;
+  animation: how-it-works-ray-4 14.14s ease-in-out infinite;
   filter: drop-shadow(0 0 4px rgba(236, 12, 140, 0.7));
 }
 @keyframes how-it-works-ray-4 {
   0%,
-  81% {
+  73.84% {
     stroke-dashoffset: 100;
     opacity: 0;
     animation-timing-function: linear;
   }
-  86%,
-  90% {
+  80.2%,
+  97.17% {
     stroke-dashoffset: 0;
     opacity: 1;
   }
-  96%,
   100% {
     stroke-dashoffset: 100;
     opacity: 0;
@@ -551,27 +525,26 @@ body {
 .how-it-works-badge-4 {
   opacity: 0;
   transform: translate(-50%, calc(-50% - 10px));
-  animation: how-it-works-badge-4 18s ease-in-out infinite;
+  animation: how-it-works-badge-4 14.14s ease-in-out infinite;
 }
 @keyframes how-it-works-badge-4 {
   0%,
-  71% {
+  54.74% {
     opacity: 0;
     transform: translate(-50%, calc(-50% - 10px));
     box-shadow: none;
   }
-  72% {
+  56.01% {
     opacity: 1;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 24px 6px rgba(236, 12, 140, 0.55);
   }
-  80%,
-  90% {
+  66.2%,
+  97.17% {
     opacity: 1;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 10px 2px rgba(236, 12, 140, 0.25);
   }
-  96%,
   100% {
     opacity: 0;
     transform: translate(-50%, calc(-50% - 10px));
@@ -581,9 +554,19 @@ body {
 
 /* Hub : glow doux et diffus (pas le pulse marqué de .animate-brand-glow
    utilisé côté Hero) — légère respiration + double halo (un proche, net et
-   discret ; un large, très diffus) pour rester premium/minimaliste. */
+   discret ; un large, très diffus) pour rester premium/minimaliste.
+   DEUX animations distinctes sur le même élément : la respiration (pulse
+   continu, indépendant, 2.6s) + how-it-works-hub-reveal (calée sur la
+   boucle principale, 14.14s) qui gère la VISIBILITÉ — le point du hub
+   n'existait pas avant : il restait affiché en permanence dès le premier
+   rendu, avant même que les rayons ne l'atteignent. Maintenant caché
+   (opacity 0) tant que le dernier rayon n'est pas arrivé (11.34s / 80.20%),
+   puis apparaît (81.47%) juste avant le texte + CTA. */
 .how-it-works-hub-glow {
-  animation: how-it-works-hub-glow 2.6s ease-in-out infinite;
+  opacity: 0;
+  animation:
+    how-it-works-hub-glow 2.6s ease-in-out infinite,
+    how-it-works-hub-reveal 14.14s ease-in-out infinite;
 }
 @keyframes how-it-works-hub-glow {
   0%,
@@ -600,22 +583,36 @@ body {
       0 0 84px 42px rgba(122, 14, 92, 0.7);
   }
 }
+@keyframes how-it-works-hub-reveal {
+  0%,
+  80.2% {
+    opacity: 0;
+  }
+  81.47%,
+  97.17% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 
 /* Climax : "sans affiliation" + CTA, point culminant où tout reste
-   connecté simultanément (les 4 rayons + le hub sont déjà tous actifs). */
+   connecté simultanément (les 4 rayons + le hub sont déjà tous actifs) —
+   ne remonte qu'une fois le hub apparu (81.47%), jamais avant. */
 .how-it-works-cta {
   opacity: 0;
   transform: translateY(12px);
-  animation: how-it-works-cta 18s ease-in-out infinite;
+  animation: how-it-works-cta 14.14s ease-in-out infinite;
 }
 @keyframes how-it-works-cta {
   0%,
-  87% {
+  81.47% {
     opacity: 0;
     transform: translateY(12px);
   }
-  91%,
-  94% {
+  86.56%,
+  97.17% {
     opacity: 1;
     transform: translateY(0);
   }
@@ -661,7 +658,6 @@ body {
   /* Traits SVG (fil + rayons + point) : ni transform ni box-shadow (ça ne
      leur sert à rien et un transform: translate(-50%,-50%) les décale hors
      de leur tracé, cassé sur du SVG). */
-  .how-it-works-trail,
   .how-it-works-dot,
   .how-it-works-ray-1,
   .how-it-works-ray-2,
@@ -691,6 +687,7 @@ body {
 
   .how-it-works-hub-glow {
     animation: none !important;
+    opacity: 1 !important;
     transform: scale(1) !important;
     box-shadow:
       0 0 8px 2px rgba(236, 12, 140, 0.35),
@@ -737,6 +734,34 @@ body {
   .money-icon-float {
     animation: none !important;
     transform: none !important;
+  }
+}
+
+/*
+  Révélation au scroll (ScrollReveal.tsx) : fondu + léger glissement vers le
+  haut, déclenché une seule fois quand le bloc entre dans le viewport
+  (IntersectionObserver côté JS, cette classe gère juste l'état visuel
+  avant/après). Utilisé sur la page /vision, jugée "trop sèche" sans
+  animation au défilement.
+*/
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
 

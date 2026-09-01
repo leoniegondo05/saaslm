@@ -1,4 +1,5 @@
 import Image from "next/image";
+import ScrollReveal from "./ScrollReveal";
 
 // Cette section est un peu particulière : l'image exportée depuis Figma
 // contient déjà tout (la pastille "La solution LM", le titre, la carte de
@@ -8,7 +9,7 @@ import Image from "next/image";
 export default function Reach() {
   return (
     <section id="un-continent" className="px-6 py-16 md:px-16">
-      <div className="mx-auto max-w-[1320px]">
+      <ScrollReveal className="mx-auto max-w-[1320px]">
         <Image
           src="/images/africa-map.png"
           alt="Un continent, des millions d'opportunités — nous construisons les connexions. Carte de l'Afrique avec Abidjan comme point de départ des connexions vers de nombreuses villes du continent."
@@ -16,7 +17,7 @@ export default function Reach() {
           height={1024}
           className="h-auto w-full rounded-3xl"
         />
-      </div>
+      </ScrollReveal>
     </section>
   );
 }

@@ -3,8 +3,8 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 export const metadata: Metadata = {
-  title: "Politique de confidentialité — Livre Moi",
-  description: "Politique de confidentialité de Livre Moi.",
+  title: "Politique de confidentialité — LIIVRE MOI",
+  description: "Politique de confidentialité de LIIVRE MOI.",
 };
 
 // Page placeholder — remplace le lien href="#" du footer (voir Footer.tsx).
