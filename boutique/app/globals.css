@@ -41,50 +41,32 @@ body {
 }
 
 /*
-  Illustration du Hero : cerveau en 5 pièces distinctes (voir HeroBrain.tsx).
-  Le mouvement des pièces (boucle auto continue, éclaté ↔ assemblé) est
-  désormais piloté par framer-motion, directement dans HeroBrain.tsx
-  (pièces = <motion.div>) — ça remplace l'ancien couple de keyframes CSS
-  (hero-brain-cluster-scale / hero-brain-piece-gather). framer-motion
-  respecte prefers-reduced-motion via useReducedMotion() dans le composant,
-  donc plus besoin d'une media query dédiée ici. Pas de traits/flèches entre
-  les pièces et le centre (retirés à la demande de l'utilisateur).
-
-  Ce qui reste en CSS : la boîte englobante (ratio Figma) et le
-  positionnement du point de relai (image hero-brain-connector.png) — son
-  opacité, elle, est animée par framer-motion (1 → 0 à mesure que les pièces
-  se rassemblent, voir HeroBrain.tsx).
-
-  Cadrage du point de relai recalé le 01/09/2026 sur le cadre Figma fourni
-  par l'utilisateur (remplace l'ancien `inset: 18%` symétrique,
-  approximatif) : régression linéaire à partir du centre du point + des 5
-  pointes de trait détectées par scan de pixels dans le PNG (512×540),
-  mises en correspondance avec le centre de chaque pièce — voir le
-  commentaire détaillé dans HeroBrain.tsx au-dessus de PIECES.
+  Illustration du Hero : cerveau procédural Three.js (voir HeroBrain.tsx),
+  qui a remplacé l'ancienne version en 5 pièces PNG assemblées par
+  framer-motion. Il ne reste plus ici que la boîte englobante (ratio Figma
+  d'origine, gardé pour ne pas casser la mise en page de Hero.tsx) — le
+  rendu (lobes, réseau de lignes, point central) est entièrement fait en
+  WebGL dans le composant, plus de markup ni d'animation CSS dédiés.
 */
 
 .hero-brain {
   position: relative;
 }
 
-.hero-brain-dot {
-  position: absolute;
-  left: 7.76%;
-  top: 12.46%;
-  width: 84.55%;
-  height: 97.71%;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.hero-brain-dot-core {
-  display: block;
-  filter: brightness(0.7) saturate(1.6);
-}
-
-.hero-brain-dot-core {
-  display: block;
-  filter: brightness(0.7) saturate(1.6);
+/*
+  Fond des cartes claires du dashboard (app/dashboard/page.tsx) : pas blanc
+  plat — la maquette Figma montre un léger dégradé rose/lavande qui pointe
+  du coin bas-gauche, presque invisible, avant de se fondre en blanc.
+  Remplace les anciens "bg-white/NN" (opacité plate qui laissait passer le
+  fond de page de façon uniforme, pas localisée dans un coin comme demandé).
+*/
+.card-tint {
+  background: radial-gradient(
+    120% 120% at 0% 100%,
+    rgba(236, 12, 140, 0.08) 0%,
+    rgba(255, 255, 255, 0.92) 45%,
+    #ffffff 100%
+  );
 }
 
 /*
