@@ -227,9 +227,10 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="mx-6 h-px rounded-full bg-[linear-gradient(90deg,transparent,rgba(20,18,32,0.14)_20%,rgba(20,18,32,0.14)_80%,transparent)]" />
-
-              <div className="p-6">
+              {/* Pas de trait dessiné : la démarcation vient d'une ombre
+                  portée très douce (comme si "Mon identité" était une
+                  plaque posée sous la carte ventes), pas d'une ligne. */}
+              <div className="rounded-t-[28px] p-6 shadow-[inset_0_10px_14px_-14px_rgba(20,18,32,0.16)]">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">Mon identité</h3>
                   <span className="rounded-full bg-[#dcf5e3] px-3 py-1 text-xs font-semibold text-[#178a3f]">
