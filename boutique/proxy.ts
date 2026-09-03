@@ -21,6 +21,11 @@ import { NextRequest, NextResponse } from "next/server";
   donc pas de fix équivalent possible sans réécriture complète en
   variables CSS. Risque résiduel plus faible que script-src (pas d'exé
   de code, exfiltration CSS uniquement).
+
+  connect-src inclut api.open-meteo.com : fetch météo temps réel du
+  dashboard (app/dashboard/page.tsx, WeatherCard) vers cette API publique
+  sans clé. Sans cette entrée le navigateur bloque l'appel (CSP) et la
+  card affiche "Météo indisponible" silencieusement.
 */
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
@@ -33,7 +38,7 @@ export function proxy(request: NextRequest) {
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data:;
     font-src 'self';
-    connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""};
+    connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""} https://api.open-meteo.com;
     object-src 'none';
     base-uri 'self';
     form-action 'self';

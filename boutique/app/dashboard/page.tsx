@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardBrain from "../components/DashboardBrain";
 import QrCode from "../components/QrCode";
 
@@ -17,7 +17,20 @@ import QrCode from "../components/QrCode";
   météo, identité du compte).
 */
 
-const MONTHS = ["Juin", "Julliet", "Août"] as const;
+const MONTH_NAMES = [
+  "Janvier",
+  "Février",
+  "Mars",
+  "Avril",
+  "Mai",
+  "Juin",
+  "Juillet",
+  "Août",
+  "Septembre",
+  "Octobre",
+  "Novembre",
+  "Décembre",
+] as const;
 
 const COMMUNES_EXPOSEES = [
   { label: "Abobo", variant: "default" },
@@ -31,9 +44,38 @@ const COMMUNES_EXPOSEES = [
 ] as const;
 
 export default function DashboardPage() {
-  const [activeMonth, setActiveMonth] = useState<(typeof MONTHS)[number]>(
-    "Août"
-  );
+  // Mois affiché au centre de la pastille + les deux mois voisins ; l'année
+  // suit automatiquement le mois (déc. -> janv. change l'année) et reste
+  // choisissable à la main via le sélecteur qui s'ouvre au clic sur le millésime.
+  const [activeDate, setActiveDate] = useState(() => new Date(2026, 7, 1));
+  const [showYearPicker, setShowYearPicker] = useState(false);
+
+  const activeMonthIndex = activeDate.getMonth();
+  const activeYear = activeDate.getFullYear();
+  const visibleMonths = [-1, 0, 1].map((offset) => {
+    const d = new Date(activeYear, activeMonthIndex + offset, 1);
+    return { key: `${d.getFullYear()}-${d.getMonth()}`, date: d };
+  });
+
+  const shiftMonth = (delta: number) => {
+    setActiveDate((current) => {
+      const next = new Date(current);
+      next.setDate(1);
+      next.setMonth(current.getMonth() + delta);
+      return next;
+    });
+  };
+
+  const setYear = (year: number) => {
+    setActiveDate((current) => {
+      const next = new Date(current);
+      next.setFullYear(year);
+      return next;
+    });
+    setShowYearPicker(false);
+  };
+
+  const yearOptions = Array.from({ length: 5 }, (_, i) => activeYear - 2 + i);
 
   return (
     <div className="min-h-screen w-full bg-[radial-gradient(ellipse_at_top_right,#f4e9f3_0%,#efe2ee_45%,#e8dbe9_100%)] font-sans text-[#141220] antialiased">
@@ -68,35 +110,66 @@ export default function DashboardPage() {
                 className="h-11 w-11 shrink-0 object-contain"
               />
 
-              <div className="flex items-center gap-1 rounded-full bg-white/70 p-1.5 shadow-[0_2px_10px_rgba(20,18,32,0.06)]">
-                <button
-                  type="button"
-                  aria-label="Mois précédent"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white"
-                >
-                  <ChevronIcon direction="left" />
-                </button>
-                {MONTHS.map((month) => (
+              <div className="relative flex items-center gap-2">
+                <div className="flex items-center gap-1 rounded-full bg-white/70 p-1.5 shadow-[0_2px_10px_rgba(20,18,32,0.06)]">
                   <button
-                    key={month}
                     type="button"
-                    onClick={() => setActiveMonth(month)}
-                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-                      activeMonth === month
-                        ? "bg-white text-[#141220] shadow-[0_2px_8px_rgba(20,18,32,0.1)]"
-                        : "text-[#141220]/45 hover:text-[#141220]/70"
-                    }`}
+                    aria-label="Mois précédent"
+                    onClick={() => shiftMonth(-1)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white"
                   >
-                    {month}
+                    <ChevronIcon direction="left" />
                   </button>
-                ))}
+                  {visibleMonths.map(({ key, date }, index) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => shiftMonth(index - 1)}
+                      className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                        index === 1
+                          ? "bg-white text-[#141220] shadow-[0_2px_8px_rgba(20,18,32,0.1)]"
+                          : "text-[#141220]/45 hover:text-[#141220]/70"
+                      }`}
+                    >
+                      {MONTH_NAMES[date.getMonth()]}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    aria-label="Mois suivant"
+                    onClick={() => shiftMonth(1)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white"
+                  >
+                    <ChevronIcon direction="right" />
+                  </button>
+                </div>
+
                 <button
                   type="button"
-                  aria-label="Mois suivant"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white"
+                  onClick={() => setShowYearPicker((open) => !open)}
+                  className="rounded-full bg-white/70 px-3 py-1.5 text-sm font-medium text-[#141220]/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white"
                 >
-                  <ChevronIcon direction="right" />
+                  {activeYear}
                 </button>
+
+                {showYearPicker && (
+                  <div className="absolute left-0 top-full z-10 mt-2 flex flex-col overflow-hidden rounded-2xl bg-white py-1 shadow-[0_8px_24px_rgba(20,18,32,0.16)]">
+                    {yearOptions.map((year) => (
+                      <button
+                        key={year}
+                        type="button"
+                        onClick={() => setYear(year)}
+                        className={`px-5 py-2 text-left text-sm font-medium transition hover:bg-[#141220]/[0.05] ${
+                          year === activeYear
+                            ? "text-brand-pink"
+                            : "text-[#141220]/70"
+                        }`}
+                      >
+                        {year}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -147,7 +220,7 @@ export default function DashboardPage() {
           </h1>
 
           {/* ── Grille principale ── */}
-          <div className="relative mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-[360px_1fr_420px]">
+          <div className="relative mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-[320px_1fr_380px]">
             {/* Colonne gauche : météo + recommandation */}
             <div className="flex flex-col gap-5">
               <WeatherCard />
@@ -157,10 +230,10 @@ export default function DashboardPage() {
                   <WarningIcon />
                 </span>
                 <span>
-                  <span className="block text-sm text-[#141220]/50">
+                  <span className="block text-xs text-[#141220]/50">
                     Recommandation
                   </span>
-                  <span className="block font-semibold">
+                  <span className="block text-sm font-semibold">
                     Livrer à yopougon avant 23h
                   </span>
                 </span>
@@ -178,27 +251,27 @@ export default function DashboardPage() {
                 sections sont liées (pas deux cartes séparées par un gap) */}
             <div className="order-2 flex flex-col rounded-[28px] card-tint shadow-[0_4px_24px_rgba(20,18,32,0.06)] lg:order-none">
               <div className="p-6">
-                <span className="inline-flex items-center gap-2 text-sm text-[#141220]/50">
+                <span className="inline-flex items-center gap-2 text-xs text-[#141220]/50">
                   <TrendUpIcon />
                   Hier · aujourd&apos;hui · demain
                 </span>
 
                 <div className="mt-4 flex items-start justify-between">
                   <div>
-                    <p className="text-sm text-[#141220]/50">
+                    <p className="text-xs text-[#141220]/50">
                       Aujourd&apos;hui
                     </p>
-                    <p className="mt-1 text-3xl font-bold">48.300F</p>
+                    <p className="mt-1 text-2xl font-bold">48.300F</p>
                     <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-brand-pink px-3 py-1 text-xs font-semibold text-white">
                       <ClockIcon />5 commandes en cours
                     </span>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-[#141220]/50">
+                    <p className="text-xs text-[#141220]/50">
                       Hier. Ven . 29
                     </p>
-                    <p className="mt-1 text-2xl font-bold">118 400 F</p>
-                    <p className="mt-1 text-sm text-[#141220]/40">
+                    <p className="mt-1 text-xl font-bold">118 400 F</p>
+                    <p className="mt-1 text-xs text-[#141220]/40">
                       12 commandes
                       <br />
                       9 livrées
@@ -208,20 +281,20 @@ export default function DashboardPage() {
 
                 <div className="mt-6 h-px bg-[#141220]/10" />
 
-                <p className="mt-6 text-sm text-[#141220]/50">
+                <p className="mt-6 text-xs text-[#141220]/50">
                   Objectif demain soir
                 </p>
-                <p className="mt-1 text-4xl font-bold">142 000 F</p>
+                <p className="mt-1 text-3xl font-bold">142 000 F</p>
 
                 <div className="mt-4">
                   <div className="h-2 w-full overflow-hidden rounded-full bg-[#141220]/[0.08]">
                     <div className="h-full w-[34%] rounded-full bg-[linear-gradient(90deg,var(--color-brand-pink),var(--color-brand-purple))]" />
                   </div>
-                  <p className="mt-3 text-sm">
+                  <p className="mt-3 text-xs">
                     <span className="font-semibold">34%</span>{" "}
                     <span className="text-[#141220]/50">du chemin fait</span>
                   </p>
-                  <p className="text-sm text-[#141220]/50">
+                  <p className="text-xs text-[#141220]/50">
                     Il reste que 93 700 F
                   </p>
                 </div>
@@ -232,7 +305,7 @@ export default function DashboardPage() {
                   plaque posée sous la carte ventes), pas d'une ligne. */}
               <div className="rounded-t-[28px] p-6 shadow-[inset_0_10px_14px_-14px_rgba(20,18,32,0.16)]">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Mon identité</h3>
+                  <h3 className="text-base font-semibold">Mon identité</h3>
                   <span className="rounded-full bg-[#dcf5e3] px-3 py-1 text-xs font-semibold text-[#178a3f]">
                     Validé
                   </span>
@@ -248,7 +321,7 @@ export default function DashboardPage() {
 
                   <div className="bg-[#141220]/10" aria-hidden />
 
-                  <div className="flex min-w-0 flex-col justify-center gap-3 text-sm">
+                  <div className="flex min-w-0 flex-col justify-center gap-3 text-xs">
                     <div>
                       <p className="font-semibold">Awa Konan</p>
                       <p className="text-[#141220]/50">Propriétaire · Admin</p>
@@ -261,7 +334,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <p className="mt-5 text-sm text-[#141220]/40">
+                <p className="mt-5 text-xs text-[#141220]/40">
                   Code personnel, lié à votre compte. Il sert à ouvrir
                   l&apos;application mobile avec vos droits.
                 </p>
@@ -295,44 +368,167 @@ const LOCAL_CONDITIONS = [
   },
 ] as const;
 
+// Abidjan (Côte d'Ivoire) : position par défaut si la géolocalisation
+// navigateur est refusée/indisponible — cohérent avec les communes
+// (Yopougon, Plateau...) déjà affichées plus bas dans cette card.
+const DEFAULT_WEATHER_COORDS = { latitude: 5.36, longitude: -4.0083 };
+
+// Table de correspondance codes météo WMO (renvoyés par Open-Meteo) →
+// libellé FR / emoji / couleur, réutilisée pour "Aujourd'hui" et "Demain".
+function describeWeatherCode(code: number): {
+  label: string;
+  emoji: string;
+  colorClass: string;
+} {
+  if (code === 0) return { label: "Temps ensoleillé", emoji: "☀️", colorClass: "text-[#16a34a]" };
+  if (code === 1) return { label: "Temps clair", emoji: "🌤️", colorClass: "text-[#16a34a]" };
+  if (code === 2) return { label: "Passages nuageux", emoji: "⛅", colorClass: "text-[#f5a623]" };
+  if (code === 3) return { label: "Ciel couvert", emoji: "☁️", colorClass: "text-[#f5a623]" };
+  if (code === 45 || code === 48) return { label: "Brouillard", emoji: "🌫️", colorClass: "text-[#f5a623]" };
+  if ([51, 53, 55, 56, 57].includes(code)) return { label: "Bruine", emoji: "🌦️", colorClass: "text-[#f5a623]" };
+  if ([61, 63, 80].includes(code)) return { label: "Pluie légère", emoji: "🌧️", colorClass: "text-[#f5a623]" };
+  if ([65, 66, 67, 81, 82].includes(code)) return { label: "Fortes pluies", emoji: "🌧️", colorClass: "text-[#e0442b]" };
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return { label: "Neige", emoji: "❄️", colorClass: "text-[#f5a623]" };
+  if ([95, 96, 99].includes(code)) return { label: "Orage", emoji: "⛈️", colorClass: "text-[#e0442b]" };
+  return { label: "Temps pluvieux", emoji: "🌦️", colorClass: "text-[#f5a623]" };
+}
+
+type WeatherState =
+  | { status: "loading" }
+  | { status: "error" }
+  | {
+      status: "ready";
+      todayCode: number;
+      todayTempMax: number;
+      tomorrowCode: number;
+      tomorrowTempMax: number;
+    };
+
+// Récupère la météo temps réel (Open-Meteo, sans clé API) pour la position
+// du navigateur, avec repli sur Abidjan si la géolocalisation est refusée,
+// indisponible ou trop lente.
+function useLiveWeather(): WeatherState {
+  const [weather, setWeather] = useState<WeatherState>({ status: "loading" });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchWeather = async (latitude: number, longitude: number) => {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=weather_code,temperature_2m&daily=weather_code,temperature_2m_max&timezone=auto&forecast_days=2`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("météo indisponible");
+        const data = await res.json();
+        if (cancelled) return;
+        setWeather({
+          status: "ready",
+          todayCode: data.current.weather_code,
+          todayTempMax: Math.round(data.daily.temperature_2m_max[0]),
+          tomorrowCode: data.daily.weather_code[1],
+          tomorrowTempMax: Math.round(data.daily.temperature_2m_max[1]),
+        });
+      } catch {
+        if (!cancelled) setWeather({ status: "error" });
+      }
+    };
+
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) =>
+          fetchWeather(position.coords.latitude, position.coords.longitude),
+        () =>
+          fetchWeather(
+            DEFAULT_WEATHER_COORDS.latitude,
+            DEFAULT_WEATHER_COORDS.longitude
+          ),
+        { timeout: 5000 }
+      );
+    } else {
+      fetchWeather(DEFAULT_WEATHER_COORDS.latitude, DEFAULT_WEATHER_COORDS.longitude);
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return weather;
+}
+
 /*
   Carte "Aujourd'hui" (météo) : deux vues qui se remplacent l'une l'autre
   au clic sur "Conditions locale" / "Météo", comme sur la maquette Figma
   (2ème card = "Conditions locales" avec trafic/boulevard/douane + retour).
+  Météo branchée en temps réel sur Open-Meteo (position navigateur, ou
+  Abidjan par défaut) — seules les communes exposées restent statiques.
 */
 function WeatherCard() {
   const [view, setView] = useState<"meteo" | "conditions">("meteo");
+  const weather = useLiveWeather();
+
+  const today =
+    weather.status === "ready" ? describeWeatherCode(weather.todayCode) : null;
+  const tomorrow =
+    weather.status === "ready"
+      ? describeWeatherCode(weather.tomorrowCode)
+      : null;
 
   return (
     <div className="rounded-[28px] card-tint p-6 shadow-[0_4px_24px_rgba(20,18,32,0.06)]">
       {view === "meteo" ? (
         <>
           <div className="flex items-start justify-between">
-            <h2 className="text-2xl font-semibold">Aujourd&apos;hui</h2>
-            <Image
-              src="/images/Météo.png"
-              alt="Temps ensoleillé"
-              width={64}
-              height={64}
-              className="h-16 w-16 object-contain"
-            />
+            <h2 className="text-xl font-semibold">Aujourd&apos;hui</h2>
+            {today && today.emoji === "☀️" ? (
+              <Image
+                src="/images/Météo.png"
+                alt={today.label}
+                width={64}
+                height={64}
+                className="h-16 w-16 object-contain"
+              />
+            ) : (
+              <span
+                className="flex h-16 w-16 items-center justify-center text-5xl leading-none"
+                role="img"
+                aria-label={today?.label ?? "Météo en cours de chargement"}
+              >
+                {today?.emoji ?? "…"}
+              </span>
+            )}
           </div>
-          <p className="mt-2 text-[15px] font-semibold text-[#16a34a]">
-            Temps ensoleillé
+          <p
+            className={`mt-2 text-sm font-semibold ${
+              today?.colorClass ?? "text-[#141220]/50"
+            }`}
+          >
+            {weather.status === "error"
+              ? "Météo indisponible"
+              : (today?.label ?? "Chargement de la météo…")}
           </p>
-          <p className="text-sm text-[#141220]/50">Toute la journée</p>
+          <p className="text-xs text-[#141220]/50">
+            {weather.status === "ready"
+              ? `Toute la journée · ${weather.todayTempMax}°C`
+              : "Toute la journée"}
+          </p>
 
           <div className="my-5 h-px bg-[#141220]/10" />
 
-          <h3 className="text-lg font-semibold">Demain</h3>
-          <p className="mt-1 text-sm text-[#141220]/50">Temps pluvieux.</p>
+          <h3 className="text-base font-semibold">Demain</h3>
+          <p className="mt-1 text-xs text-[#141220]/50">
+            {weather.status === "ready" && tomorrow
+              ? `${tomorrow.label} · ${weather.tomorrowTempMax}°C`
+              : weather.status === "error"
+                ? "Indisponible."
+                : "Chargement…"}
+          </p>
 
-          <p className="mt-6 text-sm text-[#141220]/50">Communes exposées</p>
+          <p className="mt-6 text-xs text-[#141220]/50">Communes exposées</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {COMMUNES_EXPOSEES.map((commune) => (
               <span
                 key={commune.label}
-                className={`rounded-full px-3.5 py-1.5 text-sm font-medium ${
+                className={`rounded-full px-3.5 py-1.5 text-xs font-medium ${
                   commune.variant === "highlight"
                     ? "bg-[#dcf5e3] text-[#178a3f]"
                     : "bg-[#141220]/[0.06] text-[#141220]/70"
@@ -348,7 +544,7 @@ function WeatherCard() {
             <button
               type="button"
               onClick={() => setView("conditions")}
-              className="flex items-center gap-2 text-sm font-semibold"
+              className="flex items-center gap-2 text-xs font-semibold"
             >
               Conditions locale
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#141220]/[0.06]">
@@ -359,7 +555,7 @@ function WeatherCard() {
         </>
       ) : (
         <>
-          <h2 className="text-center text-xl font-bold">Conditions locales</h2>
+          <h2 className="text-center text-lg font-bold">Conditions locales</h2>
 
           <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
             {LOCAL_CONDITIONS.map((condition) => (
@@ -399,7 +595,7 @@ function WeatherCard() {
             <button
               type="button"
               onClick={() => setView("meteo")}
-              className="flex items-center gap-2 text-sm font-semibold"
+              className="flex items-center gap-2 text-xs font-semibold"
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-[0_2px_10px_rgba(20,18,32,0.1)]">
                 <ChevronIcon direction="left" />
