@@ -42,6 +42,7 @@ export default function FloatingAiAssistant() {
   // la bulle).
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
   const bubbleRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
   const movedRef = useRef(false);
   const grabOffsetRef = useRef({ x: 0, y: 0 });
@@ -130,6 +131,21 @@ export default function FloatingAiAssistant() {
     };
   }, []);
 
+  // Ferme le panneau au clic n'importe où ailleurs à l'écran (pas seulement
+  // via la croix) : demande explicite. La bulle est exclue exprès, sinon le
+  // clic qui l'ouvre la refermerait aussitôt via ce même listener.
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (panelRef.current?.contains(target)) return;
+      if (bubbleRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [open]);
+
   const startDrag = (clientX: number, clientY: number) => {
     const rect = bubbleRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -162,14 +178,28 @@ export default function FloatingAiAssistant() {
   // Position custom (glissée) : calcul JS, le panneau reste toujours entièrement
   // dans le viewport quelle que soit la position de la bulle.
   let panelWidth: number | undefined;
-  let panelStyle: { left: number; bottom: number; width: number } | undefined;
+  let panelStyle:
+    | { left: number; width: number; maxHeight: number; top?: number; bottom?: number }
+    | undefined;
   if (position) {
     panelWidth = Math.min(PANEL_WIDTH, window.innerWidth - 2 * EDGE_MARGIN);
     const idealLeft = position.x + BUBBLE_SIZE - panelWidth; // aligné au bord droit de la bulle
     const maxLeft = window.innerWidth - panelWidth - EDGE_MARGIN;
     const left = Math.min(Math.max(EDGE_MARGIN, idealLeft), Math.max(EDGE_MARGIN, maxLeft));
-    const bottom = window.innerHeight - position.y + PANEL_GAP;
-    panelStyle = { left, bottom, width: panelWidth };
+
+    // Bulle proche du haut de l'écran (ex: glissée près de la navbar) : pas
+    // assez de place au-dessus pour le panneau -> il dépassait par le haut,
+    // caché hors-viewport. On bascule alors le panneau sous la bulle, et on
+    // borne sa hauteur (maxHeight) à la place réellement dispo côté choisi
+    // pour qu'il ne déborde plus jamais, quelle que soit la position.
+    const spaceAbove = position.y - PANEL_GAP - EDGE_MARGIN;
+    const spaceBelow = window.innerHeight - position.y - BUBBLE_SIZE - PANEL_GAP - EDGE_MARGIN;
+    const MIN_PANEL_HEIGHT = 280;
+    if (spaceAbove >= MIN_PANEL_HEIGHT || spaceAbove >= spaceBelow) {
+      panelStyle = { left, width: panelWidth, bottom: window.innerHeight - position.y + PANEL_GAP, maxHeight: Math.max(spaceAbove, MIN_PANEL_HEIGHT) };
+    } else {
+      panelStyle = { left, width: panelWidth, top: position.y + BUBBLE_SIZE + PANEL_GAP, maxHeight: Math.max(spaceBelow, MIN_PANEL_HEIGHT) };
+    }
   }
 
   return (
@@ -203,6 +233,7 @@ export default function FloatingAiAssistant() {
 
       {open && (
         <div
+          ref={panelRef}
           style={panelStyle}
           className={
             position
@@ -234,7 +265,7 @@ export default function FloatingAiAssistant() {
           </div>
 
           {/* Fil de discussion */}
-          <div className="flex max-h-[50vh] min-h-[160px] flex-col gap-2.5 overflow-y-auto px-4 py-4">
+          <div className="flex min-h-0 flex-1 max-h-[50vh] flex-col gap-2.5 overflow-y-auto px-4 py-4">
             {messages.map((message, index) => (
               <p
                 key={index}
