@@ -16,13 +16,12 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
       />
 
       <div className="grid gap-3 lg:grid-cols-3">
-        <Card>
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">
-              Top 5 des produits
-            </p>
-            <p className="text-[10px] text-[#141220]/40">sur la période</p>
-          </div>
+        <Card
+          title="Top 5 des produits"
+          titleTab
+          className="!bg-white"
+          badge={<p className="text-[10px] text-[#141220]/40">sur la période</p>}
+        >
           <TopProductRow code="L" name="Montre connectée S8" value="48 · 672 000" pct={100} />
           <TopProductRow code="S" name="Sérum éclat 30 ml" value="37 · 444 000" pct={77} />
           <TopProductRow code="P" name="Casque sans fil X2" value="21 · 231 000" pct={44} />
@@ -52,7 +51,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
           </p>
         </Card>
 
-        <Card title="Vos quatre natures de produits">
+        <Card title="Vos quatre natures de produits" titleTab className="!bg-white">
           <div className="mt-2 flex h-2 overflow-hidden rounded-full">
             <span className="h-full" style={{ width: "36%", background: "#141220" }} />
             <span className="h-full bg-[#141220]/30" style={{ width: "17%" }} />
@@ -69,12 +68,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
         </Card>
 
         <div>
-          <Card>
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">
-                Ma position sur les prix drop
-              </p>
-            </div>
+          <Card title="Ma position sur les prix drop" titleTab className="!bg-white">
             <ProductSelector name="Montre connectée S8" position="Produit 1 sur 12" className="mt-2" />
             <p className="mt-2 text-xs">
               Vous payez <b>6 200 F</b> · vous revendez <b>14 000 F</b>

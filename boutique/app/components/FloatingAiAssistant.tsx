@@ -28,6 +28,8 @@ const INTRO_MESSAGE: ChatMessage = {
 
 const BUBBLE_SIZE = 64; // h-16 w-16
 const EDGE_MARGIN = 8;
+const PANEL_WIDTH = 360;
+const PANEL_GAP = 12; // gap-3
 const POSITION_STORAGE_KEY = "lm-dashboard-ai-bubble-position";
 
 export default function FloatingAiAssistant() {
@@ -44,8 +46,20 @@ export default function FloatingAiAssistant() {
   const movedRef = useRef(false);
   const grabOffsetRef = useRef({ x: 0, y: 0 });
 
+  const clampToViewport = (x: number, y: number) => {
+    const maxX = window.innerWidth - BUBBLE_SIZE - EDGE_MARGIN;
+    const maxY = window.innerHeight - BUBBLE_SIZE - EDGE_MARGIN;
+    return {
+      x: Math.min(Math.max(EDGE_MARGIN, x), Math.max(EDGE_MARGIN, maxX)),
+      y: Math.min(Math.max(EDGE_MARGIN, y), Math.max(EDGE_MARGIN, maxY)),
+    };
+  };
+
   // Position sauvegardée par le navigateur (par appareil), pour rester où
-  // l'utilisateur l'a laissée d'une visite à l'autre.
+  // l'utilisateur l'a laissée d'une visite à l'autre. Reclampée contre la
+  // fenêtre actuelle : une position sauvegardée sur un écran plus large (ou
+  // avant une rotation/redimensionnement) peut sinon tomber hors-écran et
+  // bloquer la bulle, inatteignable, du mauvais côté.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(POSITION_STORAGE_KEY);
@@ -56,7 +70,7 @@ export default function FloatingAiAssistant() {
         // pas désynchroniser le HTML serveur (qui ignore toujours la
         // position sauvegardée) de la 1re passe client.
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setPosition(saved);
+        setPosition(clampToViewport(saved.x, saved.y));
       }
     } catch {
       // localStorage indisponible (navigation privée, etc.) : position par défaut
@@ -64,14 +78,7 @@ export default function FloatingAiAssistant() {
   }, []);
 
   useEffect(() => {
-    const clamp = (x: number, y: number) => {
-      const maxX = window.innerWidth - BUBBLE_SIZE - EDGE_MARGIN;
-      const maxY = window.innerHeight - BUBBLE_SIZE - EDGE_MARGIN;
-      return {
-        x: Math.min(Math.max(EDGE_MARGIN, x), Math.max(EDGE_MARGIN, maxX)),
-        y: Math.min(Math.max(EDGE_MARGIN, y), Math.max(EDGE_MARGIN, maxY)),
-      };
-    };
+    const clamp = clampToViewport;
 
     const moveTo = (clientX: number, clientY: number) => {
       if (!draggingRef.current) return;
@@ -103,16 +110,23 @@ export default function FloatingAiAssistant() {
       moveTo(touch.clientX, touch.clientY);
     };
     const onTouchEnd = () => endDrag();
+    // Fenêtre redimensionnée (DevTools ouverts, rotation...) pendant que la
+    // bulle est déplacée : reclamp pour ne pas la laisser hors-écran.
+    const onResize = () => {
+      setPosition((current) => (current ? clamp(current.x, current.y) : current));
+    };
 
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("resize", onResize);
     };
   }, []);
 
@@ -138,18 +152,28 @@ export default function FloatingAiAssistant() {
     setDraft("");
   };
 
-  // flex-col-reverse : le panneau (2e enfant) s'affiche toujours au-dessus
-  // de la bulle (1er enfant), que la bulle soit ancrée en bas (position par
-  // défaut) ou déplacée n'importe où via style.top/left.
+  // Bulle et panneau sont chacun leur propre élément "fixed", positionnés
+  // indépendamment (plus de conteneur flex partagé). Évite le bug où
+  // ouvrir le panneau élargissait un conteneur ancré par un seul bord et
+  // poussait tout hors écran (à droite si ancré par la gauche, à gauche si
+  // ancré par la droite) une fois la bulle proche de ce bord.
+  //
+  // Position par défaut (jamais glissée) : classes Tailwind, ancrées bas-droite.
+  // Position custom (glissée) : calcul JS, le panneau reste toujours entièrement
+  // dans le viewport quelle que soit la position de la bulle.
+  let panelWidth: number | undefined;
+  let panelStyle: { left: number; bottom: number; width: number } | undefined;
+  if (position) {
+    panelWidth = Math.min(PANEL_WIDTH, window.innerWidth - 2 * EDGE_MARGIN);
+    const idealLeft = position.x + BUBBLE_SIZE - panelWidth; // aligné au bord droit de la bulle
+    const maxLeft = window.innerWidth - panelWidth - EDGE_MARGIN;
+    const left = Math.min(Math.max(EDGE_MARGIN, idealLeft), Math.max(EDGE_MARGIN, maxLeft));
+    const bottom = window.innerHeight - position.y + PANEL_GAP;
+    panelStyle = { left, bottom, width: panelWidth };
+  }
+
   return (
-    <div
-      className={
-        position
-          ? "fixed z-50 flex flex-col-reverse items-end gap-3"
-          : "fixed bottom-[max(6.5rem,calc(env(safe-area-inset-bottom)+5.5rem))] right-4 z-50 flex flex-col-reverse items-end gap-3 sm:right-6 lg:bottom-8 lg:right-8"
-      }
-      style={position ? { left: position.x, top: position.y } : undefined}
-    >
+    <>
       {/* Bulle robot — glisser pour déplacer, cliquer (sans glisser) pour ouvrir/fermer */}
       <button
         ref={bubbleRef}
@@ -167,13 +191,25 @@ export default function FloatingAiAssistant() {
           if (movedRef.current) return; // c'était un glisser-déposer, pas un clic
           setOpen((current) => !current);
         }}
-        className="flex h-16 w-16 shrink-0 cursor-grab touch-none items-center justify-center rounded-full bg-[linear-gradient(135deg,#ff5fc4,var(--color-brand-pink)_45%,#3a1d8a_100%)] shadow-[0_10px_30px_rgba(236,12,140,0.45)] transition hover:brightness-110 active:cursor-grabbing"
+        style={position ? { left: position.x, top: position.y } : undefined}
+        className={
+          position
+            ? "fixed z-50 flex h-16 w-16 shrink-0 cursor-grab touch-none items-center justify-center rounded-full bg-[linear-gradient(135deg,#ff5fc4,var(--color-brand-pink)_45%,#3a1d8a_100%)] shadow-[0_10px_30px_rgba(236,12,140,0.45)] transition hover:brightness-110 active:cursor-grabbing"
+            : "fixed bottom-[max(6.5rem,calc(env(safe-area-inset-bottom)+5.5rem))] right-4 z-50 flex h-16 w-16 shrink-0 cursor-grab touch-none items-center justify-center rounded-full bg-[linear-gradient(135deg,#ff5fc4,var(--color-brand-pink)_45%,#3a1d8a_100%)] shadow-[0_10px_30px_rgba(236,12,140,0.45)] transition hover:brightness-110 active:cursor-grabbing sm:right-6 lg:bottom-8 lg:right-8"
+        }
       >
         <RobotFaceIcon className="h-8 w-8 text-white" />
       </button>
 
       {open && (
-        <div className="flex w-[min(360px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl bg-[linear-gradient(160deg,#241454,#150c38_65%,#0d0826_100%)] shadow-[0_20px_60px_rgba(20,18,32,0.35)]">
+        <div
+          style={panelStyle}
+          className={
+            position
+              ? "fixed z-50 flex flex-col overflow-hidden rounded-3xl bg-[linear-gradient(160deg,#241454,#150c38_65%,#0d0826_100%)] shadow-[0_20px_60px_rgba(20,18,32,0.35)]"
+              : "fixed bottom-[calc(max(6.5rem,calc(env(safe-area-inset-bottom)+5.5rem))+4.75rem)] right-4 z-50 flex w-[min(360px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl bg-[linear-gradient(160deg,#241454,#150c38_65%,#0d0826_100%)] shadow-[0_20px_60px_rgba(20,18,32,0.35)] sm:right-6 lg:bottom-[6.75rem] lg:right-8"
+          }
+        >
           {/* En-tête */}
           <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3.5">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[radial-gradient(circle_at_35%_35%,#ff5fc4,var(--color-brand-pink)_70%)] shadow-[0_0_16px_rgba(236,12,140,0.6)]">
@@ -238,7 +274,7 @@ export default function FloatingAiAssistant() {
           </form>
         </div>
       )}
-    </div>
+    </>
   );
 }
 

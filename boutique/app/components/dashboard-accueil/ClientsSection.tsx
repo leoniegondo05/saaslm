@@ -16,7 +16,7 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
       />
 
       <div className="grid gap-3 lg:grid-cols-4">
-        <Card title="Qui achète chez vous">
+        <Card title="Qui achète chez vous" titleTab className="!bg-white">
           <StatRow label="Clients servis" value="73" />
           <StatRow label="Nouveaux clients" value="58 · 79 %" />
           <StatRow label="Clients revenus" value="15 · 21 %" />
@@ -32,7 +32,7 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
           </p>
         </Card>
 
-        <Card title="Vos cinq meilleurs clients">
+        <Card title="Vos cinq meilleurs clients" titleTab className="!bg-white">
           <ClientRow name="Traoré M." zone="Cocody" value="68 000 F" orders={5} pct={100} />
           <ClientRow name="Konan A." zone="Yopougon" value="51 000 F" orders={4} pct={75} />
           <ClientRow name="Aya D." zone="Marcory" value="38 000 F" orders={3} pct={56} />
@@ -40,7 +40,7 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
           <ClientRow name="Silué F." zone="Cocody" value="24 000 F" orders={2} pct={35} />
         </Card>
 
-        <Card title="Ce qu'ils pensent">
+        <Card title="Ce qu'ils pensent" titleTab className="!bg-white">
           <div className="mt-1 flex items-end gap-2">
             <p className="text-3xl font-bold tracking-tight">4,6</p>
             <p className="pb-1 text-xs text-[#141220]/40">sur 5 · 41 avis</p>
@@ -56,7 +56,7 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
           </p>
         </Card>
 
-        <Card title="Panier moyen par commune">
+        <Card title="Panier moyen par commune" titleTab className="!bg-white">
           <StatRow label="Cocody" value="16 400 F" />
           <StatRow label="Bingerville" value="14 800 F" />
           <StatRow label="Marcory" value="13 200 F" />

@@ -21,7 +21,7 @@ export function SectionHeader({
   return (
     <div className={`mb-4 flex flex-wrap items-end justify-between gap-3 ${first ? "mt-8" : "mt-12"}`}>
       <div>
-        <span className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-pink">
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/20 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-pink shadow-[0_2px_12px_rgba(20,18,32,0.05)] backdrop-blur-md">
           <span className="h-1.5 w-1.5 rounded-full bg-brand-pink shadow-[0_0_10px_rgba(236,12,140,0.6)]" />
           {eyebrow}
         </span>
@@ -40,17 +40,31 @@ export function SectionHeader({
 export function Card({
   title,
   badge,
+  titleTab = false,
   className = "",
   children,
 }: {
   title?: string;
   badge?: React.ReactNode;
+  /** Titre affiché en étiquette centrée (façon "onglet"), comme la carte Trésorerie disponible. */
+  titleTab?: boolean;
   className?: string;
   children?: React.ReactNode;
 }) {
   return (
     <div className={`rounded-2xl card-tint p-4 shadow-[0_4px_24px_rgba(20,18,32,0.06)] ${className}`}>
-      {title && (
+      {title && titleTab && (
+        <div className="relative -mt-4 flex items-center justify-center">
+          <p
+            className="rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B8095]"
+            style={{ background: "#F0EDF0" }}
+          >
+            {title}
+          </p>
+          {badge && <div className="absolute right-0 top-2">{badge}</div>}
+        </div>
+      )}
+      {title && !titleTab && (
         <div className="flex items-center justify-between gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">{title}</p>
           {badge}
@@ -95,9 +109,13 @@ export function Bar({ pct, color = "bg-brand-pink" }: { pct: number; color?: str
 export function Tag({
   children,
   tone = "neutral",
+  className = "",
+  style,
 }: {
   children: React.ReactNode;
   tone?: "pink" | "ok" | "warn" | "ko" | "blue" | "neutral" | "dark";
+  className?: string;
+  style?: React.CSSProperties;
 }) {
   const tones: Record<string, string> = {
     pink: "bg-brand-pink/10 text-brand-pink",
@@ -109,7 +127,10 @@ export function Tag({
     dark: "bg-[#141220]/[0.08] text-[#141220]/70",
   };
   return (
-    <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[10px] font-semibold ${tones[tone]}`}>
+    <span
+      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[10px] font-semibold ${tones[tone]} ${className}`}
+      style={style}
+    >
       {children}
     </span>
   );
@@ -119,10 +140,12 @@ export function Btn({
   children,
   variant = "outline",
   className = "",
+  style,
 }: {
   children: React.ReactNode;
   variant?: "dark" | "outline" | "white";
   className?: string;
+  style?: React.CSSProperties;
 }) {
   const variants: Record<string, string> = {
     dark: "bg-[#141220] text-white",
@@ -133,6 +156,7 @@ export function Btn({
     <button
       type="button"
       className={`w-full rounded-full px-4 py-2.5 text-center text-xs font-semibold transition hover:brightness-95 ${variants[variant]} ${className}`}
+      style={style}
     >
       {children}
     </button>
@@ -172,10 +196,10 @@ export function MiniStat({
 
 export function MiniTile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <div className="rounded-2xl card-tint p-3 shadow-[0_4px_24px_rgba(20,18,32,0.06)]">
+    <div className="flex h-full flex-col rounded-2xl card-tint p-3 shadow-[0_4px_24px_rgba(20,18,32,0.06)]">
       <p className="text-[10px] text-[#141220]/40">{label}</p>
       <p className="mt-0.5 text-sm font-bold">{value}</p>
-      {note && <p className="mt-0.5 text-[9px] text-[#141220]/35">{note}</p>}
+      <p className="mt-auto pt-0.5 text-[9px] text-[#141220]/35">{note}</p>
     </div>
   );
 }
@@ -367,11 +391,16 @@ export function ProductSelector({
   position,
   dark = false,
   className = "",
+  onPrev,
+  onNext,
 }: {
   name: string;
   position: string;
   dark?: boolean;
   className?: string;
+  /** Optionnels : sans eux les flèches restent décoratives (comportement historique). */
+  onPrev?: () => void;
+  onNext?: () => void;
 }) {
   return (
     <div
@@ -381,8 +410,10 @@ export function ProductSelector({
     >
       <button
         type="button"
+        onClick={onPrev}
+        disabled={!onPrev}
         aria-label="Produit précédent"
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${dark ? "bg-white/15 text-white" : "bg-white text-[#141220]/60"}`}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full disabled:opacity-100 ${dark ? "bg-white/15 text-white" : "bg-white text-[#141220]/60"}`}
       >
         <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
           <path d="m14.5 5-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -394,8 +425,10 @@ export function ProductSelector({
       </span>
       <button
         type="button"
+        onClick={onNext}
+        disabled={!onNext}
         aria-label="Produit suivant"
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${dark ? "bg-white/15 text-white" : "bg-white text-[#141220]/60"}`}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full disabled:opacity-100 ${dark ? "bg-white/15 text-white" : "bg-white text-[#141220]/60"}`}
       >
         <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
           <path d="m9.5 5 7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

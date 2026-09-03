@@ -23,7 +23,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
       />
 
       <div className="grid gap-3 lg:grid-cols-4">
-        <Card title="Commandes de la période">
+        <Card title="Commandes de la période" titleTab className="!bg-white">
           <div className="mt-3 flex items-center gap-4">
             <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[6px] border-brand-pink/25">
               <div className="absolute inset-0 rounded-full border-[6px] border-transparent border-t-brand-pink border-r-brand-pink" style={{ transform: "rotate(45deg)" }} />
@@ -45,7 +45,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           <StatRow label="Articles par commande" value="1,4" />
         </Card>
 
-        <Card title="Où en sont les commandes en cours">
+        <Card title="Où en sont les commandes en cours" titleTab className="!bg-white">
           <StatRow label="En coordination" value="4" bold={false} />
           <StatRow label="Affectées à un livreur" value="7" bold={false} />
           <StatRow label="En cours de livraison" value="3" bold={false} />
@@ -58,7 +58,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           <StatRow label="Total moyen" value="26 h" />
         </Card>
 
-        <Card title="Pourquoi elles n'aboutissent pas">
+        <Card title="Pourquoi elles n'aboutissent pas" titleTab className="!bg-white">
           <FailRow label="Client injoignable" value={6} pct={100} />
           <FailRow label="Adresse introuvable" value={3} pct={50} />
           <FailRow label="Refus à la livraison" value={2} pct={33} />
@@ -69,7 +69,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           <StatRow label="Taux d'annulation" value="4 %" />
         </Card>
 
-        <Card title="Quand vos clients règlent">
+        <Card title="Quand vos clients règlent" titleTab className="!bg-white">
           <StatRow label="Depuis la page de commande" value="62 %" />
           <Bar pct={62} />
           <div className="mt-2" />
@@ -84,13 +84,12 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
       </div>
 
       <div className="mt-3 grid gap-3 lg:grid-cols-[1.7fr_1fr]">
-        <Card>
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">
-              Heures auxquelles vos clients commandent
-            </p>
-            <p className="text-[10px] text-[#141220]/40">Pic entre 20 h et 22 h · 38 % des commandes</p>
-          </div>
+        <Card
+          title="Heures auxquelles vos clients commandent"
+          titleTab
+          className="!bg-white"
+          badge={<p className="text-[10px] text-[#141220]/40">Pic entre 20 h et 22 h · 38 % des commandes</p>}
+        >
           <div
             className="mt-3 grid gap-[3px]"
             style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}
@@ -130,7 +129,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           </div>
         </Card>
 
-        <Card title="Communes livrées">
+        <Card title="Communes livrées" titleTab className="!bg-white">
           <CommuneRow label="Yopougon" pct={41} value="30" />
           <CommuneRow label="Cocody" pct={27} value="20" />
           <CommuneRow label="Abobo" pct={18} value="13" />

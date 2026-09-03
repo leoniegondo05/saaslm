@@ -9,15 +9,17 @@ import { usePathname } from "next/navigation";
   synchro visuelle et que l'icône active suive la route réellement affichée
   (usePathname) au lieu d'un booléen "active" codé en dur par page.
 
-  "Produits" et "Réglages" restent des boutons inertes (pas de <Link>) tant
-  que ces pages n'existent pas — cf. mémoire "ne pas toucher à la page
-  Produits pour l'instant".
+  "Réglages" pointe vers Écran 07 "Personnel et accès" (voir
+  app/dashboard/parametres/page.tsx).
 */
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Ma journée", Icon: SunIcon },
   { href: "/dashboard/accueil", label: "Accueil", Icon: HomeIcon },
+  { href: "/dashboard/produits", label: "Produits", Icon: BoxIcon },
 ] as const;
+
+const REGLAGES = { href: "/dashboard/parametres", label: "Paramètres" } as const;
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
@@ -31,14 +33,21 @@ export default function DashboardSidebar() {
               <Icon />
             </SidebarIcon>
           ))}
-          <SidebarIcon label="Produits">
-            <BoxIcon />
-          </SidebarIcon>
-          <SidebarIcon label="Paramètres" className="lg:hidden">
+          <SidebarIcon
+            href={REGLAGES.href}
+            label={REGLAGES.label}
+            active={pathname === REGLAGES.href}
+            className="lg:hidden"
+          >
             <GearIcon />
           </SidebarIcon>
         </div>
-        <SidebarIcon label="Paramètres" className="hidden lg:flex">
+        <SidebarIcon
+          href={REGLAGES.href}
+          label={REGLAGES.label}
+          active={pathname === REGLAGES.href}
+          className="hidden lg:flex"
+        >
           <GearIcon />
         </SidebarIcon>
       </nav>
