@@ -391,7 +391,7 @@ function describeWeatherCode(code: number): {
   if ([71, 73, 75, 77, 85, 86].includes(code)) return { label: "Neige", emoji: "❄️", colorClass: "text-[#f5a623]" };
   if ([95, 96, 99].includes(code)) return { label: "Orage", emoji: "⛈️", colorClass: "text-[#e0442b]" };
   return { label: "Temps pluvieux", emoji: "🌦️", colorClass: "text-[#f5a623]" };
-}
+}       
 
 type WeatherState =
   | { status: "loading" }
