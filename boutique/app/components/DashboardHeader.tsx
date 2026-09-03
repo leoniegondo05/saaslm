@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 
 /*
@@ -140,7 +141,10 @@ export default function DashboardHeader() {
       </span>
 
       <div className="flex items-center gap-2 sm:gap-3">
-        <span className="flex items-center gap-3 rounded-full bg-white/70 p-1.5 shadow-[0_2px_10px_rgba(20,18,32,0.06)] sm:pr-5">
+        <Link
+          href="/dashboard/produits?tab=partenaire"
+          className="flex items-center gap-3 rounded-full bg-white/70 p-1.5 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white sm:pr-5"
+        >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-purple">
             <BuildingIcon />
           </span>
@@ -148,7 +152,7 @@ export default function DashboardHeader() {
             <span className="block text-xs text-[#141220]/50">Partenaire agréé</span>
             <span className="block text-sm font-semibold">Groupe Logistique Ivoire</span>
           </span>
-        </span>
+        </Link>
 
         <button
           type="button"

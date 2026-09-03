@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 /*
   Carte "Reversé sur ce compte" du dashboard Accueil : un jeu de cartes
@@ -56,9 +56,38 @@ const METHODS: Method[] = [
   },
 ];
 
+const SWIPE_THRESHOLD = 40;
+
 export default function PaymentMethodCard() {
   const [active, setActive] = useState(0);
+  const [dragX, setDragX] = useState(0);
+  const startXRef = useRef(0);
+  const draggingRef = useRef(false);
   const method = METHODS[active];
+
+  const next = () => setActive((a) => (a + 1) % METHODS.length);
+  const prev = () => setActive((a) => (a - 1 + METHODS.length) % METHODS.length);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    draggingRef.current = true;
+    startXRef.current = e.clientX;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!draggingRef.current) return;
+    setDragX(e.clientX - startXRef.current);
+  };
+  const endDrag = () => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    if (Math.abs(dragX) > SWIPE_THRESHOLD) {
+      dragX < 0 ? next() : prev();
+    } else {
+      // petit déplacement (ou simple tap) → clic sur la carte = carte suivante
+      next();
+    }
+    setDragX(0);
+  };
 
   return (
     <div className="relative pt-6">
@@ -68,10 +97,25 @@ export default function PaymentMethodCard() {
       <div className="absolute inset-x-2 top-2 h-40 rounded-2xl bg-[linear-gradient(160deg,#1BA1F2_0%,#0A3D91_100%)] opacity-80" />
 
       <div
-        className={`relative overflow-hidden rounded-2xl p-4 shadow-[0_18px_40px_rgba(20,18,32,0.28)] ${
+        role="button"
+        tabIndex={0}
+        aria-label={`Voir le moyen de paiement suivant (actuel : ${method.label})`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowRight" || e.key === "Enter" || e.key === " ") next();
+          if (e.key === "ArrowLeft") prev();
+        }}
+        className={`relative touch-pan-y cursor-grab overflow-hidden rounded-2xl p-4 shadow-[0_18px_40px_rgba(20,18,32,0.28)] select-none active:cursor-grabbing ${
           method.textDark ? "text-[#141220]" : "text-white"
         }`}
-        style={{ background: method.gradient }}
+        style={{
+          background: method.gradient,
+          transform: `translateX(${dragX}px)`,
+          transition: draggingRef.current ? "none" : "transform 0.2s ease",
+        }}
       >
         <span
           className={`pointer-events-none absolute rounded-full ${

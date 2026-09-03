@@ -16,13 +16,12 @@ export default function AlertesSection({ first = true }: { first?: boolean }) {
       />
 
       <div className="grid gap-3 pb-4 lg:grid-cols-3">
-        <Card>
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">
-              Ce qui demande une décision
-            </p>
-            <Tag tone="pink">5 alertes</Tag>
-          </div>
+        <Card
+          title="Ce qui demande une décision"
+          titleTab
+          className="!bg-white"
+          badge={<Tag tone="pink">5 alertes</Tag>}
+        >
           <AlertRow code="S" name="Huile de ricin" tag="Rupture sous 1 jour" tone="ko" />
           <AlertRow code="S" name="Coffret parfum" tag="En rupture · retiré de la page" tone="ko" />
           <AlertRow code="S" name="Bracelet cuir" tag="Rotation lente · 28 immobilisées" tone="warn" />
@@ -32,11 +31,7 @@ export default function AlertesSection({ first = true }: { first?: boolean }) {
           <StatRow label="Alertes traitées ce mois" value="11" />
         </Card>
 
-        <Card>
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Litiges</p>
-            <Tag tone="pink">1 en cours</Tag>
-          </div>
+        <Card title="Litiges" titleTab className="!bg-white" badge={<Tag tone="pink">1 en cours</Tag>}>
           <StatRow label="Montant suspendu" value="28 000 F" />
           <StatRow label="Ouvert par" value="Le client final" />
           <StatRow label="Depuis" value="3 jours" />
@@ -53,13 +48,7 @@ export default function AlertesSection({ first = true }: { first?: boolean }) {
           </button>
         </Card>
 
-        <Card>
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">
-              Votre partenaire
-            </p>
-            <Tag tone="dark">Note 8,4</Tag>
-          </div>
+        <Card title="Votre partenaire" titleTab className="!bg-white" badge={<Tag tone="dark">Note 8,4</Tag>}>
           <StatRow label="Délai moyen de livraison" value="26 h" />
           <StatRow label="Moyenne du réseau" value="31 h" />
           <StatRow label="Taux de livraison" value="79 %" />

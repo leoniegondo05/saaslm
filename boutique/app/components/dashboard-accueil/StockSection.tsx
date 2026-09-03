@@ -16,9 +16,12 @@ export default function StockSection({ first = true }: { first?: boolean }) {
       />
 
       <div className="grid gap-3 lg:grid-cols-[1.9fr_1fr]">
-        <Card>
+        <Card className="!bg-white">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">
+            <p
+              className="rounded-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B8095]"
+              style={{ background: "#F0EDF0" }}
+            >
               Fiche d&apos;un dépôt
             </p>
             <ProductSelector name="Sérum éclat 30 ml" position="Dépôt 1 sur 4" />
@@ -147,11 +150,15 @@ export default function StockSection({ first = true }: { first?: boolean }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.16em] text-[#7B8095]">Restant</p>
-                  <p className="text-xl font-bold">83</p>
+                  <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-1 pl-4 pr-4 text-xl font-bold text-white">
+                    83
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] uppercase tracking-[0.16em] text-[#7B8095]">Valeur</p>
-                  <p className="text-sm font-bold">514 600 F</p>
+                  <p className="-mr-4 inline-block rounded-l-xl bg-brand-purple py-1 pl-4 pr-4 text-sm font-bold text-white">
+                    514 600 F
+                  </p>
                 </div>
               </div>
               <Divider />
@@ -161,7 +168,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             </div>
           </div>
 
-          <Card title="Tous dépôts confondus" className="mt-3">
+          <Card title="Tous dépôts confondus" titleTab className="mt-3 !bg-white">
             <StatRow label="Unités en entrepôt" value="240" />
             <StatRow label="Déposé depuis le 1er août" value="420" />
             <StatRow label="Endommagé à la réception" value="3 · 0,7 %" />
@@ -171,13 +178,12 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             <StatRow label="Délai moyen de contrôle" value="1,2 jour" />
           </Card>
 
-          <Card className="mt-3">
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">
-                Envois récents
-              </p>
-              <Tag tone="pink">1 en cours</Tag>
-            </div>
+          <Card
+            title="Envois récents"
+            titleTab
+            className="mt-3 !bg-white"
+            badge={<Tag tone="pink">1 en cours</Tag>}
+          >
             <div className="mt-3 flex items-center justify-between text-xs">
               <span className="font-semibold">Huile de ricin · 60</span>
               <span className="text-[#141220]/40">28 août</span>

@@ -54,19 +54,11 @@ body {
 }
 
 /*
-  Fond des cartes claires du dashboard (app/dashboard/page.tsx) : pas blanc
-  plat — la maquette Figma montre un léger dégradé rose/lavande qui pointe
-  du coin bas-gauche, presque invisible, avant de se fondre en blanc.
-  Remplace les anciens "bg-white/NN" (opacité plate qui laissait passer le
-  fond de page de façon uniforme, pas localisée dans un coin comme demandé).
+  Fond des cartes claires du dashboard : blanc plat (le dégradé rose/lavande
+  du coin bas-gauche a été retiré à la demande).
 */
 .card-tint {
-  background: radial-gradient(
-    120% 120% at 0% 100%,
-    rgba(236, 12, 140, 0.08) 0%,
-    rgba(255, 255, 255, 0.92) 45%,
-    #ffffff 100%
-  );
+  background: #ffffff;
 }
 
 /*
