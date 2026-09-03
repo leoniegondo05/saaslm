@@ -1,4 +1,4 @@
-import { Bar, Card, CommuneRow, Divider, FailRow, SectionHeader, StatRow } from "./shared";
+import { Bar, Card, CommuneRow, Divider, FailRow, LegendRow, SectionHeader, StatRow } from "./shared";
 
 // 24 barres pour la bande "heures de commande" — pic 20h-22h, gabarit repris
 // des hauteurs de la maquette (0 → 1).
@@ -25,24 +25,26 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
       <div className="grid gap-3 lg:grid-cols-4">
         <Card title="Commandes de la période" titleTab className="!bg-white">
           <div className="mt-3 flex items-center gap-4">
-            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[6px] border-brand-pink/25">
+            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[6px] border-white">
               <div className="absolute inset-0 rounded-full border-[6px] border-transparent border-t-brand-pink border-r-brand-pink" style={{ transform: "rotate(45deg)" }} />
-              <div className="text-center">
-                <p className="text-lg font-bold leading-none">73</p>
-                <p className="text-[8px] text-[#141220]/40">au total</p>
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#141220] text-center">
+                <div>
+                  <p className="text-lg font-bold leading-none text-white">73</p>
+                  <p className="text-[8px] text-white/40">au total</p>
+                </div>
               </div>
             </div>
             <div className="flex-1 space-y-1.5">
-              <StatRow label="Livrées" value="45" />
-              <StatRow label="En cours" value="16" />
-              <StatRow label="Non livrées" value="12" />
+              <LegendRow color="#22C55E" label="Livrées" value="45" />
+              <LegendRow color="#EC0C8C" label="En cours" value="16" />
+              <LegendRow color="#D9D9E0" label="Non livrées" value="12" />
             </div>
           </div>
           <Divider />
           <StatRow label="Taux de livraison" value="79 %" />
-          <StatRow label="Dont produits en stockage" value="31" />
-          <StatRow label="Dont produits en drop" value="42" />
-          <StatRow label="Articles par commande" value="1,4" />
+          <StatRow label="Dont produits en stockage" value="31" bold={false} />
+          <StatRow label="Dont produits en drop" value="42" bold={false} />
+          <StatRow label="Articles par commande" value="1,4" bold={false} />
         </Card>
 
         <Card title="Où en sont les commandes en cours" titleTab className="!bg-white">
@@ -74,7 +76,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           <Bar pct={62} />
           <div className="mt-2" />
           <StatRow label="Via le lien de commande" value="38 %" />
-          <Bar pct={38} color="bg-[#141220]/30" />
+          <Bar pct={38} color="bg-[#EC0C8C]" />
           <Divider />
           <StatRow label="Livraisons normales" value="62 · 77 % réussies" />
           <StatRow label="Livraisons express" value="11 · 91 % réussies" />
@@ -87,7 +89,8 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
         <Card
           title="Heures auxquelles vos clients commandent"
           titleTab
-          className="!bg-white"
+          titleAlign="left"
+          className="!bg-[#F4F4F6]"
           badge={<p className="text-[10px] text-[#141220]/40">Pic entre 20 h et 22 h · 38 % des commandes</p>}
         >
           <div
@@ -130,7 +133,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
         </Card>
 
         <Card title="Communes livrées" titleTab className="!bg-white">
-          <CommuneRow label="Yopougon" pct={41} value="30" />
+          <CommuneRow label="Yopougon" pct={41} value="30" barColor="bg-[#000000]" />
           <CommuneRow label="Cocody" pct={27} value="20" />
           <CommuneRow label="Abobo" pct={18} value="13" />
           <CommuneRow label="Marcory" pct={9} value="7" />

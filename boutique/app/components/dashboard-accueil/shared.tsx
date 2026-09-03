@@ -21,9 +21,14 @@ export function SectionHeader({
   return (
     <div className={`mb-4 flex flex-wrap items-end justify-between gap-3 ${first ? "mt-8" : "mt-12"}`}>
       <div>
-        <span className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/20 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-pink shadow-[0_2px_12px_rgba(20,18,32,0.05)] backdrop-blur-md">
-          <span className="h-1.5 w-1.5 rounded-full bg-brand-pink shadow-[0_0_10px_rgba(236,12,140,0.6)]" />
-          {eyebrow}
+        <span
+          className="inline-flex rounded-full p-px shadow-[0_2px_12px_rgba(20,18,32,0.05)]"
+          style={{ backgroundImage: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 58.35%, #FFFFFF 100%)" }}
+        >
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-[#141220] backdrop-blur-md">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-pink shadow-[0_0_10px_rgba(236,12,140,0.6)]" />
+            {eyebrow}
+          </span>
         </span>
         <h2 className="mt-1.5 text-xl font-bold tracking-tight sm:text-2xl">{title}</h2>
         {subtitle && <p className="mt-0.5 text-xs text-[#141220]/50">{subtitle}</p>}
@@ -40,12 +45,18 @@ export function SectionHeader({
 export function Card({
   title,
   badge,
+  badgeAlign = "right",
+  titleAlign = "center",
   titleTab = false,
   className = "",
   children,
 }: {
   title?: string;
   badge?: React.ReactNode;
+  /** Position du badge quand titleTab est actif. Défaut: "right". */
+  badgeAlign?: "left" | "right";
+  /** Position de l'étiquette de titre quand titleTab est actif. Défaut: "center". */
+  titleAlign?: "left" | "center";
   /** Titre affiché en étiquette centrée (façon "onglet"), comme la carte Trésorerie disponible. */
   titleTab?: boolean;
   className?: string;
@@ -54,14 +65,16 @@ export function Card({
   return (
     <div className={`rounded-2xl card-tint p-4 shadow-[0_4px_24px_rgba(20,18,32,0.06)] ${className}`}>
       {title && titleTab && (
-        <div className="relative -mt-4 flex items-center justify-center">
+        <div className={`relative -mt-4 flex items-center ${titleAlign === "left" ? "justify-start" : "justify-center"}`}>
           <p
             className="rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B8095]"
             style={{ background: "#F0EDF0" }}
           >
             {title}
           </p>
-          {badge && <div className="absolute right-0 top-2">{badge}</div>}
+          {badge && (
+            <div className={`absolute top-2 ${badgeAlign === "left" ? "left-0" : "right-0"}`}>{badge}</div>
+          )}
         </div>
       )}
       {title && !titleTab && (
@@ -90,6 +103,18 @@ export function StatRow({
     <div className="mt-2.5 flex items-center justify-between gap-3 text-xs first:mt-3">
       <span className={light ? "text-white/55" : "text-[#141220]/50"}>{label}</span>
       <span className={bold ? "font-semibold" : ""}>{value}</span>
+    </div>
+  );
+}
+
+export function LegendRow({ color, label, value }: { color: string; label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 text-xs">
+      <span className="flex items-center gap-1.5 text-[#141220]/50">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: color }} />
+        {label}
+      </span>
+      <span className="font-semibold">{value}</span>
     </div>
   );
 }
@@ -248,7 +273,17 @@ export function FailRow({ label, value, pct }: { label: string; value: number; p
   );
 }
 
-export function CommuneRow({ label, pct, value }: { label: string; pct: number; value: string }) {
+export function CommuneRow({
+  label,
+  pct,
+  value,
+  barColor = "bg-[#141220]/50",
+}: {
+  label: string;
+  pct: number;
+  value: string;
+  barColor?: string;
+}) {
   return (
     <div className="mt-2.5 first:mt-3">
       <div className="flex items-center justify-between text-xs">
@@ -257,7 +292,7 @@ export function CommuneRow({ label, pct, value }: { label: string; pct: number; 
           {pct} % · {value}
         </span>
       </div>
-      <Bar pct={pct} color="bg-[#141220]/50" />
+      <Bar pct={pct} color={barColor} />
     </div>
   );
 }
