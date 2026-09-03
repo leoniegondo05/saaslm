@@ -31,16 +31,13 @@ export default function DashboardSidebar() {
               <Icon />
             </SidebarIcon>
           ))}
-          <SidebarIcon label="Produits" className="lg:hidden">
+          <SidebarIcon label="Produits">
             <BoxIcon />
           </SidebarIcon>
           <SidebarIcon label="Paramètres" className="lg:hidden">
             <GearIcon />
           </SidebarIcon>
         </div>
-        <SidebarIcon label="Produits" className="hidden lg:flex">
-          <BoxIcon />
-        </SidebarIcon>
         <SidebarIcon label="Paramètres" className="hidden lg:flex">
           <GearIcon />
         </SidebarIcon>
