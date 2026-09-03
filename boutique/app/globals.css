@@ -720,6 +720,48 @@ body {
 }
 
 /*
+  Cerveau du dashboard (DashboardBrain.tsx) : léger flottement vertical en
+  boucle + traits qui pulsent doucement, pour donner vie à l'illustration
+  statique sans distraire.
+*/
+@keyframes dashboard-brain-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.dashboard-brain-float {
+  animation: dashboard-brain-float 5s ease-in-out infinite;
+}
+
+@keyframes dashboard-brain-line-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.dashboard-brain-line-pulse {
+  animation: dashboard-brain-line-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-brain-float,
+  .dashboard-brain-line-pulse {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/*
   Révélation au scroll (ScrollReveal.tsx) : fondu + léger glissement vers le
   haut, déclenché une seule fois quand le bloc entre dans le viewport
   (IntersectionObserver côté JS, cette classe gère juste l'état visuel
