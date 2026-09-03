@@ -4,10 +4,10 @@ import { useState } from "react";
 
 /*
   Carte "Reversé sur ce compte" du dashboard Accueil : un jeu de cartes
-  empilées (Orange Money, MTN MoMo, Wave, Moov Money, Carte bancaire), les
-  pastilles en bas servent de sélecteur — cliquer une couleur affiche la
-  carte du moyen de paiement correspondant. Données statiques en attendant
-  l'API Laravel, cf. mémoire [[dashboard-mock-data-pending-laravel-api]].
+  empilées (Orange Money, Wave, MTN MoMo, Moov Money), les pastilles en bas
+  servent de sélecteur — cliquer une couleur affiche la carte du moyen de
+  paiement correspondant. Données statiques en attendant l'API Laravel,
+  cf. mémoire [[dashboard-mock-data-pending-laravel-api]].
 */
 
 type Method = {
@@ -30,6 +30,14 @@ const METHODS: Method[] = [
     iconText: "#FF7900",
   },
   {
+    id: "wave",
+    label: "Wave",
+    short: "WV",
+    dot: "#1BA1F2",
+    gradient: "linear-gradient(118.07deg, #6DC5FA 0%, #1BA1F2 46%, #0A3D91 100%)",
+    iconText: "#0A3D91",
+  },
+  {
     id: "mtn",
     label: "MTN MoMo",
     short: "MTN",
@@ -39,28 +47,12 @@ const METHODS: Method[] = [
     textDark: true,
   },
   {
-    id: "wave",
-    label: "Wave",
-    short: "WV",
-    dot: "#1BA1F2",
-    gradient: "linear-gradient(118.07deg, #6DC5FA 0%, #1BA1F2 46%, #0A3D91 100%)",
-    iconText: "#0A3D91",
-  },
-  {
     id: "moov",
     label: "Moov Money",
     short: "MV",
     dot: "#2F72D6",
     gradient: "linear-gradient(118.07deg, #6E9EEB 0%, #2F72D6 46%, #123B7A 100%)",
     iconText: "#123B7A",
-  },
-  {
-    id: "cb",
-    label: "Carte bancaire",
-    short: "CB",
-    dot: "#8A90A0",
-    gradient: "linear-gradient(118.07deg, #78808F 0%, #4A5568 46%, #20242E 100%)",
-    iconText: "#2D3748",
   },
 ];
 
@@ -71,8 +63,8 @@ export default function PaymentMethodCard() {
   return (
     <div className="relative pt-6">
       {/* cartes empilées derrière — profondeur : plus loin = plus flou */}
-      <div className="absolute inset-x-6 top-0 h-40 rounded-2xl bg-[linear-gradient(160deg,#7A8296_0%,#3A4152_100%)] opacity-30 blur-md" />
-      <div className="absolute inset-x-4 top-1 h-40 rounded-2xl bg-[linear-gradient(160deg,#4A5568_0%,#2D3748_100%)] opacity-60 blur-sm" />
+      <div className="absolute inset-x-6 top-0 h-40 rounded-2xl border border-white/20 bg-[#8A90A0]/30 opacity-90 backdrop-blur-md" />
+      <div className="absolute inset-x-4 top-1 h-40 rounded-2xl opacity-90" style={{ background: "#2F72D6" }} />
       <div className="absolute inset-x-2 top-2 h-40 rounded-2xl bg-[linear-gradient(160deg,#1BA1F2_0%,#0A3D91_100%)] opacity-80" />
 
       <div
@@ -97,11 +89,7 @@ export default function PaymentMethodCard() {
             </span>
             {method.label}
           </span>
-          <span
-            className={`rounded-full px-3 py-1 text-[10px] font-semibold ${
-              method.textDark ? "bg-white/70 text-[#141220]" : "bg-white/90 text-[#141220]"
-            }`}
-          >
+          <span className="rounded-full border border-white/30 bg-white/20 px-3 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
             Compte actif
           </span>
         </div>
@@ -127,13 +115,13 @@ export default function PaymentMethodCard() {
           >
             <span
               className="h-1.5 rounded-full transition-all"
-              style={{ width: i === active ? 20 : 6, background: i === active ? m.dot : "rgba(20,18,32,0.15)" }}
+              style={{ width: i === active ? 20 : 6, background: m.dot, opacity: i === active ? 1 : 0.35 }}
             />
           </button>
         ))}
       </div>
       <p className="mt-2 text-center text-[9px] text-[#141220]/40">
-        Orange Money · MTN MoMo · Wave · Moov Money · Carte bancaire
+        Orange Money · Wave · MTN MoMo · Moov Money
       </p>
     </div>
   );
