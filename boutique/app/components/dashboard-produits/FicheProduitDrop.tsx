@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Card, Tag } from "../dashboard-accueil/shared";
+import { Card, ProduitCarousel, Tag } from "../dashboard-accueil/shared";
 import type { DropProduit } from "./dropCatalogue";
 
 /*
@@ -42,9 +42,12 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
         {produit.categorie}
       </Link>
 
-      <div className="relative mt-4 flex min-h-[280px] flex-col justify-end overflow-hidden rounded-3xl bg-[linear-gradient(135deg,#2A0F3E_0%,#0A1338_40%,#050509_100%)] p-6 text-white">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(700px_460px_at_50%_46%,rgba(236,12,140,0.24),transparent_64%)]" />
-        <span className="absolute left-1/2 top-[42%] h-[170px] w-[170px] -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-white/15 bg-white/[0.06]" />
+      <div className="relative mt-4 flex min-h-[280px] flex-col justify-end overflow-hidden rounded-3xl bg-white p-6 text-white">
+        <ProduitCarousel images={produit.images ?? []} />
+        {/* Dégradé produit : fondu vers le noir pour la lisibilité du texte.
+            Vide tant que le produit n'a pas de photos, cf.
+            [[dashboard-mock-data-pending-laravel-api]]. */}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(238.49deg,rgba(217,217,217,0)_51.88%,#000000_120.52%)]" />
         <div className="relative">
           <div className="mb-2.5 flex flex-wrap gap-1.5">
             <Tag tone="pink">{produit.source === "L" ? "Drop LM" : "Partenaire"}</Tag>
@@ -138,7 +141,7 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
           <button type="button" className="mt-3 w-full rounded-full bg-white px-4 py-2.5 text-center text-xs font-semibold shadow-[0_2px_10px_rgba(20,18,32,0.08)]">
             Choisir le produit
           </button>
-          <button type="button" className="mt-2 w-full rounded-full border border-[#141220]/15 bg-white/60 px-4 py-2.5 text-center text-xs font-semibold">
+          <button type="button" className="mt-2 w-full rounded-full bg-[#141220] px-4 py-2.5 text-center text-xs font-semibold text-white">
             Mettre de côté
           </button>
         </div>

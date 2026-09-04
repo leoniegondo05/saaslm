@@ -155,8 +155,8 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
           <p className="mt-1.5 text-[10px] text-[#141220]/40">52 % du chiffre d&apos;affaires · 5 972 F par commande</p>
         </Card>
 
-        <Card className="!bg-white !p-3 max-w-md justify-self-center sm:col-span-2">
-          <div className="grid grid-cols-3 gap-2">
+        <Card className="!bg-white !p-3 sm:col-span-2">
+          <div className="grid grid-cols-6 gap-2">
             {[
               { label: "Abonnement", value: "25 000 F", note: "Échéance 14 sept." },
               { label: "Commission LM", value: "21 060 F", note: "2,5 % effectif" },

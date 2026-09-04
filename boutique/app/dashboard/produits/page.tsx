@@ -1,7 +1,7 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useState } from "react";
 import DashboardHeader from "../../components/DashboardHeader";
 import DashboardSidebar from "../../components/DashboardSidebar";
 import ProduitsCatalogue from "../../components/dashboard-accueil/ProduitsCatalogue";
@@ -36,10 +36,27 @@ const SECTIONS: Record<ProduitsTab, React.ComponentType<{ first?: boolean }>> = 
 const TAB_ORDER: ProduitsTab[] = ["mes-produits", "partenaire", "catalogue"];
 
 export default function ProduitsPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<ProduitsTab | null>(
     initialTab && TAB_ORDER.includes(initialTab as ProduitsTab) ? (initialTab as ProduitsTab) : null
+  );
+
+  // Onglet cliqué change bien la vue, mais laissait l'URL figée sur le
+  // ?tab= d'arrivée (ex. lien "Voir le catalogue" -> ?tab=catalogue) :
+  // un refresh relisait cette URL et ramenait toujours sur ce même onglet,
+  // quel que soit celui affiché au moment du refresh. On garde l'URL
+  // synchronisée à chaque changement (replace, pas de nouvelle entrée
+  // d'historique) pour que le refresh retrouve l'onglet réellement affiché.
+  const handleChange = useCallback(
+    (tab: ProduitsTab | null) => {
+      setActiveTab(tab);
+      const query = tab ? `?tab=${tab}` : "";
+      router.replace(`${pathname}${query}`, { scroll: false });
+    },
+    [pathname, router]
   );
 
   return (
@@ -47,9 +64,9 @@ export default function ProduitsPage() {
       <div className="mx-auto flex max-w-[1620px] flex-col gap-6 px-4 pb-28 pt-6 sm:px-6 md:px-10 lg:flex-row lg:pb-10 lg:pl-3 lg:pt-8">
         <DashboardSidebar />
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 lg:px-6">
           <DashboardHeader />
-          <ProduitsNav active={activeTab} onChange={setActiveTab} />
+          <ProduitsNav active={activeTab} onChange={handleChange} />
 
           {activeTab === null
             ? TAB_ORDER.map((tab, index) => {

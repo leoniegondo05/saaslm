@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { Btn, Card, Divider, MiniTile, Nature, ProductSelector, SectionHeader, StatRow, Tag } from "./shared";
 
@@ -15,13 +16,13 @@ import { Btn, Card, Divider, MiniTile, Nature, ProductSelector, SectionHeader, S
   quand elle expose le catalogue produits.
 */
 
-type Nature4 = "S" | "P" | "L" | "O";
+type Nature4 = "S" | "P" | "L";
 type Etat = { label: string; tone: "ok" | "warn" | "ko" };
 
 type Produit = {
   nom: string;
   nature: Nature4;
-  achat: number | null; // F — null pour un produit propre sans coût de revient déclaré
+  achat: number | null; // F — null si aucun coût de revient déclaré
   vente: number; // F
   stock: number;
   vendu: number;
@@ -31,32 +32,55 @@ type Produit = {
   fraisPreleves?: number; // F par vente, pour la fiche détaillée
   couverture?: string;
   litiges?: number;
+  tendance: number[]; // ventes / semaine, 6 dernières semaines — pour le mini diagramme
+  images?: string[]; // URLs — absent/vide si le produit n'a pas encore de visuel
 };
 
 const PRODUITS: Produit[] = [
-  { nom: "Montre connectée S8", nature: "L", achat: 6200, vente: 14000, stock: 340, vendu: 48, margePct: 31, avis: 4.5, etat: { label: "Actif", tone: "ok" }, fraisPreleves: 1660, couverture: "21 jours", litiges: 3 },
-  { nom: "Sérum éclat 30 ml", nature: "S", achat: 4300, vente: 12000, stock: 83, vendu: 37, margePct: 46, avis: 4.7, etat: { label: "Actif", tone: "ok" }, fraisPreleves: 2180, couverture: "22 jours", litiges: 0 },
-  { nom: "Casque sans fil X2", nature: "P", achat: 4800, vente: 11000, stock: 96, vendu: 21, margePct: 34, avis: 3.4, etat: { label: "Avis négatifs", tone: "warn" }, fraisPreleves: 1420, couverture: "13 jours", litiges: 1 },
-  { nom: "Huile de ricin 100 ml", nature: "S", achat: 2600, vente: 7500, stock: 2, vendu: 58, margePct: 44, avis: 4.8, etat: { label: "Rupture · 1 j", tone: "ko" }, fraisPreleves: 1580, couverture: "1 jour", litiges: 0 },
-  { nom: "Beurre de karité 200 g", nature: "S", achat: 4100, vente: 9000, stock: 127, vendu: 73, margePct: 42, avis: 4.6, etat: { label: "Actif", tone: "ok" }, fraisPreleves: 1120, couverture: "34 jours", litiges: 0 },
-  { nom: "Coffret parfum", nature: "O", achat: null, vente: 9000, stock: 0, vendu: 40, margePct: 71, avis: 4.9, etat: { label: "En rupture", tone: "ko" }, couverture: "rupture", litiges: 0 },
-  { nom: "Bracelet cuir", nature: "S", achat: 3800, vente: 6000, stock: 28, vendu: 2, margePct: 29, avis: 4.2, etat: { label: "Rotation lente", tone: "warn" }, fraisPreleves: 460, couverture: "60+ jours", litiges: 0 },
-  { nom: "Lotion tonique", nature: "L", achat: 3800, vente: 8900, stock: 210, vendu: 9, margePct: 38, avis: 4.4, etat: { label: "Actif", tone: "ok" }, fraisPreleves: 1440, couverture: "40 jours", litiges: 0 },
-  { nom: "Gel nettoyant", nature: "P", achat: 2200, vente: 6000, stock: 140, vendu: 4, margePct: 36, avis: null, etat: { label: "Jamais vendu", tone: "warn" }, fraisPreleves: 940, couverture: "35 jours", litiges: 0 },
+  { nom: "Montre connectée S8", nature: "L", achat: 6200, vente: 14000, stock: 340, vendu: 48, margePct: 31, avis: 4.5, etat: { label: "Actif", tone: "ok" }, fraisPreleves: 1660, couverture: "21 jours", litiges: 3, tendance: [5, 7, 6, 9, 10, 11] },
+  { nom: "Sérum éclat 30 ml", nature: "S", achat: 4300, vente: 12000, stock: 83, vendu: 37, margePct: 46, avis: 4.7, etat: { label: "Actif", tone: "ok" }, fraisPreleves: 2180, couverture: "22 jours", litiges: 0, tendance: [4, 6, 5, 8, 9, 5] },
+  { nom: "Casque sans fil X2", nature: "P", achat: 4800, vente: 11000, stock: 96, vendu: 21, margePct: 34, avis: 3.4, etat: { label: "Avis négatifs", tone: "warn" }, fraisPreleves: 1420, couverture: "13 jours", litiges: 1, tendance: [6, 5, 4, 3, 2, 1] },
+  { nom: "Huile de ricin 100 ml", nature: "S", achat: 2600, vente: 7500, stock: 2, vendu: 58, margePct: 44, avis: 4.8, etat: { label: "Rupture · 1 j", tone: "ko" }, fraisPreleves: 1580, couverture: "1 jour", litiges: 0, tendance: [7, 9, 11, 13, 12, 14] },
+  { nom: "Beurre de karité 200 g", nature: "S", achat: 4100, vente: 9000, stock: 127, vendu: 73, margePct: 42, avis: 4.6, etat: { label: "Actif", tone: "ok" }, fraisPreleves: 1120, couverture: "34 jours", litiges: 0, tendance: [8, 8, 9, 10, 9, 10] },
+  { nom: "Bracelet cuir", nature: "S", achat: 3800, vente: 6000, stock: 28, vendu: 2, margePct: 29, avis: 4.2, etat: { label: "Rotation lente", tone: "warn" }, fraisPreleves: 460, couverture: "60+ jours", litiges: 0, tendance: [2, 1, 1, 0, 1, 0] },
+  { nom: "Lotion tonique", nature: "L", achat: 3800, vente: 8900, stock: 210, vendu: 9, margePct: 38, avis: 4.4, etat: { label: "Actif", tone: "ok" }, fraisPreleves: 1440, couverture: "40 jours", litiges: 0, tendance: [3, 2, 3, 2, 4, 3] },
+  { nom: "Gel nettoyant", nature: "P", achat: 2200, vente: 6000, stock: 140, vendu: 4, margePct: 36, avis: null, etat: { label: "Jamais vendu", tone: "warn" }, fraisPreleves: 940, couverture: "35 jours", litiges: 0, tendance: [0, 0, 1, 0, 0, 1] },
 ];
+
+function MiniTrend({ data }: { data: number[] }) {
+  const max = Math.max(...data, 1);
+  return (
+    <div className="flex h-5 items-end gap-[3px]">
+      {data.map((v, i) => (
+        <span
+          key={i}
+          className={`w-1.5 rounded-full ${i === data.length - 1 ? "bg-brand-pink" : "bg-[#141220]/15"}`}
+          style={{ height: `${Math.max((v / max) * 100, 12)}%` }}
+        />
+      ))}
+    </div>
+  );
+}
 
 const F = (n: number) => `${n.toLocaleString("fr-FR")} F`;
 
 export default function ProduitsCatalogue({ first = true }: { first?: boolean }) {
-  const [selected, setSelected] = useState(0);
+  const [selected, setSelectedRaw] = useState(0);
+  const [photo, setPhoto] = useState(0);
   const produit = PRODUITS[selected];
+  const photos = produit.images ?? [];
+
+  // Changer de produit repart toujours sur sa première photo.
+  const setSelected = (updater: number | ((i: number) => number)) => {
+    setSelectedRaw(updater);
+    setPhoto(0);
+  };
 
   const publies = PRODUITS.length;
   const enStockage = PRODUITS.filter((p) => p.nature === "S").length;
   const enDrop = PRODUITS.filter((p) => p.nature === "P" || p.nature === "L").length;
   const dropPartenaire = PRODUITS.filter((p) => p.nature === "P").length;
   const dropLm = PRODUITS.filter((p) => p.nature === "L").length;
-  const propres = PRODUITS.filter((p) => p.nature === "O").length;
   const jamaisVendus = PRODUITS.filter((p) => p.avis === null).length;
   const margeMoyenne = Math.round(PRODUITS.reduce((sum, p) => sum + p.margePct, 0) / PRODUITS.length);
   const stockTotal = PRODUITS.filter((p) => p.nature === "S").reduce((sum, p) => sum + p.stock, 0);
@@ -79,23 +103,19 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
         <MiniTile label="Produits publiés" value={String(publies)} />
         <MiniTile label="En stockage" value={String(enStockage)} note={`${stockTotal} unités`} />
         <MiniTile label="En drop" value={String(enDrop)} note={`${dropPartenaire} partenaire · ${dropLm} LM`} />
-        <MiniTile label="Produits propres" value={String(propres)} />
         <MiniTile label="Jamais vendus" value={String(jamaisVendus)} />
         <MiniTile label="Marge moyenne" value={`${margeMoyenne} %`} />
       </div>
 
       <div className="mt-3 grid gap-3 lg:grid-cols-[1.75fr_1fr]">
         <Card>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap gap-1.5">
-              <Tag tone="neutral">Tous</Tag>
-              <Tag tone="neutral">Propres</Tag>
-              <Tag tone="neutral">Stockage</Tag>
-              <Tag tone="neutral">Drop</Tag>
-            </div>
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <div className="flex gap-2">
-              <button type="button" className="rounded-full border border-[#141220]/15 bg-white/60 px-3.5 py-2 text-xs font-semibold">
+              <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white">
                 Déposer un stock
+              </button>
+              <button type="button" className="rounded-full border border-[#141220]/15 bg-white/60 px-3.5 py-2 text-xs font-semibold">
+                Ajouter une catégorie
               </button>
               <button type="button" className="rounded-full bg-white px-4 py-2 text-xs font-semibold shadow-[0_2px_10px_rgba(20,18,32,0.08)]">
                 Ajouter un produit
@@ -107,9 +127,13 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
             <table className="w-full min-w-[640px] border-collapse text-left text-xs">
               <thead>
                 <tr className="border-b border-[#141220]/10">
-                  {["Produit", "Nature", "Achat", "Vente", "Stock", "Vendu", "Marge", "Avis", "État"].map((h) => (
+                  {["Produit", "Source", "Achat", "Vente", "Stock", "Vendu", "Marge", "Avis", "État", "Tendance"].map((h) => (
                     <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#141220]/35">
-                      {h}
+                      {h === "Produit" ? (
+                        <span className="inline-block rounded-full bg-[#141220] px-3 py-2 text-white">{h}</span>
+                      ) : (
+                        h
+                      )}
                     </th>
                   ))}
                 </tr>
@@ -134,6 +158,9 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
                     <td className="py-2 pr-3">
                       <Tag tone={p.etat.tone}>{p.etat.label}</Tag>
                     </td>
+                    <td className="py-2 pr-3">
+                      <MiniTrend data={p.tendance} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -151,9 +178,41 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
             onNext={() => setSelected((i) => (i + 1) % PRODUITS.length)}
           />
 
-          <div className="mt-3 flex h-[110px] items-center justify-center rounded-2xl bg-[radial-gradient(circle_at_50%_40%,rgba(236,12,140,0.14),transparent_70%)]">
-            <span className="h-16 w-16 rounded-2xl border border-[#141220]/10 bg-white/70" />
-          </div>
+          <button
+            type="button"
+            onClick={() => photos.length > 1 && setPhoto((i) => (i + 1) % photos.length)}
+            title={photos.length > 1 ? "Voir la photo suivante" : undefined}
+            className="relative mt-3 flex h-[110px] w-full items-center justify-center overflow-hidden rounded-2xl bg-white"
+          >
+            {photos.length > 0 ? (
+              <Image
+                src={photos[photo]}
+                alt={produit.nom}
+                fill
+                sizes="220px"
+                className="object-cover"
+              />
+            ) : (
+              <span className="h-16 w-16 rounded-2xl border border-[#141220]/10 bg-white/70" />
+            )}
+
+            {/* Même dégradé que le carousel de la fiche produit (fondu vers
+                le noir pour la lisibilité des dots), cf.
+                [[dashboard-mock-data-pending-laravel-api]]. */}
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(238.49deg,rgba(217,217,217,0)_51.88%,#000000_120.52%)]" />
+
+            {/* Dot(s) restent visibles même sans photo (produit pas encore
+                photographié) : signale que c'est un carousel, prêt à recevoir
+                plusieurs images, cf. [[dashboard-mock-data-pending-laravel-api]]. */}
+            <div className="absolute bottom-2.5 left-1/2 flex -translate-x-1/2 items-center gap-1.5">
+              {(photos.length > 0 ? photos : [null]).map((_, i) => (
+                <span
+                  key={i}
+                  className={i === photo ? "h-1.5 w-4 rounded-full bg-white" : "h-1.5 w-1.5 rounded-full bg-white/40"}
+                />
+              ))}
+            </div>
+          </button>
 
           <div className="mt-3 flex items-center justify-between">
             <span className="flex items-center gap-2">
@@ -176,9 +235,9 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
 
           <div className="mt-3.5 flex gap-2">
             <Btn variant="white">Modifier</Btn>
-            <Btn variant="outline">Réapprovisionner</Btn>
+            <Btn variant="dark">Réapprovisionner</Btn>
           </div>
-          <Btn variant="outline" className="mt-2">Retirer de la boutique</Btn>
+          <Btn variant="dark" className="mt-2">Retirer de la boutique</Btn>
         </Card>
       </div>
     </>

@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { Card, SectionHeader, StatRow, Tag } from "../dashboard-accueil/shared";
+import { useState } from "react";
+import { Card, ProduitCarousel, SectionHeader, StatRow, Tag } from "../dashboard-accueil/shared";
 
 /*
   Écran 04 "Le partenaire agréé" : identité du partenaire, ses informations
@@ -39,9 +42,17 @@ const PROCHAIN_PRODUIT = {
   nom: "Enceinte nomade B4",
   arriveeLe: "4 septembre",
   note: "Prochainement au catalogue de votre partenaire. Prix communiqué à l'arrivée du stock.",
+  // Une seule image mock pour l'instant ; le carousel est prêt à en recevoir
+  // plusieurs à l'arrivée des vraies photos produit, cf.
+  // [[dashboard-mock-data-pending-laravel-api]].
+  images: ["/images/baff.png", "/images/iphone.jpg"],
 };
 
+const INFOS_VISIBLES = 9;
+
 export default function PartenaireAgree({ first = true }: { first?: boolean }) {
+  const [infosOuvertes, setInfosOuvertes] = useState(false);
+
   return (
     <>
       <SectionHeader
@@ -81,10 +92,30 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
             </div>
           </div>
 
-          <Card title="Informations du partenaire" className="mt-3">
-            {PARTENAIRE.infos.map((row) => (
-              <StatRow key={row.label} label={row.label} value={row.value} bold={false} />
-            ))}
+          <Card title="Informations du partenaire" className="relative mt-3 overflow-hidden">
+            <div
+              className="transition-[max-height] duration-300"
+              style={{ maxHeight: infosOuvertes ? PARTENAIRE.infos.length * 32 : INFOS_VISIBLES * 32 }}
+            >
+              {PARTENAIRE.infos.map((row) => (
+                <StatRow key={row.label} label={row.label} value={row.value} bold={false} />
+              ))}
+            </div>
+
+            {!infosOuvertes && (
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-14 items-end justify-center bg-[linear-gradient(rgba(255,255,255,0),#fff_65%)] pb-1">
+                <button
+                  type="button"
+                  onClick={() => setInfosOuvertes(true)}
+                  className="pointer-events-auto flex items-center gap-1 rounded-full border border-[#141220]/10 bg-white px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#141220]/60 shadow-[0_2px_10px_rgba(20,18,32,0.08)]"
+                >
+                  Dérouler
+                  <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
+                    <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </Card>
 
           <button
@@ -95,9 +126,10 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
           </button>
         </div>
 
-        <div className="relative flex min-h-[420px] flex-col justify-end overflow-hidden rounded-3xl bg-[linear-gradient(155deg,#171238_0%,#0A0D1C_55%,#25082A_100%)] p-6 text-white">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(560px_380px_at_60%_44%,rgba(236,12,140,0.24),transparent_62%)]" />
-          <span className="absolute left-1/2 top-1/2 h-[220px] w-[220px] -translate-x-1/2 -translate-y-1/2 rounded-[32px] border border-white/15 bg-white/[0.06]" />
+        <div className="relative flex min-h-[480px] flex-col justify-end overflow-hidden rounded-3xl bg-white p-6 text-white">
+          <ProduitCarousel images={PROCHAIN_PRODUIT.images} />
+          {/* Dégradé produit : image du produit visible en haut, fondu vers le noir en bas pour la lisibilité du texte. */}
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(238.49deg,rgba(217,217,217,0)_51.88%,#000000_120.52%)]" />
           <div className="relative">
             <Tag tone="pink">Arrive le {PROCHAIN_PRODUIT.arriveeLe}</Tag>
             <p className="mt-2.5 text-3xl font-semibold tracking-tight">{PROCHAIN_PRODUIT.nom}</p>

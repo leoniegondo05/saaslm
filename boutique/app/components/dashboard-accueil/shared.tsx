@@ -1,9 +1,71 @@
+"use client";
+
+import { useState } from "react";
+
 /*
   Petits composants d'appui partagés par toutes les sections de l'onglet
   "Accueil" (Finances, Commandes, Clients, Acquisition, Stock, Produits,
   Alertes) — extraits de app/dashboard/accueil/page.tsx pour que chaque
   section vive dans son propre fichier sans dupliquer Card/StatRow/Tag/etc.
 */
+
+/*
+  Carousel image d'un produit : utilisé sur la fiche "Prochain produit" du
+  partenaire agréé (PartenaireAgree.tsx) et sur la fiche produit du
+  catalogue drop (FicheProduitDrop.tsx). Flèches restent visibles même sans
+  aucune image (produit pas encore photographié) : le carousel doit se voir
+  prêt, cf. [[dashboard-mock-data-pending-laravel-api]]. Les flèches sont
+  alors décoratives (rien à faire défiler) mais ne cassent rien : le calcul
+  d'index se protège de la division par zéro.
+*/
+export function ProduitCarousel({ images }: { images: string[] }) {
+  const [index, setIndex] = useState(0);
+  const count = images.length;
+
+  return (
+    <>
+      {images.map((src, i) => (
+        <div
+          key={src}
+          aria-hidden={i !== index}
+          className="absolute inset-6 bg-contain bg-no-repeat bg-right transition-opacity duration-500"
+          style={{
+            backgroundImage: `url(${src})`,
+            opacity: i === index ? 1 : 0,
+          }}
+        />
+      ))}
+
+      <button
+        type="button"
+        onClick={() => count > 0 && setIndex((i) => (i - 1 + count) % count)}
+        aria-label="Image précédente"
+        className="absolute left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md"
+      >
+        ‹
+      </button>
+      <button
+        type="button"
+        onClick={() => count > 0 && setIndex((i) => (i + 1) % count)}
+        aria-label="Image suivante"
+        className="absolute right-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md"
+      >
+        ›
+      </button>
+      <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+        {images.map((src, i) => (
+          <button
+            key={src}
+            type="button"
+            onClick={() => setIndex(i)}
+            aria-label={`Aller à l'image ${i + 1}`}
+            className={`h-1.5 rounded-full transition-all ${i === index ? "w-4 bg-white" : "w-1.5 bg-white/40"}`}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
 
 export function SectionHeader({
   eyebrow,
@@ -188,12 +250,13 @@ export function Btn({
   );
 }
 
-export function Nature({ code }: { code: "S" | "P" | "L" | "O" }) {
+export function Nature({ code }: { code: "S" | "P" | "L" | "O" | "D" }) {
   const styles: Record<string, string> = {
     S: "bg-[#141220]/[0.08] text-[#141220]/60",
     P: "bg-brand-purple/10 text-brand-purple",
     L: "bg-brand-pink/10 text-brand-pink",
     O: "border border-[#141220]/15 text-[#141220]/40",
+    D: "bg-brand-pink/10 text-brand-pink",
   };
   return (
     <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[9px] font-bold ${styles[code]}`}>
@@ -373,7 +436,7 @@ export function NatureRow({
   note,
   last = false,
 }: {
-  code: "S" | "P" | "L" | "O";
+  code: "S" | "P" | "L" | "O" | "D";
   name: string;
   value: string;
   note: string;

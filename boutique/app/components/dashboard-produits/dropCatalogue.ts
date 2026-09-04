@@ -28,6 +28,9 @@ export type DropProduit = {
   prixBasReseau?: number;
   prixMoyenReseau?: number;
   prixHautReseau?: number;
+  /** Photos produit pour le carousel de la fiche (Écran 06). Aucune pour
+   *  l'instant, cf. [[dashboard-mock-data-pending-laravel-api]]. */
+  images?: string[];
 };
 
 export const CATEGORIES: { nom: string; count: number; nouveautes?: number }[] = [

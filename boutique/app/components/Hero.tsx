@@ -1,5 +1,5 @@
 import Link from "next/link";
-import HeroBrainThree from "./HeroBrainThree";
+import HeroBrainVideo from "./HeroBrainVideo";
 
 export default function Hero() {
   return (
@@ -9,7 +9,7 @@ export default function Hero() {
     >
       {/* ── MOBILE ONLY : cerveau en arrière-plan, atténué ── */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden opacity-55 lg:hidden">
-        <HeroBrainThree className="w-[130%] max-w-none" />
+        <HeroBrainVideo className="w-[130%] max-w-none" />
       </div>
 
       {/* ── Grille principale ── */}
@@ -47,7 +47,7 @@ export default function Hero() {
 
         {/* ── DESKTOP ONLY : cerveau en colonne à droite ── */}
         <div className="relative hidden lg:block">
-          <HeroBrainThree />
+          <HeroBrainVideo />
         </div>
       </div>
 

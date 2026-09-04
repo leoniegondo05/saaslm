@@ -370,7 +370,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
               <span className="text-[#141220]/50">Coffret parfum · 40</span>
               <Tag tone="ok">Conforme</Tag>
             </div>
-            <Btn variant="outline" className="mt-4">
+            <Btn variant="dark" className="mt-4">
               Déposer un nouveau stock
             </Btn>
           </Card>

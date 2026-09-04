@@ -68,6 +68,14 @@ const COLLABORATEURS: Collaborateur[] = [
     statut: { label: "Actif", tone: "ok" },
     expire: "30 sept.",
     couleur: "linear-gradient(140deg,#2F6BE0,#011847)",
+    details: {
+      creeLe: "20 janv. 2026",
+      premiereConnexion: "20 janv. · 9 h 10",
+      derniereConnexion: "Aujourd'hui · 8 h 42",
+      motDePasseChange: "Oui",
+      codeRenouvele: "2 fois",
+      pages: ["Ma journée", "Finances", "Commandes", "Stock et dépôts", "Produits", "Litiges"],
+    },
   },
   {
     nom: "Yao Pacôme",
@@ -76,6 +84,14 @@ const COLLABORATEURS: Collaborateur[] = [
     statut: { label: "Expire dans 3 jours", tone: "warn" },
     expire: "2 sept.",
     couleur: "linear-gradient(140deg,#FFB020,#8A5A00)",
+    details: {
+      creeLe: "5 juin 2026",
+      premiereConnexion: "5 juin · 11 h 30",
+      derniereConnexion: "Hier · 19 h 15",
+      motDePasseChange: "Oui",
+      codeRenouvele: "Aucune",
+      pages: ["Ma journée", "Commandes"],
+    },
   },
   {
     nom: "Nadège Ouattara",
@@ -84,6 +100,14 @@ const COLLABORATEURS: Collaborateur[] = [
     statut: { label: "Jamais connectée", tone: "neutral" },
     expire: "20 sept.",
     couleur: "linear-gradient(140deg,#A279FF,#2A1466)",
+    details: {
+      creeLe: "20 août 2026",
+      premiereConnexion: "Jamais",
+      derniereConnexion: "Jamais",
+      motDePasseChange: "Non",
+      codeRenouvele: "Aucune",
+      pages: ["Ma journée", "Stock et dépôts"],
+    },
   },
   {
     nom: "Aya Diomandé",
@@ -92,6 +116,14 @@ const COLLABORATEURS: Collaborateur[] = [
     statut: { label: "Révoquée", tone: "ko" },
     expire: "Révoquée le 18 août",
     couleur: "",
+    details: {
+      creeLe: "3 févr. 2026",
+      premiereConnexion: "3 févr. · 10 h 05",
+      derniereConnexion: "17 août · 16 h 40",
+      motDePasseChange: "Oui",
+      codeRenouvele: "1 fois",
+      pages: ["Ma journée", "Stock et dépôts"],
+    },
   },
 ];
 
@@ -179,7 +211,7 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
                     className="flex w-full items-center gap-3 p-3.5 text-left disabled:cursor-default"
                   >
                     <span
-                      className="h-9 w-9 shrink-0 rounded-xl"
+                      className="h-9 w-9 shrink-0 rounded-full"
                       style={{ background: c.couleur || "rgba(20,18,32,0.06)" }}
                     />
                     <span className="min-w-0 flex-1">
@@ -196,20 +228,18 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
                       </span>
                       <span className="block text-xs font-semibold">{c.expire}</span>
                     </span>
-                    {c.details && (
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        className={`h-3.5 w-3.5 shrink-0 text-[#141220]/40 transition-transform ${open ? "rotate-180" : ""}`}
-                      >
-                        <path d="m6 9.5 6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className={`h-3.5 w-3.5 shrink-0 text-[#141220]/40 transition-transform ${open ? "rotate-90" : ""}`}
+                    >
+                      <path d="m9.5 6 6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </button>
 
                   {open && c.details && (
                     <div className="border-t border-[#141220]/[0.06] bg-black/[0.015] p-3.5">
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 min-[1360px]:grid-cols-5">
+                      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 min-[1360px]:grid-cols-5">
                         <DetailTile label="Compte créé le" value={c.details.creeLe} />
                         <DetailTile label="Première connexion" value={c.details.premiereConnexion} />
                         <DetailTile label="Dernière connexion" value={c.details.derniereConnexion} />
@@ -219,22 +249,22 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
                       <Divider />
                       <p className="mb-1.5 text-[10px] text-[#141220]/40">Pages accessibles</p>
                       <div className="flex flex-wrap gap-1.5">
-                        {c.details.pages.map((p) => (
-                          <Tag key={p} tone="neutral">{p}</Tag>
+                        {c.details.pages.map((p, pi) => (
+                          <Tag key={p} tone={pi % 2 === 0 ? "dark" : "ok"}>{p}</Tag>
                         ))}
                       </div>
                       <Divider />
                       <div className="flex flex-wrap gap-2">
-                        <button type="button" className="rounded-full border border-[#141220]/15 bg-white px-3.5 py-2 text-xs font-semibold">
+                        <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white">
                           Modifier les droits
                         </button>
-                        <button type="button" className="rounded-full border border-[#141220]/15 bg-white px-3.5 py-2 text-xs font-semibold">
+                        <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white">
                           Prolonger la validité
                         </button>
-                        <button type="button" className="rounded-full border border-[#141220]/15 bg-white px-3.5 py-2 text-xs font-semibold">
+                        <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white">
                           Réinitialiser le mot de passe
                         </button>
-                        <button type="button" className="rounded-full border border-red-300 bg-white px-3.5 py-2 text-xs font-semibold text-[#c8262d]">
+                        <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-brand-pink">
                           Révoquer l&apos;accès
                         </button>
                       </div>
@@ -304,7 +334,7 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
             <Tag tone="neutral">Litiges</Tag>
           </div>
 
-          <Btn variant="white" className="mt-3.5">Créer le compte et générer les accès</Btn>
+          <Btn variant="dark" className="mt-3.5">Créer le compte et générer les accès</Btn>
           <p className="mt-1.5 text-center text-[10px] text-[#141220]/40">
             Le code à scanner apparaîtra après sa première connexion.
           </p>
@@ -316,9 +346,9 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
 
 function DetailTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-[#141220]/10 bg-white p-2.5">
-      <p className="text-[9px] text-[#141220]/40">{label}</p>
-      <p className="mt-0.5 text-xs font-semibold">{value}</p>
+    <div className="rounded-2xl bg-white p-3 text-center shadow-[0_4px_24px_rgba(20,18,32,0.06)]">
+      <p className="text-[10px] text-[#141220]/40">{label}</p>
+      <p className="mt-1.5 text-sm font-bold">{value}</p>
     </div>
   );
 }

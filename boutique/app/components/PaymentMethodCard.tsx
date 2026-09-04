@@ -63,10 +63,23 @@ export default function PaymentMethodCard() {
   const [dragX, setDragX] = useState(0);
   const startXRef = useRef(0);
   const draggingRef = useRef(false);
+  const dirRef = useRef<1 | -1>(1); // sens de l'anim d'entrée, façon changement de page
   const method = METHODS[active];
+  const behind1 = METHODS[(active + 1) % METHODS.length];
+  const behind2 = METHODS[(active + 2) % METHODS.length];
 
-  const next = () => setActive((a) => (a + 1) % METHODS.length);
-  const prev = () => setActive((a) => (a - 1 + METHODS.length) % METHODS.length);
+  const next = () => {
+    dirRef.current = 1;
+    setActive((a) => (a + 1) % METHODS.length);
+  };
+  const prev = () => {
+    dirRef.current = -1;
+    setActive((a) => (a - 1 + METHODS.length) % METHODS.length);
+  };
+  const goTo = (i: number) => {
+    dirRef.current = i >= active ? 1 : -1;
+    setActive(i);
+  };
 
   const onPointerDown = (e: React.PointerEvent) => {
     draggingRef.current = true;
@@ -92,58 +105,68 @@ export default function PaymentMethodCard() {
   return (
     <div className="relative pt-6">
       {/* cartes empilées derrière — profondeur : plus loin = plus flou */}
-      <div className="absolute inset-x-6 top-0 h-40 rounded-2xl border border-white/20 bg-[#8A90A0]/30 opacity-90 backdrop-blur-md" />
-      <div className="absolute inset-x-4 top-1 h-40 rounded-2xl opacity-90" style={{ background: "#2F72D6" }} />
-      <div className="absolute inset-x-2 top-2 h-40 rounded-2xl bg-[linear-gradient(160deg,#1BA1F2_0%,#0A3D91_100%)] opacity-80" />
+      <div
+        className="absolute inset-x-6 top-0 h-40 rounded-2xl border border-white/20 opacity-60 backdrop-blur-md transition-[background] duration-300 ease-out"
+        style={{ background: behind2.gradient }}
+      />
+      <div
+        className="absolute inset-x-2 top-2 h-40 rounded-2xl opacity-85 transition-[background] duration-300 ease-out"
+        style={{ background: behind1.gradient }}
+      />
 
       <div
-        role="button"
-        tabIndex={0}
-        aria-label={`Voir le moyen de paiement suivant (actuel : ${method.label})`}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowRight" || e.key === "Enter" || e.key === " ") next();
-          if (e.key === "ArrowLeft") prev();
-        }}
-        className={`relative touch-pan-y cursor-grab overflow-hidden rounded-2xl p-4 shadow-[0_18px_40px_rgba(20,18,32,0.28)] select-none active:cursor-grabbing ${
-          method.textDark ? "text-[#141220]" : "text-white"
-        }`}
-        style={{
-          background: method.gradient,
-          transform: `translateX(${dragX}px)`,
-          transition: draggingRef.current ? "none" : "transform 0.2s ease",
-        }}
+        key={method.id}
+        className={dirRef.current === 1 ? "payment-card-enter-fwd" : "payment-card-enter-back"}
       >
-        <span
-          className={`pointer-events-none absolute rounded-full ${
-            method.textDark ? "bg-black/[0.06]" : "bg-white/[0.16]"
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label={`Voir le moyen de paiement suivant (actuel : ${method.label})`}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowRight" || e.key === "Enter" || e.key === " ") next();
+            if (e.key === "ArrowLeft") prev();
+          }}
+          className={`relative touch-pan-y cursor-grab overflow-hidden rounded-2xl p-4 shadow-[0_18px_40px_rgba(20,18,32,0.28)] select-none active:cursor-grabbing ${
+            method.textDark ? "text-[#141220]" : "text-white"
           }`}
-          style={{ right: -56, top: -70, width: 200, height: 200 }}
-        />
-        <div className="relative flex items-center justify-between gap-2">
-          <span className="flex items-center gap-2 text-sm font-bold">
-            <span
-              className="flex h-6 w-6 items-center justify-center rounded-md bg-white/90 text-[10px] font-extrabold"
-              style={{ color: method.iconText }}
-            >
-              {method.short}
+          style={{
+            background: method.gradient,
+            transform: `translateX(${dragX}px)`,
+            transition: draggingRef.current ? "none" : "transform 0.2s ease",
+          }}
+        >
+          <span
+            className={`pointer-events-none absolute rounded-full ${
+              method.textDark ? "bg-black/[0.06]" : "bg-white/[0.16]"
+            }`}
+            style={{ right: -56, top: -70, width: 200, height: 200 }}
+          />
+          <div className="relative flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2 text-sm font-bold">
+              <span
+                className="flex h-6 w-6 items-center justify-center rounded-md bg-white/90 text-[10px] font-extrabold"
+                style={{ color: method.iconText }}
+              >
+                {method.short}
+              </span>
+              {method.label}
             </span>
-            {method.label}
-          </span>
-          <span className="rounded-full border border-white/30 bg-white/20 px-3 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
-            Compte actif
-          </span>
-        </div>
-        <p className={`mt-4 text-[10px] uppercase tracking-[0.16em] ${method.textDark ? "text-black/50" : "text-white/70"}`}>
-          Reversé sur ce compte
-        </p>
-        <p className="mt-1 text-3xl font-bold tracking-tight">318 000 F</p>
-        <div className={`mt-3 flex items-center justify-between text-[10px] ${method.textDark ? "text-black/50" : "text-white/70"}`}>
-          <span className="tracking-[0.18em]">•••• •••• 4417</span>
-          <span>30 / 08</span>
+            <span className="rounded-full border border-white/30 bg-white/20 px-3 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
+              Compte actif
+            </span>
+          </div>
+          <p className={`mt-4 text-[10px] uppercase tracking-[0.16em] ${method.textDark ? "text-black/50" : "text-white/70"}`}>
+            Reversé sur ce compte
+          </p>
+          <p className="mt-1 text-3xl font-bold tracking-tight">318 000 F</p>
+          <div className={`mt-3 flex items-center justify-between text-[10px] ${method.textDark ? "text-black/50" : "text-white/70"}`}>
+            <span className="tracking-[0.18em]">•••• •••• 4417</span>
+            <span>30 / 08</span>
+          </div>
         </div>
       </div>
 
@@ -152,7 +175,7 @@ export default function PaymentMethodCard() {
           <button
             key={m.id}
             type="button"
-            onClick={() => setActive(i)}
+            onClick={() => goTo(i)}
             aria-label={m.label}
             aria-pressed={i === active}
             className="flex h-3 items-center px-0.5"

@@ -38,7 +38,7 @@ export default function DashboardPage() {
             barre latérale sticky à partir de lg (desktop) ── */}
         <DashboardSidebar />
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 lg:px-6">
           <DashboardHeader />
 
           {/* ── Salutation ── */}
