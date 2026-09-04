@@ -15,32 +15,39 @@ export default function Hero() {
       {/* ── Grille principale ── */}
       <div className="relative mx-auto grid max-w-[1320px] items-center gap-8 lg:grid-cols-[420px_1fr]">
 
-        {/* Colonne texte */}
+        {/* Colonne texte — même disposition "en cascade" que le prototype
+            hero-brain : chaque ligne du titre est indentée un peu plus que
+            la précédente (ml-4 puis ml-8), et le sous-titre / bouton / "Sans
+            s'engager" suivent avec leur propre décalage (ml-20, puis un
+            ml-20 supplémentaire rien que pour "Sans s'engager"). */}
         <div>
-          <h1 className="text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-[56px]">
-            une vente
-            <br />
-            un réseau
-            <br />
-            Tout <span className="text-brand-pink">s'active</span>
+          <h1 className="text-left text-4xl font-extrabold leading-[1.16] tracking-[-0.02em] sm:text-5xl lg:text-[56px]">
+            <span className="block">une vente</span>
+            <span className="ml-4 block">un réseau</span>
+            <span className="ml-8 block">
+              Tout <span className="text-brand-pink">s&apos;active</span>
+            </span>
           </h1>
 
-          <p className="mt-4 max-w-sm text-brand-white/60 lg:mt-6">
+          <p className="ml-20 mt-[1.6rem] max-w-[36ch] text-brand-white/60">
             toute votre logistique e-commerce, une seule plateforme
           </p>
 
-          <div className="mt-6 flex flex-col items-start gap-3 lg:mt-8">
-            <span className="inline-block rounded-xl bg-[linear-gradient(90deg,var(--color-brand-pink),var(--color-brand-purple))] p-px">
+          <div className="ml-20 mt-[2.4rem] flex flex-col items-start gap-3">
+            <span className="inline-block rounded-2xl bg-[linear-gradient(90deg,var(--color-brand-pink),var(--color-brand-purple))] p-px">
               <Link
                 href="/login"
-                className="flex items-center gap-2 rounded-[11px] bg-[#0a0e1c] px-[18px] py-4 text-sm font-semibold transition hover:opacity-90"
+                className="flex items-center gap-2 rounded-[14px] bg-[#0a0e1c] px-[18px] py-4 text-sm font-semibold transition hover:opacity-90"
               >
                 commencer maintenant
-                <span aria-hidden>»</span>
+                <svg width="26" height="16" viewBox="0 0 26 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M2 2L8 8L2 14" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M11 2L17 8L11 14" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </Link>
             </span>
-            <span className="text-xs text-brand-white/40">
-              Sans s'engager
+            <span className="ml-20 text-xs text-brand-white/40">
+              Sans s&apos;engager
             </span>
           </div>
         </div>
