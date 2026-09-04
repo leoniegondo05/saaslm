@@ -17,7 +17,7 @@ export default function AcquisitionSection({ first = true }: { first?: boolean }
 
       <div className="grid gap-3 lg:grid-cols-4">
         <Card title="Votre page de commande" titleTab className="!bg-white">
-          <div className="mt-1 flex items-end gap-2">
+          <div className="mt-1 flex items-end justify-between gap-2">
             <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-3xl font-bold tracking-tight text-white">
               2 140
             </p>
@@ -52,7 +52,7 @@ export default function AcquisitionSection({ first = true }: { first?: boolean }
         </Card>
 
         <Card title="Paniers abandonnés" titleTab className="!bg-white">
-          <div className="mt-1 flex items-end gap-2">
+          <div className="mt-1 flex items-end justify-between gap-2">
             <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-3xl font-bold tracking-tight text-white">
               23
             </p>

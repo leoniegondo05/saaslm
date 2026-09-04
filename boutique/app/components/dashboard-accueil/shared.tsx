@@ -473,16 +473,43 @@ export function ProductSelector({
   );
 }
 
+export function Trend({ values }: { values?: number[] }) {
+  const bars = values && values.length ? values : [3, 5, 4, 8];
+  const max = Math.max(...bars);
+  return (
+    <div className="flex h-5 items-end gap-[3px]" aria-hidden>
+      {bars.map((v, i) => (
+        <span
+          key={i}
+          className="w-1.5 rounded-sm"
+          style={{
+            height: `${Math.max((v / max) * 100, 12)}%`,
+            background: i === bars.length - 1 ? "var(--color-brand-pink)" : "#E4E1E8",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function Table({
   head,
   rows,
   className = "",
   sourceCol,
+  evolutions,
+  activeIndex,
+  onRowClick,
 }: {
   head: string[];
   rows: string[][];
   className?: string;
   sourceCol?: number;
+  evolutions?: number[][];
+  /** Ligne mise en avant (ex: produit sélectionné dans un carousel lié). */
+  activeIndex?: number;
+  /** Optionnel : rend les lignes cliquables (ex: pour piloter un carousel lié). */
+  onRowClick?: (index: number) => void;
 }) {
   return (
     <div className={`overflow-x-auto ${className}`}>
@@ -494,11 +521,22 @@ export function Table({
                 {h}
               </th>
             ))}
+            {evolutions && (
+              <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#141220]/35">
+                Évolution
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className="border-b border-[#141220]/[0.05] last:border-0">
+            <tr
+              key={i}
+              onClick={onRowClick ? () => onRowClick(i) : undefined}
+              className={`border-b border-[#141220]/[0.05] last:border-0 ${onRowClick ? "cursor-pointer" : ""} ${
+                activeIndex === i ? "bg-brand-pink/5" : ""
+              }`}
+            >
               {row.map((cell, j) => (
                 <td key={j} className="py-2 pr-3">
                   {j === 0 ? (
@@ -510,6 +548,11 @@ export function Table({
                   )}
                 </td>
               ))}
+              {evolutions && (
+                <td className="py-2 pr-3">
+                  <Trend values={evolutions[i]} />
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

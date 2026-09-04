@@ -53,7 +53,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           <StatRow label="En cours de livraison" value="3" bold={false} />
           <StatRow label="En relance" value="2" bold={false} />
           <Divider />
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Les quatre délais</p>
+          <p className="inline-block rounded bg-[#F4F4F6] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Les quatre délais</p>
           <StatRow label="Commande → confirmation" value="1 h 40" bold={false} />
           <StatRow label="Confirmation → livreur" value="4 h 10" bold={false} />
           <StatRow label="Livreur → livraison" value="20 h" bold={false} />
