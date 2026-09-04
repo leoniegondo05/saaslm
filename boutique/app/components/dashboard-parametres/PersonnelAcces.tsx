@@ -144,12 +144,13 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
         title="Personnel et accès"
         subtitle="Créer un collaborateur, lui envoyer ses accès, son code personnel."
         first={first}
+        layout="inline"
       />
 
       <div className="grid gap-4 min-[1360px]:grid-cols-[320px_1fr_300px]">
         {/* Colonne 1 : mon identité */}
         <div>
-          <div className="rounded-2xl bg-white p-4 shadow-[0_4px_24px_rgba(20,18,32,0.06)]">
+          <div className="rounded-2xl bg-white p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Mon identité</p>
               <Tag tone="dark">Valide 15 jours</Tag>
@@ -200,7 +201,7 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
               return (
                 <div
                   key={c.nom}
-                  className={`overflow-hidden rounded-2xl bg-white shadow-[0_4px_24px_rgba(20,18,32,0.06)] transition ${
+                  className={`overflow-hidden rounded-2xl bg-white shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] transition ${
                     open ? "ring-1 ring-brand-pink/30" : ""
                   }`}
                 >
@@ -346,7 +347,7 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
 
 function DetailTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-white p-3 text-center shadow-[0_4px_24px_rgba(20,18,32,0.06)]">
+    <div className="rounded-2xl bg-white p-3 text-center shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
       <p className="text-[10px] text-[#141220]/40">{label}</p>
       <p className="mt-1.5 text-sm font-bold">{value}</p>
     </div>

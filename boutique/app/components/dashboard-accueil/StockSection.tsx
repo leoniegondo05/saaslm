@@ -119,6 +119,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
         subtitle="Chaque dépôt, du départ de chez vous jusqu'à la vente."
         count="Flèches pour changer de produit"
         first={first}
+        layout="inline"
       />
 
       <div className="grid gap-3 lg:grid-cols-[1.9fr_1fr]">
@@ -253,7 +254,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
         </Card>
 
         <div>
-          <div className="overflow-hidden rounded-2xl shadow-[0_4px_24px_rgba(20,18,32,0.06)]">
+          <div className="overflow-hidden rounded-2xl shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
             <div className="relative bg-[linear-gradient(153.4deg,#3A1D8A_16.68%,#000000_135.1%)] p-4 text-white">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">Évolution du stock</p>

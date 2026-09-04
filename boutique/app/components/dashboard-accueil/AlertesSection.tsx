@@ -13,6 +13,7 @@ export default function AlertesSection({ first = true }: { first?: boolean }) {
         subtitle="Ruptures, litiges et tenue de votre partenaire."
         count="16 indicateurs"
         first={first}
+        layout="inline"
       />
 
       <div className="grid gap-3 pb-4 lg:grid-cols-3">

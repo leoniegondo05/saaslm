@@ -13,6 +13,7 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
         subtitle="Ce que valent vos clients et ce qu'ils pensent."
         count="14 indicateurs"
         first={first}
+        layout="inline"
       />
 
       <div className="grid gap-3 lg:grid-cols-4">

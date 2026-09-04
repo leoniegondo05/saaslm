@@ -141,9 +141,21 @@ export default function PaymentMethodCard() {
         >
           <span
             className={`pointer-events-none absolute rounded-full ${
-              method.textDark ? "bg-black/[0.06]" : "bg-white/[0.16]"
+              method.textDark ? "bg-black/[0.06]" : ""
             }`}
-            style={{ right: -56, top: -70, width: 200, height: 200 }}
+            style={{ right: -30, top: -40, width: 130, height: 130, background: method.textDark ? undefined : "#FFFFFF29" }}
+          />
+          <span
+            className={`pointer-events-none absolute rounded-full ${
+              method.textDark ? "bg-black/[0.06]" : ""
+            }`}
+            style={{ left: -34, top: -40, width: 105, height: 105, background: method.textDark ? undefined : "#FFFFFF29" }}
+          />
+          <span
+            className={`pointer-events-none absolute rounded-full ${
+              method.textDark ? "bg-black/[0.06]" : ""
+            }`}
+            style={{ left: -32, bottom: -46, width: 115, height: 115, background: method.textDark ? undefined : "#FFFFFF29" }}
           />
           <div className="relative flex items-center justify-between gap-2">
             <span className="flex items-center gap-2 text-sm font-bold">

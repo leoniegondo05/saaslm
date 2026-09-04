@@ -36,6 +36,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
         subtitle="Ce que chaque nature de produit vous rapporte."
         count="20 indicateurs"
         first={first}
+        layout="inline"
       />
 
       <div className="grid gap-3 lg:grid-cols-3">

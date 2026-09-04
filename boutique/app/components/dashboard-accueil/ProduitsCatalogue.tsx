@@ -97,6 +97,7 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
         subtitle="Toutes natures confondues, dans un seul tableau."
         count={`${PRODUITS.length} produits`}
         first={first}
+        layout="inline"
       />
 
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
