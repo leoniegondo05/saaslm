@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { SectionHeader, Nature, Tag } from "../dashboard-accueil/shared";
+import { SectionHeader, Tag } from "../dashboard-accueil/shared";
 import { CATEGORIES, DROP_PRODUITS } from "./dropCatalogue";
 
 /*
-  Écran 05 "Catalogue disponible en drop" : catégories à gauche, produits de
+  Écran 05 "Catalogue disponible en drop" : aperçu du produit en avant à
+  gauche (les nouveautés de la catégorie), catégories au centre, produits de
   la catégorie choisie en carrés à droite. Chaque tuile mène à sa fiche
   (Écran 06, /dashboard/produits/catalogue/[slug]) — sauf les produits "à
   venir", qui n'ont pas encore de fiche.
@@ -15,8 +16,19 @@ import { CATEGORIES, DROP_PRODUITS } from "./dropCatalogue";
 const F = (n: number) => `${n.toLocaleString("fr-FR")} F`;
 
 export default function CatalogueDrop({ first = true }: { first?: boolean }) {
-  const [categorie, setCategorie] = useState(CATEGORIES[0].nom);
+  const [categorie, setCategorieRaw] = useState(CATEGORIES[0].nom);
+  const [previewIndex, setPreviewIndex] = useState(0);
   const produits = DROP_PRODUITS.filter((p) => p.categorie === categorie);
+
+  // Changer de catégorie repart toujours sur le premier aperçu.
+  const setCategorie = (nom: string) => {
+    setCategorieRaw(nom);
+    setPreviewIndex(0);
+  };
+
+  const categorieActive = CATEGORIES.find((c) => c.nom === categorie);
+  const nouveautes = produits.filter((p) => p.source !== "AVENIR").slice(0, categorieActive?.nouveautes ?? undefined);
+  const preview = nouveautes[previewIndex];
 
   return (
     <>
@@ -27,7 +39,75 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
         first={first}
       />
 
-      <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[260px_200px_1fr]">
+        <div className="relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-[28px] bg-white p-5">
+          {/* Fond attend la photo du produit en avant (background-image sur cette
+              div) ; le dégradé ci-dessous fait le fondu vers le noir pour la
+              lisibilité du texte, cf. [[dashboard-mock-data-pending-laravel-api]]. */}
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(238.49deg,rgba(217,217,217,0)_51.88%,#000000_120.52%)]" />
+          {preview ? (
+            <>
+              {nouveautes.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewIndex((i) => (i - 1 + nouveautes.length) % nouveautes.length)}
+                    aria-label="Produit précédent"
+                    className="absolute left-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-[#141220]/25 text-white backdrop-blur-sm"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
+                      <path d="m14.5 5-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewIndex((i) => (i + 1) % nouveautes.length)}
+                    aria-label="Produit suivant"
+                    className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-[#141220]/25 text-white backdrop-blur-sm"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
+                      <path d="m9.5 5 7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </>
+              )}
+
+              <span className="relative z-10">
+                <Tag tone={preview.source === "L" ? "pink" : "neutral"}>{preview.source === "L" ? "Drop LM" : "Partenaire"}</Tag>
+              </span>
+
+              <div className="relative z-10">
+                <h3 className="text-base font-bold text-white">{preview.nom}</h3>
+                <p className="mt-1 text-[11px] text-white/70">
+                  Vous payez {F(preview.prixDrop!)} · conseillé {F(preview.prixConseille!)}
+                </p>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <Link
+                    href={`/dashboard/produits/catalogue/${preview.slug}`}
+                    className="rounded-full bg-[#141220] px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:brightness-95"
+                  >
+                    Voir la fiche
+                  </Link>
+                  {nouveautes.length > 1 && (
+                    <div className="flex items-center gap-1">
+                      {nouveautes.map((_, i) => (
+                        <span
+                          key={i}
+                          className={i === previewIndex ? "h-1.5 w-4 rounded-full bg-white" : "h-1.5 w-1.5 rounded-full bg-white/40"}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="relative z-10 m-auto max-w-[80%] text-center text-xs text-white/70">
+              Catalogue de cette catégorie à venir.
+            </p>
+          )}
+        </div>
+
       <div>
         <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Catégories</p>
         <div className="flex flex-col gap-2">
@@ -71,28 +151,41 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {produits.map((p) => {
+              const glow =
+                p.source === "L"
+                  ? "bg-[linear-gradient(165deg,rgba(236,12,140,0.38)_0%,rgba(236,12,140,0.05)_100%)]"
+                  : p.source === "P"
+                  ? "bg-[linear-gradient(165deg,rgba(20,18,32,0.16)_0%,rgba(20,18,32,0.02)_100%)]"
+                  : "bg-[#141220]/[0.03]";
+              const badgeLabel = p.source === "AVENIR" ? "À venir" : p.source === "L" ? "Drop" : "Stock Management";
+              const badgeColor = p.source === "L" ? "#EC0C8C" : "#6b7280";
               const tile = (
-                <div className="rounded-2xl border border-[#141220]/[0.06] card-tint overflow-hidden">
-                  <div className="relative flex aspect-square items-center justify-center bg-[radial-gradient(260px_180px_at_50%_44%,rgba(236,12,140,0.16),transparent_66%)]">
-                    <span className="h-1/2 w-1/2 rounded-2xl border border-[#141220]/10 bg-white/70" />
-                    <span className="absolute left-2.5 top-2.5">
-                      {p.source === "AVENIR" ? (
-                        <Tag tone="neutral">À venir</Tag>
-                      ) : (
-                        <Tag tone={p.source === "L" ? "pink" : "blue"}>{p.source === "L" ? "Drop LM" : "Partenaire"}</Tag>
-                      )}
+                <div className="relative">
+                  <div className={`relative flex aspect-square items-center justify-center rounded-[20px] ${glow}`}>
+                    <span className="absolute left-2 top-2 rounded-full bg-white px-2 py-1 text-[9px] font-semibold" style={{ color: badgeColor }}>
+                      {badgeLabel}
                     </span>
-                    {p.source !== "AVENIR" && (
-                      <span className="absolute right-2.5 top-2.5">
-                        <Nature code={p.source} />
-                      </span>
-                    )}
+                    <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#141220]/45 backdrop-blur-sm">
+                      <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
+                        <path
+                          d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0Z"
+                          stroke="#ffffff"
+                          strokeWidth="1.6"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
                   </div>
-                  <div className="p-2.5">
-                    <p className="text-xs font-semibold">{p.nom}</p>
-                    <p className="mt-0.5 text-[10px] text-[#141220]/50">
-                      {p.prixDrop !== null ? `${F(p.prixDrop)} · conseillé ${F(p.prixConseille!)}` : `Prix à l'arrivée · ${p.arriveeLe}`}
-                    </p>
+                  <div className="relative z-10 -mt-6 mx-2 rounded-2xl bg-white p-2 shadow-[0_4px_16px_rgba(20,18,32,0.1)]">
+                    <p className="truncate text-[11px] font-bold">{p.nom}</p>
+                    {p.source === "AVENIR" ? (
+                      <p className="mt-0.5 truncate text-[9px] text-[#141220]/50">Prix à l&apos;arrivée · {p.arriveeLe}</p>
+                    ) : (
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <span className="rounded-full bg-brand-purple px-2 py-0.5 text-[9px] font-bold text-white">{F(p.prixDrop!)}</span>
+                        <span className="truncate text-[9px] text-[#141220]/70">conseillé {F(p.prixConseille!)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

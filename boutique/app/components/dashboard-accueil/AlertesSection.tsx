@@ -31,8 +31,17 @@ export default function AlertesSection({ first = true }: { first?: boolean }) {
           <StatRow label="Alertes traitées ce mois" value="11" />
         </Card>
 
-        <Card title="Litiges" titleTab className="!bg-white" badge={<Tag tone="pink">1 en cours</Tag>}>
-          <StatRow label="Montant suspendu" value="28 000 F" />
+        <Card title="Litiges" titleTab className="!bg-white" badge={<Tag tone="pink" className="mb-2">1 en cours</Tag>}>
+          <div className="mt-3">
+          <StatRow
+            label="Montant suspendu"
+            value={
+              <span className="-mr-4 inline-block rounded-l-xl bg-brand-purple py-2 pl-4 pr-4 text-sm font-bold text-white">
+                28 000 F
+              </span>
+            }
+          />
+          </div>
           <StatRow label="Ouvert par" value="Le client final" />
           <StatRow label="Depuis" value="3 jours" />
           <StatRow label="Résolus ce mois" value="4" />
@@ -40,15 +49,26 @@ export default function AlertesSection({ first = true }: { first?: boolean }) {
           <StatRow label="Montant récupéré" value="46 000 F" />
           <StatRow label="Montant perdu" value="12 000 F" />
           <StatRow label="Taux de litige" value="1,4 %" />
-          <button
-            type="button"
-            className="mt-4 w-full rounded-full border border-brand-pink/40 py-2.5 text-center text-xs font-semibold text-brand-pink transition hover:bg-brand-pink/5"
-          >
-            Voir le litige en cours
-          </button>
+          <div className="mt-4 flex justify-center">
+            <button
+              type="button"
+              className="w-full rounded-full bg-brand-pink py-2.5 text-center text-xs font-semibold text-white shadow-[0_4px_16px_rgba(236,12,140,0.35)] transition hover:bg-brand-pink/90"
+            >
+              Voir le litige en cours
+            </button>
+          </div>
         </Card>
 
-        <Card title="Votre partenaire" titleTab className="!bg-white" badge={<Tag tone="dark">Note 8,4</Tag>}>
+        <Card
+          title="Votre partenaire"
+          titleTab
+          className="!bg-white"
+          badge={
+            <Tag tone="dark" style={{ background: "#ffffff", boxShadow: "0 2px 10px rgba(20,18,32,0.12)" }}>
+              <span className="text-yellow-400">★</span> Note 8,4
+            </Tag>
+          }
+        >
           <StatRow label="Délai moyen de livraison" value="26 h" />
           <StatRow label="Moyenne du réseau" value="31 h" />
           <StatRow label="Taux de livraison" value="79 %" />

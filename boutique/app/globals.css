@@ -619,7 +619,51 @@ body {
   animation: auth-overlay-in 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/*
+  Entrée de la carte "Reversé sur ce compte" (PaymentMethodCard) : style
+  transition de page — la carte suivante glisse depuis la droite (fwd) ou la
+  gauche (back), avec fade + léger flou, selon le sens de navigation.
+*/
+@keyframes payment-card-enter-fwd {
+  from {
+    opacity: 0;
+    transform: translateX(28px) scale(0.97);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes payment-card-enter-back {
+  from {
+    opacity: 0;
+    transform: translateX(-28px) scale(0.97);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.payment-card-enter-fwd {
+  animation: payment-card-enter-fwd 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.payment-card-enter-back {
+  animation: payment-card-enter-back 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .payment-card-enter-fwd,
+  .payment-card-enter-back {
+    animation: none !important;
+  }
+
   .animate-auth-overlay {
     animation: none !important;
     opacity: 1 !important;
