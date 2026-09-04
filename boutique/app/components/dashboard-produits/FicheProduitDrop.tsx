@@ -62,7 +62,7 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
       </div>
 
       <div className="mt-4 grid gap-3 lg:grid-cols-[1.1fr_1.25fr_0.95fr]">
-        <div className="rounded-2xl bg-white p-4 text-[#141220] shadow-[0_4px_24px_rgba(20,18,32,0.06)]">
+        <div className="rounded-2xl bg-white p-4 text-[#141220] shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Les quatre prix</p>
           <p className="mt-3 text-[10px] uppercase tracking-[0.16em] text-[#141220]/40">Vous payez ce produit</p>
           <p className="text-2xl font-bold">{F(produit.prixDrop ?? 0)}</p>

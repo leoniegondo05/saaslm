@@ -54,7 +54,7 @@ export default function DashboardPage() {
             <div className="flex flex-col gap-3">
               <WeatherCard />
 
-              <div className="flex items-center gap-3 rounded-2xl card-tint p-3 pr-4 shadow-[0_4px_24px_rgba(20,18,32,0.06)]">
+              <div className="flex items-center gap-3 rounded-2xl card-tint p-3 pr-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink">
                   <WarningIcon />
                 </span>
@@ -78,7 +78,7 @@ export default function DashboardPage() {
 
             {/* Colonne droite : ventes + identité — une seule carte, les deux
                 sections sont liées (pas deux cartes séparées par un gap) */}
-            <div className="order-2 flex flex-col rounded-2xl card-tint shadow-[0_4px_24px_rgba(20,18,32,0.06)] lg:order-none">
+            <div className="order-2 flex flex-col rounded-2xl card-tint shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] lg:order-none">
               <div className="p-3">
                 <span className="inline-flex items-center gap-2 text-xs text-[#141220]/50">
                   <TrendUpIcon />
@@ -303,7 +303,7 @@ function WeatherCard() {
       : null;
 
   return (
-    <div className="rounded-2xl card-tint p-3 shadow-[0_4px_24px_rgba(20,18,32,0.06)]">
+    <div className="rounded-2xl card-tint p-3 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
       {view === "meteo" ? (
         <>
           <div className="flex items-start justify-between">
@@ -390,7 +390,7 @@ function WeatherCard() {
             {LOCAL_CONDITIONS.map((condition) => (
               <div
                 key={condition.label}
-                className="flex flex-col gap-2 rounded-2xl border border-[#141220]/[0.06] bg-white p-2"
+                className="flex flex-col gap-2 rounded-2xl border border-[#141220]/[0.06] bg-white p-2 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]"
               >
                 <span
                   className={`inline-block rounded-full px-2.5 py-1 text-center text-[11px] font-semibold ${condition.badgeClass}`}

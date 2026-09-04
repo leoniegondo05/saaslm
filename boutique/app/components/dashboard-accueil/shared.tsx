@@ -73,28 +73,46 @@ export function SectionHeader({
   subtitle,
   count,
   first = false,
+  layout = "stack",
 }: {
   eyebrow: string;
   title: string;
   subtitle?: string;
   count?: string;
   first?: boolean;
+  /** "stack": badge au-dessus du titre (défaut). "inline": badge / titre sur une même ligne. */
+  layout?: "stack" | "inline";
 }) {
+  const badge = (
+    <span
+      className="inline-flex rounded-full p-px shadow-[0_2px_12px_rgba(20,18,32,0.05)]"
+      style={{ backgroundImage: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 58.35%, #FFFFFF 100%)" }}
+    >
+      <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-[#141220] backdrop-blur-md">
+        <span className="h-1.5 w-1.5 rounded-full bg-brand-pink shadow-[0_0_10px_rgba(236,12,140,0.6)]" />
+        {eyebrow}
+      </span>
+    </span>
+  );
+
   return (
-    <div className={`mb-4 flex flex-wrap items-end justify-between gap-3 ${first ? "mt-8" : "mt-12"}`}>
-      <div>
-        <span
-          className="inline-flex rounded-full p-px shadow-[0_2px_12px_rgba(20,18,32,0.05)]"
-          style={{ backgroundImage: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 58.35%, #FFFFFF 100%)" }}
-        >
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-[#141220] backdrop-blur-md">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-pink shadow-[0_0_10px_rgba(236,12,140,0.6)]" />
-            {eyebrow}
-          </span>
-        </span>
-        <h2 className="mt-1.5 text-xl font-bold tracking-tight sm:text-2xl">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-xs text-[#141220]/50">{subtitle}</p>}
-      </div>
+    <div className={`flex flex-wrap items-end justify-between gap-3 ${layout === "inline" ? "mb-12" : "mb-4"} ${first ? "mt-8" : "mt-12"}`}>
+      {layout === "inline" ? (
+        <div className="flex items-center gap-3">
+          {badge}
+          <span className="text-lg font-light text-[#141220]/20">/</span>
+          <div>
+            <h2 className="text-xs font-bold tracking-tight sm:text-sm">{title}</h2>
+            {subtitle && <p className="mt-0.5 text-xs text-[#141220]/50">{subtitle}</p>}
+          </div>
+        </div>
+      ) : (
+        <div>
+          {badge}
+          <h2 className="mt-1.5 text-xl font-bold tracking-tight sm:text-2xl">{title}</h2>
+          {subtitle && <p className="mt-0.5 text-xs text-[#141220]/50">{subtitle}</p>}
+        </div>
+      )}
       {count && (
         <span className="rounded-full bg-white/70 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-[#141220]/40 shadow-[0_2px_10px_rgba(20,18,32,0.06)]">
           {count}
@@ -125,7 +143,7 @@ export function Card({
   children?: React.ReactNode;
 }) {
   return (
-    <div className={`rounded-2xl card-tint p-4 shadow-[0_4px_24px_rgba(20,18,32,0.06)] ${className}`}>
+    <div className={`rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] ${className}`}>
       {title && titleTab && (
         <div className={`relative -mt-4 flex items-center ${titleAlign === "left" ? "justify-start" : "justify-center"}`}>
           <p
@@ -284,7 +302,7 @@ export function MiniStat({
 
 export function MiniTile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <div className="flex h-full flex-col rounded-2xl card-tint p-3 shadow-[0_4px_24px_rgba(20,18,32,0.06)]">
+    <div className="flex h-full flex-col rounded-2xl card-tint p-3 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
       <p className="text-[10px] text-[#141220]/40">{label}</p>
       <p className="mt-0.5 text-sm font-bold">{value}</p>
       <p className="mt-auto pt-0.5 text-[9px] text-[#141220]/35">{note}</p>

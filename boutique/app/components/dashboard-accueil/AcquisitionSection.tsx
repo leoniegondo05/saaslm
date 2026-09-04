@@ -13,6 +13,7 @@ export default function AcquisitionSection({ first = true }: { first?: boolean }
         subtitle="Votre page de commande et vos sources de trafic."
         count="14 indicateurs"
         first={first}
+        layout="inline"
       />
 
       <div className="grid gap-3 lg:grid-cols-4">

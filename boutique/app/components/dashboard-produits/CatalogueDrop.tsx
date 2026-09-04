@@ -37,6 +37,7 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
         title="Produits disponibles chez le partenaire"
         subtitle="Aucun stock à avancer : vous choisissez, il livre."
         first={first}
+        layout="inline"
       />
 
       <div className="grid gap-4 lg:grid-cols-[260px_200px_1fr]">

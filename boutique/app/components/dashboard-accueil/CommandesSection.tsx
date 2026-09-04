@@ -20,6 +20,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
         subtitle="De la prise de commande jusqu'à la livraison."
         count="24 indicateurs"
         first={first}
+        layout="inline"
       />
 
       <div className="grid gap-3 lg:grid-cols-4">

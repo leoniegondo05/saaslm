@@ -60,11 +60,12 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
         title={PARTENAIRE.nom}
         subtitle="Identité, informations et prochains produits."
         first={first}
+        layout="inline"
       />
 
       <div className="grid gap-4 lg:grid-cols-[334px_1fr]">
         <div>
-          <div className="rounded-2xl bg-white p-4 shadow-[0_4px_24px_rgba(20,18,32,0.06)]">
+          <div className="rounded-2xl bg-white p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
             <div className="flex items-center gap-3">
               <span className="h-14 w-14 shrink-0 rounded-2xl bg-[linear-gradient(140deg,#2F6BE0,#011847)]" />
               <div>
