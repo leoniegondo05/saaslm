@@ -28,6 +28,12 @@ export type DropProduit = {
   prixBasReseau?: number;
   prixMoyenReseau?: number;
   prixHautReseau?: number;
+  /** Unités disponibles chez le partenaire, affiché en tag sur la fiche (Écran 06). */
+  unitesDisponibles?: number;
+  /** Prix auquel le partenaire revend réellement ce produit — distinct de
+   *  prixConseille (juste une recommandation) : sert de valeur de départ au
+   *  simulateur "Fixer mon prix". Absent -> le simulateur part du conseillé. */
+  prixVenteActuel?: number;
   /** Photos produit pour le carousel de la fiche (Écran 06). Aucune pour
    *  l'instant, cf. [[dashboard-mock-data-pending-laravel-api]]. */
   images?: string[];
@@ -64,6 +70,8 @@ export const DROP_PRODUITS: DropProduit[] = [
     prixBasReseau: 9500,
     prixMoyenReseau: 13400,
     prixHautReseau: 17000,
+    unitesDisponibles: 340,
+    prixVenteActuel: 12000,
   },
   {
     slug: "masque-argile",
