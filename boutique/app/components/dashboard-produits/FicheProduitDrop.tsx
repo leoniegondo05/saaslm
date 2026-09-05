@@ -21,7 +21,7 @@ const FRAIS_LOGISTIQUES = 1500;
 const TAUX_COMMISSION = 0.04;
 
 export default function FicheProduitDrop({ produit }: { produit: DropProduit }) {
-  const [monPrix, setMonPrix] = useState(produit.prixConseille ?? produit.prixDrop ?? 0);
+  const [monPrix, setMonPrix] = useState(produit.prixVenteActuel ?? produit.prixConseille ?? produit.prixDrop ?? 0);
   const commission = Math.round(monPrix * TAUX_COMMISSION);
   const ilReste = monPrix - (produit.prixDrop ?? 0) - FRAIS_LOGISTIQUES - commission;
 
@@ -48,23 +48,38 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
             Vide tant que le produit n'a pas de photos, cf.
             [[dashboard-mock-data-pending-laravel-api]]. */}
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(238.49deg,rgba(217,217,217,0)_51.88%,#000000_120.52%)]" />
+        {/* Barre de progression (vidéo en lecture en arrière-plan) : blanche,
+            avec un segment rose figurant la portion déjà lue. */}
+        <div className="pointer-events-none absolute inset-x-4 bottom-0 h-[3px] overflow-hidden rounded-full bg-white/90">
+          <span className="absolute inset-y-0 left-0 w-[38%] rounded-full bg-brand-pink" />
+        </div>
         <div className="relative">
           <div className="mb-2.5 flex flex-wrap gap-1.5">
             <Tag tone="pink">{produit.source === "L" ? "Drop LM" : "Partenaire"}</Tag>
+            {produit.unitesDisponibles !== undefined && (
+              <Tag tone="neutral">Disponible · {produit.unitesDisponibles} unités</Tag>
+            )}
             <Tag tone="neutral">Réf. {produit.slug.slice(0, 8).toUpperCase()}</Tag>
           </div>
           <p className="text-3xl font-semibold tracking-tight">{produit.nom}</p>
           <p className="mt-1 text-xs text-white/60">
-            {produit.categorie}
-            {produit.contenance ? ` · ${produit.contenance}` : ""}
+            {[produit.categorie, produit.conditionnement, produit.contenance].filter(Boolean).join(" · ")}
           </p>
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 lg:grid-cols-[1.1fr_1.25fr_0.95fr]">
+      <div className="mt-4 grid items-start gap-3 lg:grid-cols-[1.1fr_1.25fr_0.95fr]">
         <Card title="Les quatre prix" titleTab className="!bg-white">
-          <p className="mt-3 text-[10px] uppercase tracking-[0.16em] text-[#141220]/40">Vous payez ce produit</p>
-          <p className="text-2xl font-bold">{F(produit.prixDrop ?? 0)}</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#141220]/40">Vous payez ce produit</p>
+            <Tag tone="dark">Sur ce partenaire</Tag>
+          </div>
+          <div className="mt-1.5 flex items-center justify-between gap-2">
+            <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-2xl font-bold tracking-tight text-white">
+              {F(produit.prixDrop ?? 0)}
+            </p>
+            <Tag tone="neutral">Prix drop</Tag>
+          </div>
           <div className="my-3 h-px bg-[#141220]/10" />
           <div className="flex items-center justify-between text-xs">
             <span className="text-[#141220]/50">Prix moyen de revente</span>

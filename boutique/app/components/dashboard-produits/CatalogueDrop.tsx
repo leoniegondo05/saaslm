@@ -41,7 +41,7 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
       />
 
       <div className="grid gap-4 lg:grid-cols-[260px_200px_1fr]">
-        <div className="relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-[28px] bg-white p-5" style={{ marginBottom: "5rem"}}>
+        <div className="relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-[28px] bg-white p-5" style={{ marginBottom: "15rem"}}>
           {/* Fond attend la photo du produit en avant (background-image sur cette
               div) ; le dégradé ci-dessous fait le fondu vers le noir pour la
               lisibilité du texte, cf. [[dashboard-mock-data-pending-laravel-api]]. */}
@@ -111,7 +111,7 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
 
       <div>
         <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Catégories</p>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           {CATEGORIES.map((cat) => {
             const active = cat.nom === categorie;
             return (
@@ -119,7 +119,7 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
                 key={cat.nom}
                 type="button"
                 onClick={() => setCategorie(cat.nom)}
-                className={`relative rounded-2xl px-4 py-3 text-left transition ${
+                className={`relative rounded-2xl px-3.5 py-2.5 text-left transition ${
                   active ? "bg-[linear-gradient(120deg,#ffffff,#e3e7f3)]" : "card-tint"
                 }`}
               >

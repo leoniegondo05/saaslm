@@ -52,14 +52,14 @@ export function ProduitCarousel({ images }: { images: string[] }) {
       >
         ›
       </button>
-      <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+      <div className="absolute bottom-3 right-3 z-10 flex gap-1.5">
         {images.map((src, i) => (
           <button
             key={src}
             type="button"
             onClick={() => setIndex(i)}
             aria-label={`Aller à l'image ${i + 1}`}
-            className={`h-1.5 rounded-full transition-all ${i === index ? "w-4 bg-white" : "w-1.5 bg-white/40"}`}
+            className={`h-1.5 rounded-full transition-all ${i === index ? "w-4 bg-[#141220]" : "w-1.5 bg-[#141220]/40"}`}
           />
         ))}
       </div>

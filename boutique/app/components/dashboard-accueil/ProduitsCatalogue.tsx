@@ -100,36 +100,27 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
         layout="inline"
       />
 
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
-        <Card title="Produits publiés" titleTab className="!bg-white">
-          <p className="mt-2 text-center text-xl font-bold tracking-tight">{publies}</p>
-        </Card>
-        <Card title="En stockage" titleTab className="!bg-white">
-          <p className="mt-2 text-center text-xl font-bold tracking-tight">{enStockage}</p>
-          <p className="mt-0.5 text-center text-[9px] text-[#141220]/35">{stockTotal} unités</p>
-        </Card>
-        <Card title="En drop" titleTab className="!bg-white">
-          <p className="mt-2 text-center text-xl font-bold tracking-tight">{enDrop}</p>
-          <p className="mt-0.5 text-center text-[9px] text-[#141220]/35">{dropPartenaire} partenaire · {dropLm} LM</p>
-        </Card>
-        <Card title="Jamais vendus" titleTab className="!bg-white">
-          <p className="mt-2 text-center text-xl font-bold tracking-tight">{jamaisVendus}</p>
-        </Card>
-        <Card title="Marge moyenne" titleTab className="!bg-white">
-          <p className="mt-2 text-center text-xl font-bold tracking-tight">{margeMoyenne} %</p>
-        </Card>
+      {/* Un seul cadre, séparé par des traits (divide-x/y) — pas cinq cartes
+          côte à côte : chaque étiquette reste en onglet (même trait que
+          Card titleTab) mais posée sur le même fond continu. */}
+      <div className="grid grid-cols-2 divide-x divide-y divide-[#141220]/10 overflow-hidden rounded-2xl bg-white shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] sm:grid-cols-3 lg:grid-cols-5 lg:divide-y-0">
+        <StatCell label="Produits publiés" value={publies} />
+        <StatCell label="En stockage" value={enStockage} note={`${stockTotal} unités`} />
+        <StatCell label="En drop" value={enDrop} note={`${dropPartenaire} partenaire · ${dropLm} LM`} />
+        <StatCell label="Jamais vendus" value={jamaisVendus} />
+        <StatCell label="Marge moyenne" value={`${margeMoyenne} %`} />
       </div>
 
       <div className="mt-3 mb-8 grid gap-3 lg:grid-cols-[1.75fr_1fr]">
         <Card className="!bg-[#FFFFFF70]">
           <div className="flex flex-wrap items-center justify-end gap-2">
             <div className="flex gap-2">
+              <button type="button" className="rounded-full border border-[#141220]/15 bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white">
+                Ajouter une catégorie
+              </button> 
               <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white">
                 Déposer un stock
               </button>
-              {/* <button type="button" className="rounded-full border border-[#141220]/15 bg-white/60 px-3.5 py-2 text-xs font-semibold">
-                Ajouter une catégorie
-              </button> */}
               <button type="button" className="rounded-full bg-white px-4 py-2 text-xs font-semibold shadow-[0_2px_10px_rgba(20,18,32,0.08)]">
                 Ajouter un produit
               </button>
@@ -181,8 +172,7 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
           </div>
         </Card>
 
-        <Card className="!bg-[#FFFFFF70]">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Fiche du produit</p>
+        <Card title="Fiche du produit" titleTab className="!bg-[#FFFFFF70]">
           <ProductSelector
             name={produit.nom}
             position={`Produit ${selected + 1} sur ${PRODUITS.length}`}
@@ -209,16 +199,17 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
               <span className="h-16 w-16 rounded-2xl border border-[#141220]/10 bg-white/70" />
             )}
 
-            {/* Même dégradé que le carousel de la fiche produit (fondu vers
-                le noir pour la lisibilité des dots), cf.
-                [[dashboard-mock-data-pending-laravel-api]]. */}
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(238.49deg,rgba(217,217,217,0)_51.88%,#000000_120.52%)]" />
+            {/* Blanc en haut, gris en bas : assombrit le coin bas-droit où
+                vivent les dots (sans lui, un point blanc y était invisible,
+                cf. [[dashboard-mock-data-pending-laravel-api]] pour l'absence
+                de vraie photo tant que l'API ne les fournit pas). */}
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,#ffffff_0%,#c4c4c4_100%)]" />
 
-            {/* Dot(s) restent visibles même sans photo (produit pas encore
-                photographié) : signale que c'est un carousel, prêt à recevoir
-                plusieurs images, cf. [[dashboard-mock-data-pending-laravel-api]]. */}
-            <div className="absolute bottom-2.5 left-1/2 flex -translate-x-1/2 items-center gap-1.5">
-              {(photos.length > 0 ? photos : [null]).map((_, i) => (
+            {/* 3 dots par défaut (pas 1) tant qu'il n'y a pas de vraies
+                photos : signale que c'est un carousel à trois emplacements,
+                prêt à les recevoir, cf. [[dashboard-mock-data-pending-laravel-api]]. */}
+            <div className="absolute bottom-2.5 right-3 flex items-center gap-1.5">
+              {(photos.length > 0 ? photos : [null, null, null]).map((_, i) => (
                 <span
                   key={i}
                   className={i === photo ? "h-1.5 w-4 rounded-full bg-white" : "h-1.5 w-1.5 rounded-full bg-white/40"}
@@ -254,5 +245,22 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
         </Card>
       </div>
     </>
+  );
+}
+
+function StatCell({ label, value, note }: { label: string; value: string | number; note?: string }) {
+  return (
+    <div className="px-4 pb-4 pt-4">
+      <div className="relative -mt-4 flex justify-center">
+        <p
+          className="rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B8095]"
+          style={{ background: "#F0EDF0" }}
+        >
+          {label}
+        </p>
+      </div>
+      <p className="mt-2 text-center text-xl font-bold tracking-tight">{value}</p>
+      {note && <p className="mt-0.5 text-center text-[9px] text-[#141220]/35">{note}</p>}
+    </div>
   );
 }
