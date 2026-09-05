@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { Btn, Card, Divider, MiniTile, Nature, ProductSelector, SectionHeader, StatRow, Tag } from "./shared";
+import { Btn, Card, Divider, Nature, ProductSelector, SectionHeader, StatRow, Tag } from "./shared";
 
 /*
   Page "Produits" (Écran 03 des maquettes) : tous les produits de la
@@ -101,11 +101,23 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
       />
 
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
-        <MiniTile label="Produits publiés" value={String(publies)} />
-        <MiniTile label="En stockage" value={String(enStockage)} note={`${stockTotal} unités`} />
-        <MiniTile label="En drop" value={String(enDrop)} note={`${dropPartenaire} partenaire · ${dropLm} LM`} />
-        <MiniTile label="Jamais vendus" value={String(jamaisVendus)} />
-        <MiniTile label="Marge moyenne" value={`${margeMoyenne} %`} />
+        <Card title="Produits publiés" titleTab className="!bg-white">
+          <p className="mt-2 text-center text-xl font-bold tracking-tight">{publies}</p>
+        </Card>
+        <Card title="En stockage" titleTab className="!bg-white">
+          <p className="mt-2 text-center text-xl font-bold tracking-tight">{enStockage}</p>
+          <p className="mt-0.5 text-center text-[9px] text-[#141220]/35">{stockTotal} unités</p>
+        </Card>
+        <Card title="En drop" titleTab className="!bg-white">
+          <p className="mt-2 text-center text-xl font-bold tracking-tight">{enDrop}</p>
+          <p className="mt-0.5 text-center text-[9px] text-[#141220]/35">{dropPartenaire} partenaire · {dropLm} LM</p>
+        </Card>
+        <Card title="Jamais vendus" titleTab className="!bg-white">
+          <p className="mt-2 text-center text-xl font-bold tracking-tight">{jamaisVendus}</p>
+        </Card>
+        <Card title="Marge moyenne" titleTab className="!bg-white">
+          <p className="mt-2 text-center text-xl font-bold tracking-tight">{margeMoyenne} %</p>
+        </Card>
       </div>
 
       <div className="mt-3 grid gap-3 lg:grid-cols-[1.75fr_1fr]">
@@ -115,9 +127,9 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
               <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white">
                 Déposer un stock
               </button>
-              <button type="button" className="rounded-full border border-[#141220]/15 bg-white/60 px-3.5 py-2 text-xs font-semibold">
+              {/* <button type="button" className="rounded-full border border-[#141220]/15 bg-white/60 px-3.5 py-2 text-xs font-semibold">
                 Ajouter une catégorie
-              </button>
+              </button> */}
               <button type="button" className="rounded-full bg-white px-4 py-2 text-xs font-semibold shadow-[0_2px_10px_rgba(20,18,32,0.08)]">
                 Ajouter un produit
               </button>
@@ -169,12 +181,11 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
           </div>
         </Card>
 
-        <Card>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Fiche du produit</p>
+        <Card title="Fiche du produit" titleTab className="!bg-white">
           <ProductSelector
             name={produit.nom}
             position={`Produit ${selected + 1} sur ${PRODUITS.length}`}
-            className="mt-2"
+            className="mt-3 w-full"
             onPrev={() => setSelected((i) => (i - 1 + PRODUITS.length) % PRODUITS.length)}
             onNext={() => setSelected((i) => (i + 1) % PRODUITS.length)}
           />
