@@ -16,7 +16,7 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
         layout="inline"
       />
 
-      <div className="grid gap-3 lg:grid-cols-4">
+      <div className="mb-8 grid gap-3 lg:grid-cols-4">
         <Card title="Qui achète chez vous" titleTab className="!bg-[#FFFFFF70]">
           <StatRow label="Clients servis" value="73" />
           <StatRow label="Nouveaux clients" value="58 · 79 %" />

@@ -123,7 +123,12 @@ export default function StockSection({ first = true }: { first?: boolean }) {
       />
 
       <div className="grid gap-3 lg:grid-cols-[1.9fr_1fr]">
-        <Card className="!bg-[#FFFFFF70]">
+        <Card
+          style={{
+            background:
+              "linear-gradient(154.44deg, rgba(255, 255, 255, 0.44) 33.22%, rgba(249, 233, 245, 0.44) 109.81%)",
+          }}
+        >
           <div className="flex items-center justify-between gap-3">
             <p
               className="rounded-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]"
@@ -256,8 +261,16 @@ export default function StockSection({ first = true }: { first?: boolean }) {
         <div>
           <div className="overflow-hidden rounded-2xl shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
             <div className="relative bg-[linear-gradient(153.4deg,#3A1D8A_16.68%,#000000_135.1%)] p-4 text-white">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">Évolution du stock</p>
+              <div className="-mt-4 mb-3 flex items-center justify-center">
+                <p
+                  className="rounded-b-lg px-3.5 py-1.5 text-[10px] uppercase tracking-[0.16em] text-white/80"
+                  style={{
+                    background:
+                      "linear-gradient(97.49deg, rgba(255, 255, 255, 0.27) -2.86%, rgba(49, 25, 117, 0.27) 102.18%)",
+                  }}
+                >
+                  Évolution du stock
+                </p>
               </div>
               <ProductSelector
                 name={depot.name}
@@ -313,13 +326,13 @@ export default function StockSection({ first = true }: { first?: boolean }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.16em] text-[#7B8095]">Restant</p>
-                  <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-1 pl-4 pr-4 text-xl font-bold text-white">
+                  <p className="-ml-4 mt-1.5 inline-block rounded-r-xl bg-brand-purple py-1 pl-4 pr-4 text-xl font-bold text-white">
                     {depot.restant}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] uppercase tracking-[0.16em] text-[#7B8095]">Valeur</p>
-                  <p className="-mr-4 inline-block rounded-l-xl bg-brand-purple py-1 pl-4 pr-4 text-sm font-bold text-white">
+                  <p className="-mr-4 mt-1.5 inline-block rounded-l-xl bg-brand-purple py-1 pl-4 pr-4 text-sm font-bold text-white">
                     {depot.valeur}
                   </p>
                 </div>
@@ -371,7 +384,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
               <span className="text-[#141220]/50">Coffret parfum · 40</span>
               <Tag tone="ok">Conforme</Tag>
             </div>
-            <Btn variant="dark" className="mt-4">
+            <Btn variant="dark" className="mt-4 !rounded-lg">
               Déposer un nouveau stock
             </Btn>
           </Card>

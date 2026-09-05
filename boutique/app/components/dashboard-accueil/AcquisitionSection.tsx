@@ -16,9 +16,9 @@ export default function AcquisitionSection({ first = true }: { first?: boolean }
         layout="inline"
       />
 
-      <div className="grid gap-3 lg:grid-cols-4">
-        <Card title="Votre page de commande" titleTab className="!bg-[#FFFFFF70]">
-          <div className="mt-1 flex items-end justify-between gap-2">
+      <div className="mb-8 grid gap-3 lg:grid-cols-4">
+        <Card title="Votre page de commande" titleTab className="!bg-[#FFFFFF70] self-start">
+          <div className="mt-4 flex items-end justify-between gap-2">
             <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-3xl font-bold tracking-tight text-white">
               2 140
             </p>
@@ -32,15 +32,15 @@ export default function AcquisitionSection({ first = true }: { first?: boolean }
           <StatRow label="Visites depuis un téléphone" value="93 %" />
         </Card>
 
-        <Card title="D'où viennent vos visiteurs" titleTab className="!bg-[#FFFFFF70]">
-          <SourceRow label="TikTok" value="912" pct={43} color="bg-brand-pink" />
-          <SourceRow label="WhatsApp et lien direct" value="556" pct={26} color="bg-[#141220]/70" />
+        <Card title="D'où viennent vos visiteurs" titleTab className="!bg-[#FFFFFF70] self-start">
+          <SourceRow label="TikTok" value="912" pct={43} color="bg-[linear-gradient(270.03deg,#000000_10.99%,#FFFFFF_107.31%)]" />
+          <SourceRow label="WhatsApp et lien direct" value="556" pct={26} color="bg-[#3CB500]" />
           <SourceRow label="Facebook" value="385" pct={18} color="bg-[#2F6BE0]" />
-          <SourceRow label="Instagram" value="192" pct={9} color="bg-[#141220]/30" />
-          <SourceRow label="Google" value="95" pct={4} color="bg-[#141220]/20" />
+          <SourceRow label="Instagram" value="192" pct={9} color="bg-[linear-gradient(90deg,rgba(251,134,0,0.58)_0%,rgba(58,29,138,0.58)_50%,rgba(205,0,24,0.58)_100%)]" />
+          <SourceRow label="Google" value="95" pct={4} color="bg-[linear-gradient(93.86deg,rgba(212,0,64,0.57)_5.96%,rgba(4,108,182,0.57)_49.14%,rgba(161,140,0,0.57)_116.83%)]" />
         </Card>
 
-        <Card title="Ce que chaque source rapporte" titleTab className="!bg-[#FFFFFF70]">
+        <Card title="Ce que chaque source rapporte" titleTab className="!bg-[#FFFFFF70] self-start">
           <StatRow label="TikTok" value="3,1 % · 28 commandes" />
           <StatRow label="WhatsApp et direct" value="4,9 % · 27" />
           <StatRow label="Facebook" value="2,6 % · 10" />
@@ -53,11 +53,13 @@ export default function AcquisitionSection({ first = true }: { first?: boolean }
         </Card>
 
         <Card title="Paniers abandonnés" titleTab className="!bg-[#FFFFFF70]">
-          <div className="mt-1 flex items-end justify-between gap-2">
+          <div className="mt-4 flex items-end justify-between gap-2">
             <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-3xl font-bold tracking-tight text-white">
               23
             </p>
-            <p className="pb-1 text-xs text-[#141220]/40">soit 287 000 F</p>
+            <p className="mb-1 rounded-md px-3 py-1 text-xs text-[#141220]/60" style={{ background: "#DFDEDF" }}>
+              soit 287 000 F
+            </p>
           </div>
           <Divider />
           <StatRow label="Abandon après le prix" value="11" />

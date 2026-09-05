@@ -120,7 +120,7 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
         </Card>
       </div>
 
-      <div className="mt-3 grid gap-3 lg:grid-cols-[1.75fr_1fr]">
+      <div className="mt-3 mb-8 grid gap-3 lg:grid-cols-[1.75fr_1fr]">
         <Card className="!bg-[#FFFFFF70]">
           <div className="flex flex-wrap items-center justify-end gap-2">
             <div className="flex gap-2">
@@ -250,7 +250,7 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
             <Btn variant="white">Modifier</Btn>
             <Btn variant="dark">Réapprovisionner</Btn>
           </div>
-          <Btn variant="dark" className="mt-2">Retirer de la boutique</Btn>
+          <Btn variant="dark" className="mt-2 mb-2">Retirer de la boutique</Btn>
         </Card>
       </div>
     </>
