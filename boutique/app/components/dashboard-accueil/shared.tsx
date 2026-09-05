@@ -129,6 +129,7 @@ export function Card({
   titleAlign = "center",
   titleTab = false,
   className = "",
+  style,
   children,
 }: {
   title?: string;
@@ -140,15 +141,16 @@ export function Card({
   /** Titre affiché en étiquette centrée (façon "onglet"), comme la carte Trésorerie disponible. */
   titleTab?: boolean;
   className?: string;
+  style?: React.CSSProperties;
   children?: React.ReactNode;
 }) {
   return (
-    <div className={`rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] ${className}`}>
+    <div className={`rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] ${className}`} style={style}>
       {title && titleTab && (
-        <div className={`relative -mt-4 flex items-center ${titleAlign === "left" ? "justify-start" : "justify-center"}`}>
+        <div className={`relative -mt-4 mb-3 flex items-center ${titleAlign === "left" ? "justify-start" : "justify-center"}`}>
           <p
-            className="rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B8095]"
-            style={{ background: "#F0EDF0" }}
+            className="rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]"
+            style={{ background: "#F0EDF0", fontFamily: "var(--font-bricolage)" }}
           >
             {title}
           </p>
@@ -173,16 +175,19 @@ export function StatRow({
   value,
   bold = true,
   light = false,
+  compact = false,
 }: {
   label: string;
   value: React.ReactNode;
   bold?: boolean;
   light?: boolean;
+  /** Espacement réduit (mt-1 au lieu de mt-2.5), pour cards à liste longue. */
+  compact?: boolean;
 }) {
   return (
-    <div className="mt-2.5 flex items-center justify-between gap-3 text-xs first:mt-3">
+    <div className={compact ? "mt-1 flex items-center justify-between gap-3 text-xs first:mt-1" : "mt-2.5 flex items-center justify-between gap-3 text-xs first:mt-3"}>
       <span className={light ? "text-white/55" : "text-[#141220]/50"}>{label}</span>
-      <span className={bold ? "font-semibold" : ""}>{value}</span>
+      <span className={`${bold ? "font-semibold" : ""} ${compact ? "text-black" : ""}`.trim()}>{value}</span>
     </div>
   );
 }
@@ -384,12 +389,17 @@ export function ClientRow({
   value,
   orders,
   pct,
+  showCommandeLabel = false,
+  barColor = "bg-[#FFC2E2]",
 }: {
   name: string;
   zone: string;
   value: string;
   orders: number;
   pct: number;
+  /** Affiche "commande(s)" en toutes lettres derrière le nombre (réservé à la première ligne). */
+  showCommandeLabel?: boolean;
+  barColor?: string;
 }) {
   return (
     <div className="mt-2.5 first:mt-3">
@@ -397,11 +407,16 @@ export function ClientRow({
         <span>
           {name} · {zone}
         </span>
-        <span className="font-semibold">
-          {value} · {orders} commande{orders > 1 ? "s" : ""}
+        <span>
+          <span className="font-semibold">{value}</span>
+          <span className="text-[#141220]/40">
+            {" "}
+            · {orders}
+            {showCommandeLabel ? ` commande${orders > 1 ? "s" : ""}` : ""}
+          </span>
         </span>
       </div>
-      <Bar pct={pct} color="bg-brand-pink" />
+      <Bar pct={pct} color={barColor} />
     </div>
   );
 }

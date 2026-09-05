@@ -123,11 +123,11 @@ export default function StockSection({ first = true }: { first?: boolean }) {
       />
 
       <div className="grid gap-3 lg:grid-cols-[1.9fr_1fr]">
-        <Card className="!bg-white">
+        <Card className="!bg-[#FFFFFF70]">
           <div className="flex items-center justify-between gap-3">
             <p
-              className="rounded-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B8095]"
-              style={{ background: "#F0EDF0" }}
+              className="rounded-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]"
+              style={{ background: "#F0EDF0", fontFamily: "var(--font-bricolage)" }}
             >
               Fiche d&apos;un dépôt
             </p>
@@ -309,7 +309,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
                 <span className="text-brand-pink">- - Sorties cumulées</span>
               </div>
             </div>
-            <div className="bg-white p-4">
+            <div className="bg-[#FFFFFF70] p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.16em] text-[#7B8095]">Restant</p>
@@ -331,7 +331,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             </div>
           </div>
 
-          <Card title="Tous dépôts confondus" titleTab className="mt-3 !bg-white">
+          <Card title="Tous dépôts confondus" titleTab className="mt-3 !bg-[#FFFFFF70]">
             <StatRow label="Unités en entrepôt" value="240" />
             <StatRow label="Déposé depuis le 1er août" value="420" />
             <StatRow label="Endommagé à la réception" value="3 · 0,7 %" />
@@ -344,7 +344,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
           <Card
             title="Envois récents"
             titleTab
-            className="mt-3 !bg-white"
+            className="mt-3 !bg-[#FFFFFF70]"
             badge={<Tag tone="pink">1 en cours</Tag>}
           >
             <div className="mt-3 flex items-center justify-between text-xs">

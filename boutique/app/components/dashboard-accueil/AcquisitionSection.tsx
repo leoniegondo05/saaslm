@@ -17,7 +17,7 @@ export default function AcquisitionSection({ first = true }: { first?: boolean }
       />
 
       <div className="grid gap-3 lg:grid-cols-4">
-        <Card title="Votre page de commande" titleTab className="!bg-white">
+        <Card title="Votre page de commande" titleTab className="!bg-[#FFFFFF70]">
           <div className="mt-1 flex items-end justify-between gap-2">
             <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-3xl font-bold tracking-tight text-white">
               2 140
@@ -32,7 +32,7 @@ export default function AcquisitionSection({ first = true }: { first?: boolean }
           <StatRow label="Visites depuis un téléphone" value="93 %" />
         </Card>
 
-        <Card title="D'où viennent vos visiteurs" titleTab className="!bg-white">
+        <Card title="D'où viennent vos visiteurs" titleTab className="!bg-[#FFFFFF70]">
           <SourceRow label="TikTok" value="912" pct={43} color="bg-brand-pink" />
           <SourceRow label="WhatsApp et lien direct" value="556" pct={26} color="bg-[#141220]/70" />
           <SourceRow label="Facebook" value="385" pct={18} color="bg-[#2F6BE0]" />
@@ -40,7 +40,7 @@ export default function AcquisitionSection({ first = true }: { first?: boolean }
           <SourceRow label="Google" value="95" pct={4} color="bg-[#141220]/20" />
         </Card>
 
-        <Card title="Ce que chaque source rapporte" titleTab className="!bg-white">
+        <Card title="Ce que chaque source rapporte" titleTab className="!bg-[#FFFFFF70]">
           <StatRow label="TikTok" value="3,1 % · 28 commandes" />
           <StatRow label="WhatsApp et direct" value="4,9 % · 27" />
           <StatRow label="Facebook" value="2,6 % · 10" />
@@ -52,7 +52,7 @@ export default function AcquisitionSection({ first = true }: { first?: boolean }
           </p>
         </Card>
 
-        <Card title="Paniers abandonnés" titleTab className="!bg-white">
+        <Card title="Paniers abandonnés" titleTab className="!bg-[#FFFFFF70]">
           <div className="mt-1 flex items-end justify-between gap-2">
             <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-3xl font-bold tracking-tight text-white">
               23

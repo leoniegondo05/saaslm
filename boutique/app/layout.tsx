@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Sora } from "next/font/google";
+import { Sora, Bricolage_Grotesque } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 
@@ -13,6 +13,14 @@ import "./globals.css";
 const sora = Sora({
   subsets: ["latin"],
   variable: "--font-sora",
+  display: "swap",
+});
+
+// Police "Bricolage Grotesque" — utilisée pour les entêtes (pastilles) des
+// cards du dashboard accueil. Variable "--font-bricolage".
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-bricolage",
   display: "swap",
 });
 
@@ -38,7 +46,7 @@ export default async function RootLayout({
   await headers();
 
   return (
-    <html lang="fr" className={sora.variable}>
+    <html lang="fr" className={`${sora.variable} ${bricolage.variable}`}>
       <body className="flex min-h-screen flex-col bg-brand-bg font-sans text-brand-white antialiased">
         {children}
       </body>

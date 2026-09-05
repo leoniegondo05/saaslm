@@ -43,7 +43,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
         <Card
           title="Top 5 des produits"
           titleTab
-          className="!bg-white"
+          className="!bg-[#FFFFFF70]"
           badge={<p className="text-[10px] text-[#141220]/40">sur la période</p>}
         >
           <TopProductRow code="L" name="Montre connectée S8" value="48 · 672 000" pct={100} />
@@ -75,7 +75,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
           </p>
         </Card>
 
-        <Card title="Vos quatre natures de produits" titleTab className="!bg-white">
+        <Card title="Vos quatre natures de produits" titleTab className="!bg-[#FFFFFF70]">
           <div className="mt-2 flex h-2 overflow-hidden rounded-full">
             <span className="h-full" style={{ width: "36%", background: "#141220" }} />
             <span className="h-full bg-[#141220]/30" style={{ width: "17%" }} />
@@ -92,7 +92,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
         </Card>
 
         <div>
-          <Card title="Ma position sur les prix drop" titleTab className="!bg-white">
+          <Card title="Ma position sur les prix drop" titleTab className="!bg-[#FFFFFF70]">
             <ProductSelector
               name={drop.nom}
               position={`Produit ${selectedDrop + 1} sur ${PRIX_DROP.length}`}
@@ -121,7 +121,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
             <StatRow label="Votre écart au marché" value={drop.ecart} />
           </Card>
 
-          <Card title="Catalogue accessible" className="mt-3">
+          <Card title="Catalogue accessible" titleTab className="mt-3 !bg-[#FFFFFF70]">
             <StatRow label="Produits du partenaire" value="117" />
             <StatRow label="Produits LM" value="64" />
             <StatRow label="Nouveautés ce mois" value="12" />

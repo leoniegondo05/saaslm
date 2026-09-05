@@ -49,11 +49,11 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
     <>
       <PaymentMethodCard />
 
-      <div className="rounded-2xl bg-white p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+      <div className="ml-3 self-start rounded-2xl bg-[#FFFFFF70] p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
         <div className="relative flex items-center justify-center">
           <p
-            className="-mt-4 rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B8095]"
-            style={{ background: "#F0EDF0" }}
+            className="-mt-4 mb-2 rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]"
+            style={{ background: "#F0EDF0", fontFamily: "var(--font-bricolage)" }}
           >
             Trésorerie disponible
           </p>
@@ -64,7 +64,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         <p className="-ml-4 mt-2 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-2xl font-bold tracking-tight text-white">
           318 000 F
         </p>
-        <p className="mt-1 text-xs text-[#3A4055]">
+        <p className="mt-3 text-xs text-[#3A4055]">
           Sur 5 commandes libérées, reversées par votre partenaire.
         </p>
         <Divider />
@@ -77,8 +77,8 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         </Btn>
       </div>
 
-      <div className="overflow-hidden rounded-2xl shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
-        <div className="bg-[linear-gradient(140.81deg,#3A1D8A_0%,#070707_100%)] p-4 text-white">
+      <div className="-mt-16 self-start overflow-hidden rounded-2xl shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+        <div className="bg-[linear-gradient(140.81deg,#3A1D8A_0%,#070707_100%)] px-4 pb-0 pt-4 text-white">
           <div className="relative -mx-4 -mt-4 flex items-center justify-center px-4 pb-2 pt-0">
             <p
               className="rounded-b-md px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/80"
@@ -96,7 +96,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
               -18 %
             </Tag>
           </div>
-          <div className="mt-3 flex h-14 items-end gap-1">
+          <div className="mt-3 flex h-16 items-end gap-1">
             {[32, 54, 40, 68, 56, 84, 100, 66, 74, 48, 62, 80].map((h, i) => (
               <span
                 key={i}
@@ -109,7 +109,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
             ))}
           </div>
         </div>
-        <div className="bg-white p-4">
+        <div className="bg-[#FFFFFF70] p-4">
           <div className="flex items-end justify-between">
             <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-2xl font-bold tracking-tight text-white">
               842 500 F
@@ -128,18 +128,18 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         </div>
       </div>
 
-      <Card title="Ce que la période a coûté" titleTab className="!bg-white">
-        <StatRow label="Produits drop achetés" value="248 000" bold={false} />
-        <StatRow label="Frais logistiques" value="96 000" bold={false} />
-        <StatRow label="Emballage" value="inclus" bold={false} />
-        <StatRow label="Garantie contre la perte" value="12 000" bold={false} />
-        <StatRow label="Livraisons express" value="22 000" bold={false} />
-        <StatRow label="Récupération de marchandise" value="4 000" bold={false} />
-        <StatRow label="Commission LM" value="21 060" bold={false} />
-        <StatRow label="Frais de paiement en ligne" value="14 900" bold={false} />
-        <StatRow label="Coût des retours" value="18 000" bold={false} />
+      <Card title="Ce que la période a coûté" titleTab className="-mt-9 self-start !bg-[#FFFFFF70]">
+        <StatRow label="Produits drop achetés" value="248 000" compact />
+        <StatRow label="Frais logistiques" value="96 000" compact />
+        <StatRow label="Emballage" value="inclus" compact />
+        <StatRow label="Garantie contre la perte" value="12 000" compact />
+        <StatRow label="Livraisons express" value="22 000" compact />
+        <StatRow label="Récupération de marchandise" value="4 000" compact />
+        <StatRow label="Commission LM" value="21 060" compact />
+        <StatRow label="Frais de paiement en ligne" value="14 900" compact />
+        <StatRow label="Coût des retours" value="18 000" compact />
         <Divider />
-        <StatRow label="Total prélevé" value="435 960" />
+        <StatRow label="Total prélevé" value="435 960" compact />
         <Bar pct={52} color="bg-[#EC0C8C]" />
         <p className="mt-1.5 text-[10px] text-[#141220]/40">52 % du chiffre d&apos;affaires · 5 972 F par commande</p>
       </Card>
@@ -148,7 +148,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
 
   const rightCards = (
     <>
-      <Card title="Où se trouve votre argent" titleTab className="!bg-white">
+      <Card title="Où se trouve votre argent" titleTab className="!bg-[#FFFFFF70]">
         <div className="mt-3 grid grid-cols-2 gap-3">
           <div>
             <p className="text-[10px] text-[#141220]/40">Encaissé sur la période</p>
@@ -185,8 +185,8 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         <StatRow label="Impayés de plus de 72 h" value={<>18 000 F <span className="text-[#141220]/40">· 2 commandes</span></>} />
       </Card>
 
-      <div className="rounded-2xl bg-[linear-gradient(140.81deg,#3A1D8A_0%,#070707_100%)] p-4 text-white shadow-[0_18px_40px_rgba(20,20,60,0.3)]">
-        <div className="flex items-start justify-between">
+      <div className="mx-4 mt-3 rounded-2xl bg-[linear-gradient(140.81deg,#3A1D8A_0%,#070707_100%)] p-4 text-white shadow-[0_18px_40px_rgba(20,20,60,0.3)]">
+        <div className="mb-2 flex items-start justify-between">
           <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">Bénéfice net de la période</p>
           <Tag tone="dark" style={{ border: "1px solid #FFFFFF21", color: "#FFFFFFB8" }}>
             Marge 48 %
@@ -194,7 +194,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         </div>
         <button
           type="button"
-          className="-ml-4 mt-1 rounded-r-xl py-1 pl-4 pr-3 text-3xl font-bold tracking-tight text-white"
+          className="-ml-4 mb-3 mt-1 rounded-r-xl py-1 pl-4 pr-3 text-3xl font-bold tracking-tight text-white"
           style={{
             background:
               "linear-gradient(93.86deg, rgba(255, 255, 255, 0.23) 3.16%, rgba(33, 18, 74, 0.23) 97.81%)",
@@ -211,7 +211,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         <StatRow label="Marge sur produits propres" value="71 %" light />
       </div>
 
-      <Card title="Paiements reçus, par moyen" titleTab className="!bg-white">
+      <Card title="Paiements reçus, par moyen" titleTab className="!bg-[#FFFFFF70]">
         <PayRow label="Orange Money" color="#FF7900" value="412 000" pct={49} />
         <PayRow label="Wave" color="#1BA1F2" value="238 500" pct={28} />
         <PayRow label="MTN MoMo" color="#FFCC00" value="121 000" pct={14} />
@@ -233,7 +233,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
 
       <div className="grid items-stretch gap-3 lg:grid-cols-[2fr_1fr]">
       <div
-        className="grid gap-3 rounded-2xl px-5 py-12 sm:grid-cols-2"
+        className="grid gap-3 rounded-2xl px-5 pb-12 pt-24 sm:grid-cols-2"
         style={{ backdropFilter: "blur(18.899999618530273px)", background: "#FFFFFF7A" }}
       >
         {leftCards}
@@ -248,7 +248,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
       </div>
       </div>
 
-      <Card className="mt-3 !bg-white !p-3">
+      <Card className="mt-3 !p-6" style={{ background: "#FFFFFF70" }}>
         <div className="grid grid-cols-6 gap-2">
           {[
             { label: "Abonnement", value: "25 000 F", note: "Échéance 14 sept." },
@@ -261,12 +261,12 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
             <button
               key={t.label}
               type="button"
-              className="flex h-full flex-col rounded-xl p-2 text-left"
+              className="flex h-full flex-col rounded-xl p-1.5 text-left"
               style={{ background: "#F0EDF0" }}
             >
-              <p className="text-[9px] text-[#141220]/40">{t.label}</p>
+              <p className="text-[9px] font-semibold text-[#141220]">{t.label}</p>
               <p className="mt-0.5 text-xs font-bold">{t.value}</p>
-              <p className="mt-auto pt-0.5 text-[8px] text-[#141220]/35">{t.note}</p>
+              <p className="mt-auto pt-0.5 text-[8px] font-medium text-[#141220]">{t.note}</p>
             </button>
           ))}
         </div>

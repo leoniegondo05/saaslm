@@ -121,7 +121,7 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
       </div>
 
       <div className="mt-3 grid gap-3 lg:grid-cols-[1.75fr_1fr]">
-        <Card>
+        <Card className="!bg-[#FFFFFF70]">
           <div className="flex flex-wrap items-center justify-end gap-2">
             <div className="flex gap-2">
               <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white">
@@ -181,7 +181,8 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
           </div>
         </Card>
 
-        <Card title="Fiche du produit" titleTab className="!bg-white">
+        <Card className="!bg-[#FFFFFF70]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Fiche du produit</p>
           <ProductSelector
             name={produit.nom}
             position={`Produit ${selected + 1} sur ${PRODUITS.length}`}
