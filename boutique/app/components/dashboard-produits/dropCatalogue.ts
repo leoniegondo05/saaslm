@@ -138,6 +138,15 @@ export const DROP_PRODUITS: DropProduit[] = [
     prixHautReseau: 10200,
   },
   {
+    slug: "coffret-soin-nuit",
+    nom: "Coffret soin nuit",
+    categorie: "Beauté et soins",
+    source: "AVENIR",
+    prixDrop: null,
+    prixConseille: null,
+    arriveeLe: "12 septembre",
+  },
+  {
     slug: "gel-nettoyant",
     nom: "Gel nettoyant",
     categorie: "Beauté et soins",
@@ -190,15 +199,6 @@ export const DROP_PRODUITS: DropProduit[] = [
     prixBasReseau: 2800,
     prixMoyenReseau: 3400,
     prixHautReseau: 4200,
-  },
-  {
-    slug: "coffret-soin-nuit",
-    nom: "Coffret soin nuit",
-    categorie: "Beauté et soins",
-    source: "AVENIR",
-    prixDrop: null,
-    prixConseille: null,
-    arriveeLe: "12 septembre",
   },
 ];
 

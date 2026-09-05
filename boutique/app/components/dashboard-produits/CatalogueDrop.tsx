@@ -41,11 +41,11 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
       />
 
       <div className="grid gap-4 lg:grid-cols-[260px_200px_1fr]">
-        <div className="relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-[28px] bg-white p-5">
+        <div className="relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-[28px] bg-white p-5" style={{ marginBottom: "5rem"}}>
           {/* Fond attend la photo du produit en avant (background-image sur cette
               div) ; le dégradé ci-dessous fait le fondu vers le noir pour la
               lisibilité du texte, cf. [[dashboard-mock-data-pending-laravel-api]]. */}
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(238.49deg,rgba(217,217,217,0)_51.88%,#000000_120.52%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(238.49deg,rgba(217,217,217,0)_51.88%,#000000_120.52%)]"  />
           {preview ? (
             <>
               {nouveautes.length > 1 && (
