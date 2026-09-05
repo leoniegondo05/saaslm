@@ -20,7 +20,7 @@ export default function AlertesSection({ first = true }: { first?: boolean }) {
         <Card
           title="Ce qui demande une décision"
           titleTab
-          className="!bg-white"
+          className="!bg-[#FFFFFF70]"
           badge={<Tag tone="pink">5 alertes</Tag>}
         >
           <AlertRow code="S" name="Huile de ricin" tag="Rupture sous 1 jour" tone="ko" />
@@ -32,7 +32,7 @@ export default function AlertesSection({ first = true }: { first?: boolean }) {
           <StatRow label="Alertes traitées ce mois" value="11" />
         </Card>
 
-        <Card title="Litiges" titleTab className="!bg-white" badge={<Tag tone="pink" className="mb-2">1 en cours</Tag>}>
+        <Card title="Litiges" titleTab className="!bg-[#FFFFFF70]" badge={<Tag tone="pink" className="mb-2">1 en cours</Tag>}>
           <div className="mt-3">
           <StatRow
             label="Montant suspendu"
@@ -63,7 +63,7 @@ export default function AlertesSection({ first = true }: { first?: boolean }) {
         <Card
           title="Votre partenaire"
           titleTab
-          className="!bg-white"
+          className="!bg-[#FFFFFF70]"
           badge={
             <Tag tone="dark" style={{ background: "#ffffff", boxShadow: "0 2px 10px rgba(20,18,32,0.12)" }}>
               <span className="text-yellow-400">★</span> Note 8,4
