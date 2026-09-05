@@ -147,7 +147,7 @@ export function Card({
   return (
     <div className={`rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] ${className}`} style={style}>
       {title && titleTab && (
-        <div className={`relative -mt-4 mb-3 flex items-center ${titleAlign === "left" ? "justify-start" : "justify-center"}`}>
+        <div className={`relative -mt-4 mb-5 flex items-center ${titleAlign === "left" ? "justify-start" : "justify-center"}`}>
           <p
             className="rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]"
             style={{ background: "#F0EDF0", fontFamily: "var(--font-bricolage)" }}
@@ -208,10 +208,13 @@ export function Divider() {
   return <div className="my-3 h-px bg-[#141220]/10" />;
 }
 
-export function Bar({ pct, color = "bg-brand-pink" }: { pct: number; color?: string }) {
+export function Bar({ pct, color = "bg-brand-pink", background }: { pct: number; color?: string; background?: string }) {
   return (
     <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[#141220]/[0.08]">
-      <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
+      <div
+        className={`h-full rounded-full ${background ? "" : color}`}
+        style={{ width: `${Math.min(100, Math.max(0, pct))}%`, ...(background ? { background } : {}) }}
+      />
     </div>
   );
 }
@@ -317,10 +320,10 @@ export function MiniTile({ label, value, note }: { label: string; value: string;
 
 export function QuickStat({ label, value, tone }: { label: string; value: string; tone?: "ok" | "ko" }) {
   return (
-    <div className="rounded-xl border border-[#141220]/10 bg-white/60 p-2.5">
+    <div className="rounded-xl bg-white p-2.5 text-center">
       <p className="text-[9px] text-[#141220]/40">{label}</p>
       <p
-        className={`mt-0.5 text-sm font-bold ${
+        className={`mt-0.5 text-center text-sm font-bold ${
           tone === "ok" ? "text-[#178a3f]" : tone === "ko" ? "text-[#c8262d]" : ""
         }`}
       >
@@ -447,7 +450,7 @@ export function SourceRow({ label, value, pct, color }: { label: string; value: 
   );
 }
 
-export function TopProductRow({ code, name, value, pct }: { code: "S" | "P" | "L" | "O"; name: string; value: string; pct: number }) {
+export function TopProductRow({ code, name, value, pct, background }: { code: "S" | "P" | "L" | "O"; name: string; value: string; pct: number; background?: string }) {
   return (
     <div className="mt-2.5">
       <div className="flex items-center justify-between text-xs">
@@ -457,7 +460,7 @@ export function TopProductRow({ code, name, value, pct }: { code: "S" | "P" | "L
         </span>
         <span className="font-semibold">{value}</span>
       </div>
-      <Bar pct={pct} color="bg-brand-pink" />
+      <Bar pct={pct} color="bg-brand-pink" background={background} />
     </div>
   );
 }
@@ -496,12 +499,14 @@ export function AlertRow({
   tag,
   tone,
   last = false,
+  tagClassName = "",
 }: {
   code: "S" | "P" | "L" | "O";
   name: string;
   tag: string;
   tone: "warn" | "ko";
   last?: boolean;
+  tagClassName?: string;
 }) {
   return (
     <>
@@ -510,7 +515,7 @@ export function AlertRow({
           <Nature code={code} />
           {name}
         </span>
-        <Tag tone={tone}>{tag}</Tag>
+        <Tag tone={tone} className={tagClassName}>{tag}</Tag>
       </div>
       {!last && <Divider />}
     </>

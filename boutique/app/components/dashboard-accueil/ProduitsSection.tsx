@@ -39,18 +39,18 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
         layout="inline"
       />
 
-      <div className="grid gap-3 lg:grid-cols-3">
+      <div className="grid items-start gap-3 lg:grid-cols-3">
         <Card
           title="Top 5 des produits"
           titleTab
           className="!bg-[#FFFFFF70]"
           badge={<p className="text-[10px] text-[#141220]/40">sur la période</p>}
         >
-          <TopProductRow code="L" name="Montre connectée S8" value="48 · 672 000" pct={100} />
-          <TopProductRow code="S" name="Sérum éclat 30 ml" value="37 · 444 000" pct={77} />
-          <TopProductRow code="P" name="Casque sans fil X2" value="21 · 231 000" pct={44} />
-          <TopProductRow code="S" name="Huile de ricin" value="14 · 105 000" pct={29} />
-          <TopProductRow code="O" name="Coffret parfum" value="9 · 81 000" pct={19} />
+          <TopProductRow code="L" name="Montre connectée S8" value="48 · 672 000" pct={100} background="linear-gradient(90deg, #FF8BCB 0%, #EC0C8C 100%)" />
+          <TopProductRow code="S" name="Sérum éclat 30 ml" value="37 · 444 000" pct={77} background="#8B90A6" />
+          <TopProductRow code="P" name="Casque sans fil X2" value="21 · 231 000" pct={44} background="#2F6BE0BF" />
+          <TopProductRow code="S" name="Huile de ricin" value="14 · 105 000" pct={29} background="#FFFFFF" />
+          <TopProductRow code="O" name="Coffret parfum" value="9 · 81 000" pct={19} background="#8B90A666" />
           <Divider />
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">
             Les moins rentables
@@ -71,13 +71,13 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
           </div>
           <Divider />
           <p className="text-[10px] text-[#141220]/40">
-            S · stocké chez le partenaire &nbsp; P · drop du partenaire &nbsp; L · drop LM &nbsp; O · produit propre
+            S · stocké Management · drop LM
           </p>
         </Card>
 
         <Card title="Vos quatre natures de produits" titleTab className="!bg-[#FFFFFF70]">
           <div className="mt-2 flex h-2 overflow-hidden rounded-full">
-            <span className="h-full" style={{ width: "36%", background: "#141220" }} />
+            <span className="h-full" style={{ width: "36%", background: "#FFFFFF" }} />
             <span className="h-full bg-[#141220]/30" style={{ width: "17%" }} />
             <span className="h-full bg-[#2F6BE0]" style={{ width: "29%" }} />
             <span className="h-full bg-brand-pink" style={{ width: "18%" }} />
@@ -87,8 +87,8 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
           <NatureRow code="D" name="Drop" value="7 · 301 000" note="Marge 34 % · aucun stock avancé · 1 litige" />
           <NatureRow code="D" name="Drop" value="5 · 145 000" note="Marge 31 % · catalogue de la plateforme · 3 litiges" last />
           <Divider />
-          <StatRow label="Nature la plus rentable" value="Drop" />
-          <StatRow label="Nature qui vend le plus" value="Drop" />
+          <StatRow label="Nature la plus rentable" value="Produit propre" />
+          <StatRow label="Nature qui vend le plus" value="Drop du partenaire" />
         </Card>
 
         <div>
@@ -100,7 +100,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
               onPrev={() => setSelectedDrop((i) => (i - 1 + PRIX_DROP.length) % PRIX_DROP.length)}
               onNext={() => setSelectedDrop((i) => (i + 1) % PRIX_DROP.length)}
             />
-            <p className="mt-2 text-xs">
+            <p className="mt-3 mb-3 text-xs">
               Vous payez <b>{drop.achat.toLocaleString("fr-FR")} F</b> · vous revendez <b>{drop.vente.toLocaleString("fr-FR")} F</b>
             </p>
             <div className="relative mt-3 h-1 rounded-full bg-[linear-gradient(90deg,#C9CFDD,#EC0C8C)]">
@@ -122,8 +122,8 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
           </Card>
 
           <Card title="Catalogue accessible" titleTab className="mt-3 !bg-[#FFFFFF70]">
-            <StatRow label="Produits du partenaire" value="117" />
-            <StatRow label="Produits LM" value="64" />
+            <StatRow label="Drop" value="117" />
+            <StatRow label="Drop" value="64" />
             <StatRow label="Nouveautés ce mois" value="12" />
             <StatRow label="Produits à venir" value="6" />
             <StatRow label="Jamais vendus chez vous" value="3" />

@@ -16,18 +16,18 @@ export default function AlertesSection({ first = true }: { first?: boolean }) {
         layout="inline"
       />
 
-      <div className="grid gap-3 pb-4 lg:grid-cols-3">
+      <div className="grid items-start gap-3 pb-4 lg:grid-cols-3">
         <Card
           title="Ce qui demande une décision"
           titleTab
           className="!bg-[#FFFFFF70]"
           badge={<Tag tone="pink">5 alertes</Tag>}
         >
-          <AlertRow code="S" name="Huile de ricin" tag="Rupture sous 1 jour" tone="ko" />
-          <AlertRow code="S" name="Coffret parfum" tag="En rupture · retiré de la page" tone="ko" />
-          <AlertRow code="S" name="Bracelet cuir" tag="Rotation lente · 28 immobilisées" tone="warn" />
-          <AlertRow code="P" name="Casque X2" tag="4 avis négatifs" tone="warn" />
-          <AlertRow code="L" name="Montre S8" tag="3 litiges ce mois" tone="warn" last />
+          <AlertRow code="S" name="Huile de ricin" tag="Rupture sous 1 jour" tone="ko" tagClassName="!bg-white !text-[#FF5A62]" />
+          <AlertRow code="S" name="Coffret parfum" tag="En rupture · retiré de la page" tone="ko" tagClassName="!bg-white !text-[#FF5A62]" />
+          <AlertRow code="S" name="Bracelet cuir" tag="Rotation lente · 28 immobilisées" tone="warn" tagClassName="!bg-white !text-[#FFB020]" />
+          <AlertRow code="P" name="Casque X2" tag="4 avis négatifs" tone="warn" tagClassName="!bg-white !text-[#FFB020]" />
+          <AlertRow code="L" name="Montre S8" tag="3 litiges ce mois" tone="warn" tagClassName="!bg-white !text-[#FFB020]" last />
           <div className="my-3 h-px bg-[#141220]/10" />
           <StatRow label="Alertes traitées ce mois" value="11" />
         </Card>

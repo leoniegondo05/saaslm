@@ -147,7 +147,7 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
         layout="inline"
       />
 
-      <div className="grid gap-4 min-[1360px]:grid-cols-[320px_1fr_300px]">
+      <div className="grid items-start gap-4 min-[1360px]:grid-cols-[320px_1fr_300px]">
         {/* Colonne 1 : mon identité */}
         <div>
           <div className="rounded-2xl bg-white p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
@@ -276,12 +276,14 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
             })}
           </div>
 
-          <Card title="Comment se passe l'arrivée d'un collaborateur" className="mt-3">
+          <Card title="Comment se passe l'arrivée d'un collaborateur" titleTab className="mt-3">
             <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {ETAPES.map((e) => (
                 <div key={e.titre}>
-                  <p className="text-xs font-semibold">{e.titre}</p>
-                  <p className="mt-0.5 text-[11px] text-[#141220]/50">{e.note}</p>
+                  <p className="inline-block rounded-md px-3 py-1.5 text-[10px] font-semibold" style={{ background: "#F0EDF0" }}>
+                    {e.titre}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-[#000000]">{e.note}</p>
                 </div>
               ))}
             </div>
@@ -289,11 +291,7 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
         </div>
 
         {/* Colonne 3 : créer un collaborateur */}
-        <Card>
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Créer un collaborateur</p>
-            <Tag tone="pink">Nouveau</Tag>
-          </div>
+        <Card title="Créer un collaborateur" titleTab badge={<Tag tone="pink" className="mt-6">Nouveau</Tag>}>
 
           <FormField label="Nom et prénom" value="Nadège Ouattara" />
 
