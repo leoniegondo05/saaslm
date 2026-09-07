@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
 /*
+  Variante "dark:" pilotée par une classe plutôt que par la préférence
+  système (comportement par défaut de Tailwind v4) : le mode nuit est un
+  réglage choisi dans le menu compte du dashboard (DashboardHeader), pas la
+  préférence OS, donc "dark:*" ne doit s'activer que sous <html class="dark">
+  — posée par DashboardThemeProvider.tsx. Le site public (hors /dashboard)
+  n'a pas cette classe et n'est donc jamais affecté.
+*/
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
   Palette de couleurs de la marque "LIIVRE MOI" (LM), reprise du fichier Figma.
   On les déclare ici une seule fois, puis on les réutilise partout dans le
   site avec des classes Tailwind comme "bg-brand-bg" ou "text-brand-pink".
@@ -16,6 +26,48 @@
 body {
   background: var(--color-brand-bg);
   color: var(--color-brand-white);
+}
+
+/*
+  Jetons de couleur du dashboard : valeurs par défaut = design clair
+  existant, redéfinies sous html.dark pour le mode nuit — un seul point de
+  bascule, plutôt que du hex codé en dur à chaque endroit. Plusieurs niveaux
+  de gris/violet sombre (pas un simple noir plat) pour garder une hiérarchie
+  visuelle entre fond de page, cartes, panneaux "verre" et surfaces
+  secondaires (chips, inputs) :
+
+    --dashboard-bg        fond de page (le plus sombre)
+    --dashboard-card-bg   cartes (.card-tint, Card, QuickStat...)
+    --dashboard-surface-2 surfaces secondaires (chips d'étiquette F0EDF0,
+                           fond d'input) — légèrement plus clair qu'une carte
+                           pour rester lisible dessus
+    --dashboard-modal-bg  panneaux modaux / dépliés (FinancesSection) —
+                           encore un cran au-dessus, pour l'élévation
+    --dashboard-glass     cartes "verre" translucides (backdrop-filter)
+    --dashboard-text      texte encre : aussi réutilisé (via l'opacité
+                           Tailwind text-[var(--dashboard-text)]/NN) comme
+                           couleur de fond neutre pour bordures/séparateurs/
+                           tags — en clair c'est de l'encre foncée sur blanc,
+                           en sombre ça devient un liseré clair sur fond
+                           sombre, donc le même token sert aux deux usages
+                           sans code dupliqué.
+*/
+:root {
+  --dashboard-bg: #faf7fc;
+  --dashboard-text: #141220;
+  --dashboard-card-bg: #ffffff;
+  --dashboard-surface-2: #f0edf0;
+  --dashboard-modal-bg: #f3f1f5;
+  --dashboard-glass: rgba(255, 255, 255, 0.48);
+}
+
+html.dark {
+  --dashboard-bg: #100e1c;
+  --dashboard-text: #ede9f5;
+  --dashboard-card-bg: #1c1830;
+  --dashboard-surface-2: #241f3a;
+  --dashboard-modal-bg: #1e1a33;
+  --dashboard-glass: rgba(36, 31, 58, 0.6);
 }
 
 /*
@@ -55,10 +107,11 @@ body {
 
 /*
   Fond des cartes claires du dashboard : blanc plat (le dégradé rose/lavande
-  du coin bas-gauche a été retiré à la demande).
+  du coin bas-gauche a été retiré à la demande). Suit --dashboard-card-bg
+  pour s'assombrir avec le mode nuit (voir html.dark plus haut).
 */
 .card-tint {
-  background: #ffffff;
+  background: var(--dashboard-card-bg);
 }
 
 /*

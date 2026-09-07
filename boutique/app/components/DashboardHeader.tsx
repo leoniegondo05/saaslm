@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { logout } from "../../lib/api/services/auth";
+import { clearToken } from "../../lib/api/token";
+import { APPAREILS_CONNECTES_COUNT } from "./dashboard-profil/MonProfil";
+import { PERSONNEL_ACTIF_COUNT } from "./dashboard-parametres/PersonnelAcces";
+import { useDashboardTheme } from "./DashboardThemeProvider";
 
 /*
   Barre du haut du dashboard (logo, sélecteur mois/année, badge "solution LM",
@@ -31,8 +37,43 @@ const MONTH_NAMES = [
 ] as const;
 
 export default function DashboardHeader() {
+  const router = useRouter();
   const [activeDate, setActiveDate] = useState(() => new Date(2026, 7, 1));
   const [showYearPicker, setShowYearPicker] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
+  // Langue : purement visuel pour l'instant, pas d'i18n câblée. Le mode nuit,
+  // lui, est bien fonctionnel : état partagé (DashboardThemeProvider, monté
+  // dans app/dashboard/layout.tsx) plutôt que local à ce composant, pour que
+  // le bascule agisse sur tout le dashboard et pas juste ce menu.
+  const [langue, setLangue] = useState<"FR" | "EN">("FR");
+  const { modeNuit, toggleModeNuit } = useDashboardTheme();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showAccountMenu) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node)) {
+        setShowAccountMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showAccountMenu]);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout(); // appelle aussi clearToken() en cas de succès
+    } catch {
+      // Backend indisponible ou session déjà expirée : logout() n'a alors
+      // pas atteint son clearToken() interne, donc on l'appelle nous-mêmes
+      // pour ne jamais laisser un token périmé en localStorage.
+      clearToken();
+    } finally {
+      router.push("/login");
+    }
+  };
 
   const activeMonthIndex = activeDate.getMonth();
   const activeYear = activeDate.getFullYear();
@@ -73,12 +114,12 @@ export default function DashboardHeader() {
         />
 
         <div className="relative flex items-center gap-1.5 sm:gap-2">
-          <div className="flex items-center gap-0.5 rounded-full bg-white/70 p-1 shadow-[0_2px_10px_rgba(20,18,32,0.06)] sm:gap-1 sm:p-1.5">
+          <div className="flex items-center gap-0.5 rounded-full bg-white/70 p-1 shadow-[0_2px_10px_rgba(20,18,32,0.06)] dark:bg-white/10 sm:gap-1 sm:p-1.5">
             <button
               type="button"
               aria-label="Mois précédent"
               onClick={() => shiftMonth(-1)}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white sm:h-8 sm:w-8"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white dark:text-white/50 dark:hover:bg-white/15 sm:h-8 sm:w-8"
             >
               <ChevronIcon direction="left" />
             </button>
@@ -89,8 +130,8 @@ export default function DashboardHeader() {
                 onClick={() => shiftMonth(index - 1)}
                 className={`rounded-full px-2.5 py-1 text-xs font-medium transition sm:px-4 sm:py-1.5 sm:text-sm ${
                   index === 1
-                    ? "bg-white text-[#141220] shadow-[0_2px_8px_rgba(20,18,32,0.1)]"
-                    : "hidden text-[#141220]/45 hover:text-[#141220]/70 sm:inline-block"
+                    ? "bg-white text-[#141220] shadow-[0_2px_8px_rgba(20,18,32,0.1)] dark:bg-white/15 dark:text-[var(--dashboard-text)]"
+                    : "hidden text-[#141220]/45 hover:text-[#141220]/70 dark:text-white/40 dark:hover:text-white/70 sm:inline-block"
                 }`}
               >
                 {MONTH_NAMES[date.getMonth()]}
@@ -100,7 +141,7 @@ export default function DashboardHeader() {
               type="button"
               aria-label="Mois suivant"
               onClick={() => shiftMonth(1)}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white sm:h-8 sm:w-8"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white dark:text-white/50 dark:hover:bg-white/15 sm:h-8 sm:w-8"
             >
               <ChevronIcon direction="right" />
             </button>
@@ -109,20 +150,20 @@ export default function DashboardHeader() {
           <button
             type="button"
             onClick={() => setShowYearPicker((open) => !open)}
-            className="shrink-0 rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-[#141220]/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white sm:px-3 sm:py-1.5 sm:text-sm"
+            className="shrink-0 rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-[#141220]/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:text-white/70 dark:hover:bg-white/15 sm:px-3 sm:py-1.5 sm:text-sm"
           >
             {activeYear}
           </button>
 
           {showYearPicker && (
-            <div className="absolute left-0 top-full z-10 mt-2 flex flex-col overflow-hidden rounded-2xl bg-white py-1 shadow-[0_8px_24px_rgba(20,18,32,0.16)]">
+            <div className="absolute left-0 top-full z-10 mt-2 flex flex-col overflow-hidden rounded-2xl bg-white py-1 shadow-[0_8px_24px_rgba(20,18,32,0.16)] dark:bg-[#1c1830]">
               {yearOptions.map((year) => (
                 <button
                   key={year}
                   type="button"
                   onClick={() => setYear(year)}
-                  className={`px-5 py-2 text-left text-sm font-medium transition hover:bg-[#141220]/[0.05] ${
-                    year === activeYear ? "text-brand-pink" : "text-[#141220]/70"
+                  className={`px-5 py-2 text-left text-sm font-medium transition hover:bg-[#141220]/[0.05] dark:hover:bg-white/5 ${
+                    year === activeYear ? "text-brand-pink" : "text-[#141220]/70 dark:text-white/70"
                   }`}
                 >
                   {year}
@@ -134,7 +175,7 @@ export default function DashboardHeader() {
       </div>
 
       <span className="inline-flex rounded-full bg-[linear-gradient(90deg,var(--color-brand-pink),rgba(20,18,32,0.08))] p-px shadow-[0_2px_10px_rgba(20,18,32,0.06)]">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white/90 px-5 py-2.5 text-sm font-medium text-[#141220]">
+        <span className="inline-flex items-center gap-2 rounded-full bg-white/90 px-5 py-2.5 text-sm font-medium text-[#141220] dark:bg-[#1c1830]/90 dark:text-[var(--dashboard-text)]">
           <SparkleIcon />
           solution LM
         </span>
@@ -143,13 +184,13 @@ export default function DashboardHeader() {
       <div className="flex items-center gap-2 sm:gap-3">
         <Link
           href="/dashboard/produits?tab=partenaire"
-          className="flex items-center gap-3 rounded-full bg-white/70 p-1.5 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white sm:pr-5"
+          className="flex items-center gap-3 rounded-full bg-white/70 p-1.5 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15 sm:pr-5"
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-purple">
             <BuildingIcon />
           </span>
           <span className="hidden leading-tight sm:block">
-            <span className="block text-xs text-[#141220]/50">Partenaire agréé</span>
+            <span className="block text-xs text-[#141220]/50 dark:text-white/40">Partenaire agréé</span>
             <span className="block text-sm font-semibold">Groupe Logistique Ivoire</span>
           </span>
         </Link>
@@ -157,19 +198,211 @@ export default function DashboardHeader() {
         <button
           type="button"
           aria-label="Notifications"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15"
         >
           <BellIcon />
         </button>
-        <button
-          type="button"
-          aria-label="Mon compte"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white"
-        >
-          <UserIcon />
-        </button>
+
+        {/* Avatar utilisateur : cliquable, ouvre le menu de compte (profil,
+            sécurité, droits, appareils, accès, langue, mode nuit, aide,
+            déconnexion) — cf. maquette Figma fournie. */}
+        <div className="relative" ref={accountMenuRef}>
+          <button
+            type="button"
+            aria-label="Mon compte"
+            aria-haspopup="menu"
+            aria-expanded={showAccountMenu}
+            onClick={() => setShowAccountMenu((open) => !open)}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15"
+          >
+            <UserIcon />
+          </button>
+
+          {showAccountMenu && (
+            <div
+              role="menu"
+              className="absolute right-0 top-full z-20 mt-2 w-[300px] overflow-hidden rounded-[28px] bg-white shadow-[0_20px_48px_-12px_rgba(20,18,32,0.35)] dark:bg-[#1c1830]"
+            >
+              <Link
+                href="/dashboard/profil"
+                onClick={() => setShowAccountMenu(false)}
+                className="flex items-center gap-3 p-3 transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
+              >
+                <span
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white"
+                  style={{ background: "linear-gradient(135deg,#EC0C8C,#3A1D8A)" }}
+                >
+                  <UserIcon className="h-5 w-5 text-white" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-bold">Awa K.</span>
+                  <span className="block text-xs text-[#141220]/45 dark:text-white/40">Voir mon profil</span>
+                </span>
+                <ChevronIcon direction="right" />
+              </Link>
+
+              <div className="px-2 pb-2">
+                <Link
+                  href="/dashboard/profil/securite"
+                  onClick={() => setShowAccountMenu(false)}
+                  className="flex items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-purple/10 text-brand-purple">
+                    <ShieldIcon />
+                  </span>
+                  <span className="flex-1 text-sm font-medium">Mot de passe et sécurité</span>
+                  <ChevronIcon direction="right" />
+                </Link>
+                <Link
+                  href="/dashboard/profil/droits"
+                  onClick={() => setShowAccountMenu(false)}
+                  className="flex items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dcf5e3] text-[#178a3f]">
+                    <UserCheckIcon />
+                  </span>
+                  <span className="flex-1 text-sm font-medium">Mes droits</span>
+                  <ChevronIcon direction="right" />
+                </Link>
+                <Link
+                  href="/dashboard/profil/appareils"
+                  onClick={() => setShowAccountMenu(false)}
+                  className="flex items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dbeafe] text-[#1d4ed8]">
+                    <DeviceIcon />
+                  </span>
+                  <span className="flex-1 text-sm font-medium">Mes appareils</span>
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#141220] px-1.5 text-[11px] font-semibold text-white">
+                    {APPAREILS_CONNECTES_COUNT}
+                  </span>
+                  <ChevronIcon direction="right" />
+                </Link>
+                <Link
+                  href="/dashboard/parametres"
+                  onClick={() => setShowAccountMenu(false)}
+                  className="flex items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ffe1e2] text-[#c8262d]">
+                    <PersonPlusIcon />
+                  </span>
+                  <span className="flex-1 text-sm font-medium">Gérer les accès</span>
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#141220] px-1.5 text-[11px] font-semibold text-white">
+                    {PERSONNEL_ACTIF_COUNT}
+                  </span>
+                  <ChevronIcon direction="right" />
+                </Link>
+              </div>
+
+              <div className="mx-4 h-px bg-[#141220]/10 dark:bg-white/10" />
+
+              <div className="px-2 py-2">
+                <div className="flex items-center gap-3 px-2 py-2.5">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#141220]/[0.06] text-[#141220]/60 dark:bg-white/10 dark:text-white/60">
+                    <GlobeIcon />
+                  </span>
+                  <span className="flex-1 text-sm font-medium">Langue</span>
+                  <div className="flex items-center rounded-full bg-[#141220]/[0.06] p-0.5 text-xs font-semibold dark:bg-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setLangue("FR")}
+                      className={`rounded-full px-2.5 py-1 transition ${
+                        langue === "FR" ? "bg-[#141220] text-white" : "text-[#141220]/40 dark:text-white/40"
+                      }`}
+                    >
+                      FR
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLangue("EN")}
+                      className={`rounded-full px-2.5 py-1 transition ${
+                        langue === "EN" ? "bg-[#141220] text-white" : "text-[#141220]/40 dark:text-white/40"
+                      }`}
+                    >
+                      EN
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 px-2 py-2.5">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-purple/10 text-brand-purple">
+                    <MoonIcon />
+                  </span>
+                  <span className="flex-1 text-sm font-medium">Mode nuit</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={modeNuit}
+                    onClick={toggleModeNuit}
+                    className={`flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition ${
+                      modeNuit ? "justify-end bg-[#141220] dark:bg-brand-pink" : "justify-start bg-[#141220]/20 dark:bg-white/20"
+                    }`}
+                  >
+                    <span className="h-5 w-5 rounded-full bg-white shadow" />
+                  </button>
+                </div>
+
+                <AccountMenuRow
+                  icon={<HelpIcon />}
+                  iconBg="bg-[#fff1d6] text-[#a8690a]"
+                  label="Aide"
+                  onClick={() => setShowAccountMenu(false)}
+                />
+              </div>
+
+              <div className="mx-4 h-px bg-[#141220]/10 dark:bg-white/10" />
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-[#ffe1e2]/40 disabled:opacity-60"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ffe1e2] text-[#c8262d]">
+                  <LogoutIcon />
+                </span>
+                <span className="text-sm font-semibold text-[#c8262d]">
+                  {loggingOut ? "Déconnexion…" : "Se déconnecter"}
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
+  );
+}
+
+function AccountMenuRow({
+  icon,
+  iconBg,
+  label,
+  badge,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  iconBg: string;
+  label: string;
+  badge?: string;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
+    >
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconBg}`}>
+        {icon}
+      </span>
+      <span className="flex-1 text-sm font-medium">{label}</span>
+      {badge && (
+        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#141220] px-1.5 text-[11px] font-semibold text-white">
+          {badge}
+        </span>
+      )}
+      <ChevronIcon direction="right" />
+    </button>
   );
 }
 
@@ -225,9 +458,9 @@ function BellIcon() {
   );
 }
 
-function UserIcon() {
+function UserIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
       <circle cx="12" cy="8.5" r="3.5" stroke="currentColor" strokeWidth="1.6" />
       <path
         d="M5 20c1.2-3.5 4-5.5 7-5.5s5.8 2 7 5.5"
@@ -235,6 +468,95 @@ function UserIcon() {
         strokeWidth="1.6"
         strokeLinecap="round"
       />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+      <path
+        d="M12 3.5 5 6v5.5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-2.5Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path d="m9.2 12 1.9 1.9 3.7-3.9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function UserCheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+      <circle cx="10" cy="8.5" r="3.2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M4.5 19.5c1-3.2 3.5-5 5.5-5s3.4 1 4.4 2.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="m15.5 12.5 1.7 1.7 3-3.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function DeviceIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+      <rect x="3.5" y="5" width="17" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M2 19.5h20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PersonPlusIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+      <circle cx="9.5" cy="8.5" r="3.2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M3.5 19.5c1-3.2 3.5-5 6-5s5 1.8 6 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M18.5 8v5.5M15.75 10.75h5.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function GlobeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M3.5 12h17M12 3.5c2.2 2.3 3.4 5.3 3.4 8.5s-1.2 6.2-3.4 8.5c-2.2-2.3-3.4-5.3-3.4-8.5S9.8 5.8 12 3.5Z" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+      <path
+        d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function HelpIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M9.8 9.3a2.3 2.3 0 1 1 3.4 2c-.9.55-1.2 1-1.2 1.9"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="16.7" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+      <path d="M15.5 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7.5a2 2 0 0 0 2-2v-2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.5 12H21M17.5 8.5 21 12l-3.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

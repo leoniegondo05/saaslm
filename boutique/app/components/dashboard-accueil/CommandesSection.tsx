@@ -23,12 +23,12 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
         layout="inline"
       />
 
-      <div className="grid gap-3 lg:grid-cols-4">
-        <Card title="Commandes de la période" titleTab className="!bg-[#FFFFFF70] self-start">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Card title="Commandes de la période" titleTab className="!bg-[var(--dashboard-glass)] self-start">
           <div className="mt-3 flex items-center gap-4">
-            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[6px] border-white">
+            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[6px] border-[var(--dashboard-card-bg)]">
               <div className="absolute inset-0 rounded-full border-[6px] border-transparent border-t-brand-pink border-r-brand-pink" style={{ transform: "rotate(45deg)" }} />
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#141220] text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#141220] text-center dark:bg-brand-pink">
                 <div>
                   <p className="text-lg font-bold leading-none text-white">73</p>
                   <p className="text-[8px] text-white/40">au total</p>
@@ -48,20 +48,20 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           <StatRow label="Articles par commande" value="1,4" bold={false} />
         </Card>
 
-        <Card title="Où en sont les commandes en cours" titleTab className="!bg-[#FFFFFF70]">
+        <Card title="Où en sont les commandes en cours" titleTab className="!bg-[var(--dashboard-glass)]">
           <StatRow label="En coordination" value="4" bold={false} />
           <StatRow label="Affectées à un livreur" value="7" bold={false} />
           <StatRow label="En cours de livraison" value="3" bold={false} />
           <StatRow label="En relance" value="2" bold={false} />
           <Divider />
-          <p className="inline-block rounded bg-[#F0EDF0] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Les quatre délais</p>
+          <p className="inline-block rounded bg-[var(--dashboard-surface-2)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">Les quatre délais</p>
           <StatRow label="Commande → confirmation" value="1 h 40" bold={false} />
           <StatRow label="Confirmation → livreur" value="4 h 10" bold={false} />
           <StatRow label="Livreur → livraison" value="20 h" bold={false} />
           <StatRow label="Total moyen" value="26 h" />
         </Card>
 
-        <Card title="Pourquoi elles n'aboutissent pas" titleTab className="!bg-[#FFFFFF70] self-start">
+        <Card title="Pourquoi elles n'aboutissent pas" titleTab className="!bg-[var(--dashboard-glass)] self-start">
           <FailRow label="Client injoignable" value={6} pct={100} />
           <FailRow label="Adresse introuvable" value={3} pct={50} />
           <FailRow label="Refus à la livraison" value={2} pct={33} />
@@ -72,7 +72,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           <StatRow label="Taux d'annulation" value="4 %" />
         </Card>
 
-        <Card title="Quand vos clients règlent" titleTab className="!bg-[#FFFFFF70] self-start">
+        <Card title="Quand vos clients règlent" titleTab className="!bg-[var(--dashboard-glass)] self-start">
           <StatRow label="Depuis la page de commande" value="62 %" />
           <Bar pct={62} />
           <div className="mt-2" />
@@ -86,13 +86,13 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
         </Card>
       </div>
 
-      <div className="mt-3 grid gap-3 lg:grid-cols-[1.7fr_1fr]">
+      <div className="mt-3 grid gap-3 lg:grid-cols-[1.7fr_1fr] [&>*]:min-w-0">
         <Card
           title="Heures auxquelles vos clients commandent"
           titleTab
           titleAlign="left"
-          className="!bg-[#F4F4F6] self-start"
-          badge={<p className="text-[10px] text-[#141220]">Pic entre 20 h et 22 h · 38 % des commandes</p>}
+          className="!bg-[var(--dashboard-surface-2)] self-start"
+          badge={<p className="text-[10px] text-[var(--dashboard-text)]">Pic entre 20 h et 22 h · 38 % des commandes</p>}
         >
           <div
             className="mt-3 grid gap-[3px]"
@@ -106,11 +106,11 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
                 ? v > 0.75
                   ? "#EC0C8C"
                   : `rgba(236,12,140,${Math.max(0.25, v * 0.9)})`
-                : `rgba(20,18,32,${Math.max(0.08, v * 0.6)})`;
+                : `color-mix(in srgb, var(--dashboard-text) ${Math.round(Math.max(0.08, v * 0.6) * 100)}%, transparent)`;
               return <span key={i} className="h-4 rounded-sm" style={{ background }} />;
             })}
           </div>
-          <div className="mt-1.5 flex justify-between text-[9px] text-[#141220]/40">
+          <div className="mt-1.5 flex justify-between text-[9px] text-[var(--dashboard-text)]/40">
             <span>00 h</span>
             <span>06 h</span>
             <span>12 h</span>
@@ -118,8 +118,8 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
             <span>23 h</span>
           </div>
           <Divider />
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Jours de la semaine</p>
-          <div className="mt-2 grid grid-cols-7 gap-2 text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">Jours de la semaine</p>
+          <div className="mt-2 grid grid-cols-4 gap-2 text-center sm:grid-cols-7">
             {[
               ["Lun", 8],
               ["Mar", 9],
@@ -130,19 +130,19 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
               ["Dim", 5],
             ].map(([d, v]) => (
               <div key={d}>
-                <p className="text-[9px] text-[#141220]/40">{d}</p>
+                <p className="text-[9px] text-[var(--dashboard-text)]/40">{d}</p>
                 <p className={`text-xs font-semibold ${Number(v) >= 14 ? "text-brand-pink" : ""}`}>{v}</p>
               </div>
             ))}
           </div>
         </Card>
 
-        <Card title="Communes livrées" titleTab className="!bg-[#FFFFFF70]">
-          <CommuneRow label="Yopougon" pct={41} value="30" barColor="bg-[#141220]" />
-          <CommuneRow label="Cocody" pct={27} value="20" barColor="bg-[#141220]/75" />
-          <CommuneRow label="Abobo" pct={18} value="13" barColor="bg-[#141220]/55" />
-          <CommuneRow label="Marcory" pct={9} value="7" barColor="bg-[#141220]/35" />
-          <CommuneRow label="Bingerville" pct={5} value="3" barColor="bg-[#141220]/20" />
+        <Card title="Communes livrées" titleTab className="!bg-[var(--dashboard-glass)]">
+          <CommuneRow label="Yopougon" pct={41} value="30" barColor="bg-[var(--dashboard-text)]" />
+          <CommuneRow label="Cocody" pct={27} value="20" barColor="bg-[var(--dashboard-text)]/75" />
+          <CommuneRow label="Abobo" pct={18} value="13" barColor="bg-[var(--dashboard-text)]/55" />
+          <CommuneRow label="Marcory" pct={9} value="7" barColor="bg-[var(--dashboard-text)]/35" />
+          <CommuneRow label="Bingerville" pct={5} value="3" barColor="bg-[var(--dashboard-text)]/20" />
           <Divider />
           <StatRow label="Commune la plus rentable" value="Cocody · marge 54 %" />
           <StatRow label="Commune la plus difficile" value="Abobo · 31 % d'échecs" />

@@ -63,26 +63,26 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
         layout="inline"
       />
 
-      <div className="grid gap-4 lg:grid-cols-[334px_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[334px_1fr] [&>*]:min-w-0">
         <div>
-          <div className="rounded-2xl bg-white p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+          <div className="rounded-2xl bg-[var(--dashboard-card-bg)] p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
             <div className="flex items-center gap-3">
               <span className="h-14 w-14 shrink-0 rounded-2xl bg-[linear-gradient(140deg,#2F6BE0,#011847)]" />
               <div>
                 <p className="text-base font-semibold tracking-tight">{PARTENAIRE.nom}</p>
-                <p className="text-xs text-[#141220]/50">{PARTENAIRE.ville}</p>
+                <p className="text-xs text-[var(--dashboard-text)]/50">{PARTENAIRE.ville}</p>
               </div>
             </div>
-            <div className="my-3 h-px bg-[#141220]/10" />
+            <div className="my-3 h-px bg-[var(--dashboard-text)]/10" />
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.16em] text-[#141220]/40">Note du réseau</p>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">Note du réseau</p>
                 <p className="text-base font-bold">
-                  {PARTENAIRE.note.toLocaleString("fr-FR")} <span className="text-xs font-normal text-[#141220]/50">/ 10</span>
+                  {PARTENAIRE.note.toLocaleString("fr-FR")} <span className="text-xs font-normal text-[var(--dashboard-text)]/50">/ 10</span>
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] uppercase tracking-[0.16em] text-[#141220]/40">Affiliée depuis</p>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">Affiliée depuis</p>
                 <p className="text-sm font-semibold">{PARTENAIRE.affilieeDepuis}</p>
               </div>
             </div>
@@ -93,7 +93,7 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
             </div>
           </div>
 
-          <Card title="Informations du partenaire" titleTab className="relative mt-3 overflow-hidden !bg-white">
+          <Card title="Informations du partenaire" titleTab className="relative mt-3 overflow-hidden !bg-[var(--dashboard-card-bg)]">
             <div
               className="transition-[max-height] duration-300"
               style={{ maxHeight: infosOuvertes ? PARTENAIRE.infos.length * 32 : INFOS_VISIBLES * 32 }}
@@ -104,11 +104,11 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
             </div>
 
             {!infosOuvertes && (
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-14 items-end justify-center bg-[linear-gradient(rgba(255,255,255,0),#fff_65%)] pb-1">
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-14 items-end justify-center bg-[linear-gradient(transparent,var(--dashboard-card-bg)_65%)] pb-1">
                 <button
                   type="button"
                   onClick={() => setInfosOuvertes(true)}
-                  className="pointer-events-auto flex items-center gap-1 rounded-full border border-[#141220]/10 bg-white px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#141220]/60 shadow-[0_2px_10px_rgba(20,18,32,0.08)]"
+                  className="pointer-events-auto flex items-center gap-1 rounded-full border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/60 shadow-[0_2px_10px_rgba(20,18,32,0.08)]"
                 >
                   Dérouler
                   <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
@@ -121,16 +121,16 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
 
           <button
             type="button"
-            className="mt-3 w-full rounded-full border border-brand-pink/45 bg-white/60 px-4 py-2.5 text-center text-xs font-semibold text-brand-pink"
+            className="mt-3 w-full rounded-full border border-brand-pink/45 bg-[var(--dashboard-card-bg)]/60 px-4 py-2.5 text-center text-xs font-semibold text-brand-pink"
           >
             Ouvrir un litige
           </button>
         </div>
 
-        <div className="relative flex min-h-[480px] flex-col justify-end overflow-hidden rounded-3xl bg-white p-6 text-white">
+        <div className="relative flex min-h-[480px] flex-col justify-end overflow-hidden rounded-3xl bg-[var(--dashboard-card-bg)] p-6 text-white">
           <ProduitCarousel images={PROCHAIN_PRODUIT.images} />
           {/* Dégradé produit : image du produit visible en haut, fondu vers le noir en bas pour la lisibilité du texte. */}
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(238.49deg,rgba(217,217,217,0)_51.88%,#000000_120.52%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(217,217,217,0)_40%,#000000_92%)]" />
           <div className="relative">
             <Tag tone="pink">Arrive le {PROCHAIN_PRODUIT.arriveeLe}</Tag>
             <p className="mt-2.5 text-3xl font-semibold tracking-tight">{PROCHAIN_PRODUIT.nom}</p>

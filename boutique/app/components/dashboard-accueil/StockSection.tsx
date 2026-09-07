@@ -122,17 +122,12 @@ export default function StockSection({ first = true }: { first?: boolean }) {
         layout="inline"
       />
 
-      <div className="grid gap-3 lg:grid-cols-[1.9fr_1fr]">
-        <Card
-          style={{
-            background:
-              "linear-gradient(154.44deg, rgba(255, 255, 255, 0.44) 33.22%, rgba(249, 233, 245, 0.44) 109.81%)",
-          }}
-        >
+      <div className="grid gap-3 lg:grid-cols-[1.9fr_1fr] [&>*]:min-w-0">
+        <Card style={{ background: "var(--dashboard-glass)" }}>
           <div className="flex items-center justify-between gap-3">
             <p
-              className="rounded-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]"
-              style={{ background: "#F0EDF0", fontFamily: "var(--font-bricolage)" }}
+              className="rounded-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]"
+              style={{ background: "var(--dashboard-surface-2)", fontFamily: "var(--font-bricolage)" }}
             >
               Fiche d&apos;un dépôt
             </p>
@@ -149,7 +144,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
               <Nature code={depot.nature} />
               <div>
                 <p className="text-xs font-semibold">{depot.deposedLe}</p>
-                <p className="text-[10px] text-[#141220]/40">
+                <p className="text-[10px] text-[var(--dashboard-text)]/40">
                   {depot.entrepot} · {depot.reference} · {depot.garantie}
                 </p>
               </div>
@@ -157,14 +152,14 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             <Tag tone={depot.tag.tone}>{depot.tag.label}</Tag>
           </div>
 
-          <div className="mt-3 grid grid-cols-5 gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
             <QuickStat label="Quantité déposée" value={depot.quick[0]} />
             <QuickStat label="Reçu conforme" value={depot.quick[1]} tone="ok" />
             <QuickStat label="Endommagé à la réception" value={depot.quick[2]} tone="ko" />
             <QuickStat label="Mis en distribution" value={depot.quick[3]} />
             <QuickStat label="Vendu sur la période" value={depot.quick[4]} />
           </div>
-          <div className="mt-2 grid grid-cols-5 gap-2">
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
             <QuickStat label="Restant en entrepôt" value={depot.quick2[0]} />
             <QuickStat label="Réservé aux commandes" value={depot.quick2[1]} />
             <QuickStat label="Valeur immobilisée" value={depot.quick2[2]} />
@@ -173,7 +168,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
           </div>
 
           <Divider />
-          <div className="flex items-center justify-between text-[10px] text-[#141220]/40">
+          <div className="flex items-center justify-between text-[10px] text-[var(--dashboard-text)]/40">
             <span>Parcours du dépôt</span>
             <span>{depot.parcours.debut} → {depot.parcours.fin}</span>
           </div>
@@ -182,7 +177,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
               <span key={i} className="h-1 flex-1 rounded-full bg-[linear-gradient(90deg,#6B21D6,#EC0C8C)]" />
             ))}
           </div>
-          <div className="mt-1.5 flex justify-between text-[9px] text-[#141220]/40">
+          <div className="mt-1.5 flex justify-between text-[9px] text-[var(--dashboard-text)]/40">
             <span>Demande envoyée</span>
             <span>Récupérée chez moi</span>
             <span>Contrôle de conformité</span>
@@ -191,9 +186,9 @@ export default function StockSection({ first = true }: { first?: boolean }) {
 
           <Divider />
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="max-w-md text-[10px] text-[#141220]/40">{depot.note}</p>
+            <p className="max-w-md text-[10px] text-[var(--dashboard-text)]/40">{depot.note}</p>
             <div className="flex gap-2">
-              <span className="rounded-full border border-[#141220]/15 px-3.5 py-2 text-[10px] font-semibold">
+              <span className="rounded-full border border-[var(--dashboard-text)]/15 px-3.5 py-2 text-[10px] font-semibold">
                 Voir le contrôle
               </span>
               <span className="rounded-full border border-brand-pink/40 px-3.5 py-2 text-[10px] font-semibold text-brand-pink">
@@ -203,8 +198,8 @@ export default function StockSection({ first = true }: { first?: boolean }) {
           </div>
 
           <Divider />
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
               Mes quatre dépôts
             </p>
             <Tag tone="dark">240 unités · 1 209 100 F</Tag>
@@ -228,8 +223,8 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             onRowClick={setIndex}
           />
 
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
               Produits que je revends sans stock · drop
             </p>
             <div className="flex gap-1.5">
@@ -322,7 +317,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
                 <span className="text-brand-pink">- - Sorties cumulées</span>
               </div>
             </div>
-            <div className="bg-[#FFFFFF70] p-4">
+            <div className="bg-[var(--dashboard-glass)] p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.16em] text-[#7B8095]">Restant</p>
@@ -344,7 +339,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             </div>
           </div>
 
-          <Card title="Tous dépôts confondus" titleTab className="mt-3 !bg-[#FFFFFF70]">
+          <Card title="Tous dépôts confondus" titleTab className="mt-3 !bg-[var(--dashboard-glass)]">
             <StatRow label="Unités en entrepôt" value="240" />
             <StatRow label="Déposé depuis le 1er août" value="420" />
             <StatRow label="Endommagé à la réception" value="3 · 0,7 %" />
@@ -357,31 +352,31 @@ export default function StockSection({ first = true }: { first?: boolean }) {
           <Card
             title="Envois récents"
             titleTab
-            className="mt-3 !bg-[#FFFFFF70]"
+            className="mt-3 !bg-[var(--dashboard-glass)]"
             badge={<Tag tone="pink">1 en cours</Tag>}
           >
             <div className="mt-3 flex items-center justify-between text-xs">
               <span className="font-semibold">Huile de ricin · 60</span>
-              <span className="text-[#141220]/40">28 août</span>
+              <span className="text-[var(--dashboard-text)]/40">28 août</span>
             </div>
             <div className="mt-1.5 flex gap-1">
               <span className="h-1 flex-1 rounded-full bg-[linear-gradient(90deg,#6B21D6,#EC0C8C)]" />
               <span className="h-1 flex-1 rounded-full bg-[linear-gradient(90deg,#6B21D6,#EC0C8C)]" />
-              <span className="h-1 flex-1 rounded-full bg-[#141220]/10" />
-              <span className="h-1 flex-1 rounded-full bg-[#141220]/10" />
+              <span className="h-1 flex-1 rounded-full bg-[var(--dashboard-text)]/10" />
+              <span className="h-1 flex-1 rounded-full bg-[var(--dashboard-text)]/10" />
             </div>
-            <p className="mt-1.5 text-[10px] text-[#141220]/40">Au contrôle · résultat attendu aujourd&apos;hui</p>
+            <p className="mt-1.5 text-[10px] text-[var(--dashboard-text)]/40">Au contrôle · résultat attendu aujourd&apos;hui</p>
             <Divider />
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#141220]/50">Sérum éclat · 120</span>
+              <span className="text-[var(--dashboard-text)]/50">Sérum éclat · 120</span>
               <Tag tone="warn">3 écartés</Tag>
             </div>
             <div className="mt-2 flex items-center justify-between text-xs">
-              <span className="text-[#141220]/50">Beurre de karité · 200</span>
+              <span className="text-[var(--dashboard-text)]/50">Beurre de karité · 200</span>
               <Tag tone="ok">Conforme</Tag>
             </div>
             <div className="mt-2 flex items-center justify-between text-xs">
-              <span className="text-[#141220]/50">Coffret parfum · 40</span>
+              <span className="text-[var(--dashboard-text)]/50">Coffret parfum · 40</span>
               <Tag tone="ok">Conforme</Tag>
             </div>
             <Btn variant="dark" className="mt-4 !rounded-lg">

@@ -60,7 +60,7 @@ export default function ProduitsPage() {
   );
 
   return (
-    <div className="min-h-screen w-full bg-[#FAF7FC] font-sans text-[#141220] antialiased">
+    <div className="min-h-screen w-full bg-[var(--dashboard-bg)] font-sans text-[var(--dashboard-text)] antialiased transition-colors">
       <div className="mx-auto flex max-w-[1620px] flex-col gap-6 px-4 pb-28 pt-6 sm:px-6 md:px-10 lg:flex-row lg:pb-10 lg:pl-3 lg:pt-8">
         <DashboardSidebar />
 

@@ -59,7 +59,7 @@ export function ProduitCarousel({ images }: { images: string[] }) {
             type="button"
             onClick={() => setIndex(i)}
             aria-label={`Aller à l'image ${i + 1}`}
-            className={`h-1.5 rounded-full transition-all ${i === index ? "w-4 bg-[#141220]" : "w-1.5 bg-[#141220]/40"}`}
+            className={`h-1.5 rounded-full transition-all ${i === index ? "w-4 bg-[#141220]" : "w-1.5 bg-[var(--dashboard-text)]/40"}`}
           />
         ))}
       </div>
@@ -88,7 +88,7 @@ export function SectionHeader({
       className="inline-flex rounded-full p-px shadow-[0_2px_12px_rgba(20,18,32,0.05)]"
       style={{ backgroundImage: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 58.35%, #FFFFFF 100%)" }}
     >
-      <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-[#141220] backdrop-blur-md">
+      <span className="inline-flex items-center gap-2 rounded-full bg-[var(--dashboard-card-bg)]/80 px-4 py-2 text-sm font-semibold text-[var(--dashboard-text)] backdrop-blur-md">
         <span className="h-1.5 w-1.5 rounded-full bg-brand-pink shadow-[0_0_10px_rgba(236,12,140,0.6)]" />
         {eyebrow}
       </span>
@@ -100,21 +100,21 @@ export function SectionHeader({
       {layout === "inline" ? (
         <div className="flex items-center gap-3">
           {badge}
-          <span className="text-lg font-light text-[#141220]/20">/</span>
+          <span className="text-lg font-light text-[var(--dashboard-text)]/20">/</span>
           <div>
             <h2 className="text-xs font-bold tracking-tight sm:text-sm">{title}</h2>
-            {subtitle && <p className="mt-0.5 text-xs text-[#141220]/50">{subtitle}</p>}
+            {subtitle && <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/50">{subtitle}</p>}
           </div>
         </div>
       ) : (
         <div>
           {badge}
           <h2 className="mt-1.5 text-xl font-bold tracking-tight sm:text-2xl">{title}</h2>
-          {subtitle && <p className="mt-0.5 text-xs text-[#141220]/50">{subtitle}</p>}
+          {subtitle && <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/50">{subtitle}</p>}
         </div>
       )}
       {count && (
-        <span className="rounded-full bg-white/70 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-[#141220]/40 shadow-[0_2px_10px_rgba(20,18,32,0.06)]">
+        <span className="rounded-full bg-[var(--dashboard-card-bg)]/70 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-[var(--dashboard-text)]/40 shadow-[0_2px_10px_rgba(20,18,32,0.06)]">
           {count}
         </span>
       )}
@@ -149,8 +149,8 @@ export function Card({
       {title && titleTab && (
         <div className={`relative -mt-4 mb-5 flex items-center ${titleAlign === "left" ? "justify-start" : "justify-center"}`}>
           <p
-            className="rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]"
-            style={{ background: "#F0EDF0", fontFamily: "var(--font-bricolage)" }}
+            className="rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]"
+            style={{ background: "var(--dashboard-surface-2)", fontFamily: "var(--font-bricolage)" }}
           >
             {title}
           </p>
@@ -161,7 +161,7 @@ export function Card({
       )}
       {title && !titleTab && (
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">{title}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{title}</p>
           {badge}
         </div>
       )}
@@ -186,8 +186,8 @@ export function StatRow({
 }) {
   return (
     <div className={compact ? "mt-1 flex items-center justify-between gap-3 text-xs first:mt-1" : "mt-2.5 flex items-center justify-between gap-3 text-xs first:mt-3"}>
-      <span className={light ? "text-white/55" : "text-[#141220]/50"}>{label}</span>
-      <span className={`${bold ? "font-semibold" : ""} ${compact ? "text-black" : ""}`.trim()}>{value}</span>
+      <span className={light ? "text-white/55" : "text-[var(--dashboard-text)]/50"}>{label}</span>
+      <span className={`${bold ? "font-semibold" : ""} ${compact ? "text-[var(--dashboard-text)]" : ""}`.trim()}>{value}</span>
     </div>
   );
 }
@@ -195,7 +195,7 @@ export function StatRow({
 export function LegendRow({ color, label, value }: { color: string; label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3 text-xs">
-      <span className="flex items-center gap-1.5 text-[#141220]/50">
+      <span className="flex items-center gap-1.5 text-[var(--dashboard-text)]/50">
         <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: color }} />
         {label}
       </span>
@@ -205,12 +205,12 @@ export function LegendRow({ color, label, value }: { color: string; label: strin
 }
 
 export function Divider() {
-  return <div className="my-3 h-px bg-[#141220]/10" />;
+  return <div className="my-3 h-px bg-[var(--dashboard-text)]/10" />;
 }
 
 export function Bar({ pct, color = "bg-brand-pink", background }: { pct: number; color?: string; background?: string }) {
   return (
-    <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[#141220]/[0.08]">
+    <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]">
       <div
         className={`h-full rounded-full ${background ? "" : color}`}
         style={{ width: `${Math.min(100, Math.max(0, pct))}%`, ...(background ? { background } : {}) }}
@@ -236,8 +236,8 @@ export function Tag({
     warn: "bg-[#fff1d6] text-[#a8690a]",
     ko: "bg-[#ffe1e2] text-[#c8262d]",
     blue: "bg-brand-purple/10 text-brand-purple",
-    neutral: "bg-[#141220]/[0.06] text-[#141220]/60",
-    dark: "bg-[#141220]/[0.08] text-[#141220]/70",
+    neutral: "bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/60",
+    dark: "bg-[var(--dashboard-text)]/[0.08] text-[var(--dashboard-text)]/70",
   };
   return (
     <span
@@ -261,9 +261,9 @@ export function Btn({
   style?: React.CSSProperties;
 }) {
   const variants: Record<string, string> = {
-    dark: "bg-[#141220] text-white",
-    outline: "border border-[#141220]/15 bg-white/60 text-[#141220]",
-    white: "bg-white text-[#141220] shadow-[0_2px_10px_rgba(20,18,32,0.08)]",
+    dark: "bg-[#141220] text-white dark:bg-brand-pink",
+    outline: "border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-card-bg)]/60 text-[var(--dashboard-text)]",
+    white: "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-[0_2px_10px_rgba(20,18,32,0.08)]",
   };
   return (
     <button
@@ -278,10 +278,10 @@ export function Btn({
 
 export function Nature({ code }: { code: "S" | "P" | "L" | "O" | "D" }) {
   const styles: Record<string, string> = {
-    S: "bg-[#141220]/[0.08] text-[#141220]/60",
+    S: "bg-[var(--dashboard-text)]/[0.08] text-[var(--dashboard-text)]/60",
     P: "bg-brand-purple/10 text-brand-purple",
     L: "bg-brand-pink/10 text-brand-pink",
-    O: "border border-[#141220]/15 text-[#141220]/40",
+    O: "border border-[var(--dashboard-text)]/15 text-[var(--dashboard-text)]/40",
     D: "bg-brand-pink/10 text-brand-pink",
   };
   return (
@@ -302,7 +302,7 @@ export function MiniStat({
 }) {
   return (
     <div>
-      <p className="text-[10px] text-[#141220]/40">{label}</p>
+      <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
       <p className={`mt-0.5 text-base font-bold ${tone === "pink" ? "text-brand-pink" : ""}`}>{value}</p>
     </div>
   );
@@ -311,17 +311,17 @@ export function MiniStat({
 export function MiniTile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <div className="flex h-full flex-col rounded-2xl card-tint p-3 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
-      <p className="text-[10px] text-[#141220]/40">{label}</p>
+      <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
       <p className="mt-0.5 text-sm font-bold">{value}</p>
-      <p className="mt-auto pt-0.5 text-[9px] text-[#141220]/35">{note}</p>
+      <p className="mt-auto pt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{note}</p>
     </div>
   );
 }
 
 export function QuickStat({ label, value, tone }: { label: string; value: string; tone?: "ok" | "ko" }) {
   return (
-    <div className="rounded-xl bg-white p-2.5 text-center">
-      <p className="text-[9px] text-[#141220]/40">{label}</p>
+    <div className="rounded-xl bg-[var(--dashboard-card-bg)] p-2.5 text-center">
+      <p className="text-[9px] text-[var(--dashboard-text)]/40">{label}</p>
       <p
         className={`mt-0.5 text-center text-sm font-bold ${
           tone === "ok" ? "text-[#178a3f]" : tone === "ko" ? "text-[#c8262d]" : ""
@@ -337,13 +337,13 @@ export function PayRow({ label, color, value, pct }: { label: string; color: str
   return (
     <div className="mt-2.5 first:mt-3">
       <div className="flex items-center justify-between text-xs">
-        <span className="flex items-center gap-2 text-[#141220]/70">
+        <span className="flex items-center gap-2 text-[var(--dashboard-text)]/70">
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
           {label}
         </span>
         <span className="font-semibold">{value}</span>
       </div>
-      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-[#141220]/[0.08]">
+      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]">
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
       </div>
     </div>
@@ -354,7 +354,7 @@ export function FailRow({ label, value, pct }: { label: string; value: number; p
   return (
     <div className="mt-2.5 first:mt-3">
       <div className="flex items-center justify-between text-xs">
-        <span className="text-[#141220]/50">{label}</span>
+        <span className="text-[var(--dashboard-text)]/50">{label}</span>
         <span>{value}</span>
       </div>
       <Bar pct={pct} color="bg-brand-pink" />
@@ -366,7 +366,7 @@ export function CommuneRow({
   label,
   pct,
   value,
-  barColor = "bg-[#141220]/50",
+  barColor = "bg-[var(--dashboard-text)]/50",
 }: {
   label: string;
   pct: number;
@@ -412,7 +412,7 @@ export function ClientRow({
         </span>
         <span>
           <span className="font-semibold">{value}</span>
-          <span className="text-[#141220]/40">
+          <span className="text-[var(--dashboard-text)]/40">
             {" "}
             · {orders}
             {showCommandeLabel ? ` commande${orders > 1 ? "s" : ""}` : ""}
@@ -424,10 +424,10 @@ export function ClientRow({
   );
 }
 
-export function RatingRow({ label, value, pct, color = "bg-[#141220]" }: { label: string; value: string; pct: number; color?: string }) {
+export function RatingRow({ label, value, pct, color = "bg-[var(--dashboard-text)]" }: { label: string; value: string; pct: number; color?: string }) {
   return (
     <div>
-      <div className="flex items-center justify-between text-[10px] text-[#141220]/40">
+      <div className="flex items-center justify-between text-[10px] text-[var(--dashboard-text)]/40">
         <span>{label}</span>
         <span>{value}</span>
       </div>
@@ -487,7 +487,7 @@ export function NatureRow({
         </span>
         <span className="font-semibold">{value}</span>
       </div>
-      <p className="ml-7 mt-0.5 text-[10px] text-[#141220]/40">{note}</p>
+      <p className="ml-7 mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{note}</p>
       {!last && <Divider />}
     </>
   );
@@ -549,7 +549,7 @@ export function ProductSelector({
         onClick={onPrev}
         disabled={!onPrev}
         aria-label="Produit précédent"
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full disabled:opacity-100 ${dark ? "bg-white/15 text-white" : "bg-white text-[#141220]/60"}`}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full disabled:opacity-100 ${dark ? "bg-white/15 text-white" : "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)]/60"}`}
       >
         <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
           <path d="m14.5 5-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -557,14 +557,14 @@ export function ProductSelector({
       </button>
       <span className="min-w-0 flex-1 text-center leading-tight">
         <span className={`block truncate text-[10px] font-semibold ${dark ? "text-white" : ""}`}>{name}</span>
-        <span className={`block text-[8px] ${dark ? "text-white/50" : "text-[#141220]/40"}`}>{position}</span>
+        <span className={`block text-[8px] ${dark ? "text-white/50" : "text-[var(--dashboard-text)]/40"}`}>{position}</span>
       </span>
       <button
         type="button"
         onClick={onNext}
         disabled={!onNext}
         aria-label="Produit suivant"
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full disabled:opacity-100 ${dark ? "bg-white/15 text-white" : "bg-white text-[#141220]/60"}`}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full disabled:opacity-100 ${dark ? "bg-white/15 text-white" : "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)]/60"}`}
       >
         <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
           <path d="m9.5 5 7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -616,14 +616,14 @@ export function Table({
     <div className={`overflow-x-auto ${className}`}>
       <table className="w-full min-w-[560px] border-collapse text-left text-xs">
         <thead>
-          <tr className="border-b border-[#141220]/10">
+          <tr className="border-b border-[var(--dashboard-text)]/10">
             {head.map((h) => (
-              <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#141220]/35">
+              <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
                 {h}
               </th>
             ))}
             {evolutions && (
-              <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#141220]/35">
+              <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
                 Évolution
               </th>
             )}
@@ -634,7 +634,7 @@ export function Table({
             <tr
               key={i}
               onClick={onRowClick ? () => onRowClick(i) : undefined}
-              className={`border-b border-[#141220]/[0.05] last:border-0 ${onRowClick ? "cursor-pointer" : ""} ${
+              className={`border-b border-[var(--dashboard-text)]/[0.05] last:border-0 ${onRowClick ? "cursor-pointer" : ""} ${
                 activeIndex === i ? "bg-brand-pink/5" : ""
               }`}
             >

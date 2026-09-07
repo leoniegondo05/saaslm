@@ -34,7 +34,7 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
     <>
       <Link
         href="/dashboard/produits?tab=catalogue"
-        className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-[#141220]/15 bg-white/60 px-3.5 py-2 text-xs font-semibold"
+        className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-card-bg)]/60 px-3.5 py-2 text-xs font-semibold"
       >
         <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
           <path d="m14.5 5-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -42,12 +42,12 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
         {produit.categorie}
       </Link>
 
-      <div className="relative mt-4 flex min-h-[280px] flex-col justify-end overflow-hidden rounded-3xl bg-white p-6 text-white">
+      <div className="relative mt-4 flex min-h-[280px] flex-col justify-end overflow-hidden rounded-3xl bg-[var(--dashboard-card-bg)] p-6 text-white">
         <ProduitCarousel images={produit.images ?? []} />
         {/* Dégradé produit : fondu vers le noir pour la lisibilité du texte.
             Vide tant que le produit n'a pas de photos, cf.
             [[dashboard-mock-data-pending-laravel-api]]. */}
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(238.49deg,rgba(217,217,217,0)_51.88%,#000000_120.52%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(217,217,217,0)_40%,#000000_92%)]" />
         {/* Barre de progression (vidéo en lecture en arrière-plan) : blanche,
             avec un segment rose figurant la portion déjà lue. */}
         <div className="pointer-events-none absolute inset-x-4 bottom-0 h-[3px] overflow-hidden rounded-full bg-white/90">
@@ -68,10 +68,10 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
         </div>
       </div>
 
-      <div className="mt-4 grid items-start gap-3 lg:grid-cols-[1.1fr_1.25fr_0.95fr]">
-        <Card title="Les quatre prix" titleTab className="!bg-white">
+      <div className="mt-4 grid items-start gap-3 lg:grid-cols-[1.1fr_1.25fr_0.95fr] [&>*]:min-w-0">
+        <Card title="Les quatre prix" titleTab className="!bg-[var(--dashboard-card-bg)]">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-[#141220]/40">Vous payez ce produit</p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">Vous payez ce produit</p>
             <Tag tone="dark">Sur ce partenaire</Tag>
           </div>
           <div className="mt-1.5 flex items-center justify-between gap-2">
@@ -80,17 +80,17 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
             </p>
             <Tag tone="neutral">Prix drop</Tag>
           </div>
-          <div className="my-3 h-px bg-[#141220]/10" />
+          <div className="my-3 h-px bg-[var(--dashboard-text)]/10" />
           <div className="flex items-center justify-between text-xs">
-            <span className="text-[#141220]/50">Prix moyen de revente</span>
+            <span className="text-[var(--dashboard-text)]/50">Prix moyen de revente</span>
             <span className="font-semibold">{produit.prixMoyenReseau ? F(produit.prixMoyenReseau) : "—"}</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="text-[#141220]/50">Le plus bas pratiqué</span>
+            <span className="text-[var(--dashboard-text)]/50">Le plus bas pratiqué</span>
             <span className="font-semibold">{produit.prixBasReseau ? F(produit.prixBasReseau) : "—"}</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="text-[#141220]/50">Le plus haut pratiqué</span>
+            <span className="text-[var(--dashboard-text)]/50">Le plus haut pratiqué</span>
             <span className="font-semibold">{produit.prixHautReseau ? F(produit.prixHautReseau) : "—"}</span>
           </div>
           {produit.prixBasReseau && produit.prixHautReseau && (
@@ -101,18 +101,18 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
                   style={{ left: `${scalePct}%` }}
                 />
               </div>
-              <div className="mt-1.5 flex justify-between text-[9px] text-[#141220]/40">
+              <div className="mt-1.5 flex justify-between text-[9px] text-[var(--dashboard-text)]/40">
                 <span>{F(produit.prixBasReseau)}</span>
-                <span className="font-semibold text-[#141220]">Vous : {F(monPrix)}</span>
+                <span className="font-semibold text-[var(--dashboard-text)]">Vous : {F(monPrix)}</span>
                 <span>{F(produit.prixHautReseau)}</span>
               </div>
             </>
           )}
         </Card>
 
-        <Card title="Description" titleTab className="!bg-white">
-          <p className="mt-2.5 text-xs text-[#141220]/70">{produit.description ?? "—"}</p>
-          <div className="my-3 h-px bg-[#141220]/10" />
+        <Card title="Description" titleTab className="!bg-[var(--dashboard-card-bg)]">
+          <p className="mt-2.5 text-xs text-[var(--dashboard-text)]/70">{produit.description ?? "—"}</p>
+          <div className="my-3 h-px bg-[var(--dashboard-text)]/10" />
           {produit.conditionnement && <Row label="Conditionnement" value={produit.conditionnement} />}
           {produit.contenance && <Row label="Contenance" value={produit.contenance} />}
           {produit.poidsEmballe && <Row label="Poids emballé" value={produit.poidsEmballe} />}
@@ -152,10 +152,10 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
               <span className={`text-lg font-bold ${ilReste < 0 ? "text-red-300" : "text-brand-pink"}`}>{F(ilReste)}</span>
             </div>
           </div>
-          <button type="button" className="mt-3 w-full rounded-full bg-white px-4 py-2.5 text-center text-xs font-semibold shadow-[0_2px_10px_rgba(20,18,32,0.08)]">
+          <button type="button" className="mt-3 w-full rounded-full bg-[var(--dashboard-card-bg)] px-4 py-2.5 text-center text-xs font-semibold shadow-[0_2px_10px_rgba(20,18,32,0.08)]">
             Choisir le produit
           </button>
-          <button type="button" className="mt-2 w-full rounded-full bg-[#141220] px-4 py-2.5 text-center text-xs font-semibold text-white">
+          <button type="button" className="mt-2 w-full rounded-full bg-[#141220] px-4 py-2.5 text-center text-xs font-semibold text-white dark:bg-brand-pink">
             Mettre de côté
           </button>
         </div>
@@ -167,7 +167,7 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="mt-2 flex items-center justify-between text-xs">
-      <span className="text-[#141220]/50">{label}</span>
+      <span className="text-[var(--dashboard-text)]/50">{label}</span>
       <span>{value}</span>
     </div>
   );

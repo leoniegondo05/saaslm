@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import QrCode from "../QrCode";
 import { Btn, Card, Divider, SectionHeader, Tag } from "../dashboard-accueil/shared";
@@ -134,6 +135,12 @@ const ETAPES = [
   { titre: "4 · Son code apparaît", note: "Il obtient son propre code à scanner, valable jusqu'à la date fixée." },
 ];
 
+// Réutilisé par le menu du compte (DashboardHeader) pour le badge
+// "Gérer les accès", afin de ne pas dupliquer ce chiffre à la main.
+export const PERSONNEL_ACTIF_COUNT = COLLABORATEURS.filter(
+  (c) => c.statut.tone !== "ko",
+).length;
+
 export default function PersonnelAcces({ first = true }: { first?: boolean }) {
   const [ouvert, setOuvert] = useState(0);
 
@@ -147,34 +154,34 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
         layout="inline"
       />
 
-      <div className="grid items-start gap-4 min-[1360px]:grid-cols-[320px_1fr_300px]">
+      <div className="grid items-start gap-4 min-[1360px]:grid-cols-[320px_1fr_300px] [&>*]:min-w-0">
         {/* Colonne 1 : mon identité */}
         <div>
-          <div className="rounded-2xl bg-white p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+          <div className="rounded-2xl bg-[var(--dashboard-card-bg)] p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Mon identité</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">Mon identité</p>
               <Tag tone="dark">Valide 15 jours</Tag>
             </div>
 
             <div className="mt-3.5 flex items-start gap-3.5">
-              <div className="h-[110px] w-[110px] shrink-0 overflow-hidden rounded-2xl border border-[#141220]/10 bg-white p-2">
+              <div className="h-[110px] w-[110px] shrink-0 overflow-hidden rounded-2xl border border-[var(--dashboard-text)]/10 bg-white p-2">
                 <QrCode value="https://liivremoi.com/id/awa-konan" className="h-full w-full" />
               </div>
               <div className="min-w-0">
                 <p className="text-base font-semibold tracking-tight">{MOI.nom}</p>
                 <p className="text-xs font-semibold text-brand-pink">{MOI.role}</p>
                 <Divider />
-                <p className="text-xs text-[#141220]/50">Adresse de connexion</p>
+                <p className="text-xs text-[var(--dashboard-text)]/50">Adresse de connexion</p>
                 <p className="break-words text-xs font-semibold">{MOI.email}</p>
-                <p className="mt-1.5 text-xs text-[#141220]/50">Créée le</p>
+                <p className="mt-1.5 text-xs text-[var(--dashboard-text)]/50">Créée le</p>
                 <p className="text-xs font-semibold">{MOI.creeLe}</p>
-                <p className="mt-1.5 text-xs text-[#141220]/50">Expire le</p>
+                <p className="mt-1.5 text-xs text-[var(--dashboard-text)]/50">Expire le</p>
                 <p className="text-xs font-semibold">{MOI.expireLe}</p>
               </div>
             </div>
 
             <Divider />
-            <p className="text-xs text-[#141220]/70">
+            <p className="text-xs text-[var(--dashboard-text)]/70">
               Votre code est personnel. Ouvrez l&apos;application mobile, choisissez « Scanner mon code » et
               présentez-le : vous entrez avec vos droits, et seulement les vôtres.
             </p>
@@ -188,99 +195,102 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
 
         {/* Colonne 2 : liste du personnel */}
         <div>
-          <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">
-              Personnel de la boutique · {COLLABORATEURS.filter((c) => c.statut.tone !== "ko").length} comptes actifs
-            </p>
-            <Tag tone="neutral">Filtrer par rôle</Tag>
-          </div>
+          {/* Carte "Gérer les accès" : en-tête icône + titre + badge nombre
+              de comptes actifs, puis une ligne par collaborateur avec ses
+              tags de statut et un bouton "Gérer" explicite qui déplie le
+              détail (droits, dates, actions) — repris de la maquette
+              fournie par l'utilisateur pour cet écran. */}
+          <div className="overflow-hidden rounded-[28px] bg-[var(--dashboard-card-bg)] shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+            <div className="flex flex-wrap items-center justify-between gap-2 p-4 pb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ffe1e2] text-[#c8262d]">
+                  <AccessIcon />
+                </span>
+                <p className="text-sm font-bold text-[var(--dashboard-text)]">Gérer les accès</p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Tag tone="dark">{PERSONNEL_ACTIF_COUNT} comptes</Tag>
+                <Tag tone="neutral">Filtrer par rôle</Tag>
+              </div>
+            </div>
 
-          <div className="flex flex-col gap-2.5">
-            {COLLABORATEURS.map((c, i) => {
-              const open = ouvert === i && !!c.details;
-              return (
-                <div
-                  key={c.nom}
-                  className={`overflow-hidden rounded-2xl bg-white shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] transition ${
-                    open ? "ring-1 ring-brand-pink/30" : ""
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => c.details && setOuvert(open ? -1 : i)}
-                    disabled={!c.details}
-                    className="flex w-full items-center gap-3 p-3.5 text-left disabled:cursor-default"
-                  >
-                    <span
-                      className="h-9 w-9 shrink-0 rounded-full"
-                      style={{ background: c.couleur || "rgba(20,18,32,0.06)" }}
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-semibold">{c.nom}</span>
-                      <span className="block truncate text-[11px] text-[#141220]/50">
-                        {c.role}
-                        {c.email && ` · ${c.email}`}
+            <div className="divide-y divide-[var(--dashboard-text)]/[0.06] border-t border-[var(--dashboard-text)]/[0.06]">
+              {COLLABORATEURS.map((c, i) => {
+                const open = ouvert === i && !!c.details;
+                const codeActif = c.statut.tone === "ok" || c.statut.tone === "warn";
+                return (
+                  <div key={c.nom} className={open ? "bg-brand-pink/[0.03]" : ""}>
+                    <div className="flex items-center gap-3 p-3.5">
+                      <span
+                        className="h-9 w-9 shrink-0 rounded-full"
+                        style={{ background: c.couleur || "color-mix(in srgb, var(--dashboard-text) 6%, transparent)" }}
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-semibold">{c.nom}</span>
+                        <span className="block truncate text-[11px] text-[var(--dashboard-text)]/50">
+                          {c.role}
+                          {c.details && ` · ${c.details.pages.length} pages`}
+                        </span>
                       </span>
-                    </span>
-                    <Tag tone={c.statut.tone}>{c.statut.label}</Tag>
-                    <span className="hidden text-right sm:block">
-                      <span className="block text-[9px] text-[#141220]/40">
-                        {c.statut.tone === "ko" ? "" : "Expire le"}
+                      <span className="hidden items-center gap-1.5 sm:flex">
+                        {codeActif && <Tag tone="dark">Code actif</Tag>}
+                        <Tag tone={c.statut.tone}>{c.statut.label}</Tag>
                       </span>
-                      <span className="block text-xs font-semibold">{c.expire}</span>
-                    </span>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      className={`h-3.5 w-3.5 shrink-0 text-[#141220]/40 transition-transform ${open ? "rotate-90" : ""}`}
-                    >
-                      <path d="m9.5 6 6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-
-                  {open && c.details && (
-                    <div className="border-t border-[#141220]/[0.06] bg-black/[0.015] p-3.5">
-                      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 min-[1360px]:grid-cols-5">
-                        <DetailTile label="Compte créé le" value={c.details.creeLe} />
-                        <DetailTile label="Première connexion" value={c.details.premiereConnexion} />
-                        <DetailTile label="Dernière connexion" value={c.details.derniereConnexion} />
-                        <DetailTile label="Mot de passe changé" value={c.details.motDePasseChange} />
-                        <DetailTile label="Code renouvelé" value={c.details.codeRenouvele} />
-                      </div>
-                      <Divider />
-                      <p className="mb-1.5 text-[10px] text-[#141220]/40">Pages accessibles</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {c.details.pages.map((p, pi) => (
-                          <Tag key={p} tone={pi % 2 === 0 ? "dark" : "ok"}>{p}</Tag>
-                        ))}
-                      </div>
-                      <Divider />
-                      <div className="flex flex-wrap gap-2">
-                        <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white">
-                          Modifier les droits
+                      {c.details && (
+                        <button
+                          type="button"
+                          onClick={() => setOuvert(open ? -1 : i)}
+                          className="shrink-0 rounded-full border border-brand-pink/40 px-3.5 py-1.5 text-[11px] font-semibold text-brand-pink transition hover:bg-brand-pink/10"
+                        >
+                          Gérer
                         </button>
-                        <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white">
-                          Prolonger la validité
-                        </button>
-                        <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white">
-                          Réinitialiser le mot de passe
-                        </button>
-                        <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-brand-pink">
-                          Révoquer l&apos;accès
-                        </button>
-                      </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
+
+                    {open && c.details && (
+                      <div className="border-t border-[var(--dashboard-text)]/[0.06] bg-black/[0.015] p-3.5">
+                        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 min-[1360px]:grid-cols-5">
+                          <DetailTile label="Compte créé le" value={c.details.creeLe} />
+                          <DetailTile label="Première connexion" value={c.details.premiereConnexion} />
+                          <DetailTile label="Dernière connexion" value={c.details.derniereConnexion} />
+                          <DetailTile label="Mot de passe changé" value={c.details.motDePasseChange} />
+                          <DetailTile label="Code renouvelé" value={c.details.codeRenouvele} />
+                        </div>
+                        <Divider />
+                        <p className="mb-1.5 text-[10px] text-[var(--dashboard-text)]/40">Pages accessibles</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {c.details.pages.map((p, pi) => (
+                            <Tag key={p} tone={pi % 2 === 0 ? "dark" : "ok"}>{p}</Tag>
+                          ))}
+                        </div>
+                        <Divider />
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white dark:bg-brand-pink">
+                            Modifier les droits
+                          </button>
+                          <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white dark:bg-brand-pink">
+                            Prolonger la validité
+                          </button>
+                          <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white dark:bg-brand-pink">
+                            Réinitialiser le mot de passe
+                          </button>
+                          <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-brand-pink dark:bg-white/10">
+                            Révoquer l&apos;accès
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <Card title="Comment se passe l'arrivée d'un collaborateur" titleTab className="mt-3">
             <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {ETAPES.map((e) => (
                 <div key={e.titre}>
-                  <p className="inline-block rounded-md px-3 py-1.5 text-[10px] font-semibold" style={{ background: "#F0EDF0" }}>
+                  <p className="inline-block rounded-md px-3 py-1.5 text-[10px] font-semibold" style={{ background: "var(--dashboard-surface-2)" }}>
                     {e.titre}
                   </p>
                   <p className="mt-0.5 text-[11px] text-[#000000]">{e.note}</p>
@@ -290,75 +300,46 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
           </Card>
         </div>
 
-        {/* Colonne 3 : créer un collaborateur */}
-        <Card title="Créer un collaborateur" titleTab badge={<Tag tone="pink" className="mt-6">Nouveau</Tag>}>
-
-          <FormField label="Nom et prénom" value="Nadège Ouattara" />
-
-          <p className="mt-3 text-[11px] text-[#141220]/40">Rôle</p>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            <Tag tone="neutral">Admin</Tag>
-            <Tag tone="neutral">Comptable</Tag>
-            <Tag tone="neutral">Commandes</Tag>
-            <Tag tone="pink">Stock</Tag>
-          </div>
-
-          <FormField label="Adresse de connexion" value="n.ouattara@awabeaute.ci" className="mt-3" />
-
-          <p className="mt-3 text-[11px] text-[#141220]/40">Mot de passe provisoire</p>
-          <div className="mt-1.5 flex items-center justify-between gap-2 rounded-xl border border-brand-pink/45 bg-brand-pink/5 px-3 py-2.5">
-            <span className="text-xs tracking-[0.16em]">Kx7 · 4Q2 · vT9</span>
-            <Tag tone="neutral">Copier</Tag>
-          </div>
-          <p className="mt-1.5 text-[10px] text-[#141220]/40">
-            À communiquer au collaborateur. Il devra le changer à sa première connexion.
+        {/* Colonne 3 : ouvrir le formulaire "Créer un collaborateur" (voir
+            CreerCollaborateur.tsx, /dashboard/parametres/creer) — cette
+            colonne ne fait plus qu'y renvoyer, le vrai formulaire (rôle,
+            durée, mot de passe, code à scanner) vit sur son propre écran. */}
+        <div className="rounded-[28px] border border-brand-pink/25 bg-brand-pink/5 p-4">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--dashboard-card-bg)] text-brand-pink shadow-[0_4px_14px_rgba(236,12,140,0.18)]">
+            <AccessIcon />
+          </span>
+          <p className="mt-3 text-sm font-bold text-[var(--dashboard-text)]">Créer un collaborateur</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-[var(--dashboard-text)]/55">
+            Nom, rôle parmi les quatre, pages autorisées, période d&apos;accès. Son code à scanner est généré à
+            la création et part avec son mot de passe provisoire.
           </p>
-
-          <p className="mt-3 text-[11px] text-[#141220]/40">Date d&apos;expiration de l&apos;accès</p>
-          <div className="mt-1.5 flex items-center justify-between rounded-xl border border-[#141220]/15 bg-black/[0.02] px-3 py-2.5">
-            <span className="text-xs">20 septembre 2026</span>
-            <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5 text-[#141220]/40">
-              <rect x="3.5" y="5" width="17" height="15.5" rx="3" stroke="currentColor" strokeWidth="1.4" />
-              <path d="M3.5 9.5h17M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-            </svg>
-          </div>
-
-          <p className="mt-3 text-[11px] text-[#141220]/40">Pages accessibles</p>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            <Tag tone="pink">Ma journée</Tag>
-            <Tag tone="pink">Stock et dépôts</Tag>
-            <Tag tone="pink">Produits</Tag>
-            <Tag tone="neutral">Finances</Tag>
-            <Tag tone="neutral">Commandes</Tag>
-            <Tag tone="neutral">Litiges</Tag>
-          </div>
-
-          <Btn variant="dark" className="mt-3.5">Créer le compte et générer les accès</Btn>
-          <p className="mt-1.5 text-center text-[10px] text-[#141220]/40">
-            Le code à scanner apparaîtra après sa première connexion.
-          </p>
-        </Card>
+          <Link
+            href="/dashboard/parametres/creer"
+            className="mt-3.5 block w-full rounded-full bg-[var(--dashboard-card-bg)] px-4 py-2.5 text-center text-xs font-semibold text-[var(--dashboard-text)] shadow-[0_2px_10px_rgba(20,18,32,0.08)] transition hover:brightness-95"
+          >
+            Créer un collaborateur
+          </Link>
+        </div>
       </div>
     </>
   );
 }
 
-function DetailTile({ label, value }: { label: string; value: string }) {
+function AccessIcon() {
   return (
-    <div className="rounded-2xl bg-white p-3 text-center shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
-      <p className="text-[10px] text-[#141220]/40">{label}</p>
-      <p className="mt-1.5 text-sm font-bold">{value}</p>
-    </div>
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+      <circle cx="9.5" cy="8.5" r="3.2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M3.5 19.5c1-3.2 3.5-5 6-5s5 1.8 6 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M18.5 8v5.5M15.75 10.75h5.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
   );
 }
 
-function FormField({ label, value, className = "" }: { label: string; value: string; className?: string }) {
+function DetailTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className={className}>
-      <p className="text-[11px] text-[#141220]/40">{label}</p>
-      <div className="mt-1.5 rounded-xl border border-[#141220]/15 bg-black/[0.02] px-3 py-2.5">
-        <p className="text-xs">{value}</p>
-      </div>
+    <div className="rounded-2xl bg-[var(--dashboard-card-bg)] p-3 text-center shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+      <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
+      <p className="mt-1.5 text-sm font-bold">{value}</p>
     </div>
   );
 }

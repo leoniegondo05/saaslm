@@ -43,8 +43,8 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
         <Card
           title="Top 5 des produits"
           titleTab
-          className="!bg-[#FFFFFF70]"
-          badge={<p className="text-[10px] text-[#141220]/40">sur la période</p>}
+          className="!bg-[var(--dashboard-glass)]"
+          badge={<p className="text-[10px] text-[var(--dashboard-text)]/40">sur la période</p>}
         >
           <TopProductRow code="L" name="Montre connectée S8" value="48 · 672 000" pct={100} background="linear-gradient(90deg, #FF8BCB 0%, #EC0C8C 100%)" />
           <TopProductRow code="S" name="Sérum éclat 30 ml" value="37 · 444 000" pct={77} background="#8B90A6" />
@@ -52,7 +52,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
           <TopProductRow code="S" name="Huile de ricin" value="14 · 105 000" pct={29} background="#FFFFFF" />
           <TopProductRow code="O" name="Coffret parfum" value="9 · 81 000" pct={19} background="#8B90A666" />
           <Divider />
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
             Les moins rentables
           </p>
           <div className="mt-2 flex items-center justify-between text-xs">
@@ -60,25 +60,25 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
               <Nature code="S" />
               Bracelet cuir
             </span>
-            <span className="text-[#141220]/50">2 ventes · 29 %</span>
+            <span className="text-[var(--dashboard-text)]/50">2 ventes · 29 %</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
             <span className="flex items-center gap-2">
               <Nature code="P" />
               Gel nettoyant
             </span>
-            <span className="text-[#141220]/50">4 ventes · 36 %</span>
+            <span className="text-[var(--dashboard-text)]/50">4 ventes · 36 %</span>
           </div>
           <Divider />
-          <p className="text-[10px] text-[#141220]/40">
+          <p className="text-[10px] text-[var(--dashboard-text)]/40">
             S · stocké Management · drop LM
           </p>
         </Card>
 
-        <Card title="Vos quatre natures de produits" titleTab className="!bg-[#FFFFFF70]">
+        <Card title="Vos quatre natures de produits" titleTab className="!bg-[var(--dashboard-glass)]">
           <div className="mt-2 flex h-2 overflow-hidden rounded-full">
-            <span className="h-full" style={{ width: "36%", background: "#FFFFFF" }} />
-            <span className="h-full bg-[#141220]/30" style={{ width: "17%" }} />
+            <span className="h-full" style={{ width: "36%", background: "var(--dashboard-surface-2)" }} />
+            <span className="h-full bg-[var(--dashboard-text)]/30" style={{ width: "17%" }} />
             <span className="h-full bg-[#2F6BE0]" style={{ width: "29%" }} />
             <span className="h-full bg-brand-pink" style={{ width: "18%" }} />
           </div>
@@ -92,7 +92,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
         </Card>
 
         <div>
-          <Card title="Ma position sur les prix drop" titleTab className="!bg-[#FFFFFF70]">
+          <Card title="Ma position sur les prix drop" titleTab className="!bg-[var(--dashboard-glass)]">
             <ProductSelector
               name={drop.nom}
               position={`Produit ${selectedDrop + 1} sur ${PRIX_DROP.length}`}
@@ -105,11 +105,11 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
             </p>
             <div className="relative mt-3 h-1 rounded-full bg-[linear-gradient(90deg,#C9CFDD,#EC0C8C)]">
               <span
-                className="absolute -top-1.5 h-4 w-0.5 rounded-full bg-[#141220] shadow-[0_0_0_2px_#fff]"
+                className="absolute -top-1.5 h-4 w-0.5 rounded-full bg-[var(--dashboard-text)] shadow-[0_0_0_2px_var(--dashboard-card-bg)]"
                 style={{ left: `${drop.position}%` }}
               />
             </div>
-            <div className="mt-1.5 flex justify-between text-[9px] text-[#141220]/40">
+            <div className="mt-1.5 flex justify-between text-[9px] text-[var(--dashboard-text)]/40">
               <span>Bas {drop.bas.toLocaleString("fr-FR")}</span>
               <span>Moyen {drop.moyen.toLocaleString("fr-FR")}</span>
               <span>Haut {drop.haut.toLocaleString("fr-FR")}</span>
@@ -121,7 +121,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
             <StatRow label="Votre écart au marché" value={drop.ecart} />
           </Card>
 
-          <Card title="Catalogue accessible" titleTab className="mt-3 !bg-[#FFFFFF70]">
+          <Card title="Catalogue accessible" titleTab className="mt-3 !bg-[var(--dashboard-glass)]">
             <StatRow label="Drop" value="117" />
             <StatRow label="Drop" value="64" />
             <StatRow label="Nouveautés ce mois" value="12" />
