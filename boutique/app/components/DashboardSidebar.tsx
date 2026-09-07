@@ -25,7 +25,7 @@ export default function DashboardSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 rounded-full border border-white/50 bg-white/40 px-2 py-2 shadow-[0_8px_32px_rgba(20,18,32,0.16),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-2xl backdrop-saturate-150 lg:inset-auto lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:w-[90px] lg:shrink-0 lg:rounded-none lg:border-0 lg:border-r lg:border-[#141220]/10 lg:bg-transparent lg:px-3 lg:py-6 lg:shadow-none lg:backdrop-blur-none lg:backdrop-saturate-100">
+    <aside className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 rounded-full border border-white/50 bg-white/40 px-2 py-2 shadow-[0_8px_32px_rgba(20,18,32,0.16),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/5 lg:inset-auto lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:w-[90px] lg:shrink-0 lg:rounded-none lg:border-0 lg:border-r lg:border-[#141220]/10 lg:bg-transparent lg:px-3 lg:py-6 lg:shadow-none lg:backdrop-blur-none lg:backdrop-saturate-100 dark:lg:border-white/10">
       <nav className="flex flex-row items-center justify-around gap-2 lg:h-full lg:flex-col lg:justify-between lg:gap-0">
         <div className="flex flex-row items-center justify-around gap-2 lg:flex-1 lg:flex-col lg:justify-center lg:gap-8">
           {NAV_LINKS.map(({ href, label, Icon }) => (
@@ -68,13 +68,13 @@ function SidebarIcon({
   children: React.ReactNode;
   className?: string;
 }) {
-  const sharedClassName = `flex flex-col items-center gap-1.5 text-[11px] text-[#141220] transition ${className ?? ""}`;
+  const sharedClassName = `flex flex-col items-center gap-1.5 text-[11px] text-[#141220] transition dark:text-[var(--dashboard-text)] ${className ?? ""}`;
   const badge = (
     <span
       className={`flex h-11 w-11 items-center justify-center rounded-2xl backdrop-blur-md transition lg:backdrop-blur-none ${
         active
-          ? "border border-white/60 bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.1)] lg:border-0 lg:bg-white"
-          : "bg-[#141220]/[0.04] hover:bg-[#141220]/[0.08]"
+          ? "border border-white/60 bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.1)] dark:border-white/10 dark:bg-white/15 lg:border-0 lg:bg-white dark:lg:bg-white/15"
+          : "bg-[#141220]/[0.04] hover:bg-[#141220]/[0.08] dark:bg-white/5 dark:hover:bg-white/10"
       }`}
     >
       {children}

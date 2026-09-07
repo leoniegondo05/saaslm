@@ -20,19 +20,19 @@ export default function AlertesSection({ first = true }: { first?: boolean }) {
         <Card
           title="Ce qui demande une décision"
           titleTab
-          className="!bg-[#FFFFFF70]"
+          className="!bg-[var(--dashboard-glass)]"
           badge={<Tag tone="pink">5 alertes</Tag>}
         >
-          <AlertRow code="S" name="Huile de ricin" tag="Rupture sous 1 jour" tone="ko" tagClassName="!bg-white !text-[#FF5A62]" />
-          <AlertRow code="S" name="Coffret parfum" tag="En rupture · retiré de la page" tone="ko" tagClassName="!bg-white !text-[#FF5A62]" />
-          <AlertRow code="S" name="Bracelet cuir" tag="Rotation lente · 28 immobilisées" tone="warn" tagClassName="!bg-white !text-[#FFB020]" />
-          <AlertRow code="P" name="Casque X2" tag="4 avis négatifs" tone="warn" tagClassName="!bg-white !text-[#FFB020]" />
-          <AlertRow code="L" name="Montre S8" tag="3 litiges ce mois" tone="warn" tagClassName="!bg-white !text-[#FFB020]" last />
-          <div className="my-3 h-px bg-[#141220]/10" />
+          <AlertRow code="S" name="Huile de ricin" tag="Rupture sous 1 jour" tone="ko" tagClassName="!bg-[var(--dashboard-card-bg)] !text-[#FF5A62]" />
+          <AlertRow code="S" name="Coffret parfum" tag="En rupture · retiré de la page" tone="ko" tagClassName="!bg-[var(--dashboard-card-bg)] !text-[#FF5A62]" />
+          <AlertRow code="S" name="Bracelet cuir" tag="Rotation lente · 28 immobilisées" tone="warn" tagClassName="!bg-[var(--dashboard-card-bg)] !text-[#FFB020]" />
+          <AlertRow code="P" name="Casque X2" tag="4 avis négatifs" tone="warn" tagClassName="!bg-[var(--dashboard-card-bg)] !text-[#FFB020]" />
+          <AlertRow code="L" name="Montre S8" tag="3 litiges ce mois" tone="warn" tagClassName="!bg-[var(--dashboard-card-bg)] !text-[#FFB020]" last />
+          <div className="my-3 h-px bg-[var(--dashboard-text)]/10" />
           <StatRow label="Alertes traitées ce mois" value="11" />
         </Card>
 
-        <Card title="Litiges" titleTab className="!bg-[#FFFFFF70]" badge={<Tag tone="pink" className="mb-2">1 en cours</Tag>}>
+        <Card title="Litiges" titleTab className="!bg-[var(--dashboard-glass)]" badge={<Tag tone="pink" className="mb-2">1 en cours</Tag>}>
           <div className="mt-3">
           <StatRow
             label="Montant suspendu"
@@ -63,9 +63,9 @@ export default function AlertesSection({ first = true }: { first?: boolean }) {
         <Card
           title="Votre partenaire"
           titleTab
-          className="!bg-[#FFFFFF70]"
+          className="!bg-[var(--dashboard-glass)]"
           badge={
-            <Tag tone="dark" style={{ background: "#ffffff", boxShadow: "0 2px 10px rgba(20,18,32,0.12)" }}>
+            <Tag tone="dark" style={{ background: "var(--dashboard-card-bg)", boxShadow: "0 2px 10px rgba(20,18,32,0.12)" }}>
               <span className="text-yellow-400">★</span> Note 8,4
             </Tag>
           }
@@ -77,7 +77,7 @@ export default function AlertesSection({ first = true }: { first?: boolean }) {
           <StatRow label="Écarts sur mes dépôts" value="3 unités" />
           <StatRow label="Réponses à l'assistance" value="3 h en moyenne" />
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="text-[#141220]/50">Évaluation du mois</span>
+            <span className="text-[var(--dashboard-text)]/50">Évaluation du mois</span>
             <Tag tone="pink">À donner</Tag>
           </div>
         </Card>

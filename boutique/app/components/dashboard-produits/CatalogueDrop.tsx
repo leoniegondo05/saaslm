@@ -40,12 +40,12 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
         layout="inline"
       />
 
-      <div className="grid gap-4 lg:grid-cols-[260px_200px_1fr]">
-        <div className="relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-[28px] bg-white p-5" style={{ marginBottom: "15rem"}}>
+      <div className="grid gap-4 lg:grid-cols-[260px_200px_1fr] [&>*]:min-w-0">
+        <div className="relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 lg:mb-60">
           {/* Fond attend la photo du produit en avant (background-image sur cette
               div) ; le dégradé ci-dessous fait le fondu vers le noir pour la
               lisibilité du texte, cf. [[dashboard-mock-data-pending-laravel-api]]. */}
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(238.49deg,rgba(217,217,217,0)_51.88%,#000000_120.52%)]"  />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(217,217,217,0)_40%,#000000_92%)]" />
           {preview ? (
             <>
               {nouveautes.length > 1 && (
@@ -85,7 +85,7 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <Link
                     href={`/dashboard/produits/catalogue/${preview.slug}`}
-                    className="rounded-full bg-[#141220] px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:brightness-95"
+                    className="rounded-full bg-[#141220] px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:brightness-95 dark:bg-brand-pink"
                   >
                     Voir la fiche
                   </Link>
@@ -94,7 +94,7 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
                       {nouveautes.map((_, i) => (
                         <span
                           key={i}
-                          className={i === previewIndex ? "h-1.5 w-4 rounded-full bg-white" : "h-1.5 w-1.5 rounded-full bg-white/40"}
+                          className={i === previewIndex ? "h-1.5 w-4 rounded-full bg-[var(--dashboard-card-bg)]" : "h-1.5 w-1.5 rounded-full bg-[var(--dashboard-card-bg)]/40"}
                         />
                       ))}
                     </div>
@@ -110,7 +110,7 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
         </div>
 
       <div>
-        <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">Catégories</p>
+        <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">Catégories</p>
         <div className="flex flex-col gap-1.5">
           {CATEGORIES.map((cat) => {
             const active = cat.nom === categorie;
@@ -120,12 +120,12 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
                 type="button"
                 onClick={() => setCategorie(cat.nom)}
                 className={`relative rounded-2xl px-3.5 py-2.5 text-left transition ${
-                  active ? "bg-[linear-gradient(120deg,#ffffff,#e3e7f3)]" : "card-tint"
+                  active ? "bg-[linear-gradient(120deg,var(--dashboard-card-bg),var(--dashboard-surface-2))]" : "card-tint"
                 }`}
               >
                 <p className="text-xs font-semibold">{cat.nom}</p>
-                {cat.nouveautes && <p className="mt-0.5 text-[10px] text-[#141220]/40">{cat.nouveautes} nouveautés</p>}
-                <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-lg font-bold ${active ? "text-brand-pink" : "text-[#141220]/25"}`}>
+                {cat.nouveautes && <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{cat.nouveautes} nouveautés</p>}
+                <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-lg font-bold ${active ? "text-brand-pink" : "text-[var(--dashboard-text)]/25"}`}>
                   {cat.count}
                 </span>
               </button>
@@ -136,7 +136,7 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
 
       <div>
         <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]/40">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
             {categorie} · {produits.length} produits
           </p>
           <div className="flex gap-1.5">
@@ -146,7 +146,7 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
         </div>
 
         {produits.length === 0 ? (
-          <p className="rounded-2xl card-tint p-6 text-center text-xs text-[#141220]/40">
+          <p className="rounded-2xl card-tint p-6 text-center text-xs text-[var(--dashboard-text)]/40">
             Catalogue de cette catégorie à venir.
           </p>
         ) : (
@@ -156,14 +156,14 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
                 p.source === "L"
                   ? "bg-[linear-gradient(165deg,rgba(236,12,140,0.38)_0%,rgba(236,12,140,0.05)_100%)]"
                   : p.source === "P"
-                  ? "bg-[linear-gradient(165deg,rgba(20,18,32,0.16)_0%,rgba(20,18,32,0.02)_100%)]"
-                  : "bg-[#141220]/[0.03]";
+                  ? "bg-[linear-gradient(165deg,color-mix(in_srgb,var(--dashboard-text)_16%,transparent)_0%,color-mix(in_srgb,var(--dashboard-text)_2%,transparent)_100%)]"
+                  : "bg-[var(--dashboard-text)]/[0.03]";
               const badgeLabel = p.source === "AVENIR" ? "À venir" : p.source === "L" ? "Drop" : "Stock Management";
               const badgeColor = p.source === "L" ? "#EC0C8C" : "#6b7280";
               const tile = (
                 <div className="relative">
                   <div className={`relative flex aspect-square items-center justify-center rounded-[20px] ${glow}`}>
-                    <span className="absolute left-2 top-2 rounded-full bg-white px-2 py-1 text-[9px] font-semibold" style={{ color: badgeColor }}>
+                    <span className="absolute left-2 top-2 rounded-full bg-[var(--dashboard-card-bg)] px-2 py-1 text-[9px] font-semibold" style={{ color: badgeColor }}>
                       {badgeLabel}
                     </span>
                     <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#141220]/45 backdrop-blur-sm">
@@ -177,14 +177,14 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
                       </svg>
                     </span>
                   </div>
-                  <div className="relative z-10 -mt-6 mx-2 rounded-2xl bg-white p-2 shadow-[0_4px_16px_rgba(20,18,32,0.1)]">
+                  <div className="relative z-10 -mt-6 mx-2 rounded-2xl bg-[var(--dashboard-card-bg)] p-2 shadow-[0_4px_16px_rgba(20,18,32,0.1)]">
                     <p className="truncate text-[11px] font-bold">{p.nom}</p>
                     {p.source === "AVENIR" ? (
-                      <p className="mt-0.5 truncate text-[9px] text-[#141220]/50">Prix à l&apos;arrivée · {p.arriveeLe}</p>
+                      <p className="mt-0.5 truncate text-[9px] text-[var(--dashboard-text)]/50">Prix à l&apos;arrivée · {p.arriveeLe}</p>
                     ) : (
                       <div className="mt-1 flex flex-wrap items-center gap-1.5">
                         <span className="rounded-full bg-brand-purple px-2 py-0.5 text-[9px] font-bold text-white">{F(p.prixDrop!)}</span>
-                        <span className="truncate text-[9px] text-[#141220]/70">conseillé {F(p.prixConseille!)}</span>
+                        <span className="truncate text-[9px] text-[var(--dashboard-text)]/70">conseillé {F(p.prixConseille!)}</span>
                       </div>
                     )}
                   </div>

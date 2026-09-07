@@ -54,7 +54,7 @@ function MiniTrend({ data }: { data: number[] }) {
       {data.map((v, i) => (
         <span
           key={i}
-          className={`w-1.5 rounded-full ${i === data.length - 1 ? "bg-brand-pink" : "bg-[#141220]/15"}`}
+          className={`w-1.5 rounded-full ${i === data.length - 1 ? "bg-brand-pink" : "bg-[var(--dashboard-text)]/15"}`}
           style={{ height: `${Math.max((v / max) * 100, 12)}%` }}
         />
       ))}
@@ -103,7 +103,7 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
       {/* Un seul cadre, séparé par des traits (divide-x/y) — pas cinq cartes
           côte à côte : chaque étiquette reste en onglet (même trait que
           Card titleTab) mais posée sur le même fond continu. */}
-      <div className="grid grid-cols-2 divide-x divide-y divide-[#141220]/10 overflow-hidden rounded-2xl bg-white shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] sm:grid-cols-3 lg:grid-cols-5 lg:divide-y-0">
+      <div className="grid grid-cols-2 divide-x divide-y divide-[var(--dashboard-text)]/10 overflow-hidden rounded-2xl bg-[var(--dashboard-card-bg)] shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] sm:grid-cols-3 lg:grid-cols-5 lg:divide-y-0">
         <StatCell label="Produits publiés" value={publies} />
         <StatCell label="En stockage" value={enStockage} note={`${stockTotal} unités`} />
         <StatCell label="En drop" value={enDrop} note={`${dropPartenaire} partenaire · ${dropLm} LM`} />
@@ -111,17 +111,17 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
         <StatCell label="Marge moyenne" value={`${margeMoyenne} %`} />
       </div>
 
-      <div className="mt-3 mb-8 grid gap-3 lg:grid-cols-[1.75fr_1fr]">
-        <Card className="!bg-[#FFFFFF70]">
+      <div className="mt-3 mb-8 grid gap-3 lg:grid-cols-[1.75fr_1fr] [&>*]:min-w-0">
+        <Card className="!bg-[var(--dashboard-glass)]">
           <div className="flex flex-wrap items-center justify-end gap-2">
             <div className="flex gap-2">
-              <button type="button" className="rounded-full border border-[#141220]/15 bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white">
+              <button type="button" className="rounded-full border border-[var(--dashboard-text)]/15 bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white dark:bg-brand-pink">
                 Ajouter une catégorie
-              </button> 
-              <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white">
+              </button>
+              <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white dark:bg-brand-pink">
                 Déposer un stock
               </button>
-              <button type="button" className="rounded-full bg-white px-4 py-2 text-xs font-semibold shadow-[0_2px_10px_rgba(20,18,32,0.08)]">
+              <button type="button" className="rounded-full bg-[var(--dashboard-card-bg)] px-4 py-2 text-xs font-semibold shadow-[0_2px_10px_rgba(20,18,32,0.08)]">
                 Ajouter un produit
               </button>
             </div>
@@ -130,11 +130,11 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-left text-xs">
               <thead>
-                <tr className="border-b border-[#141220]/10">
+                <tr className="border-b border-[var(--dashboard-text)]/10">
                   {["Produit", "Source", "Achat", "Vente", "Stock", "Vendu", "Marge", "Avis", "État", "Tendance"].map((h) => (
-                    <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#141220]/35">
+                    <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
                       {h === "Produit" ? (
-                        <span className="inline-block rounded-full bg-[#141220] px-3 py-2 text-white">{h}</span>
+                        <span className="inline-block rounded-full bg-[#141220] px-3 py-2 text-white dark:bg-brand-pink">{h}</span>
                       ) : (
                         h
                       )}
@@ -147,7 +147,7 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
                   <tr
                     key={p.nom}
                     onClick={() => setSelected(i)}
-                    className={`cursor-pointer border-b border-[#141220]/[0.05] last:border-0 hover:bg-[#141220]/[0.03] ${
+                    className={`cursor-pointer border-b border-[var(--dashboard-text)]/[0.05] last:border-0 hover:bg-[var(--dashboard-text)]/[0.03] ${
                       i === selected ? "bg-brand-pink/5" : ""
                     }`}
                   >
@@ -172,7 +172,7 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
           </div>
         </Card>
 
-        <Card title="Fiche du produit" titleTab className="!bg-[#FFFFFF70]">
+        <Card title="Fiche du produit" titleTab className="!bg-[var(--dashboard-glass)]">
           <ProductSelector
             name={produit.nom}
             position={`Produit ${selected + 1} sur ${PRODUITS.length}`}
@@ -185,7 +185,7 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
             type="button"
             onClick={() => photos.length > 1 && setPhoto((i) => (i + 1) % photos.length)}
             title={photos.length > 1 ? "Voir la photo suivante" : undefined}
-            className="relative mt-3 flex h-[110px] w-full items-center justify-center overflow-hidden rounded-2xl bg-white"
+            className="relative mt-3 flex h-[110px] w-full items-center justify-center overflow-hidden rounded-2xl bg-[var(--dashboard-card-bg)]"
           >
             {photos.length > 0 ? (
               <Image
@@ -196,7 +196,7 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
                 className="object-cover"
               />
             ) : (
-              <span className="h-16 w-16 rounded-2xl border border-[#141220]/10 bg-white/70" />
+              <span className="h-16 w-16 rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)]/70" />
             )}
 
             {/* Blanc en haut, gris en bas : assombrit le coin bas-droit où
@@ -254,13 +254,13 @@ function StatCell({ label, value, note }: { label: string; value: string | numbe
       <div className="relative -mt-4 flex justify-center">
         <p
           className="rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B8095]"
-          style={{ background: "#F0EDF0" }}
+          style={{ background: "var(--dashboard-surface-2)" }}
         >
           {label}
         </p>
       </div>
       <p className="mt-2 text-center text-xl font-bold tracking-tight">{value}</p>
-      {note && <p className="mt-0.5 text-center text-[9px] text-[#141220]/35">{note}</p>}
+      {note && <p className="mt-0.5 text-center text-[9px] text-[var(--dashboard-text)]/35">{note}</p>}
     </div>
   );
 }

@@ -49,16 +49,16 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
     <>
       <PaymentMethodCard />
 
-      <div className="ml-3 self-start rounded-2xl bg-[#FFFFFF70] p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+      <div className="ml-3 self-start rounded-2xl bg-[var(--dashboard-glass)] p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
         <div className="relative flex items-center justify-center">
           <p
-            className="-mt-4 mb-2 rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#141220]"
-            style={{ background: "#F0EDF0", fontFamily: "var(--font-bricolage)" }}
+            className="-mt-4 mb-2 rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]"
+            style={{ background: "var(--dashboard-surface-2)", fontFamily: "var(--font-bricolage)" }}
           >
             Trésorerie disponible
           </p>
           <div className="absolute right-0 top-2">
-            <Tag tone="dark" className="border border-[#D8D8DC]" style={{ borderRadius: 8 }}>Retirable</Tag>
+            <Tag tone="dark" className="border border-[var(--dashboard-text)]/15" style={{ borderRadius: 8 }}>Retirable</Tag>
           </div>
         </div>
         <p className="-ml-4 mt-2 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-2xl font-bold tracking-tight text-white">
@@ -109,7 +109,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
             ))}
           </div>
         </div>
-        <div className="bg-[#FFFFFF70] p-4">
+        <div className="bg-[var(--dashboard-glass)] p-4">
           <div className="flex items-end justify-between">
             <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-2xl font-bold tracking-tight text-white">
               842 500 F
@@ -128,7 +128,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         </div>
       </div>
 
-      <Card title="Ce que la période a coûté" titleTab className="-mt-9 self-start !bg-[#FFFFFF70]">
+      <Card title="Ce que la période a coûté" titleTab className="-mt-9 self-start !bg-[var(--dashboard-glass)]">
         <StatRow label="Produits drop achetés" value="248 000" compact />
         <StatRow label="Frais logistiques" value="96 000" compact />
         <StatRow label="Emballage" value="inclus" compact />
@@ -141,36 +141,36 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         <Divider />
         <StatRow label="Total prélevé" value="435 960" compact />
         <Bar pct={52} color="bg-[#EC0C8C]" />
-        <p className="mt-1.5 text-[10px] text-[#141220]/40">52 % du chiffre d&apos;affaires · 5 972 F par commande</p>
+        <p className="mt-1.5 text-[10px] text-[var(--dashboard-text)]/40">52 % du chiffre d&apos;affaires · 5 972 F par commande</p>
       </Card>
     </>
   );
 
   const rightCards = (
     <>
-      <Card title="Où se trouve votre argent" titleTab className="!bg-[#FFFFFF70]">
+      <Card title="Où se trouve votre argent" titleTab className="!bg-[var(--dashboard-glass)]">
         <div className="mt-3 grid grid-cols-2 gap-3">
           <div>
-            <p className="text-[10px] text-[#141220]/40">Encaissé sur la période</p>
-            <button type="button" className="mt-0.5 rounded-lg px-2 py-1 text-base font-bold" style={{ background: "#D2D2D2A1" }}>
+            <p className="text-[10px] text-[var(--dashboard-text)]/40">Encaissé sur la période</p>
+            <button type="button" className="mt-0.5 rounded-lg px-2 py-1 text-base font-bold" style={{ background: "var(--dashboard-surface-2)" }}>
               842 500
             </button>
           </div>
           <div>
-            <p className="text-[10px] text-[#141220]/40">Livrés mais non payés</p>
-            <button type="button" className="mt-0.5 rounded-lg px-2 py-1 text-base font-bold" style={{ background: "#D2D2D2A1" }}>
+            <p className="text-[10px] text-[var(--dashboard-text)]/40">Livrés mais non payés</p>
+            <button type="button" className="mt-0.5 rounded-lg px-2 py-1 text-base font-bold" style={{ background: "var(--dashboard-surface-2)" }}>
               54 000
             </button>
           </div>
           <div>
-            <p className="text-[10px] text-[#141220]/40">Livrés et payés · rétention</p>
-            <button type="button" className="mt-0.5 rounded-lg px-2 py-1 text-base font-bold" style={{ background: "#D2D2D2A1" }}>
+            <p className="text-[10px] text-[var(--dashboard-text)]/40">Livrés et payés · rétention</p>
+            <button type="button" className="mt-0.5 rounded-lg px-2 py-1 text-base font-bold" style={{ background: "var(--dashboard-surface-2)" }}>
               96 000
             </button>
           </div>
           <div>
-            <p className="text-[10px] text-[#141220]/40">Suspendus pour litige</p>
-            <button type="button" className="mt-0.5 rounded-lg px-2 py-1 text-base font-bold text-brand-pink" style={{ background: "#D2D2D2A1" }}>
+            <p className="text-[10px] text-[var(--dashboard-text)]/40">Suspendus pour litige</p>
+            <button type="button" className="mt-0.5 rounded-lg px-2 py-1 text-base font-bold text-brand-pink" style={{ background: "var(--dashboard-surface-2)" }}>
               28 000
             </button>
           </div>
@@ -178,11 +178,11 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         <Divider />
         <StatRow label="Prochaine libération" value="41 h 12" />
         <Bar pct={43} color="bg-[linear-gradient(90deg,rgba(255,255,255,0.6)_0%,#EC0C8C_100%)]" />
-        <p className="mt-1.5 text-[10px] text-[#141220]/40">3 commandes · rétention de 72 h</p>
+        <p className="mt-1.5 text-[10px] text-[var(--dashboard-text)]/40">3 commandes · rétention de 72 h</p>
         <Divider />
         <StatRow label="Libérable demain" value="62 000 F" />
         <StatRow label="Libérable sous 7 jours" value="134 000 F" />
-        <StatRow label="Impayés de plus de 72 h" value={<>18 000 F <span className="text-[#141220]/40">· 2 commandes</span></>} />
+        <StatRow label="Impayés de plus de 72 h" value={<>18 000 F <span className="text-[var(--dashboard-text)]/40">· 2 commandes</span></>} />
       </Card>
 
       <div className="mx-4 mt-3 rounded-2xl bg-[linear-gradient(140.81deg,#3A1D8A_0%,#070707_100%)] p-4 text-white shadow-[0_18px_40px_rgba(20,20,60,0.3)]">
@@ -211,7 +211,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         <StatRow label="Marge sur produits propres" value="71 %" light />
       </div>
 
-      <Card title="Paiements reçus, par moyen" titleTab className="!bg-[#FFFFFF70]">
+      <Card title="Paiements reçus, par moyen" titleTab className="!bg-[var(--dashboard-glass)]">
         <PayRow label="Orange Money" color="#FF7900" value="412 000" pct={49} />
         <PayRow label="Wave" color="#1BA1F2" value="238 500" pct={28} />
         <PayRow label="MTN MoMo" color="#FFCC00" value="121 000" pct={14} />
@@ -231,25 +231,25 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         layout="inline"
       />
 
-      <div className="grid items-stretch gap-3 lg:grid-cols-[2fr_1fr]">
+      <div className="grid items-stretch gap-3 lg:grid-cols-[2fr_1fr] [&>*]:min-w-0">
       <div
         className="grid gap-3 rounded-2xl px-5 pb-12 pt-24 sm:grid-cols-2"
-        style={{ backdropFilter: "blur(18.899999618530273px)", background: "#FFFFFF7A" }}
+        style={{ backdropFilter: "blur(18.899999618530273px)", background: "var(--dashboard-glass)" }}
       >
         {leftCards}
       </div>
 
       <div
         className="relative grid gap-3 rounded-2xl px-5 py-12"
-        style={{ backdropFilter: "blur(18.899999618530273px)", background: "#FFFFFF7A" }}
+        style={{ backdropFilter: "blur(18.899999618530273px)", background: "var(--dashboard-glass)" }}
       >
         <ExpandButton onClick={() => setExpanded(true)} />
         {rightCards}
       </div>
       </div>
 
-      <Card className="mt-3 !p-6" style={{ background: "#FFFFFF70" }}>
-        <div className="grid grid-cols-6 gap-2">
+      <Card className="mt-3 !p-6" style={{ background: "var(--dashboard-glass)" }}>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           {[
             { label: "Abonnement", value: "25 000 F", note: "Échéance 14 sept." },
             { label: "Commission LM", value: "21 060 F", note: "2,5 % effectif" },
@@ -262,11 +262,11 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
               key={t.label}
               type="button"
               className="flex h-full flex-col rounded-xl p-1.5 text-left"
-              style={{ background: "#F0EDF0" }}
+              style={{ background: "var(--dashboard-surface-2)" }}
             >
-              <p className="text-[9px] font-semibold text-[#141220]">{t.label}</p>
+              <p className="text-[9px] font-semibold text-[var(--dashboard-text)]">{t.label}</p>
               <p className="mt-0.5 text-xs font-bold">{t.value}</p>
-              <p className="mt-auto pt-0.5 text-[8px] font-medium text-[#141220]">{t.note}</p>
+              <p className="mt-auto pt-0.5 text-[8px] font-medium text-[var(--dashboard-text)]">{t.note}</p>
             </button>
           ))}
         </div>
@@ -279,7 +279,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         >
           <div
             className="finances-modal-scroll relative max-h-full w-full max-w-3xl overflow-y-auto rounded-2xl px-5 py-12"
-            style={{ backdropFilter: "blur(18.899999618530273px)", background: "#F3F1F5", scrollbarColor: "#EC0C8C transparent" }}
+            style={{ backdropFilter: "blur(18.899999618530273px)", background: "var(--dashboard-modal-bg)", scrollbarColor: "#EC0C8C transparent" }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
