@@ -1,18 +1,44 @@
 "use client";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useState } from "react";
 import DashboardHeader from "../../components/DashboardHeader";
 import DashboardSidebar from "../../components/DashboardSidebar";
-import { useDashboardLangue } from "../../components/DashboardLanguageProvider";
+import CommandesListe from "../../components/dashboard-commandes/CommandesListe";
+import CommandesNav, { CommandesTab } from "../../components/dashboard-commandes/CommandesNav";
+import LireUneLigne from "../../components/dashboard-commandes/LireUneLigne";
 
 /*
   Onglet "Commande" du dashboard, atteint depuis l'icône dédiée du rail
-  (voir DashboardSidebar, entre "Accueil" et "Produits"). Page vide pour
-  l'instant — contenu à construire, cf. mémoire
-  [[dashboard-mock-data-pending-laravel-api]].
+  (voir DashboardSidebar, entre "Accueil" et "Produits") — même mécanique
+  que "Produits" et "Paramètres" : tab null → les deux fiches empilées,
+  tab choisi → une seule fiche, via CommandesNav.
 */
 
+const SECTIONS: Record<CommandesTab, React.ComponentType<{ first?: boolean }>> = {
+  commandes: CommandesListe,
+  "lire-une-ligne": LireUneLigne,
+};
+
+const TAB_ORDER: CommandesTab[] = ["commandes", "lire-une-ligne"];
+
 export default function CommandesPage() {
-  const { t } = useDashboardLangue();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<CommandesTab | null>(
+    initialTab && TAB_ORDER.includes(initialTab as CommandesTab) ? (initialTab as CommandesTab) : null
+  );
+
+  const handleChange = useCallback(
+    (tab: CommandesTab | null) => {
+      setActiveTab(tab);
+      const query = tab ? `?tab=${tab}` : "";
+      router.replace(`${pathname}${query}`, { scroll: false });
+    },
+    [pathname, router]
+  );
 
   return (
     <div className="min-h-screen w-full bg-[var(--dashboard-bg)] font-sans text-[var(--dashboard-text)] antialiased transition-colors">
@@ -21,10 +47,21 @@ export default function CommandesPage() {
 
         <div className="min-w-0 flex-1 lg:px-6">
           <DashboardHeader />
+          <CommandesNav active={activeTab} onChange={handleChange} />
 
-          <div className="flex min-h-[50vh] items-center justify-center rounded-3xl border border-[#141220]/10 text-sm text-[#141220]/50 dark:border-white/10 dark:text-[var(--dashboard-text)]/50">
-            {t("Contenu à venir.", "Content coming soon.")}
-          </div>
+          {activeTab === null ? (
+            <>
+              {TAB_ORDER.map((tab, index) => {
+                const Section = SECTIONS[tab];
+                return <Section key={tab} first={index === 0} />;
+              })}
+            </>
+          ) : (
+            (() => {
+              const ActiveSection = SECTIONS[activeTab];
+              return <ActiveSection first />;
+            })()
+          )}
         </div>
       </div>
     </div>
