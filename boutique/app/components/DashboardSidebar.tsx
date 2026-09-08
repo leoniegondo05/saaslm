@@ -21,6 +21,7 @@ const NAV_LINKS = [
   { href: "/dashboard/produits", fr: "Produits", en: "Products", Icon: BoxIcon },
 ] as const;
 
+ 
 const REGLAGES = { href: "/dashboard/parametres", fr: "Paramètres", en: "Settings" } as const;
 
 export default function DashboardSidebar() {
