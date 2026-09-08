@@ -9,7 +9,6 @@ import Confidentialite from "../../components/dashboard-parametres/Confidentiali
 import FinancesReglements from "../../components/dashboard-parametres/FinancesReglements";
 import MaBoutique from "../../components/dashboard-parametres/MaBoutique";
 import PageDeCommande from "../../components/dashboard-parametres/PageDeCommande";
-import ReglagesAccueil from "../../components/dashboard-parametres/ReglagesAccueil";
 import ReglagesNav, { ReglagesTab } from "../../components/dashboard-parametres/ReglagesNav";
 import ReglesDeVente from "../../components/dashboard-parametres/ReglesDeVente";
 
@@ -17,10 +16,7 @@ import ReglesDeVente from "../../components/dashboard-parametres/ReglesDeVente";
   Onglet "Paramètres" du dashboard, atteint depuis l'icône engrenage du
   rail (voir DashboardSidebar) — même mécanique que l'onglet "Produits"
   (voir app/dashboard/produits/page.tsx) : tab null → tout empilé, tab
-  choisi → une seule fiche, via ReglagesNav. La différence avec Produits :
-  "tout" commence par l'écran d'accueil "Réglages" (ReglagesAccueil, écran
-  24 de la fiche de référence — un raccourci vers chaque fiche, plus ce
-  qui ne vit pas ici et pourquoi), suivi des six fiches, dans cet ordre.
+  choisi → une seule fiche, via ReglagesNav.
 
   "Personnel et accès" (dans le profil) et "Le partenaire agréé" (son
   propre onglet sous Produits) ne sont pas des fiches d'ici — l'ancien
@@ -80,10 +76,9 @@ export default function ParametresPage() {
 
           {activeTab === null ? (
             <>
-              <ReglagesAccueil onSelectTab={handleChange} first />
-              {TAB_ORDER.map((tab) => {
+              {TAB_ORDER.map((tab, index) => {
                 const Section = SECTIONS[tab];
-                return <Section key={tab} />;
+                return <Section key={tab} first={index === 0} />;
               })}
             </>
           ) : (

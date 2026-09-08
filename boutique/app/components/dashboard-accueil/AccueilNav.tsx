@@ -1,3 +1,7 @@
+"use client";
+
+import { useDashboardLangue } from "../DashboardLanguageProvider";
+
 export const ACCUEIL_TABS = [
   "Finances",
   "Commandes",
@@ -9,6 +13,19 @@ export const ACCUEIL_TABS = [
 ] as const;
 
 export type AccueilTab = (typeof ACCUEIL_TABS)[number];
+
+// Les valeurs ci-dessus servent aussi de clé pour SECTIONS (accueil/page.tsx)
+// et de valeur d'URL (?tab=...) : elles restent en FR, seul le libellé
+// affiché change avec la langue.
+const TAB_LABELS_EN: Record<AccueilTab, string> = {
+  Finances: "Finances",
+  Commandes: "Orders",
+  Clients: "Customers",
+  Acquisition: "Acquisition",
+  Stock: "Stock",
+  Produits: "Products",
+  Alertes: "Alerts",
+};
 
 /*
   Barre de navigation par onglets de l'écran Accueil : remplace la barre de
@@ -25,11 +42,12 @@ export default function AccueilNav({
   active: AccueilTab | null;
   onChange: (tab: AccueilTab | null) => void;
 }) {
+  const { t } = useDashboardLangue();
   return (
     <nav className="mt-6 flex flex-wrap items-center justify-center gap-2">
-      <NavButton label="Tout" isActive={active === null} onClick={() => onChange(null)} />
+      <NavButton label={t("Tout", "All")} isActive={active === null} onClick={() => onChange(null)} />
       {ACCUEIL_TABS.map((tab) => (
-        <NavButton key={tab} label={tab} isActive={tab === active} onClick={() => onChange(tab)} />
+        <NavButton key={tab} label={t(tab, TAB_LABELS_EN[tab])} isActive={tab === active} onClick={() => onChange(tab)} />
       ))}
     </nav>
   );

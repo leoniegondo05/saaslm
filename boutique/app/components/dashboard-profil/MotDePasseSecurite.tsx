@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SectionHeader, Tag } from "../dashboard-accueil/shared";
+import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
   "Mot de passe et sécurité" (menu du compte, voir DashboardHeader →
@@ -23,6 +24,7 @@ import { SectionHeader, Tag } from "../dashboard-accueil/shared";
 const CODES_TOTAL = 8;
 
 export default function MotDePasseSecurite({ first = false }: { first?: boolean }) {
+  const { t } = useDashboardLangue();
   const [changerMdp, setChangerMdp] = useState(false);
   const [mdpActuel, setMdpActuel] = useState("");
   const [mdpNouveau, setMdpNouveau] = useState("");
@@ -39,7 +41,8 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
   const [codesSecours, setCodesSecours] = useState(() => genererCodesMock());
 
   const protectionsActives = [true, doubleVerification, codesRestants > 0, alerteNouvelAppareil].filter(Boolean).length;
-  const niveauProtection = protectionsActives >= 4 ? "Élevé" : protectionsActives >= 2 ? "Moyen" : "Faible";
+  const niveauProtection =
+    protectionsActives >= 4 ? t("Élevé", "High") : protectionsActives >= 2 ? t("Moyen", "Medium") : t("Faible", "Low");
 
   const ouvrirChangementMdp = () => {
     setMdpActuel("");
@@ -56,9 +59,9 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
   };
 
   const enregistrerMdp = () => {
-    if (!mdpActuel) return setMdpErreur("Le mot de passe actuel est requis.");
-    if (mdpNouveau.length < 8) return setMdpErreur("Le nouveau mot de passe doit compter au moins 8 caractères.");
-    if (mdpNouveau !== mdpConfirmation) return setMdpErreur("La confirmation ne correspond pas.");
+    if (!mdpActuel) return setMdpErreur(t("Le mot de passe actuel est requis.", "Current password is required."));
+    if (mdpNouveau.length < 8) return setMdpErreur(t("Le nouveau mot de passe doit compter au moins 8 caractères.", "The new password must be at least 8 characters."));
+    if (mdpNouveau !== mdpConfirmation) return setMdpErreur(t("La confirmation ne correspond pas.", "Confirmation doesn't match."));
 
     setMdpErreur(null);
     setChangerMdp(false);
@@ -74,9 +77,9 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
   return (
     <>
       <SectionHeader
-        eyebrow="Sécurité"
-        title="Mot de passe et sécurité"
-        subtitle="Votre mot de passe, votre double vérification, vos codes de secours."
+        eyebrow={t("Sécurité", "Security")}
+        title={t("Mot de passe et sécurité", "Password & security")}
+        subtitle={t("Votre mot de passe, votre double vérification, vos codes de secours.", "Your password, your two-factor verification, your backup codes.")}
         first={first}
         layout="inline"
       />
@@ -86,14 +89,14 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
-              Niveau de protection
+              {t("Niveau de protection", "Protection level")}
             </p>
             <p className="mt-1 text-3xl font-bold tracking-tight text-[var(--dashboard-text)] sm:text-4xl">{niveauProtection}</p>
           </div>
           <p className="text-xs text-[var(--dashboard-text)]/50">
             {protectionsActives === 4
-              ? "Quatre protections sur quatre sont en place."
-              : `${protectionsActives} protection${protectionsActives > 1 ? "s" : ""} sur quatre en place.`}
+              ? t("Quatre protections sur quatre sont en place.", "Four protections out of four are in place.")
+              : t(`${protectionsActives} protection${protectionsActives > 1 ? "s" : ""} sur quatre en place.`, `${protectionsActives} of four protections in place.`)}
           </p>
         </div>
         <div className="mt-4 grid grid-cols-4 gap-2">
@@ -121,16 +124,16 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
                 <ShieldIcon />
               </span>
               <div>
-                <p className="text-sm font-bold text-[var(--dashboard-text)]">Mot de passe</p>
-                <p className="text-xs text-[var(--dashboard-text)]/45">Changé il y a 2 mois</p>
+                <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("Mot de passe", "Password")}</p>
+                <p className="text-xs text-[var(--dashboard-text)]/45">{t("Changé il y a 2 mois", "Changed 2 months ago")}</p>
               </div>
             </div>
-            <Tag tone="ok">Solide</Tag>
+            <Tag tone="ok">{t("Solide", "Strong")}</Tag>
           </div>
 
           {mdpConfirme && !changerMdp && (
             <p className="mt-4 rounded-2xl bg-[#dcf5e3] px-3 py-2 text-xs font-semibold text-[#178a3f]">
-              Mot de passe mis à jour.
+              {t("Mot de passe mis à jour.", "Password updated.")}
             </p>
           )}
 
@@ -140,24 +143,24 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
                 type="password"
                 value={mdpActuel}
                 onChange={(e) => setMdpActuel(e.target.value)}
-                placeholder="Mot de passe actuel"
-                aria-label="Mot de passe actuel"
+                placeholder={t("Mot de passe actuel", "Current password")}
+                aria-label={t("Mot de passe actuel", "Current password")}
                 className="w-full rounded-full border border-brand-pink/40 bg-brand-pink/5 px-4 py-2.5 text-sm text-[var(--dashboard-text)] outline-none focus:border-brand-pink"
               />
               <input
                 type="password"
                 value={mdpNouveau}
                 onChange={(e) => setMdpNouveau(e.target.value)}
-                placeholder="Nouveau mot de passe"
-                aria-label="Nouveau mot de passe"
+                placeholder={t("Nouveau mot de passe", "New password")}
+                aria-label={t("Nouveau mot de passe", "New password")}
                 className="w-full rounded-full border border-brand-pink/40 bg-brand-pink/5 px-4 py-2.5 text-sm text-[var(--dashboard-text)] outline-none focus:border-brand-pink"
               />
               <input
                 type="password"
                 value={mdpConfirmation}
                 onChange={(e) => setMdpConfirmation(e.target.value)}
-                placeholder="Confirmer le nouveau mot de passe"
-                aria-label="Confirmer le nouveau mot de passe"
+                placeholder={t("Confirmer le nouveau mot de passe", "Confirm new password")}
+                aria-label={t("Confirmer le nouveau mot de passe", "Confirm new password")}
                 className="w-full rounded-full border border-brand-pink/40 bg-brand-pink/5 px-4 py-2.5 text-sm text-[var(--dashboard-text)] outline-none focus:border-brand-pink"
               />
               {mdpErreur && <p className="text-xs font-semibold text-[#c8262d]">{mdpErreur}</p>}
@@ -167,14 +170,14 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
                   onClick={annulerChangementMdp}
                   className="rounded-full border border-[var(--dashboard-text)]/15 px-4 py-2.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
                 >
-                  Annuler
+                  {t("Annuler", "Cancel")}
                 </button>
                 <button
                   type="button"
                   onClick={enregistrerMdp}
                   className="rounded-full bg-[#141220] px-4 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
                 >
-                  Enregistrer
+                  {t("Enregistrer", "Save")}
                 </button>
               </div>
             </div>
@@ -184,7 +187,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
               onClick={ouvrirChangementMdp}
               className="mt-4 w-full rounded-full border border-brand-pink/40 bg-[var(--dashboard-card-bg)] px-4 py-2.5 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/10"
             >
-              Changer mon mot de passe
+              {t("Changer mon mot de passe", "Change my password")}
             </button>
           )}
         </div>
@@ -197,14 +200,14 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
                 <DeviceIcon />
               </span>
               <div>
-                <p className="text-sm font-bold text-[var(--dashboard-text)]">Double vérification</p>
-                <p className="text-xs text-[var(--dashboard-text)]/45">Un code de six chiffres sur tout appareil nouveau</p>
+                <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("Double vérification", "Two-factor verification")}</p>
+                <p className="text-xs text-[var(--dashboard-text)]/45">{t("Un code de six chiffres sur tout appareil nouveau", "A six-digit code on every new device")}</p>
               </div>
             </div>
             <ToggleSwitch
               checked={doubleVerification}
               onChange={() => setDoubleVerification((v) => !v)}
-              label="Double vérification"
+              label={t("Double vérification", "Two-factor verification")}
             />
           </div>
 
@@ -220,7 +223,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
               }`}
             >
               <MessageIcon />
-              Par message
+              {t("Par message", "By text message")}
             </button>
             <button
               type="button"
@@ -233,7 +236,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
               }`}
             >
               <AppIcon />
-              Par application
+              {t("Par application", "By app")}
             </button>
           </div>
         </div>
@@ -246,12 +249,12 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
                 <TicketIcon />
               </span>
               <div>
-                <p className="text-sm font-bold text-[var(--dashboard-text)]">Codes de secours</p>
-                <p className="text-xs text-[var(--dashboard-text)]/45">Pour le jour où le téléphone manque</p>
+                <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("Codes de secours", "Backup codes")}</p>
+                <p className="text-xs text-[var(--dashboard-text)]/45">{t("Pour le jour où le téléphone manque", "For the day your phone is missing")}</p>
               </div>
             </div>
             <p className="shrink-0 text-sm font-bold text-[var(--dashboard-text)]">
-              {codesRestants} sur {CODES_TOTAL}
+              {codesRestants} {t("sur", "of")} {CODES_TOTAL}
             </p>
           </div>
 
@@ -271,14 +274,14 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
               onClick={() => setAfficherCodes((v) => !v)}
               className="rounded-full border border-[var(--dashboard-text)]/15 px-4 py-2.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
             >
-              {afficherCodes ? "Masquer mes codes" : "Voir mes codes"}
+              {afficherCodes ? t("Masquer mes codes", "Hide my codes") : t("Voir mes codes", "View my codes")}
             </button>
             <button
               type="button"
               onClick={genererHuitCodes}
               className="rounded-full border border-brand-pink/40 bg-[var(--dashboard-card-bg)] px-4 py-2.5 text-xs font-semibold text-brand-pink transition hover:bg-brand-pink/10"
             >
-              En générer huit
+              {t("En générer huit", "Generate eight")}
             </button>
           </div>
 
@@ -306,19 +309,21 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
                 <BellIcon />
               </span>
               <div>
-                <p className="text-sm font-bold text-[var(--dashboard-text)]">M&apos;alerter</p>
-                <p className="text-xs text-[var(--dashboard-text)]/45">Dès qu&apos;un appareil inconnu ouvre le compte</p>
+                <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("M'alerter", "Alert me")}</p>
+                <p className="text-xs text-[var(--dashboard-text)]/45">{t("Dès qu'un appareil inconnu ouvre le compte", "As soon as an unknown device opens the account")}</p>
               </div>
             </div>
             <ToggleSwitch
               checked={alerteNouvelAppareil}
               onChange={() => setAlerteNouvelAppareil((v) => !v)}
-              label="M'alerter"
+              label={t("M'alerter", "Alert me")}
             />
           </div>
           <p className="mt-3 text-xs leading-snug text-[var(--dashboard-text)]/45">
-            Un message part avec la ville et l&apos;heure. C&apos;est ce qui prévient d&apos;un mot de passe volé
-            avant qu&apos;il serve.
+            {t(
+              "Un message part avec la ville et l'heure. C'est ce qui prévient d'un mot de passe volé avant qu'il serve.",
+              "A message is sent with the city and time. This is what warns of a stolen password before it's used."
+            )}
           </p>
         </div>
       </div>

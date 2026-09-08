@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Card, SectionHeader, Tag } from "../dashboard-accueil/shared";
+import { Card, SectionHeader } from "../dashboard-accueil/shared";
+import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
   Écran 25 "Réglages · Ma boutique" : identité, adresse d'enlèvement, et
@@ -10,14 +11,20 @@ import { Card, SectionHeader, Tag } from "../dashboard-accueil/shared";
   fige l'état courant. Aucun endpoint Laravel n'existe encore pour
   persister (cf. mémoire [[dashboard-mock-data-pending-laravel-api]]) :
   "Enregistrer" ne fait donc que confirmer visuellement.
-
-  "Personnaliser ma boutique" n'a pas encore d'écran construit côté
-  frontend (contrairement à la fiche de référence, qui suppose l'existant
-  à reprendre) : le bloc et son bouton sont affichés, mais le bouton ne
-  mène nulle part pour l'instant.
 */
 
-const SECTEURS = ["Beauté et soins", "Mode et accessoires", "Alimentation", "Électronique", "Maison et déco"];
+const SECTEURS = [
+  { value: "Beauté et soins", label: "Beauté et soins", labelEn: "Beauty and care" },
+  { value: "Mode et accessoires", label: "Mode et accessoires", labelEn: "Fashion and accessories" },
+  { value: "Alimentation", label: "Alimentation", labelEn: "Food" },
+  { value: "Électronique", label: "Électronique", labelEn: "Electronics" },
+  { value: "Maison et déco", label: "Maison et déco", labelEn: "Home and decor" },
+];
+
+const OUI_NON = [
+  { value: "Oui", label: "Oui", labelEn: "Yes" },
+  { value: "Non", label: "Non", labelEn: "No" },
+];
 
 type Identite = {
   nom: string;
@@ -52,18 +59,8 @@ const ENLEVEMENT_INIT: Enlevement = {
   contact: "Awa K.",
 };
 
-const PERSONNALISATION_ITEMS = [
-  "Logo, favicon et bannière",
-  "Couleur principale et couleur des boutons",
-  "Écriture et forme des coins",
-  "Barre du haut et bandeau d'annonce",
-  "Disposition de la fiche produit",
-  "Pied de page, réseaux et mentions",
-  "Pixel Meta, pixel TikTok, Google Analytics",
-  "Aperçu avant publication",
-];
-
 export default function MaBoutique({ first = false }: { first?: boolean }) {
+  const { t } = useDashboardLangue();
   const [identite, setIdentite] = useState(IDENTITE_INIT);
   const [enlevement, setEnlevement] = useState(ENLEVEMENT_INIT);
   const [enregistre, setEnregistre] = useState(false);
@@ -76,9 +73,12 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
   return (
     <>
       <SectionHeader
-        eyebrow="Ma boutique"
-        title="Qui vous êtes, où l'on vient vous chercher"
-        subtitle="Votre identité, l'adresse d'enlèvement, et l'accès à la personnalisation."
+        eyebrow={t("Ma boutique", "My shop")}
+        title={t("Qui vous êtes, où l'on vient vous chercher", "Who you are, where you'll be picked up")}
+        subtitle={t(
+          "Votre identité, l'adresse d'enlèvement, et l'accès à la personnalisation.",
+          "Your identity, the pickup address, and access to customization."
+        )}
         first={first}
         layout="inline"
       />
@@ -89,20 +89,20 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
           onClick={enregistrer}
           className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
         >
-          {enregistre ? "✓ Enregistré" : "Enregistrer"}
+          {enregistre ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
         </button>
       </div>
 
       <div className="grid gap-3">
-        <Card title="Identité" titleTab className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Identité", "Identity")} titleTab className="!bg-[var(--dashboard-card-bg)]">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Champ
-              label="Nom de la boutique"
+              label={t("Nom de la boutique", "Shop name")}
               value={identite.nom}
               onChange={(nom) => setIdentite((b) => ({ ...b, nom }))}
             />
             <ChampSelect
-              label="Secteur principal"
+              label={t("Secteur principal", "Main sector")}
               value={identite.secteur}
               options={SECTEURS}
               onChange={(secteur) => setIdentite((b) => ({ ...b, secteur }))}
@@ -110,7 +110,7 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
           </div>
           <div className="mt-3">
             <Champ
-              label="Phrase de présentation"
+              label={t("Phrase de présentation", "Tagline")}
               value={identite.presentation}
               multiline
               onChange={(presentation) => setIdentite((b) => ({ ...b, presentation }))}
@@ -118,96 +118,59 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
           </div>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Champ
-              label="Adresse de la boutique"
+              label={t("Adresse de la boutique", "Shop address")}
               value={identite.adresse}
               onChange={(adresse) => setIdentite((b) => ({ ...b, adresse }))}
             />
             <ChampSelect
-              label="Boutique ouverte"
+              label={t("Boutique ouverte", "Shop open")}
               value={identite.ouverte ? "Oui" : "Non"}
-              options={["Oui", "Non"]}
+              options={OUI_NON}
               onChange={(v) => setIdentite((b) => ({ ...b, ouverte: v === "Oui" }))}
             />
           </div>
         </Card>
 
-        <Card title="Adresse d'enlèvement" titleTab className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Adresse d'enlèvement", "Pickup address")} titleTab className="!bg-[var(--dashboard-card-bg)]">
           <p className="text-xs text-[var(--dashboard-text)]/50">
-            Là où le livreur du partenaire vient chercher vos colis et vos dépôts. Les jours et
-            les heures de passage sont fixés par le partenaire.
+            {t(
+              "Là où le livreur du partenaire vient chercher vos colis et vos dépôts. Les jours et les heures de passage sont fixés par le partenaire.",
+              "Where the partner's courier comes to collect your parcels and deposits. Pickup days and times are set by the partner."
+            )}
           </p>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Champ
-              label="Commune"
+              label={t("Commune", "District")}
               value={enlevement.commune}
               onChange={(commune) => setEnlevement((e) => ({ ...e, commune }))}
             />
             <Champ
-              label="Quartier"
+              label={t("Quartier", "Neighborhood")}
               value={enlevement.quartier}
               onChange={(quartier) => setEnlevement((e) => ({ ...e, quartier }))}
             />
           </div>
           <div className="mt-3">
             <Champ
-              label="Adresse précise et repère"
+              label={t("Adresse précise et repère", "Precise address and landmark")}
               value={enlevement.adressePrecise}
-              placeholder="Non renseignée"
+              placeholder={t("Non renseignée", "Not provided")}
               onChange={(adressePrecise) => setEnlevement((e) => ({ ...e, adressePrecise }))}
             />
           </div>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Champ
-              label="Téléphone d'enlèvement"
+              label={t("Téléphone d'enlèvement", "Pickup phone number")}
               value={enlevement.telephone}
               onChange={(telephone) => setEnlevement((e) => ({ ...e, telephone }))}
             />
             <Champ
-              label="Personne à contacter"
+              label={t("Personne à contacter", "Contact person")}
               value={enlevement.contact}
               onChange={(contact) => setEnlevement((e) => ({ ...e, contact }))}
             />
           </div>
         </Card>
-
-        <div
-          className="rounded-2xl p-5 text-white shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]"
-          style={{ backgroundImage: "linear-gradient(155deg,#3B1FA8 0%,#1B1E72 46%,#0A0E28 100%)" }}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-base font-bold tracking-tight">Personnaliser ma boutique</p>
-              <p className="mt-1 max-w-lg text-xs text-white/60">
-                Tout ce que le client voit : les images, les couleurs, l&apos;écriture, la barre
-                du haut, la façon dont un produit s&apos;affiche, le pied de page et le suivi
-                publicitaire.
-              </p>
-            </div>
-            <button
-              type="button"
-              disabled
-              className="shrink-0 cursor-not-allowed rounded-full bg-white/90 px-5 py-2.5 text-xs font-semibold text-[#141220] opacity-60"
-              title="Écran à venir"
-            >
-              Personnaliser ma boutique
-            </button>
-          </div>
-          <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
-            {PERSONNALISATION_ITEMS.map((item) => (
-              <div key={item} className="flex items-center gap-2 text-xs text-white/70">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-pink" />
-                {item}
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 flex items-start gap-2 rounded-xl bg-white/10 px-3 py-2.5">
-            <Tag tone="warn">Écran à venir</Tag>
-            <p className="text-[11px] leading-snug text-white/70">
-              Le bouton ne mène nulle part pour l&apos;instant : cet écran n&apos;a pas encore été
-              construit côté application.
-            </p>
-          </div>
-        </div>
       </div>
     </>
   );
@@ -261,16 +224,17 @@ function ChampSelect({
 }: {
   label: string;
   value: string;
-  options: string[];
+  options: { value: string; label: string; labelEn: string }[];
   onChange: (value: string) => void;
 }) {
+  const { t } = useDashboardLangue();
   return (
     <div>
       <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{label}</p>
       <select value={value} onChange={(e) => onChange(e.target.value)} className={`${champBoxClasses} cursor-pointer`}>
         {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
+          <option key={option.value} value={option.value}>
+            {t(option.label, option.labelEn)}
           </option>
         ))}
       </select>

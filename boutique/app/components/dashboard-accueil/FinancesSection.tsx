@@ -3,6 +3,7 @@
 import { useState } from "react";
 import PaymentMethodCard from "../PaymentMethodCard";
 import { Bar, Btn, Card, Divider, MiniStat, PayRow, SectionHeader, StatRow, Tag } from "./shared";
+import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
   Section "Finances" de l'onglet Accueil — extraite de
@@ -29,12 +30,12 @@ function ExpandIcon() {
   );
 }
 
-function ExpandButton({ onClick }: { onClick: () => void }) {
+function ExpandButton({ onClick, label }: { onClick: () => void; label: string }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label="Agrandir"
+      aria-label={label}
       className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-pink/10 text-brand-pink transition hover:bg-brand-pink/20"
     >
       <ExpandIcon />
@@ -43,6 +44,7 @@ function ExpandButton({ onClick }: { onClick: () => void }) {
 }
 
 export default function FinancesSection({ first = true }: { first?: boolean }) {
+  const { t } = useDashboardLangue();
   const [expanded, setExpanded] = useState(false);
 
   const leftCards = (
@@ -55,25 +57,25 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
             className="-mt-4 mb-2 rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]"
             style={{ background: "var(--dashboard-surface-2)", fontFamily: "var(--font-bricolage)" }}
           >
-            Trésorerie disponible
+            {t("Trésorerie disponible", "Available cash")}
           </p>
           <div className="absolute right-0 top-2">
-            <Tag tone="dark" className="border border-[var(--dashboard-text)]/15" style={{ borderRadius: 8 }}>Retirable</Tag>
+            <Tag tone="dark" className="border border-[var(--dashboard-text)]/15" style={{ borderRadius: 8 }}>{t("Retirable", "Withdrawable")}</Tag>
           </div>
         </div>
         <p className="-ml-4 mt-2 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-2xl font-bold tracking-tight text-white">
           318 000 F
         </p>
         <p className="mt-3 text-xs text-[#3A4055]">
-          Sur 5 commandes libérées, reversées par votre partenaire.
+          {t("Sur 5 commandes libérées, reversées par votre partenaire.", "From 5 released orders, paid out by your partner.")}
         </p>
         <Divider />
-        <StatRow label="Dernier versement" value="22 août · 214 000 F" />
-        <StatRow label="Versements ce mois" value="2" />
-        <StatRow label="Délai moyen de versement" value="1,4 jour" />
-        <StatRow label="Demande en attente" value="aucune" />
+        <StatRow label={t("Dernier versement", "Last payout")} value={t("22 août · 214 000 F", "Aug 22 · 214 000 F")} />
+        <StatRow label={t("Versements ce mois", "Payouts this month")} value="2" />
+        <StatRow label={t("Délai moyen de versement", "Average payout time")} value={t("1,4 jour", "1.4 days")} />
+        <StatRow label={t("Demande en attente", "Pending request")} value={t("aucune", "none")} />
         <Btn variant="dark" className="mt-4" style={{ borderRadius: 10 }}>
-          Demander mon versement
+          {t("Demander mon versement", "Request my payout")}
         </Btn>
       </div>
 
@@ -84,7 +86,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
               className="rounded-b-md px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/80"
               style={{ background: "linear-gradient(91.66deg, rgba(255, 255, 255, 0.1) 2.62%, rgba(33, 18, 74, 0.1) 101.03%)" }}
             >
-              Chiffre d&apos;affaires · 15 – 30 août
+              {t("Chiffre d'affaires · 15 – 30 août", "Revenue · Aug 15 – 30")}
             </p>
             <Tag
               tone="dark"
@@ -115,81 +117,81 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
               842 500 F
             </p>
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[#7B8095]">Meilleure journée</p>
-              <p className="text-xs font-semibold">27 août · 96 400 F</p>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#7B8095]">{t("Meilleure journée", "Best day")}</p>
+              <p className="text-xs font-semibold">{t("27 août · 96 400 F", "Aug 27 · 96 400 F")}</p>
             </div>
           </div>
           <Divider />
-          <StatRow label="Panier moyen" value="13 050 F · +6 %" />
-          <StatRow label="Ticket le plus élevé" value="48 000 F" />
-          <StatRow label="Ticket le plus bas" value="3 900 F" />
-          <StatRow label="Chiffre d'affaires perdu" value="148 000 F · 12 commandes" />
-          <StatRow label="Écart facturé / encaissé" value="54 000 F" />
+          <StatRow label={t("Panier moyen", "Average basket")} value={t("13 050 F · +6 %", "13 050 F · +6%")} />
+          <StatRow label={t("Ticket le plus élevé", "Highest order")} value="48 000 F" />
+          <StatRow label={t("Ticket le plus bas", "Lowest order")} value="3 900 F" />
+          <StatRow label={t("Chiffre d'affaires perdu", "Revenue lost")} value={t("148 000 F · 12 commandes", "148 000 F · 12 orders")} />
+          <StatRow label={t("Écart facturé / encaissé", "Billed / collected gap")} value="54 000 F" />
         </div>
       </div>
 
-      <Card title="Ce que la période a coûté" titleTab className="-mt-9 self-start !bg-[var(--dashboard-glass)]">
-        <StatRow label="Produits drop achetés" value="248 000" compact />
-        <StatRow label="Frais logistiques" value="96 000" compact />
-        <StatRow label="Emballage" value="inclus" compact />
-        <StatRow label="Garantie contre la perte" value="12 000" compact />
-        <StatRow label="Livraisons express" value="22 000" compact />
-        <StatRow label="Récupération de marchandise" value="4 000" compact />
-        <StatRow label="Commission LM" value="21 060" compact />
-        <StatRow label="Frais de paiement en ligne" value="14 900" compact />
-        <StatRow label="Coût des retours" value="18 000" compact />
+      <Card title={t("Ce que la période a coûté", "What this period cost")} titleTab className="-mt-9 self-start !bg-[var(--dashboard-glass)]">
+        <StatRow label={t("Produits drop achetés", "Drop-shipped products bought")} value="248 000" compact />
+        <StatRow label={t("Frais logistiques", "Logistics fees")} value="96 000" compact />
+        <StatRow label={t("Emballage", "Packaging")} value={t("inclus", "included")} compact />
+        <StatRow label={t("Garantie contre la perte", "Loss protection")} value="12 000" compact />
+        <StatRow label={t("Livraisons express", "Express deliveries")} value="22 000" compact />
+        <StatRow label={t("Récupération de marchandise", "Goods recovery")} value="4 000" compact />
+        <StatRow label={t("Commission LM", "LM commission")} value="21 060" compact />
+        <StatRow label={t("Frais de paiement en ligne", "Online payment fees")} value="14 900" compact />
+        <StatRow label={t("Coût des retours", "Cost of returns")} value="18 000" compact />
         <Divider />
-        <StatRow label="Total prélevé" value="435 960" compact />
+        <StatRow label={t("Total prélevé", "Total deducted")} value="435 960" compact />
         <Bar pct={52} color="bg-[#EC0C8C]" />
-        <p className="mt-1.5 text-[10px] text-[var(--dashboard-text)]/40">52 % du chiffre d&apos;affaires · 5 972 F par commande</p>
+        <p className="mt-1.5 text-[10px] text-[var(--dashboard-text)]/40">{t("52 % du chiffre d'affaires · 5 972 F par commande", "52% of revenue · 5 972 F per order")}</p>
       </Card>
     </>
   );
 
   const rightCards = (
     <>
-      <Card title="Où se trouve votre argent" titleTab className="!bg-[var(--dashboard-glass)]">
+      <Card title={t("Où se trouve votre argent", "Where your money is")} titleTab className="!bg-[var(--dashboard-glass)]">
         <div className="mt-3 grid grid-cols-2 gap-3">
           <div>
-            <p className="text-[10px] text-[var(--dashboard-text)]/40">Encaissé sur la période</p>
+            <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Encaissé sur la période", "Collected this period")}</p>
             <button type="button" className="mt-0.5 rounded-lg px-2 py-1 text-base font-bold" style={{ background: "var(--dashboard-surface-2)" }}>
               842 500
             </button>
           </div>
           <div>
-            <p className="text-[10px] text-[var(--dashboard-text)]/40">Livrés mais non payés</p>
+            <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Livrés mais non payés", "Delivered but unpaid")}</p>
             <button type="button" className="mt-0.5 rounded-lg px-2 py-1 text-base font-bold" style={{ background: "var(--dashboard-surface-2)" }}>
               54 000
             </button>
           </div>
           <div>
-            <p className="text-[10px] text-[var(--dashboard-text)]/40">Livrés et payés · rétention</p>
+            <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Livrés et payés · rétention", "Delivered and paid · held")}</p>
             <button type="button" className="mt-0.5 rounded-lg px-2 py-1 text-base font-bold" style={{ background: "var(--dashboard-surface-2)" }}>
               96 000
             </button>
           </div>
           <div>
-            <p className="text-[10px] text-[var(--dashboard-text)]/40">Suspendus pour litige</p>
+            <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Suspendus pour litige", "On hold for dispute")}</p>
             <button type="button" className="mt-0.5 rounded-lg px-2 py-1 text-base font-bold text-brand-pink" style={{ background: "var(--dashboard-surface-2)" }}>
               28 000
             </button>
           </div>
         </div>
         <Divider />
-        <StatRow label="Prochaine libération" value="41 h 12" />
+        <StatRow label={t("Prochaine libération", "Next release")} value="41 h 12" />
         <Bar pct={43} color="bg-[linear-gradient(90deg,rgba(255,255,255,0.6)_0%,#EC0C8C_100%)]" />
-        <p className="mt-1.5 text-[10px] text-[var(--dashboard-text)]/40">3 commandes · rétention de 72 h</p>
+        <p className="mt-1.5 text-[10px] text-[var(--dashboard-text)]/40">{t("3 commandes · rétention de 72 h", "3 orders · 72 h hold")}</p>
         <Divider />
-        <StatRow label="Libérable demain" value="62 000 F" />
-        <StatRow label="Libérable sous 7 jours" value="134 000 F" />
-        <StatRow label="Impayés de plus de 72 h" value={<>18 000 F <span className="text-[var(--dashboard-text)]/40">· 2 commandes</span></>} />
+        <StatRow label={t("Libérable demain", "Releasable tomorrow")} value="62 000 F" />
+        <StatRow label={t("Libérable sous 7 jours", "Releasable within 7 days")} value="134 000 F" />
+        <StatRow label={t("Impayés de plus de 72 h", "Unpaid for over 72 h")} value={<>18 000 F <span className="text-[var(--dashboard-text)]/40">· {t("2 commandes", "2 orders")}</span></>} />
       </Card>
 
       <div className="mx-4 mt-3 rounded-2xl bg-[linear-gradient(140.81deg,#3A1D8A_0%,#070707_100%)] p-4 text-white shadow-[0_18px_40px_rgba(20,20,60,0.3)]">
         <div className="mb-2 flex items-start justify-between">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">Bénéfice net de la période</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">{t("Bénéfice net de la période", "Net profit this period")}</p>
           <Tag tone="dark" style={{ border: "1px solid #FFFFFF21", color: "#FFFFFFB8" }}>
-            Marge 48 %
+            {t("Marge 48 %", "48% margin")}
           </Tag>
         </div>
         <button
@@ -203,15 +205,15 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
           406 540 F
         </button>
         <div className="mt-1 flex justify-end">
-          <span className="text-[10px] text-white/50">+ 6 points sur 30 jours</span>
+          <span className="text-[10px] text-white/50">{t("+ 6 points sur 30 jours", "+ 6 points over 30 days")}</span>
         </div>
         <div className="my-3 h-px bg-white/15" />
-        <StatRow label="Marge sur stockage" value="46 %" light />
-        <StatRow label="Marge sur drop" value="33 %" light />
-        <StatRow label="Marge sur produits propres" value="71 %" light />
+        <StatRow label={t("Marge sur stockage", "Margin on warehousing")} value="46 %" light />
+        <StatRow label={t("Marge sur drop", "Margin on drop-shipping")} value="33 %" light />
+        <StatRow label={t("Marge sur produits propres", "Margin on own products")} value="71 %" light />
       </div>
 
-      <Card title="Paiements reçus, par moyen" titleTab className="!bg-[var(--dashboard-glass)]">
+      <Card title={t("Paiements reçus, par moyen", "Payments received, by method")} titleTab className="!bg-[var(--dashboard-glass)]">
         <PayRow label="Orange Money" color="#FF7900" value="412 000" pct={49} />
         <PayRow label="Wave" color="#1BA1F2" value="238 500" pct={28} />
         <PayRow label="MTN MoMo" color="#FFCC00" value="121 000" pct={14} />
@@ -220,13 +222,22 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
     </>
   );
 
+  const summaryTiles = [
+    { fr: "Abonnement", en: "Subscription", value: "25 000 F", noteFr: "Échéance 14 sept.", noteEn: "Due Sept. 14" },
+    { fr: "Commission LM", en: "LM commission", value: "21 060 F", noteFr: "2,5 % effectif", noteEn: "2.5% effective" },
+    { fr: "Reste à percevoir", en: "Still to collect", value: "150 000 F" },
+    { fr: "Prévision à 7 jours", en: "7-day forecast", value: "512 000 F", noteFr: "Au rythme actuel", noteEn: "At current pace" },
+    { fr: "Trésorerie totale", en: "Total cash", value: "468 000 F" },
+    { fr: "Valeur du stock déposé", en: "Value of stock deposited", value: "1 209 100 F" },
+  ] as const;
+
   return (
     <>
       <SectionHeader
-        eyebrow="Finances"
-        title="Où va votre argent"
-        subtitle="Ce que la période a encaissé, prélevé et laissé."
-        count="28 indicateurs"
+        eyebrow={t("Finances", "Finances")}
+        title={t("Où va votre argent", "Where your money goes")}
+        subtitle={t("Ce que la période a encaissé, prélevé et laissé.", "What this period collected, deducted and left over.")}
+        count={t("28 indicateurs", "28 metrics")}
         first={first}
         layout="inline"
       />
@@ -243,30 +254,25 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         className="relative grid gap-3 rounded-2xl px-5 py-12"
         style={{ backdropFilter: "blur(18.899999618530273px)", background: "var(--dashboard-glass)" }}
       >
-        <ExpandButton onClick={() => setExpanded(true)} />
+        <ExpandButton onClick={() => setExpanded(true)} label={t("Agrandir", "Expand")} />
         {rightCards}
       </div>
       </div>
 
       <Card className="mt-3 !p-6" style={{ background: "var(--dashboard-glass)" }}>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-          {[
-            { label: "Abonnement", value: "25 000 F", note: "Échéance 14 sept." },
-            { label: "Commission LM", value: "21 060 F", note: "2,5 % effectif" },
-            { label: "Reste à percevoir", value: "150 000 F" },
-            { label: "Prévision à 7 jours", value: "512 000 F", note: "Au rythme actuel" },
-            { label: "Trésorerie totale", value: "468 000 F" },
-            { label: "Valeur du stock déposé", value: "1 209 100 F" },
-          ].map((t) => (
+          {summaryTiles.map((tile) => (
             <button
-              key={t.label}
+              key={tile.fr}
               type="button"
               className="flex h-full flex-col rounded-xl p-1.5 text-left"
               style={{ background: "var(--dashboard-surface-2)" }}
             >
-              <p className="text-[9px] font-semibold text-[var(--dashboard-text)]">{t.label}</p>
-              <p className="mt-0.5 text-xs font-bold">{t.value}</p>
-              <p className="mt-auto pt-0.5 text-[8px] font-medium text-[var(--dashboard-text)]">{t.note}</p>
+              <p className="text-[9px] font-semibold text-[var(--dashboard-text)]">{t(tile.fr, tile.en)}</p>
+              <p className="mt-0.5 text-xs font-bold">{tile.value}</p>
+              {"noteFr" in tile && (
+                <p className="mt-auto pt-0.5 text-[8px] font-medium text-[var(--dashboard-text)]">{t(tile.noteFr, tile.noteEn)}</p>
+              )}
             </button>
           ))}
         </div>
@@ -285,7 +291,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
             <button
               type="button"
               onClick={() => setExpanded(false)}
-              aria-label="Fermer"
+              aria-label={t("Fermer", "Close")}
               className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-pink/10 text-brand-pink transition hover:bg-brand-pink/20"
             >
               <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">

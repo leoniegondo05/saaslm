@@ -6,6 +6,7 @@ import DashboardBrain from "../components/DashboardBrain";
 import DashboardHeader, { ChevronIcon } from "../components/DashboardHeader";
 import DashboardSidebar from "../components/DashboardSidebar";
 import QrCode from "../components/QrCode";
+import { useDashboardLangue } from "../components/DashboardLanguageProvider";
 
 /*
   Tableau de bord (dashboard) affiché après connexion, reproduction exacte
@@ -31,6 +32,7 @@ const COMMUNES_EXPOSEES = [
 ] as const;
 
 export default function DashboardPage() {
+  const { t } = useDashboardLangue();
   return (
     <div className="min-h-screen w-full bg-[var(--dashboard-bg)] font-sans text-[var(--dashboard-text)] antialiased transition-colors">
       <div className="mx-auto flex max-w-[1620px] flex-col gap-6 px-4 pb-28 pt-6 sm:px-6 md:px-10 lg:flex-row lg:pb-10 lg:pl-3 lg:pt-8">
@@ -43,9 +45,10 @@ export default function DashboardPage() {
 
           {/* ── Salutation ── */}
           <h1 className="mt-10 text-4xl font-bold leading-[1.15] tracking-tight sm:text-[44px]">
-            Bonjour Awa,
+            {t("Bonjour Awa,", "Hello Awa,")}
             <br />
-            voici votre <span className="text-brand-pink">journée.</span>
+            {t("voici votre ", "here's your ")}
+            <span className="text-brand-pink">{t("journée.", "day.")}</span>
           </h1>
 
           {/* ── Grille principale ── */}
@@ -60,10 +63,10 @@ export default function DashboardPage() {
                 </span>
                 <span>
                   <span className="block text-xs text-[var(--dashboard-text)]/50">
-                    Recommandation
+                    {t("Recommandation", "Recommendation")}
                   </span>
                   <span className="block whitespace-nowrap text-sm font-semibold">
-                    Livrer à yopougon avant 23h
+                    {t("Livrer à yopougon avant 23h", "Deliver to Yopougon before 11pm")}
                   </span>
                 </span>
               </div>
@@ -82,28 +85,28 @@ export default function DashboardPage() {
               <div className="p-3">
                 <span className="inline-flex items-center gap-2 text-xs text-[var(--dashboard-text)]/50">
                   <TrendUpIcon />
-                  Hier · aujourd&apos;hui · demain
+                  {t("Hier · aujourd'hui · demain", "Yesterday · today · tomorrow")}
                 </span>
 
                 <div className="mt-2 flex items-start justify-between">
                   <div>
                     <p className="text-xs text-[var(--dashboard-text)]/50">
-                      Aujourd&apos;hui
+                      {t("Aujourd'hui", "Today")}
                     </p>
                     <p className="mt-0.5 text-xl font-bold">48.300F</p>
                     <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-brand-pink px-2.5 py-1 text-xs font-semibold text-white">
-                      <ClockIcon />5 commandes en cours
+                      <ClockIcon />{t("5 commandes en cours", "5 orders in progress")}
                     </span>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-[var(--dashboard-text)]/50">
-                      Hier. Ven . 29
+                      {t("Hier. Ven . 29", "Yesterday. Fri. 29")}
                     </p>
                     <p className="mt-0.5 text-lg font-bold">118 400 F</p>
                     <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/40">
-                      12 commandes
+                      {t("12 commandes", "12 orders")}
                       <br />
-                      9 livrées
+                      {t("9 livrées", "9 delivered")}
                     </p>
                   </div>
                 </div>
@@ -111,7 +114,7 @@ export default function DashboardPage() {
                 <div className="mt-3 h-px bg-[var(--dashboard-text)]/10" />
 
                 <p className="mt-3 text-xs text-[var(--dashboard-text)]/50">
-                  Objectif demain soir
+                  {t("Objectif demain soir", "Tomorrow evening's target")}
                 </p>
                 <p className="mt-0.5 text-2xl font-bold">142 000 F</p>
 
@@ -121,10 +124,10 @@ export default function DashboardPage() {
                   </div>
                   <p className="mt-1.5 text-xs">
                     <span className="font-semibold">34%</span>{" "}
-                    <span className="text-[var(--dashboard-text)]/50">du chemin fait</span>
+                    <span className="text-[var(--dashboard-text)]/50">{t("du chemin fait", "of the way there")}</span>
                   </p>
                   <p className="text-xs text-[var(--dashboard-text)]/50">
-                    Il reste que 93 700 F
+                    {t("Il reste que 93 700 F", "Only 93,700 F left")}
                   </p>
                 </div>
               </div>
@@ -134,9 +137,9 @@ export default function DashboardPage() {
                   plaque posée sous la carte ventes), pas d'une ligne. */}
               <div className="rounded-t-[28px] p-3 shadow-[inset_0_10px_14px_-14px_rgba(20,18,32,0.16)]">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold">Mon identité</h3>
+                  <h3 className="text-sm font-semibold">{t("Mon identité", "My identity")}</h3>
                   <span className="rounded-full bg-[#dcf5e3] px-2.5 py-1 text-xs font-semibold text-[#178a3f]">
-                    Validé
+                    {t("Validé", "Verified")}
                   </span>
                 </div>
 
@@ -153,19 +156,21 @@ export default function DashboardPage() {
                   <div className="flex min-w-0 flex-col justify-center gap-1.5 text-xs">
                     <div>
                       <p className="font-semibold">Awa Konan</p>
-                      <p className="text-[var(--dashboard-text)]/50">Propriétaire · Admin</p>
+                      <p className="text-[var(--dashboard-text)]/50">{t("Propriétaire · Admin", "Owner · Admin")}</p>
                     </div>
                     <div className="text-[var(--dashboard-text)]/50">
                       <p className="break-words">a.konan@awabeaute.ci</p>
-                      <p>Créée le 14 mars 2026</p>
-                      <p>Expire le 14 sept. 2026</p>
+                      <p>{t("Créée le 14 mars 2026", "Created on March 14, 2026")}</p>
+                      <p>{t("Expire le 14 sept. 2026", "Expires on Sept. 14, 2026")}</p>
                     </div>
                   </div>
                 </div>
 
                 <p className="mt-3 text-xs text-[var(--dashboard-text)]/40">
-                  Code personnel, lié à votre compte. Il sert à ouvrir
-                  l&apos;application mobile avec vos droits.
+                  {t(
+                    "Code personnel, lié à votre compte. Il sert à ouvrir l'application mobile avec vos droits.",
+                    "Personal code, linked to your account. Used to open the mobile app with your permissions."
+                  )}
                 </p>
               </div>
             </div>
@@ -178,22 +183,44 @@ export default function DashboardPage() {
 
 const LOCAL_CONDITIONS = [
   {
-    label: "Trafic",
+    fr: "Trafic",
+    en: "Traffic",
     badgeClass: "bg-[#f5a623] text-white",
-    rows: [{ label: "Statut :", value: "Boulevard VGE fermé" }],
-  },
-  {
-    label: "Boulvard",
-    badgeClass: "bg-[#e0442b] text-white",
     rows: [
-      { label: "Statut :", value: "Trafic dense au Plateau" },
-      { label: "Heure :", value: "7 h – 9 h 30" },
+      {
+        fr: "Statut :",
+        en: "Status:",
+        valueFr: "Boulevard VGE fermé",
+        valueEn: "Boulevard VGE closed",
+      },
     ],
   },
   {
-    label: "Douane",
+    fr: "Boulvard",
+    en: "Boulevard",
+    badgeClass: "bg-[#e0442b] text-white",
+    rows: [
+      {
+        fr: "Statut :",
+        en: "Status:",
+        valueFr: "Trafic dense au Plateau",
+        valueEn: "Heavy traffic in Plateau",
+      },
+      { fr: "Heure :", en: "Time:", valueFr: "7 h – 9 h 30", valueEn: "7am – 9:30am" },
+    ],
+  },
+  {
+    fr: "Douane",
+    en: "Customs",
     badgeClass: "bg-[#16a34a] text-white",
-    rows: [{ label: "Statut :", value: "Aucune restriction douanière" }],
+    rows: [
+      {
+        fr: "Statut :",
+        en: "Status:",
+        valueFr: "Aucune restriction douanière",
+        valueEn: "No customs restrictions",
+      },
+    ],
   },
 ] as const;
 
@@ -203,24 +230,28 @@ const LOCAL_CONDITIONS = [
 const DEFAULT_WEATHER_COORDS = { latitude: 5.36, longitude: -4.0083 };
 
 // Table de correspondance codes météo WMO (renvoyés par Open-Meteo) →
-// libellé FR / emoji / couleur, réutilisée pour "Aujourd'hui" et "Demain".
-function describeWeatherCode(code: number): {
+// libellé FR/EN / emoji / couleur, réutilisée pour "Aujourd'hui" et "Demain".
+// `t` reçu en paramètre (pas de hook ici, fonction pure hors composant).
+function describeWeatherCode(
+  code: number,
+  t: (fr: string, en: string) => string
+): {
   label: string;
   emoji: string;
   colorClass: string;
 } {
-  if (code === 0) return { label: "Temps ensoleillé", emoji: "☀️", colorClass: "text-[#16a34a]" };
-  if (code === 1) return { label: "Temps clair", emoji: "🌤️", colorClass: "text-[#16a34a]" };
-  if (code === 2) return { label: "Passages nuageux", emoji: "⛅", colorClass: "text-[#f5a623]" };
-  if (code === 3) return { label: "Ciel couvert", emoji: "☁️", colorClass: "text-[#f5a623]" };
-  if (code === 45 || code === 48) return { label: "Brouillard", emoji: "🌫️", colorClass: "text-[#f5a623]" };
-  if ([51, 53, 55, 56, 57].includes(code)) return { label: "Bruine", emoji: "🌦️", colorClass: "text-[#f5a623]" };
-  if ([61, 63, 80].includes(code)) return { label: "Pluie légère", emoji: "🌧️", colorClass: "text-[#f5a623]" };
-  if ([65, 66, 67, 81, 82].includes(code)) return { label: "Fortes pluies", emoji: "🌧️", colorClass: "text-[#e0442b]" };
-  if ([71, 73, 75, 77, 85, 86].includes(code)) return { label: "Neige", emoji: "❄️", colorClass: "text-[#f5a623]" };
-  if ([95, 96, 99].includes(code)) return { label: "Orage", emoji: "⛈️", colorClass: "text-[#e0442b]" };
-  return { label: "Temps pluvieux", emoji: "🌦️", colorClass: "text-[#f5a623]" };
-}       
+  if (code === 0) return { label: t("Temps ensoleillé", "Sunny"), emoji: "☀️", colorClass: "text-[#16a34a]" };
+  if (code === 1) return { label: t("Temps clair", "Clear skies"), emoji: "🌤️", colorClass: "text-[#16a34a]" };
+  if (code === 2) return { label: t("Passages nuageux", "Partly cloudy"), emoji: "⛅", colorClass: "text-[#f5a623]" };
+  if (code === 3) return { label: t("Ciel couvert", "Overcast"), emoji: "☁️", colorClass: "text-[#f5a623]" };
+  if (code === 45 || code === 48) return { label: t("Brouillard", "Fog"), emoji: "🌫️", colorClass: "text-[#f5a623]" };
+  if ([51, 53, 55, 56, 57].includes(code)) return { label: t("Bruine", "Drizzle"), emoji: "🌦️", colorClass: "text-[#f5a623]" };
+  if ([61, 63, 80].includes(code)) return { label: t("Pluie légère", "Light rain"), emoji: "🌧️", colorClass: "text-[#f5a623]" };
+  if ([65, 66, 67, 81, 82].includes(code)) return { label: t("Fortes pluies", "Heavy rain"), emoji: "🌧️", colorClass: "text-[#e0442b]" };
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return { label: t("Neige", "Snow"), emoji: "❄️", colorClass: "text-[#f5a623]" };
+  if ([95, 96, 99].includes(code)) return { label: t("Orage", "Thunderstorm"), emoji: "⛈️", colorClass: "text-[#e0442b]" };
+  return { label: t("Temps pluvieux", "Rainy"), emoji: "🌦️", colorClass: "text-[#f5a623]" };
+}
 
 type WeatherState =
   | { status: "loading" }
@@ -292,14 +323,15 @@ function useLiveWeather(): WeatherState {
   Abidjan par défaut) — seules les communes exposées restent statiques.
 */
 function WeatherCard() {
+  const { t } = useDashboardLangue();
   const [view, setView] = useState<"meteo" | "conditions">("meteo");
   const weather = useLiveWeather();
 
   const today =
-    weather.status === "ready" ? describeWeatherCode(weather.todayCode) : null;
+    weather.status === "ready" ? describeWeatherCode(weather.todayCode, t) : null;
   const tomorrow =
     weather.status === "ready"
-      ? describeWeatherCode(weather.tomorrowCode)
+      ? describeWeatherCode(weather.tomorrowCode, t)
       : null;
 
   return (
@@ -307,7 +339,7 @@ function WeatherCard() {
       {view === "meteo" ? (
         <>
           <div className="flex items-start justify-between">
-            <h2 className="text-base font-semibold">Aujourd&apos;hui</h2>
+            <h2 className="text-base font-semibold">{t("Aujourd'hui", "Today")}</h2>
             {today && today.emoji === "☀️" ? (
               <Image
                 src="/images/Météo.png"
@@ -320,7 +352,7 @@ function WeatherCard() {
               <span
                 className="flex h-9 w-9 items-center justify-center text-2xl leading-none"
                 role="img"
-                aria-label={today?.label ?? "Météo en cours de chargement"}
+                aria-label={today?.label ?? t("Météo en cours de chargement", "Weather loading")}
               >
                 {today?.emoji ?? "…"}
               </span>
@@ -332,27 +364,27 @@ function WeatherCard() {
             }`}
           >
             {weather.status === "error"
-              ? "Météo indisponible"
-              : (today?.label ?? "Chargement de la météo…")}
+              ? t("Météo indisponible", "Weather unavailable")
+              : (today?.label ?? t("Chargement de la météo…", "Loading weather…"))}
           </p>
           <p className="text-xs text-[var(--dashboard-text)]/50">
             {weather.status === "ready"
-              ? `Toute la journée · ${weather.todayTempMax}°C`
-              : "Toute la journée"}
+              ? `${t("Toute la journée", "All day")} · ${weather.todayTempMax}°C`
+              : t("Toute la journée", "All day")}
           </p>
 
           <div className="my-2 h-px bg-[var(--dashboard-text)]/10" />
 
-          <h3 className="text-sm font-semibold">Demain</h3>
+          <h3 className="text-sm font-semibold">{t("Demain", "Tomorrow")}</h3>
           <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/50">
             {weather.status === "ready" && tomorrow
               ? `${tomorrow.label} · ${weather.tomorrowTempMax}°C`
               : weather.status === "error"
-                ? "Indisponible."
-                : "Chargement…"}
+                ? t("Indisponible.", "Unavailable.")
+                : t("Chargement…", "Loading…")}
           </p>
 
-          <p className="mt-3 text-xs text-[var(--dashboard-text)]/50">Communes exposées</p>
+          <p className="mt-3 text-xs text-[var(--dashboard-text)]/50">{t("Communes exposées", "Exposed areas")}</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {COMMUNES_EXPOSEES.map((commune) => (
               <span
@@ -375,7 +407,7 @@ function WeatherCard() {
               onClick={() => setView("conditions")}
               className="flex items-center gap-2 text-xs font-semibold"
             >
-              Conditions locale
+              {t("Conditions locale", "Local conditions")}
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--dashboard-text)]/[0.06]">
                 <ChevronIcon direction="right" />
               </span>
@@ -384,26 +416,26 @@ function WeatherCard() {
         </>
       ) : (
         <>
-          <h2 className="text-center text-base font-bold">Conditions locales</h2>
+          <h2 className="text-center text-base font-bold">{t("Conditions locales", "Local conditions")}</h2>
 
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
             {LOCAL_CONDITIONS.map((condition) => (
               <div
-                key={condition.label}
+                key={condition.fr}
                 className="flex flex-col gap-2 rounded-2xl border border-[var(--dashboard-text)]/[0.06] bg-[var(--dashboard-card-bg)] p-2 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]"
               >
                 <span
                   className={`inline-block rounded-full px-2.5 py-1 text-center text-[11px] font-semibold ${condition.badgeClass}`}
                 >
-                  {condition.label}
+                  {t(condition.fr, condition.en)}
                 </span>
                 {condition.rows.map((row) => (
-                  <div key={row.label}>
+                  <div key={row.fr}>
                     <p className="text-[11px] font-medium text-[var(--dashboard-text)]/70">
-                      {row.label}
+                      {t(row.fr, row.en)}
                     </p>
                     <p className="mt-1 rounded-lg bg-[var(--dashboard-text)]/[0.05] px-2 py-1.5 text-[11px] leading-snug text-[var(--dashboard-text)]/60">
-                      {row.value}
+                      {t(row.valueFr, row.valueEn)}
                     </p>
                   </div>
                 ))}
@@ -429,7 +461,7 @@ function WeatherCard() {
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--dashboard-card-bg)] shadow-[0_2px_10px_rgba(20,18,32,0.1)]">
                 <ChevronIcon direction="left" />
               </span>
-              Météo
+              {t("Météo", "Weather")}
             </button>
           </div>
         </>

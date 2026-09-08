@@ -1,6 +1,7 @@
 "use client";
 
 import { SectionHeader } from "../dashboard-accueil/shared";
+import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
   Écran "Mes droits", atteint depuis "Mes droits" dans le menu du compte
@@ -25,56 +26,67 @@ import { SectionHeader } from "../dashboard-accueil/shared";
 
 type RoleKey = "administrateur" | "finances" | "commandes" | "stock";
 
-const ROLES: { key: RoleKey; label: string; sub: string }[] = [
-  { key: "administrateur", label: "Administrateur", sub: "Le propriétaire · vous" },
-  { key: "finances", label: "Finances", sub: "1 personne" },
-  { key: "commandes", label: "Commandes", sub: "2 personnes" },
-  { key: "stock", label: "Stock", sub: "1 personne" },
+const ROLES: { key: RoleKey; label: string; labelEn: string; sub: string; subEn: string }[] = [
+  { key: "administrateur", label: "Administrateur", labelEn: "Administrator", sub: "Le propriétaire · vous", subEn: "The owner · you" },
+  { key: "finances", label: "Finances", labelEn: "Finances", sub: "1 personne", subEn: "1 person" },
+  { key: "commandes", label: "Commandes", labelEn: "Orders", sub: "2 personnes", subEn: "2 people" },
+  { key: "stock", label: "Stock", labelEn: "Stock", sub: "1 personne", subEn: "1 person" },
 ];
 
-const PERMISSIONS: { label: string; access: Record<RoleKey, boolean> }[] = [
+const PERMISSIONS: { label: string; labelEn: string; access: Record<RoleKey, boolean> }[] = [
   {
     label: "Voir et gérer les commandes",
+    labelEn: "View and manage orders",
     access: { administrateur: true, finances: false, commandes: true, stock: false },
   },
   {
     label: "Ouvrir un litige, poser une question",
+    labelEn: "Open a dispute, ask a question",
     access: { administrateur: true, finances: false, commandes: true, stock: true },
   },
   {
     label: "Signaler un problème technique",
+    labelEn: "Report a technical issue",
     access: { administrateur: true, finances: true, commandes: true, stock: true },
   },
   {
     label: "Voir l'état du stock",
+    labelEn: "View stock status",
     access: { administrateur: true, finances: false, commandes: true, stock: true },
   },
   {
     label: "Déposer du stock",
+    labelEn: "Deposit stock",
     access: { administrateur: true, finances: false, commandes: false, stock: true },
   },
   {
     label: "Ajouter et modifier des produits",
+    labelEn: "Add and edit products",
     access: { administrateur: true, finances: false, commandes: false, stock: true },
   },
   {
     label: "Voir les prix d'achat et les marges",
+    labelEn: "View cost prices and margins",
     access: { administrateur: true, finances: true, commandes: false, stock: false },
   },
   {
     label: "Voir les chiffres et les versements",
+    labelEn: "View figures and payouts",
     access: { administrateur: true, finances: true, commandes: false, stock: false },
   },
   {
     label: "Demander un versement",
+    labelEn: "Request a payout",
     access: { administrateur: true, finances: true, commandes: false, stock: false },
   },
   {
     label: "Créer et révoquer des accès",
+    labelEn: "Create and revoke access",
     access: { administrateur: true, finances: false, commandes: false, stock: false },
   },
   {
     label: "Modifier les réglages de la boutique",
+    labelEn: "Change shop settings",
     access: { administrateur: true, finances: false, commandes: false, stock: false },
   },
 ];
@@ -84,13 +96,14 @@ const PERMISSIONS: { label: string; access: Record<RoleKey, boolean> }[] = [
 const MON_ROLE: RoleKey = "administrateur";
 
 export default function MesDroits() {
+  const { t } = useDashboardLangue();
   return (
     <>
       <SectionHeader
-        eyebrow="Mon compte"
-        title="Mes droits"
-        subtitle="Les quatre rôles de la boutique et ce que chacun peut faire."
-        count="Administrateur · tout ouvert"
+        eyebrow={t("Mon compte", "My account")}
+        title={t("Mes droits", "My permissions")}
+        subtitle={t("Les quatre rôles de la boutique et ce que chacun peut faire.", "The shop's four roles and what each one can do.")}
+        count={t("Administrateur · tout ouvert", "Administrator · everything open")}
         first
         layout="inline"
       />
@@ -108,8 +121,8 @@ export default function MesDroits() {
                       role.key === MON_ROLE ? "rounded-t-2xl bg-[var(--dashboard-text)]/[0.04]" : ""
                     }`}
                   >
-                    <p className="text-sm font-bold text-[var(--dashboard-text)]">{role.label}</p>
-                    <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/40">{role.sub}</p>
+                    <p className="text-sm font-bold text-[var(--dashboard-text)]">{t(role.label, role.labelEn)}</p>
+                    <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/40">{t(role.sub, role.subEn)}</p>
                   </th>
                 ))}
               </tr>
@@ -117,7 +130,7 @@ export default function MesDroits() {
             <tbody>
               {PERMISSIONS.map((perm, i) => (
                 <tr key={perm.label} className="border-t border-[var(--dashboard-text)]/[0.06]">
-                  <td className="py-3.5 pr-4 text-sm text-[var(--dashboard-text)]/80">{perm.label}</td>
+                  <td className="py-3.5 pr-4 text-sm text-[var(--dashboard-text)]/80">{t(perm.label, perm.labelEn)}</td>
                   {ROLES.map((role) => (
                     <td
                       key={role.key}
@@ -138,14 +151,13 @@ export default function MesDroits() {
 
         <div className="mt-5 h-px bg-[var(--dashboard-text)]/10" />
         <p className="mt-4 text-xs leading-relaxed text-[var(--dashboard-text)]/50">
-          Quatre rôles, fixés par la plateforme. Ils ne se créent pas et ne se renomment pas :
-          une boutique qui invente ses propres rôles finit avec{" "}
+          {t("Quatre rôles, fixés par la plateforme. Ils ne se créent pas et ne se renomment pas : une boutique qui invente ses propres rôles finit avec", "Four roles, fixed by the platform. They can't be created or renamed: a shop that invents its own roles ends up with")}{" "}
           <span className="font-semibold text-brand-pink">
-            des droits que personne ne sait plus expliquer
+            {t("des droits que personne ne sait plus expliquer", "permissions no one can explain anymore")}
           </span>
-          . L&apos;administrateur peut en revanche{" "}
+          . {t("L'administrateur peut en revanche", "The administrator can, however,")}{" "}
           <span className="font-semibold text-brand-purple">
-            retirer des pages à quelqu&apos;un à l&apos;intérieur de son rôle
+            {t("retirer des pages à quelqu'un à l'intérieur de son rôle", "remove pages from someone within their role")}
           </span>
           .
         </p>
@@ -155,12 +167,13 @@ export default function MesDroits() {
 }
 
 function AccessDot({ allowed }: { allowed: boolean }) {
+  const { t } = useDashboardLangue();
   return (
     <span
       className={`inline-flex h-6 w-6 items-center justify-center rounded-full ${
         allowed ? "bg-[#dcf5e3] text-[#178a3f]" : "bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/25"
       }`}
-      aria-label={allowed ? "Autorisé" : "Non autorisé"}
+      aria-label={allowed ? t("Autorisé", "Allowed") : t("Non autorisé", "Not allowed")}
     >
       {allowed ? (
         <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden>

@@ -1,10 +1,14 @@
+"use client";
+
+import { useDashboardLangue } from "../DashboardLanguageProvider";
+
 export const REGLAGES_TABS = [
-  { key: "ma-boutique", label: "Ma boutique" },
-  { key: "commande", label: "Page de commande" },
-  { key: "finances", label: "Finances et règlements" },
-  { key: "regles-vente", label: "Mes règles de vente" },
-  { key: "abonnement", label: "Abonnement" },
-  { key: "confidentialite", label: "Confidentialité" },
+  { key: "ma-boutique", label: "Ma boutique", labelEn: "My shop" },
+  { key: "commande", label: "Page de commande", labelEn: "Order page" },
+  { key: "finances", label: "Finances et règlements", labelEn: "Finances and payouts" },
+  { key: "regles-vente", label: "Mes règles de vente", labelEn: "My sales rules" },
+  { key: "abonnement", label: "Abonnement", labelEn: "Subscription" },
+  { key: "confidentialite", label: "Confidentialité", labelEn: "Privacy" },
 ] as const;
 
 export type ReglagesTab = (typeof REGLAGES_TABS)[number]["key"];
@@ -24,11 +28,12 @@ export default function ReglagesNav({
   active: ReglagesTab | null;
   onChange: (tab: ReglagesTab | null) => void;
 }) {
+  const { t } = useDashboardLangue();
   return (
     <nav className="mt-6 flex flex-wrap items-center justify-center gap-2">
-      <NavButton label="Tout" isActive={active === null} onClick={() => onChange(null)} />
-      {REGLAGES_TABS.map(({ key, label }) => (
-        <NavButton key={key} label={label} isActive={key === active} onClick={() => onChange(key)} />
+      <NavButton label={t("Tout", "All")} isActive={active === null} onClick={() => onChange(null)} />
+      {REGLAGES_TABS.map(({ key, label, labelEn }) => (
+        <NavButton key={key} label={t(label, labelEn)} isActive={key === active} onClick={() => onChange(key)} />
       ))}
     </nav>
   );

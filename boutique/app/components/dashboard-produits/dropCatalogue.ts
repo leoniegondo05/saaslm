@@ -12,13 +12,19 @@
 export type DropProduit = {
   slug: string;
   nom: string;
+  /** Version EN de `nom`, affichée quand la langue du dashboard est EN — la
+   *  clé `categorie` reste, elle, en FR (sert de filtre, cf. CATEGORIES). */
+  nomEn?: string;
   categorie: string;
   source: "L" | "P" | "AVENIR"; // Drop LM · Drop partenaire · à venir (pas encore de prix)
   prixDrop: number | null; // F
   prixConseille: number | null; // F
   arriveeLe?: string; // renseigné seulement si source === "AVENIR"
+  arriveeLeEn?: string;
   description?: string;
+  descriptionEn?: string;
   conditionnement?: string;
+  conditionnementEn?: string;
   contenance?: string;
   poidsEmballe?: string;
   venduParBoutiques?: number;
@@ -39,28 +45,38 @@ export type DropProduit = {
   images?: string[];
 };
 
-export const CATEGORIES: { nom: string; count: number; nouveautes?: number }[] = [
-  { nom: "Beauté et soins", count: 9, nouveautes: 4 },
-  { nom: "Électronique", count: 24 },
-  { nom: "Maison et cuisine", count: 16 },
-  { nom: "Mode et accessoires", count: 31 },
-  { nom: "Enfants", count: 9 },
-  { nom: "Sport", count: 7 },
-  { nom: "Téléphonie", count: 12 },
-  { nom: "Bébé et puériculture", count: 11 },
+export const CATEGORIES: { nom: string; nomEn: string; count: number; nouveautes?: number }[] = [
+  { nom: "Beauté et soins", nomEn: "Beauty & care", count: 9, nouveautes: 4 },
+  { nom: "Électronique", nomEn: "Electronics", count: 24 },
+  { nom: "Maison et cuisine", nomEn: "Home & kitchen", count: 16 },
+  { nom: "Mode et accessoires", nomEn: "Fashion & accessories", count: 31 },
+  { nom: "Enfants", nomEn: "Kids", count: 9 },
+  { nom: "Sport", nomEn: "Sport", count: 7 },
+  { nom: "Téléphonie", nomEn: "Phones", count: 12 },
+  { nom: "Bébé et puériculture", nomEn: "Baby & childcare", count: 11 },
 ];
+
+// Clé de recherche : `categorie` sur les produits reste la valeur FR
+// (sert de filtre), cette fonction fournit juste le libellé EN correspondant.
+export function getCategoryLabelEn(categorieFr: string): string {
+  return CATEGORIES.find((c) => c.nom === categorieFr)?.nomEn ?? categorieFr;
+}
 
 export const DROP_PRODUITS: DropProduit[] = [
   {
     slug: "serum-eclat-30ml",
     nom: "Sérum éclat 30 ml",
+    nomEn: "Radiance serum 30 ml",
     categorie: "Beauté et soins",
     source: "L",
     prixDrop: 6200,
     prixConseille: 14000,
     description:
       "Sérum concentré pour le visage en flacon pompe de 30 ml. Texture légère, application matin et soir sur peau propre. Se conserve douze mois après ouverture. Fabriqué et conditionné localement.",
+    descriptionEn:
+      "Concentrated face serum in a 30 ml pump bottle. Lightweight texture, apply morning and evening on clean skin. Keeps for twelve months after opening. Made and packaged locally.",
     conditionnement: "Flacon pompe verre",
+    conditionnementEn: "Glass pump bottle",
     contenance: "30 ml",
     poidsEmballe: "180 g",
     venduParBoutiques: 42,
@@ -76,12 +92,15 @@ export const DROP_PRODUITS: DropProduit[] = [
   {
     slug: "masque-argile",
     nom: "Masque argile",
+    nomEn: "Clay mask",
     categorie: "Beauté et soins",
     source: "P",
     prixDrop: 3400,
     prixConseille: 8500,
     description: "Masque à l'argile purifiant, pot 150 g. Application hebdomadaire, rinçage à l'eau tiède.",
+    descriptionEn: "Purifying clay mask, 150 g jar. Weekly application, rinse with lukewarm water.",
     conditionnement: "Pot",
+    conditionnementEn: "Jar",
     contenance: "150 g",
     venduParBoutiques: 26,
     ventesReseau30j: 410,
@@ -94,12 +113,15 @@ export const DROP_PRODUITS: DropProduit[] = [
   {
     slug: "huile-de-ricin",
     nom: "Huile de ricin",
+    nomEn: "Castor oil",
     categorie: "Beauté et soins",
     source: "L",
     prixDrop: 2900,
     prixConseille: 7500,
     description: "Huile de ricin pure 100 ml, flacon compte-gouttes. Cheveux, cils et peau.",
+    descriptionEn: "Pure castor oil 100 ml, dropper bottle. Hair, lashes and skin.",
     conditionnement: "Flacon compte-gouttes",
+    conditionnementEn: "Dropper bottle",
     contenance: "100 ml",
     venduParBoutiques: 51,
     ventesReseau30j: 980,
@@ -112,12 +134,15 @@ export const DROP_PRODUITS: DropProduit[] = [
   {
     slug: "beurre-de-karite",
     nom: "Beurre de karité 200 g",
+    nomEn: "Shea butter 200 g",
     categorie: "Beauté et soins",
     source: "P",
     prixDrop: 4100,
     prixConseille: 9000,
     description: "Beurre de karité brut 200 g, non raffiné. Corps et cheveux.",
+    descriptionEn: "Raw shea butter 200 g, unrefined. Body and hair.",
     conditionnement: "Pot",
+    conditionnementEn: "Jar",
     contenance: "200 g",
     venduParBoutiques: 38,
     ventesReseau30j: 720,
@@ -130,12 +155,15 @@ export const DROP_PRODUITS: DropProduit[] = [
   {
     slug: "lotion-tonique",
     nom: "Lotion tonique",
+    nomEn: "Toning lotion",
     categorie: "Beauté et soins",
     source: "L",
     prixDrop: 3800,
     prixConseille: 8900,
     description: "Lotion tonique visage, flacon 150 ml, sans alcool.",
+    descriptionEn: "Face toning lotion, 150 ml bottle, alcohol-free.",
     conditionnement: "Flacon",
+    conditionnementEn: "Bottle",
     contenance: "150 ml",
     venduParBoutiques: 33,
     ventesReseau30j: 540,
@@ -148,21 +176,26 @@ export const DROP_PRODUITS: DropProduit[] = [
   {
     slug: "coffret-soin-nuit",
     nom: "Coffret soin nuit",
+    nomEn: "Night care gift set",
     categorie: "Beauté et soins",
     source: "AVENIR",
     prixDrop: null,
     prixConseille: null,
     arriveeLe: "12 septembre",
+    arriveeLeEn: "Sept. 12",
   },
   {
     slug: "gel-nettoyant",
     nom: "Gel nettoyant",
+    nomEn: "Cleansing gel",
     categorie: "Beauté et soins",
     source: "P",
     prixDrop: 2200,
     prixConseille: 6000,
     description: "Gel nettoyant visage, flacon pompe 200 ml, tous types de peau.",
+    descriptionEn: "Face cleansing gel, 200 ml pump bottle, all skin types.",
     conditionnement: "Flacon pompe",
+    conditionnementEn: "Pump bottle",
     contenance: "200 ml",
     venduParBoutiques: 19,
     ventesReseau30j: 260,
@@ -175,12 +208,15 @@ export const DROP_PRODUITS: DropProduit[] = [
   {
     slug: "creme-de-jour",
     nom: "Crème de jour",
+    nomEn: "Day cream",
     categorie: "Beauté et soins",
     source: "L",
     prixDrop: 5600,
     prixConseille: 12500,
     description: "Crème de jour hydratante, pot 50 ml, protection légère.",
+    descriptionEn: "Hydrating day cream, 50 ml jar, light protection.",
     conditionnement: "Pot",
+    conditionnementEn: "Jar",
     contenance: "50 ml",
     venduParBoutiques: 29,
     ventesReseau30j: 480,
@@ -193,12 +229,15 @@ export const DROP_PRODUITS: DropProduit[] = [
   {
     slug: "savon-noir",
     nom: "Savon noir",
+    nomEn: "Black soap",
     categorie: "Beauté et soins",
     source: "P",
     prixDrop: 1400,
     prixConseille: 3900,
     description: "Savon noir traditionnel, pot 300 g, gommage et nettoyage.",
+    descriptionEn: "Traditional black soap, 300 g jar, exfoliating and cleansing.",
     conditionnement: "Pot",
+    conditionnementEn: "Jar",
     contenance: "300 g",
     venduParBoutiques: 22,
     ventesReseau30j: 350,

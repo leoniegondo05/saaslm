@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useDashboardLangue } from "./DashboardLanguageProvider";
 
 /*
   Rail de navigation du dashboard (partagé entre "Ma journée" et "Accueil"),
@@ -14,28 +15,30 @@ import { usePathname } from "next/navigation";
 */
 
 const NAV_LINKS = [
-  { href: "/dashboard", label: "Ma journée", Icon: SunIcon },
-  { href: "/dashboard/accueil", label: "Accueil", Icon: HomeIcon },
-  { href: "/dashboard/produits", label: "Produits", Icon: BoxIcon },
+  { href: "/dashboard", fr: "Ma journée", en: "My day", Icon: SunIcon },
+  { href: "/dashboard/accueil", fr: "Accueil", en: "Home", Icon: HomeIcon },
+  { href: "/dashboard/commandes", fr: "Commande", en: "Order", Icon: ClipboardIcon },
+  { href: "/dashboard/produits", fr: "Produits", en: "Products", Icon: BoxIcon },
 ] as const;
 
-const REGLAGES = { href: "/dashboard/parametres", label: "Paramètres" } as const;
+const REGLAGES = { href: "/dashboard/parametres", fr: "Paramètres", en: "Settings" } as const;
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
+  const { t } = useDashboardLangue();
 
   return (
     <aside className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 rounded-full border border-white/50 bg-white/40 px-2 py-2 shadow-[0_8px_32px_rgba(20,18,32,0.16),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/5 lg:inset-auto lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:w-[90px] lg:shrink-0 lg:rounded-none lg:border-0 lg:border-r lg:border-[#141220]/10 lg:bg-transparent lg:px-3 lg:py-6 lg:shadow-none lg:backdrop-blur-none lg:backdrop-saturate-100 dark:lg:border-white/10">
       <nav className="flex flex-row items-center justify-around gap-2 lg:h-full lg:flex-col lg:justify-between lg:gap-0">
         <div className="flex flex-row items-center justify-around gap-2 lg:flex-1 lg:flex-col lg:justify-center lg:gap-8">
-          {NAV_LINKS.map(({ href, label, Icon }) => (
-            <SidebarIcon key={href} href={href} label={label} active={pathname === href}>
+          {NAV_LINKS.map(({ href, fr, en, Icon }) => (
+            <SidebarIcon key={href} href={href} label={t(fr, en)} active={pathname === href}>
               <Icon />
             </SidebarIcon>
           ))}
           <SidebarIcon
             href={REGLAGES.href}
-            label={REGLAGES.label}
+            label={t(REGLAGES.fr, REGLAGES.en)}
             active={pathname === REGLAGES.href}
             className="lg:hidden"
           >
@@ -44,7 +47,7 @@ export default function DashboardSidebar() {
         </div>
         <SidebarIcon
           href={REGLAGES.href}
-          label={REGLAGES.label}
+          label={t(REGLAGES.fr, REGLAGES.en)}
           active={pathname === REGLAGES.href}
           className="hidden lg:flex"
         >
@@ -143,6 +146,16 @@ function BoxIcon() {
         strokeWidth="1.6"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+function ClipboardIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
+      <rect x="5.5" y="4.5" width="13" height="16" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M9 4.5V3.8a1.3 1.3 0 0 1 1.3-1.3h3.4A1.3 1.3 0 0 1 15 3.8v.7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M8.5 11h7M8.5 14.5h7M8.5 18h4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }
