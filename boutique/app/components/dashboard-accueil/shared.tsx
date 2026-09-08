@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
   Petits composants d'appui partagés par toutes les sections de l'onglet
@@ -19,6 +20,7 @@ import { useState } from "react";
   d'index se protège de la division par zéro.
 */
 export function ProduitCarousel({ images }: { images: string[] }) {
+  const { t } = useDashboardLangue();
   const [index, setIndex] = useState(0);
   const count = images.length;
 
@@ -39,7 +41,7 @@ export function ProduitCarousel({ images }: { images: string[] }) {
       <button
         type="button"
         onClick={() => count > 0 && setIndex((i) => (i - 1 + count) % count)}
-        aria-label="Image précédente"
+        aria-label={t("Image précédente", "Previous image")}
         className="absolute left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md"
       >
         ‹
@@ -47,7 +49,7 @@ export function ProduitCarousel({ images }: { images: string[] }) {
       <button
         type="button"
         onClick={() => count > 0 && setIndex((i) => (i + 1) % count)}
-        aria-label="Image suivante"
+        aria-label={t("Image suivante", "Next image")}
         className="absolute right-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md"
       >
         ›
@@ -58,7 +60,7 @@ export function ProduitCarousel({ images }: { images: string[] }) {
             key={src}
             type="button"
             onClick={() => setIndex(i)}
-            aria-label={`Aller à l'image ${i + 1}`}
+            aria-label={t(`Aller à l'image ${i + 1}`, `Go to image ${i + 1}`)}
             className={`h-1.5 rounded-full transition-all ${i === index ? "w-4 bg-[#141220]" : "w-1.5 bg-[var(--dashboard-text)]/40"}`}
           />
         ))}
@@ -538,6 +540,7 @@ export function ProductSelector({
   onPrev?: () => void;
   onNext?: () => void;
 }) {
+  const { t } = useDashboardLangue();
   return (
     <div
       className={`flex items-center gap-2 rounded-full border px-1.5 py-1 ${
@@ -548,7 +551,7 @@ export function ProductSelector({
         type="button"
         onClick={onPrev}
         disabled={!onPrev}
-        aria-label="Produit précédent"
+        aria-label={t("Produit précédent", "Previous product")}
         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full disabled:opacity-100 ${dark ? "bg-white/15 text-white" : "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)]/60"}`}
       >
         <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
@@ -563,7 +566,7 @@ export function ProductSelector({
         type="button"
         onClick={onNext}
         disabled={!onNext}
-        aria-label="Produit suivant"
+        aria-label={t("Produit suivant", "Next product")}
         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full disabled:opacity-100 ${dark ? "bg-white/15 text-white" : "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)]/60"}`}
       >
         <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
@@ -612,6 +615,11 @@ export function Table({
   /** Optionnel : rend les lignes cliquables (ex: pour piloter un carousel lié). */
   onRowClick?: (index: number) => void;
 }) {
+  const { t } = useDashboardLangue();
+  // Cellules à faire ressortir en rose (rupture / délai critique) : les
+  // valeurs traduites (StockSection) diffèrent des littéraux FR d'origine,
+  // donc on matche les deux jeux de chaînes plutôt qu'un seul.
+  const URGENT_CELLS = ["Rupture", "1 j", "Out of stock", "1 day"];
   return (
     <div className={`overflow-x-auto ${className}`}>
       <table className="w-full min-w-[560px] border-collapse text-left text-xs">
@@ -624,7 +632,7 @@ export function Table({
             ))}
             {evolutions && (
               <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
-                Évolution
+                {t("Évolution", "Trend")}
               </th>
             )}
           </tr>
@@ -645,7 +653,7 @@ export function Table({
                   ) : sourceCol === j ? (
                     <Nature code={cell as "S" | "P" | "L" | "O"} />
                   ) : (
-                    <span className={cell === "Rupture" || cell === "1 j" ? "text-brand-pink" : ""}>{cell}</span>
+                    <span className={URGENT_CELLS.includes(cell) ? "text-brand-pink" : ""}>{cell}</span>
                   )}
                 </td>
               ))}

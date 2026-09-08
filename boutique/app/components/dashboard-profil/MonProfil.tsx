@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import QrCode from "../QrCode";
 import { SectionHeader } from "../dashboard-accueil/shared";
+import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
   Écran "Mon profil", atteint depuis "Voir mon profil" dans le menu du
@@ -25,7 +26,9 @@ export const APPAREILS_CONNECTES_COUNT = 3;
 const PROFIL = {
   nomAffiche: "Awa K.",
   role: "Administratrice de la boutique",
+  roleEn: "Shop administrator",
   depuis: "4 mars 2025",
+  depuisEn: "March 4, 2025",
   email: "a.konan@awabeaute.ci",
   telephone: "+225 07 00 00 00 00",
 };
@@ -36,6 +39,7 @@ const PROFIL = {
 type ChampModifiable = "nomAffiche" | "email" | "telephone";
 
 export default function MonProfil() {
+  const { t } = useDashboardLangue();
   const [photo, setPhoto] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [revealed, setRevealed] = useState<{ email: boolean; phone: boolean }>({
@@ -76,9 +80,9 @@ export default function MonProfil() {
     const email = brouillon.email.trim();
     const telephone = brouillon.telephone.trim();
 
-    if (!nomAffiche) return setErreur("Le nom est requis.");
-    if (!/^\S+@\S+\.\S+$/.test(email)) return setErreur("Adresse e-mail invalide.");
-    if (!telephone) return setErreur("Le téléphone est requis.");
+    if (!nomAffiche) return setErreur(t("Le nom est requis.", "Name is required."));
+    if (!/^\S+@\S+\.\S+$/.test(email)) return setErreur(t("Adresse e-mail invalide.", "Invalid email address."));
+    if (!telephone) return setErreur(t("Le téléphone est requis.", "Phone is required."));
 
     setProfil({ nomAffiche, email, telephone });
     setErreur(null);
@@ -89,32 +93,32 @@ export default function MonProfil() {
     setBrouillon((b) => ({ ...b, [champ]: valeur }));
 
   const detailFields = [
-    { icon: <PersonIcon />, label: "Nom complet", value: profil.nomAffiche, editableKey: "nomAffiche" as const },
+    { icon: <PersonIcon />, label: t("Nom complet", "Full name"), value: profil.nomAffiche, editableKey: "nomAffiche" as const },
     {
       icon: <MailIcon />,
-      label: "Adresse de connexion",
+      label: t("Adresse de connexion", "Login address"),
       value: profil.email,
-      verified: "VÉRIFIÉE",
+      verified: t("VÉRIFIÉE", "VERIFIED"),
       maskKey: "email" as const,
       editableKey: "email" as const,
     },
-    { icon: <ShieldIcon />, label: "Son rôle", value: "Administrateur" },
-    { icon: <PersonBadgeIcon />, label: "Identifiant", value: "awa.k" },
+    { icon: <ShieldIcon />, label: t("Son rôle", "Their role"), value: t("Administrateur", "Administrator") },
+    { icon: <PersonBadgeIcon />, label: t("Identifiant", "Username"), value: "awa.k" },
     {
       icon: <PhoneIcon />,
-      label: "Téléphone",
+      label: t("Téléphone", "Phone"),
       value: profil.telephone,
-      verified: "VÉRIFIÉ",
+      verified: t("VÉRIFIÉ", "VERIFIED"),
       maskKey: "phone" as const,
       editableKey: "telephone" as const,
     },
-    { icon: <HomeIcon />, label: "Boutique", value: "Awa Beauté" },
-    { icon: <CheckCircleIcon />, label: "État du compte", value: "Actif" },
-    { icon: <ClockIcon />, label: "Dernière connexion", value: "Aujourd'hui · 07:42" },
-    { icon: <LaptopIcon />, label: "Appareils connectés", value: String(APPAREILS_CONNECTES_COUNT) },
-    { icon: <TruckIcon />, label: "Partenaire agréé", value: "Groupe Logistique Ivoire" },
-    { icon: <FileIcon />, label: "Contrat de la boutique", value: "Affiliée · depuis mars 2025" },
-    { icon: <CalendarIcon />, label: "Compte créé le", value: "4 mars 2025" },
+    { icon: <HomeIcon />, label: t("Boutique", "Shop"), value: "Awa Beauté" },
+    { icon: <CheckCircleIcon />, label: t("État du compte", "Account status"), value: t("Actif", "Active") },
+    { icon: <ClockIcon />, label: t("Dernière connexion", "Last login"), value: t("Aujourd'hui · 07:42", "Today · 7:42am") },
+    { icon: <LaptopIcon />, label: t("Appareils connectés", "Connected devices"), value: String(APPAREILS_CONNECTES_COUNT) },
+    { icon: <TruckIcon />, label: t("Partenaire agréé", "Approved partner"), value: "Groupe Logistique Ivoire" },
+    { icon: <FileIcon />, label: t("Contrat de la boutique", "Shop contract"), value: t("Affiliée · depuis mars 2025", "Affiliated · since March 2025") },
+    { icon: <CalendarIcon />, label: t("Compte créé le", "Account created on"), value: t("4 mars 2025", "March 4, 2025") },
   ];
 
   // Aperçu local uniquement (FileReader → data URL) : aucun endpoint
@@ -135,9 +139,9 @@ export default function MonProfil() {
   return (
     <>
       <SectionHeader
-        eyebrow="Mon compte"
-        title="Mon profil"
-        subtitle="Votre identité, votre code personnel, vos appareils."
+        eyebrow={t("Mon compte", "My account")}
+        title={t("Mon profil", "My profile")}
+        subtitle={t("Votre identité, votre code personnel, vos appareils.", "Your identity, your personal code, your devices.")}
         first
         layout="inline"
       />
@@ -166,7 +170,7 @@ export default function MonProfil() {
                 onClick={annulerEdition}
                 className="rounded-full border border-white/25 bg-white/10 px-3 py-2 text-xs font-semibold text-white backdrop-blur-md transition hover:bg-white/20"
               >
-                Annuler
+                {t("Annuler", "Cancel")}
               </button>
             )}
             <button
@@ -175,7 +179,7 @@ export default function MonProfil() {
               className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md transition hover:bg-white/20"
             >
               {enEdition ? <CheckBadgeIcon /> : <PencilIcon />}
-              {enEdition ? "Enregistrer" : "Modifier mon profil"}
+              {enEdition ? t("Enregistrer", "Save") : t("Modifier mon profil", "Edit my profile")}
             </button>
           </div>
         </div>
@@ -190,7 +194,7 @@ export default function MonProfil() {
                 >
                   {photo ? (
                     // eslint-disable-next-line @next/next/no-img-element -- aperçu local (data URL), pas une image du domaine
-                    <img src={photo} alt="Photo de profil" className="h-full w-full object-cover" />
+                    <img src={photo} alt={t("Photo de profil", "Profile photo")} className="h-full w-full object-cover" />
                   ) : (
                     <div
                       className="h-full w-full"
@@ -200,7 +204,7 @@ export default function MonProfil() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    aria-label="Changer la photo de profil"
+                    aria-label={t("Changer la photo de profil", "Change profile photo")}
                     className="absolute bottom-0.5 right-0.5 flex h-8 w-8 items-center justify-center rounded-full border-2 border-[var(--dashboard-card-bg)] bg-[#141220] text-white shadow-[0_2px_10px_rgba(0,0,0,0.25)] transition hover:brightness-110 dark:bg-brand-pink"
                   >
                     <CameraIcon />
@@ -220,8 +224,8 @@ export default function MonProfil() {
                   <input
                     value={brouillon.nomAffiche}
                     onChange={(e) => modifierBrouillon("nomAffiche", e.target.value)}
-                    placeholder="Nom complet"
-                    aria-label="Nom complet"
+                    placeholder={t("Nom complet", "Full name")}
+                    aria-label={t("Nom complet", "Full name")}
                     className="min-w-0 max-w-full rounded-lg border border-brand-pink/40 bg-brand-pink/5 px-2 py-1 text-2xl font-bold text-[var(--dashboard-text)] outline-none focus:border-brand-pink"
                   />
                 ) : (
@@ -229,12 +233,12 @@ export default function MonProfil() {
                 )}
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-[#dcf5e3] px-3 py-1 text-xs font-semibold text-[#178a3f]">
                   <CheckBadgeIcon />
-                  Compte vérifié
+                  {t("Compte vérifié", "Verified account")}
                 </span>
               </h1>
               <p className="mt-2 flex items-center gap-2 text-sm text-[var(--dashboard-text)]/50">
                 <CalendarIcon />
-                {PROFIL.role} · dans l&apos;équipe depuis le {PROFIL.depuis}
+                {t(PROFIL.role, PROFIL.roleEn)} · {t("dans l'équipe depuis le", "on the team since")} {t(PROFIL.depuis, PROFIL.depuisEn)}
               </p>
             </div>
 
@@ -248,21 +252,23 @@ export default function MonProfil() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-bold text-[var(--dashboard-text)]">Mon code à scanner</p>
+                    <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("Mon code à scanner", "My scannable code")}</p>
                     <span className="shrink-0 rounded-full bg-brand-purple/10 px-2.5 py-1 text-[10px] font-semibold text-brand-purple">
-                      Application mobile
+                      {t("Application mobile", "Mobile app")}
                     </span>
                   </div>
                   <p className="mt-1.5 text-xs leading-snug text-[var(--dashboard-text)]/50">
-                    « Scanner mon code » dans l&apos;application mobile : vous entrez avec vos
-                    droits, et seulement les vôtres.
+                    {t(
+                      '« Scanner mon code » dans l\'application mobile : vous entrez avec vos droits, et seulement les vôtres.',
+                      '"Scan my code" in the mobile app: you get in with your permissions, and only yours.'
+                    )}
                   </p>
                 </div>
               </div>
 
               <div className="mt-4 h-px bg-[var(--dashboard-text)]/10" />
 
-              <p className="mt-3 text-xs text-[var(--dashboard-text)]/50">Valable jusqu&apos;au 12 nov. 2026 · 74 jours</p>
+              <p className="mt-3 text-xs text-[var(--dashboard-text)]/50">{t("Valable jusqu'au 12 nov. 2026 · 74 jours", "Valid until Nov. 12, 2026 · 74 days")}</p>
               <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]">
                 <div
                   className="h-full rounded-full"
@@ -276,24 +282,26 @@ export default function MonProfil() {
                   className="flex items-center justify-center gap-1.5 rounded-full border border-brand-pink/40 bg-[var(--dashboard-card-bg)] px-2 py-2 text-[11px] font-semibold text-brand-pink transition hover:bg-brand-pink/10"
                 >
                   <DownloadIcon />
-                  Télécharger
+                  {t("Télécharger", "Download")}
                 </button>
                 <button
                   type="button"
                   className="rounded-full bg-[#141220] px-2 py-2 text-[11px] font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
                 >
-                  Renouveler
+                  {t("Renouveler", "Renew")}
                 </button>
                 <button
                   type="button"
                   className="rounded-full border border-[#c8262d]/30 bg-[var(--dashboard-card-bg)] px-2 py-2 text-[11px] font-semibold text-[#c8262d] transition hover:bg-[#ffe1e2]"
                 >
-                  Révoquer
+                  {t("Révoquer", "Revoke")}
                 </button>
               </div>
               <p className="mt-2.5 text-[10px] leading-snug text-[var(--dashboard-text)]/40">
-                Renouveler crée un nouveau code et annule l&apos;ancien à la seconde. Révoquer
-                coupe sans en créer : le geste du téléphone perdu.
+                {t(
+                  "Renouveler crée un nouveau code et annule l'ancien à la seconde. Révoquer coupe sans en créer : le geste du téléphone perdu.",
+                  "Renewing creates a new code and cancels the old one instantly. Revoking cuts access without creating one: the lost-phone move."
+                )}
               </p>
             </div>
           </div>
@@ -307,7 +315,7 @@ export default function MonProfil() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-pink/10 text-brand-pink">
               <PersonIcon />
             </span>
-            <h2 className="text-base font-bold text-[var(--dashboard-text)]">Détails du profil</h2>
+            <h2 className="text-base font-bold text-[var(--dashboard-text)]">{t("Détails du profil", "Profile details")}</h2>
           </div>
           <div className="flex items-center gap-2">
             {enEdition && (
@@ -316,7 +324,7 @@ export default function MonProfil() {
                 onClick={annulerEdition}
                 className="rounded-full border border-[var(--dashboard-text)]/15 px-4 py-1.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
               >
-                Annuler
+                {t("Annuler", "Cancel")}
               </button>
             )}
             <button
@@ -324,7 +332,7 @@ export default function MonProfil() {
               onClick={enEdition ? enregistrerEdition : commencerEdition}
               className="rounded-full border border-[var(--dashboard-text)]/15 px-4 py-1.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
             >
-              {enEdition ? "Enregistrer" : "Modifier"}
+              {enEdition ? t("Enregistrer", "Save") : t("Modifier", "Edit")}
             </button>
           </div>
         </div>
@@ -354,8 +362,8 @@ export default function MonProfil() {
                       onClick={() => toggleReveal(field.maskKey!)}
                       aria-label={
                         revealed[field.maskKey]
-                          ? `Masquer ${field.label.toLowerCase()}`
-                          : `Afficher ${field.label.toLowerCase()}`
+                          ? t(`Masquer ${field.label.toLowerCase()}`, `Hide ${field.label.toLowerCase()}`)
+                          : t(`Afficher ${field.label.toLowerCase()}`, `Show ${field.label.toLowerCase()}`)
                       }
                       className="text-[var(--dashboard-text)]/30 transition hover:text-[var(--dashboard-text)]/60"
                     >

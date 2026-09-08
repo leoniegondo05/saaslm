@@ -1,7 +1,11 @@
+"use client";
+
+import { useDashboardLangue } from "../DashboardLanguageProvider";
+
 export const PRODUITS_TABS = [
-  { key: "mes-produits", label: "Mes produits" },
-  { key: "partenaire", label: "Partenaire agréé" },
-  { key: "catalogue", label: "Catalogue drop" },
+  { key: "mes-produits", label: "Mes produits", labelEn: "My products" },
+  { key: "partenaire", label: "Partenaire agréé", labelEn: "Approved partner" },
+  { key: "catalogue", label: "Catalogue drop", labelEn: "Drop catalog" },
 ] as const;
 
 export type ProduitsTab = (typeof PRODUITS_TABS)[number]["key"];
@@ -21,11 +25,12 @@ export default function ProduitsNav({
   active: ProduitsTab | null;
   onChange: (tab: ProduitsTab | null) => void;
 }) {
+  const { t } = useDashboardLangue();
   return (
     <nav className="mt-6 flex flex-wrap items-center justify-center gap-2">
-      <NavButton label="Tout" isActive={active === null} onClick={() => onChange(null)} />
-      {PRODUITS_TABS.map(({ key, label }) => (
-        <NavButton key={key} label={label} isActive={key === active} onClick={() => onChange(key)} />
+      <NavButton label={t("Tout", "All")} isActive={active === null} onClick={() => onChange(null)} />
+      {PRODUITS_TABS.map(({ key, label, labelEn }) => (
+        <NavButton key={key} label={t(label, labelEn)} isActive={key === active} onClick={() => onChange(key)} />
       ))}
     </nav>
   );

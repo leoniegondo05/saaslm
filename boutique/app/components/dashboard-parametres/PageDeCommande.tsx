@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Card, SectionHeader, Tag } from "../dashboard-accueil/shared";
+import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
   Écran 26 "Réglages · la page de commande" : le format du lien de
@@ -23,15 +24,16 @@ const EXEMPLES_LIEN: Record<FormatLien, string> = {
 };
 
 const MOYENS_PAIEMENT_INIT = [
-  { key: "orange", label: "Orange Money", actif: true },
-  { key: "mtn", label: "MTN MoMo", actif: true },
-  { key: "wave", label: "Wave", actif: true },
-  { key: "moov", label: "Moov Money", actif: true },
-  { key: "carte", label: "Carte bancaire", actif: false },
-  { key: "livraison", label: "Paiement à la livraison", actif: false },
+  { key: "orange", label: "Orange Money", labelEn: "Orange Money", actif: true },
+  { key: "mtn", label: "MTN MoMo", labelEn: "MTN MoMo", actif: true },
+  { key: "wave", label: "Wave", labelEn: "Wave", actif: true },
+  { key: "moov", label: "Moov Money", labelEn: "Moov Money", actif: true },
+  { key: "carte", label: "Carte bancaire", labelEn: "Bank card", actif: false },
+  { key: "livraison", label: "Paiement à la livraison", labelEn: "Cash on delivery", actif: false },
 ];
 
 export default function PageDeCommande({ first = false }: { first?: boolean }) {
+  const { t } = useDashboardLangue();
   const [format, setFormat] = useState<FormatLien>("nom");
   const [moyens, setMoyens] = useState(MOYENS_PAIEMENT_INIT);
   const [copie, setCopie] = useState(false);
@@ -60,9 +62,12 @@ export default function PageDeCommande({ first = false }: { first?: boolean }) {
   return (
     <>
       <SectionHeader
-        eyebrow="Page de commande"
-        title="Le lien, l'imposé, les paiements"
-        subtitle="L'allure de la page se règle dans « Personnaliser ma boutique » — ici, ce n'est que le lien et les paiements."
+        eyebrow={t("Page de commande", "Order page")}
+        title={t("Le lien, l'imposé, les paiements", "The link, the fixed rules, the payments")}
+        subtitle={t(
+          "L'allure de la page se règle dans « Personnaliser ma boutique » — ici, ce n'est que le lien et les paiements.",
+          "The page's look is set in \"Customize my shop\" — here it's only the link and the payments."
+        )}
         first={first}
         layout="inline"
       />
@@ -73,12 +78,12 @@ export default function PageDeCommande({ first = false }: { first?: boolean }) {
           onClick={enregistrer}
           className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
         >
-          {enregistre ? "✓ Enregistré" : "Enregistrer"}
+          {enregistre ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
         </button>
       </div>
 
       <div className="grid gap-3">
-        <Card title="Le lien de commande" titleTab className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Le lien de commande", "The order link")} titleTab className="!bg-[var(--dashboard-card-bg)]">
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-xs">
             <span className="text-[var(--dashboard-text)]/40">lm.ci/awa-beaute/</span>
             <span className="font-bold text-[var(--dashboard-text)]">{EXEMPLES_LIEN[format]}</span>
@@ -87,53 +92,65 @@ export default function PageDeCommande({ first = false }: { first?: boolean }) {
               onClick={copier}
               className="ml-auto rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[11px] font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
             >
-              {copie ? "✓ Copié" : "Copier"}
+              {copie ? t("✓ Copié", "✓ Copied") : t("Copier", "Copy")}
             </button>
           </div>
           <p className="mt-3 text-xs text-[var(--dashboard-text)]/50">
-            Chaque produit a son propre lien, celui qu&apos;on colle dans une publicité. Le format
-            se règle ici, une fois pour tous les produits.
+            {t(
+              "Chaque produit a son propre lien, celui qu'on colle dans une publicité. Le format se règle ici, une fois pour tous les produits.",
+              "Each product has its own link, the one you paste into an ad. The format is set here, once for all products."
+            )}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <FormatChip label="Nom du produit" active={format === "nom"} onClick={() => setFormat("nom")} />
-            <FormatChip label="Référence" active={format === "reference"} onClick={() => setFormat("reference")} />
+            <FormatChip label={t("Nom du produit", "Product name")} active={format === "nom"} onClick={() => setFormat("nom")} />
+            <FormatChip label={t("Référence", "Reference")} active={format === "reference"} onClick={() => setFormat("reference")} />
             <FormatChip
-              label="Nom et référence"
+              label={t("Nom et référence", "Name and reference")}
               active={format === "nom-reference"}
               onClick={() => setFormat("nom-reference")}
             />
           </div>
         </Card>
 
-        <Card title="Ce qui s'affiche toujours" titleTab badge={<Tag tone="warn">Non modifiable</Tag>} className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Ce qui s'affiche toujours", "What's always shown")} titleTab badge={<Tag tone="warn">{t("Non modifiable", "Not editable")}</Tag>} className="!bg-[var(--dashboard-card-bg)]">
           <p className="text-xs text-[var(--dashboard-text)]/50">
-            Fixé par la plateforme, sur toutes les pages de commande du réseau. Le client doit
-            savoir quand il sera livré avant de payer.
+            {t(
+              "Fixé par la plateforme, sur toutes les pages de commande du réseau. Le client doit savoir quand il sera livré avant de payer.",
+              "Set by the platform, on every order page in the network. The customer must know when they'll be delivered before paying."
+            )}
           </p>
           <div className="mt-3 space-y-2">
             <ImposeRow
-              titre="Le délai de livraison · 4 heures en moyenne"
-              note="Le même sur toutes les pages du réseau. Seules les livraisons express font exception."
+              titre={t("Le délai de livraison · 4 heures en moyenne", "Delivery time · 4 hours on average")}
+              note={t(
+                "Le même sur toutes les pages du réseau. Seules les livraisons express font exception.",
+                "The same on every page in the network. Only express deliveries are an exception."
+              )}
             />
             <ImposeRow
-              titre="Le prix, frais de livraison compris"
-              note="Aucun montant ne peut apparaître après le paiement."
+              titre={t("Le prix, frais de livraison compris", "The price, delivery fees included")}
+              note={t(
+                "Aucun montant ne peut apparaître après le paiement.",
+                "No amount can appear after payment."
+              )}
             />
           </div>
         </Card>
 
-        <Card title="Moyens de paiement proposés" titleTab className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Moyens de paiement proposés", "Payment methods offered")} titleTab className="!bg-[var(--dashboard-card-bg)]">
           <div className="divide-y divide-[var(--dashboard-text)]/10">
             {moyens.map((m) => (
               <div key={m.key} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
-                <span className="text-xs font-semibold text-[var(--dashboard-text)]">{m.label}</span>
-                <ToggleSwitch checked={m.actif} onChange={() => basculerMoyen(m.key)} label={m.label} />
+                <span className="text-xs font-semibold text-[var(--dashboard-text)]">{t(m.label, m.labelEn)}</span>
+                <ToggleSwitch checked={m.actif} onChange={() => basculerMoyen(m.key)} label={t(m.label, m.labelEn)} />
               </div>
             ))}
           </div>
           <p className="mt-3 text-xs text-[var(--dashboard-text)]/50">
-            Les frais de paiement en ligne dépendent du moyen choisi par le client et apparaissent
-            dans le détail de chaque commande.
+            {t(
+              "Les frais de paiement en ligne dépendent du moyen choisi par le client et apparaissent dans le détail de chaque commande.",
+              "Online payment fees depend on the method the customer chooses and appear in each order's detail."
+            )}
           </p>
         </Card>
       </div>
@@ -159,6 +176,7 @@ function FormatChip({ label, active, onClick }: { label: string; active: boolean
 }
 
 function ImposeRow({ titre, note }: { titre: string; note: string }) {
+  const { t } = useDashboardLangue();
   return (
     <div className="flex items-center gap-3 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5">
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#dcf5e3] text-[#178a3f]">
@@ -169,7 +187,7 @@ function ImposeRow({ titre, note }: { titre: string; note: string }) {
         <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/50">{note}</p>
       </div>
       <Tag tone="neutral" className="shrink-0">
-        Toujours affiché
+        {t("Toujours affiché", "Always shown")}
       </Tag>
     </div>
   );

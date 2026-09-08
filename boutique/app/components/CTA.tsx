@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import ScrollReveal from "./ScrollReveal";
 import SectionBadge from "./SectionBadge";
@@ -42,21 +41,24 @@ export default function CTA() {
           </div>
         </ScrollReveal>
 
-        {/* Visuel exporté depuis Figma. On utilise le composant Image de
-            Next.js (plutôt qu'une balise <img> classique) car il optimise
-            automatiquement l'image (taille, format, chargement différé).
+        {/* Vidéo de la porte, jouée en boucle sans son ni contrôles pour
+            se fondre comme une animation 3D plutôt qu'une vidéo classique.
             Léger décalage (delay) par rapport à la colonne de texte, pour
             un effet en cascade plutôt que synchronisé. */}
         <ScrollReveal
           delay={100}
           className="mx-auto w-full max-w-md overflow-hidden rounded-3xl"
         >
-          <Image
-            src="/images/cta-image.png"
-            alt="Une main ouvre une porte avec une serrure connectée, révélant une rue de boutiques illuminées de nuit, symbolisant l'ouverture vers votre nouvelle boutique en ligne"
-            width={600}
-            height={640}
-            className="h-auto w-full"
+          <video
+            src="/videos/porte.MP4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            controls={false}
+            disablePictureInPicture
+            className="h-[560px] w-full object-cover"
+            aria-label="Une main ouvre une porte avec une serrure connectée, révélant une rue de boutiques illuminées de nuit, symbolisant l'ouverture vers votre nouvelle boutique en ligne"
           />
         </ScrollReveal>
       </div>

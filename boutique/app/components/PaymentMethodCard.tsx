@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useDashboardLangue } from "./DashboardLanguageProvider";
 
 /*
   Carte "Reversé sur ce compte" du dashboard Accueil : un jeu de cartes
@@ -59,6 +60,7 @@ const METHODS: Method[] = [
 const SWIPE_THRESHOLD = 40;
 
 export default function PaymentMethodCard() {
+  const { t } = useDashboardLangue();
   const [active, setActive] = useState(0);
   const [dragX, setDragX] = useState(0);
   const startXRef = useRef(0);
@@ -121,7 +123,10 @@ export default function PaymentMethodCard() {
         <div
           role="button"
           tabIndex={0}
-          aria-label={`Voir le moyen de paiement suivant (actuel : ${method.label})`}
+          aria-label={t(
+            `Voir le moyen de paiement suivant (actuel : ${method.label})`,
+            `See next payment method (current: ${method.label})`
+          )}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
@@ -168,11 +173,11 @@ export default function PaymentMethodCard() {
               {method.label}
             </span>
             <span className="rounded-full border border-white/30 bg-white/20 px-3 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
-              Compte actif
+              {t("Compte actif", "Active account")}
             </span>
           </div>
           <p className={`mt-4 text-[10px] uppercase tracking-[0.16em] ${method.textDark ? "text-black/50" : "text-white/70"}`}>
-            Reversé sur ce compte
+            {t("Reversé sur ce compte", "Paid out to this account")}
           </p>
           <p className="mt-1 text-3xl font-bold tracking-tight">318 000 F</p>
           <div className={`mt-3 flex items-center justify-between text-[10px] ${method.textDark ? "text-black/50" : "text-white/70"}`}>

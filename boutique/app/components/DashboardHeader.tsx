@@ -8,6 +8,7 @@ import { logout } from "../../lib/api/services/auth";
 import { clearToken } from "../../lib/api/token";
 import { APPAREILS_CONNECTES_COUNT } from "./dashboard-profil/MonProfil";
 import { useDashboardTheme } from "./DashboardThemeProvider";
+import { useDashboardLangue } from "./DashboardLanguageProvider";
 
 // Écran "Paramètres" (Personnel et accès) retiré, reconstruction en cours —
 // valeur figée en attendant, à revenir sur la nouvelle source de données.
@@ -98,7 +99,7 @@ const NOTIFICATIONS_INIT = [
   "Ma journée" et sur "Accueil" reste synchronisée entre les deux pages.
 */
 
-const MONTH_NAMES = [
+const MONTH_NAMES_FR = [
   "Janvier",
   "Février",
   "Mars",
@@ -113,16 +114,30 @@ const MONTH_NAMES = [
   "Décembre",
 ] as const;
 
+const MONTH_NAMES_EN = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
 export default function DashboardHeader() {
   const router = useRouter();
   const [activeDate, setActiveDate] = useState(() => new Date(2026, 7, 1));
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
-  // Langue : purement visuel pour l'instant, pas d'i18n câblée. Le mode nuit,
-  // lui, est bien fonctionnel : état partagé (DashboardThemeProvider, monté
-  // dans app/dashboard/layout.tsx) plutôt que local à ce composant, pour que
-  // le bascule agisse sur tout le dashboard et pas juste ce menu.
-  const [langue, setLangue] = useState<"FR" | "EN">("FR");
+  // Langue : état partagé (DashboardLanguageProvider, monté dans
+  // app/dashboard/layout.tsx), même pattern que le mode nuit ci-dessous, pour
+  // que le bascule agisse sur tout le dashboard et pas juste ce menu.
+  const { langue, setLangue, t } = useDashboardLangue();
   const { modeNuit, toggleModeNuit } = useDashboardTheme();
   const [loggingOut, setLoggingOut] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
@@ -175,6 +190,7 @@ export default function DashboardHeader() {
     }
   };
 
+  const monthNames = langue === "EN" ? MONTH_NAMES_EN : MONTH_NAMES_FR;
   const activeMonthIndex = activeDate.getMonth();
   const activeYear = activeDate.getFullYear();
   const visibleMonths = [-1, 0, 1].map((offset) => {
@@ -217,7 +233,7 @@ export default function DashboardHeader() {
           <div className="flex items-center gap-0.5 rounded-full bg-white/70 p-1 shadow-[0_2px_10px_rgba(20,18,32,0.06)] dark:bg-white/10 sm:gap-1 sm:p-1.5">
             <button
               type="button"
-              aria-label="Mois précédent"
+              aria-label={t("Mois précédent", "Previous month")}
               onClick={() => shiftMonth(-1)}
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white dark:text-white/50 dark:hover:bg-white/15 sm:h-8 sm:w-8"
             >
@@ -234,12 +250,12 @@ export default function DashboardHeader() {
                     : "hidden text-[#141220]/45 hover:text-[#141220]/70 dark:text-white/40 dark:hover:text-white/70 sm:inline-block"
                 }`}
               >
-                {MONTH_NAMES[date.getMonth()]}
+                {monthNames[date.getMonth()]}
               </button>
             ))}
             <button
               type="button"
-              aria-label="Mois suivant"
+              aria-label={t("Mois suivant", "Next month")}
               onClick={() => shiftMonth(1)}
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white dark:text-white/50 dark:hover:bg-white/15 sm:h-8 sm:w-8"
             >
@@ -277,7 +293,7 @@ export default function DashboardHeader() {
       <span className="inline-flex rounded-full bg-[linear-gradient(90deg,var(--color-brand-pink),rgba(20,18,32,0.08))] p-px shadow-[0_2px_10px_rgba(20,18,32,0.06)]">
         <span className="inline-flex items-center gap-2 rounded-full bg-white/90 px-5 py-2.5 text-sm font-medium text-[#141220] dark:bg-[#1c1830]/90 dark:text-[var(--dashboard-text)]">
           <SparkleIcon />
-          solution LM
+          {t("solution LM", "LM solution")}
         </span>
       </span>
 
@@ -290,7 +306,7 @@ export default function DashboardHeader() {
             <BuildingIcon />
           </span>
           <span className="hidden leading-tight sm:block">
-            <span className="block text-xs text-[#141220]/50 dark:text-white/40">Partenaire agréé</span>
+            <span className="block text-xs text-[#141220]/50 dark:text-white/40">{t("Partenaire agréé", "Approved partner")}</span>
             <span className="block text-sm font-semibold">Groupe Logistique Ivoire</span>
           </span>
         </Link>
@@ -396,7 +412,7 @@ export default function DashboardHeader() {
         <div className="relative" ref={accountMenuRef}>
           <button
             type="button"
-            aria-label="Mon compte"
+            aria-label={t("Mon compte", "My account")}
             aria-haspopup="menu"
             aria-expanded={showAccountMenu}
             onClick={() => setShowAccountMenu((open) => !open)}
@@ -423,7 +439,7 @@ export default function DashboardHeader() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-bold">Awa K.</span>
-                  <span className="block text-xs text-[#141220]/45 dark:text-white/40">Voir mon profil</span>
+                  <span className="block text-xs text-[#141220]/45 dark:text-white/40">{t("Voir mon profil", "View my profile")}</span>
                 </span>
                 <ChevronIcon direction="right" />
               </Link>
@@ -437,7 +453,7 @@ export default function DashboardHeader() {
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-purple/10 text-brand-purple">
                     <ShieldIcon />
                   </span>
-                  <span className="flex-1 text-sm font-medium">Mot de passe et sécurité</span>
+                  <span className="flex-1 text-sm font-medium">{t("Mot de passe et sécurité", "Password & security")}</span>
                   <ChevronIcon direction="right" />
                 </Link>
                 <Link
@@ -448,7 +464,7 @@ export default function DashboardHeader() {
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dcf5e3] text-[#178a3f]">
                     <UserCheckIcon />
                   </span>
-                  <span className="flex-1 text-sm font-medium">Mes droits</span>
+                  <span className="flex-1 text-sm font-medium">{t("Mes droits", "My permissions")}</span>
                   <ChevronIcon direction="right" />
                 </Link>
                 <Link
@@ -459,7 +475,7 @@ export default function DashboardHeader() {
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dbeafe] text-[#1d4ed8]">
                     <DeviceIcon />
                   </span>
-                  <span className="flex-1 text-sm font-medium">Mes appareils</span>
+                  <span className="flex-1 text-sm font-medium">{t("Mes appareils", "My devices")}</span>
                   <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#141220] px-1.5 text-[11px] font-semibold text-white">
                     {APPAREILS_CONNECTES_COUNT}
                   </span>
@@ -473,7 +489,7 @@ export default function DashboardHeader() {
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ffe1e2] text-[#c8262d]">
                     <PersonPlusIcon />
                   </span>
-                  <span className="flex-1 text-sm font-medium">Gérer les accès</span>
+                  <span className="flex-1 text-sm font-medium">{t("Gérer les accès", "Manage access")}</span>
                   <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#141220] px-1.5 text-[11px] font-semibold text-white">
                     {PERSONNEL_ACTIF_COUNT}
                   </span>
@@ -488,7 +504,7 @@ export default function DashboardHeader() {
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#141220]/[0.06] text-[#141220]/60 dark:bg-white/10 dark:text-white/60">
                     <GlobeIcon />
                   </span>
-                  <span className="flex-1 text-sm font-medium">Langue</span>
+                  <span className="flex-1 text-sm font-medium">{t("Langue", "Language")}</span>
                   <div className="flex items-center rounded-full bg-[#141220]/[0.06] p-0.5 text-xs font-semibold dark:bg-white/10">
                     <button
                       type="button"
@@ -515,7 +531,7 @@ export default function DashboardHeader() {
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-purple/10 text-brand-purple">
                     <MoonIcon />
                   </span>
-                  <span className="flex-1 text-sm font-medium">Mode nuit</span>
+                  <span className="flex-1 text-sm font-medium">{t("Mode nuit", "Dark mode")}</span>
                   <button
                     type="button"
                     role="switch"
@@ -532,7 +548,7 @@ export default function DashboardHeader() {
                 <AccountMenuRow
                   icon={<HelpIcon />}
                   iconBg="bg-[#fff1d6] text-[#a8690a]"
-                  label="Aide"
+                  label={t("Aide", "Help")}
                   onClick={() => setShowAccountMenu(false)}
                 />
               </div>
@@ -549,7 +565,7 @@ export default function DashboardHeader() {
                   <LogoutIcon />
                 </span>
                 <span className="text-sm font-semibold text-[#c8262d]">
-                  {loggingOut ? "Déconnexion…" : "Se déconnecter"}
+                  {loggingOut ? t("Déconnexion…", "Signing out…") : t("Se déconnecter", "Sign out")}
                 </span>
               </button>
             </div>
