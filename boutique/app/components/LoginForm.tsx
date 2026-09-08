@@ -27,7 +27,12 @@ export default function LoginForm() {
     event.preventDefault();
     const result = await run({ email, password, remember });
     if (result) {
-      router.push("/dashboard");
+      // Avant le dashboard : 9 questions sur l'activité + fiche
+      // récapitulative (voir app/completer-profil/page.tsx, écrans 37-47
+      // de la maquette). Pas encore de flag "profil complété" côté API
+      // pour sauter ce parcours aux connexions suivantes — à ajouter
+      // quand /api/login l'exposera.
+      router.push("/completer-profil");
     }
   }
 

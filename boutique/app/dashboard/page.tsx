@@ -53,7 +53,7 @@ export default function DashboardPage() {
 
           {/* ── Grille principale ── */}
           <div className="relative mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-[290px_1fr_320px]">
-            {/* Colonne gauche : météo + recommandation */}
+            {/* Colonne gauche : météo + recommandation + événements à venir */}
             <div className="flex flex-col gap-3">
               <WeatherCard />
 
@@ -70,6 +70,8 @@ export default function DashboardPage() {
                   </span>
                 </span>
               </div>
+
+              <EventsCard />
             </div>
 
             {/* Colonne centrale : cerveau */}
@@ -228,6 +230,37 @@ const LOCAL_CONDITIONS = [
 // navigateur est refusée/indisponible — cohérent avec les communes
 // (Yopougon, Plateau...) déjà affichées plus bas dans cette card.
 const DEFAULT_WEATHER_COORDS = { latitude: 5.36, longitude: -4.0083 };
+
+/*
+  Jours fériés Côte d'Ivoire — dates fixes certaines ; les fêtes mobiles
+  (calées sur calendrier lunaire : Tabaski, Aïd al-Fitr, Maouloud, lundis de
+  Pâques/Pentecôte, Ascension) sont approximatives et À VÉRIFIER/AJUSTER
+  chaque année — pas de source officielle branchée, données statiques
+  entretenues à la main (cf. [[dashboard-mock-data-pending-laravel-api]]).
+  `noel: true` déclenche en plus le rappel "articles de Noël" sur la carte.
+*/
+const HOLIDAYS_CI = [
+  { date: "2026-01-01", fr: "Jour de l'An", en: "New Year's Day" },
+  { date: "2026-04-06", fr: "Lundi de Pâques (approx.)", en: "Easter Monday (approx.)" },
+  { date: "2026-05-01", fr: "Fête du Travail", en: "Labour Day" },
+  { date: "2026-05-14", fr: "Ascension (approx.)", en: "Ascension Day (approx.)" },
+  { date: "2026-05-25", fr: "Lundi de Pentecôte (approx.)", en: "Whit Monday (approx.)" },
+  { date: "2026-05-27", fr: "Tabaski / Aïd al-Adha (approx.)", en: "Tabaski / Eid al-Adha (approx.)" },
+  { date: "2026-08-07", fr: "Fête de l'Indépendance", en: "Independence Day" },
+  { date: "2026-08-15", fr: "Assomption", en: "Assumption Day" },
+  { date: "2026-08-26", fr: "Maouloud (approx.)", en: "Mawlid (approx.)" },
+  { date: "2026-11-01", fr: "Toussaint", en: "All Saints' Day" },
+  { date: "2026-12-25", fr: "Noël", en: "Christmas", noel: true },
+] as const;
+
+// Partenaire logistique fermé les jours fériés — pas encore de calendrier
+// affilié réel côté API (aucun champ dédié trouvé dans le schéma actuel) :
+// mock dérivé des jours fériés ci-dessus en attendant que le Laravel expose
+// le vrai calendrier d'indisponibilité par affilié.
+const AFFILIATE_NAME = "Cotransport";
+
+// Fenêtre d'anticipation de la carte "Événements à venir".
+const UPCOMING_WINDOW_DAYS = 14;
 
 // Table de correspondance codes météo WMO (renvoyés par Open-Meteo) →
 // libellé FR/EN / emoji / couleur, réutilisée pour "Aujourd'hui" et "Demain".
@@ -466,6 +499,74 @@ function WeatherCard() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+// Nombre de jours (entier, peut être négatif) entre aujourd'hui et une date
+// "YYYY-MM-DD", comparaison sur la date seule (minuit local des deux côtés).
+function daysUntil(isoDate: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(`${isoDate}T00:00:00`);
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+}
+
+/*
+  Carte "Événements à venir" : jours fériés dans les UPCOMING_WINDOW_DAYS
+  prochains jours (cf. HOLIDAYS_CI), avec rappel articles pour Noël et
+  fermeture du partenaire logistique affilié. Recalculée à chaque rendu à
+  partir de la date du jour (pas de state/effect nécessaire, pas d'appel
+  réseau — tout est dérivé de la liste statique ci-dessus).
+*/
+function EventsCard() {
+  const { t } = useDashboardLangue();
+
+  const upcoming = HOLIDAYS_CI.map((holiday) => ({ ...holiday, inDays: daysUntil(holiday.date) }))
+    .filter((holiday) => holiday.inDays >= 0 && holiday.inDays <= UPCOMING_WINDOW_DAYS)
+    .sort((a, b) => a.inDays - b.inDays);
+
+  if (upcoming.length === 0) {
+    return (
+      <div className="rounded-2xl card-tint p-3 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+        <h3 className="text-sm font-semibold">{t("Événements à venir", "Upcoming events")}</h3>
+        <p className="mt-1 text-xs text-[var(--dashboard-text)]/50">
+          {t("Rien dans les 14 prochains jours.", "Nothing in the next 14 days.")}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl card-tint p-3 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+      <h3 className="text-sm font-semibold">{t("Événements à venir", "Upcoming events")}</h3>
+      <div className="mt-2 flex flex-col gap-2.5">
+        {upcoming.map((holiday) => (
+          <div key={holiday.date}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold">{t(holiday.fr, holiday.en)}</span>
+              <span className="shrink-0 rounded-full bg-[var(--dashboard-text)]/[0.06] px-2 py-0.5 text-[11px] font-medium text-[var(--dashboard-text)]/70">
+                {holiday.inDays === 0
+                  ? t("Aujourd'hui", "Today")
+                  : holiday.inDays === 1
+                    ? t("Demain", "Tomorrow")
+                    : t(`Dans ${holiday.inDays} j`, `In ${holiday.inDays}d`)}
+              </span>
+            </div>
+            <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/50">
+              {t(
+                `${AFFILIATE_NAME} (partenaire livraison) fermé ce jour.`,
+                `${AFFILIATE_NAME} (delivery partner) closed that day.`
+              )}
+            </p>
+            {"noel" in holiday && holiday.noel ? (
+              <p className="mt-0.5 text-xs font-semibold text-brand-pink">
+                {t("Pensez à mettre en avant vos articles de Noël.", "Time to feature your Christmas products.")}
+              </p>
+            ) : null}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
