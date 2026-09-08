@@ -1,11 +1,9 @@
 import DashboardHeader from "../../../components/DashboardHeader";
 import DashboardSidebar from "../../../components/DashboardSidebar";
-import CreerCollaborateur from "../../../components/dashboard-parametres/CreerCollaborateur";
 
 /*
-  Sous-écran de Écran 07 "Personnel et accès" : formulaire "Créer un
-  collaborateur" (voir CreerCollaborateur.tsx), atteint depuis le bouton du
-  même nom sur /dashboard/parametres.
+  Sous-écran de "Paramètres". Ancien formulaire "Créer un collaborateur"
+  retiré, nouvelle version à venir.
 */
 
 export default function CreerCollaborateurPage() {
@@ -16,7 +14,6 @@ export default function CreerCollaborateurPage() {
 
         <div className="min-w-0 flex-1 lg:px-6">
           <DashboardHeader />
-          <CreerCollaborateur />
         </div>
       </div>
     </div>

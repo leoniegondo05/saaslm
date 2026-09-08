@@ -7,8 +7,85 @@ import { useEffect, useRef, useState } from "react";
 import { logout } from "../../lib/api/services/auth";
 import { clearToken } from "../../lib/api/token";
 import { APPAREILS_CONNECTES_COUNT } from "./dashboard-profil/MonProfil";
-import { PERSONNEL_ACTIF_COUNT } from "./dashboard-parametres/PersonnelAcces";
 import { useDashboardTheme } from "./DashboardThemeProvider";
+
+// Écran "Paramètres" (Personnel et accès) retiré, reconstruction en cours —
+// valeur figée en attendant, à revenir sur la nouvelle source de données.
+const PERSONNEL_ACTIF_COUNT = 4;
+
+/*
+  Écran 31 "La cloche" : les notifications ne sont plus un réglage, ce
+  sont des événements, affichés en haut de l'écran, avant la pastille du
+  partenaire agréé. Champs statiques pour l'instant, cf. mémoire
+  [[dashboard-mock-data-pending-laravel-api]].
+*/
+type CategorieNotif = "commandes" | "litiges" | "argent" | "stock";
+
+const NOTIF_TABS: { key: "tout" | CategorieNotif; label: string }[] = [
+  { key: "tout", label: "Tout" },
+  { key: "commandes", label: "Commandes" },
+  { key: "litiges", label: "Litiges" },
+  { key: "argent", label: "Argent" },
+  { key: "stock", label: "Stock" },
+];
+
+const NOTIF_COULEURS: Record<CategorieNotif, string> = {
+  litiges: "#EC0C8C",
+  argent: "#178a3f",
+  stock: "#2563eb",
+  commandes: "#8A90A6",
+};
+
+const NOTIFICATIONS_INIT = [
+  {
+    id: "n1",
+    categorie: "litiges" as CategorieNotif,
+    titre: "Litige ouvert",
+    sousTitre: "C-4819 · Sac cabas en raphia",
+    temps: "il y a 12 min",
+    lue: false,
+  },
+  {
+    id: "n2",
+    categorie: "argent" as CategorieNotif,
+    titre: "Règlement effectué",
+    sousTitre: "214 000 F vers Orange Money",
+    temps: "il y a 2 h",
+    lue: false,
+  },
+  {
+    id: "n3",
+    categorie: "stock" as CategorieNotif,
+    titre: "Dépôt contrôlé",
+    sousTitre: "Beurre de karité · 200 reçus, 0 endommagé",
+    temps: "il y a 5 h",
+    lue: false,
+  },
+  {
+    id: "n4",
+    categorie: "stock" as CategorieNotif,
+    titre: "Stock bas",
+    sousTitre: "Huile de ricin 100 ml · 2 unités restantes",
+    temps: "hier",
+    lue: true,
+  },
+  {
+    id: "n5",
+    categorie: "commandes" as CategorieNotif,
+    titre: "Évaluation du mois",
+    sousTitre: "À donner avant le 5 septembre",
+    temps: "hier",
+    lue: true,
+  },
+  {
+    id: "n6",
+    categorie: "commandes" as CategorieNotif,
+    titre: "Commande livrée",
+    sousTitre: "C-4816 · Sandales tressées",
+    temps: "hier",
+    lue: true,
+  },
+];
 
 /*
   Barre du haut du dashboard (logo, sélecteur mois/année, badge "solution LM",
@@ -50,6 +127,14 @@ export default function DashboardHeader() {
   const [loggingOut, setLoggingOut] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
 
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [notifFiltre, setNotifFiltre] = useState<"tout" | CategorieNotif>("tout");
+  const [notifications, setNotifications] = useState(NOTIFICATIONS_INIT);
+  const notifPanelRef = useRef<HTMLDivElement>(null);
+  const nbNonLues = notifications.filter((n) => !n.lue).length;
+  const notificationsFiltrees =
+    notifFiltre === "tout" ? notifications : notifications.filter((n) => n.categorie === notifFiltre);
+
   useEffect(() => {
     if (!showAccountMenu) return;
     const handleClickOutside = (event: MouseEvent) => {
@@ -60,6 +145,21 @@ export default function DashboardHeader() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showAccountMenu]);
+
+  useEffect(() => {
+    if (!showNotifPanel) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!notifPanelRef.current?.contains(event.target as Node)) {
+        setShowNotifPanel(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showNotifPanel]);
+
+  const marquerToutLu = () => setNotifications((liste) => liste.map((n) => ({ ...n, lue: true })));
+  const marquerLu = (id: string) =>
+    setNotifications((liste) => liste.map((n) => (n.id === id ? { ...n, lue: true } : n)));
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -195,13 +295,100 @@ export default function DashboardHeader() {
           </span>
         </Link>
 
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15"
-        >
-          <BellIcon />
-        </button>
+        <div className="relative" ref={notifPanelRef}>
+          <button
+            type="button"
+            aria-label="Notifications"
+            aria-haspopup="menu"
+            aria-expanded={showNotifPanel}
+            onClick={() => setShowNotifPanel((open) => !open)}
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15"
+          >
+            <BellIcon />
+            {nbNonLues > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-[var(--dashboard-bg)] bg-brand-pink px-1 text-[10px] font-bold text-white">
+                {nbNonLues}
+              </span>
+            )}
+          </button>
+
+          {showNotifPanel && (
+            <div
+              role="menu"
+              className="absolute right-0 top-full z-20 mt-2 w-[340px] overflow-hidden rounded-[28px] bg-white shadow-[0_20px_48px_-12px_rgba(20,18,32,0.35)] dark:bg-[#1c1830] sm:w-[400px]"
+            >
+              <div className="flex items-center justify-between gap-3 p-4">
+                <div>
+                  <p className="text-sm font-bold text-[var(--dashboard-text)]">Notifications</p>
+                  <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/45">
+                    {nbNonLues > 0 ? `${nbNonLues} non lue${nbNonLues > 1 ? "s" : ""}` : "Tout est lu"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={marquerToutLu}
+                  className="shrink-0 rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[11px] font-semibold text-[var(--dashboard-text)] transition hover:bg-[#141220]/[0.05] dark:hover:bg-white/5"
+                >
+                  Tout marquer comme lu
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5 px-4 pb-3">
+                {NOTIF_TABS.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setNotifFiltre(key)}
+                    aria-pressed={notifFiltre === key}
+                    className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
+                      notifFiltre === key
+                        ? "bg-[#141220] text-white dark:bg-brand-pink"
+                        : "bg-[#141220]/[0.05] text-[var(--dashboard-text)]/50 hover:bg-[#141220]/10 dark:bg-white/10 dark:hover:bg-white/15"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="max-h-[360px] overflow-y-auto border-t border-[#141220]/10 dark:border-white/10">
+                {notificationsFiltrees.length === 0 ? (
+                  <p className="p-6 text-center text-xs text-[var(--dashboard-text)]/40">
+                    Rien à signaler dans cette catégorie.
+                  </p>
+                ) : (
+                  notificationsFiltrees.map((n) => (
+                    <button
+                      key={n.id}
+                      type="button"
+                      onClick={() => marquerLu(n.id)}
+                      className={`flex w-full items-start gap-3 border-b border-[#141220]/[0.04] p-4 text-left transition last:border-0 hover:bg-[#141220]/[0.03] dark:border-white/5 dark:hover:bg-white/5 ${
+                        n.lue ? "" : "bg-brand-pink/[0.04]"
+                      }`}
+                    >
+                      <span
+                        className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+                        style={{ background: NOTIF_COULEURS[n.categorie] }}
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-xs font-bold text-[var(--dashboard-text)]">{n.titre}</span>
+                        <span className="mt-0.5 block text-[11px] text-[var(--dashboard-text)]/50">{n.sousTitre}</span>
+                      </span>
+                      <span className="shrink-0 text-[10px] text-[var(--dashboard-text)]/40">{n.temps}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+
+              <button
+                type="button"
+                className="w-full p-3.5 text-center text-xs font-semibold text-[var(--dashboard-text)]/60 transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
+              >
+                Voir tout l&apos;historique
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Avatar utilisateur : cliquable, ouvre le menu de compte (profil,
             sécurité, droits, appareils, accès, langue, mode nuit, aide,
