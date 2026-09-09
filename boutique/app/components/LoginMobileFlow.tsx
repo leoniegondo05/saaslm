@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, type ReactNode } from "react";
 import AuthOverlayText from "./AuthOverlayText";
+import NetworkBackground from "./vision/NetworkBackground";
 
 /*
   Sur mobile (< lg), la colonne visuel de app/login/page.tsx est masquée
@@ -20,21 +21,13 @@ export default function LoginMobileFlow({ children }: { children: ReactNode }) {
   return (
     <>
       {step === "intro" && (
-        // Maquette Figma fournie en deux calques (public/images/Rectangle.png
-        // + Frame 53.png) : Rectangle = fond plein écran, Frame 53 = la carte
-        // qui flotte dessus, en retrait (marge ~20px sur les côtés, ~80px en
-        // haut/bas — mesuré sur les deux PNG : carte 336×763 centrée dans un
-        // écran 375×918). On ne duplique pas l'image pour la carte : c'est le
-        // même dégradé qui transparaît, seul un cadre (bordure + coins
-        // arrondis, fond transparent) est posé en retrait par-dessus.
-        <div className="absolute inset-0 z-10 lg:hidden">
-          <Image
-            src="/images/Rectangle.png"
-            alt="Fond décoratif aux dégradés violet et rose de LIIVRE MOI"
-            fill
-            className="object-cover"
-            priority
-          />
+        // Même maillage de points que la colonne visuel desktop (voir
+        // app/login/page.tsx) plutôt que Rectangle.png : identité "réseau"
+        // du site au lieu d'un dégradé flou figé, et un cadre (bordure +
+        // coins arrondis, fond transparent) posé en retrait par-dessus
+        // (marge ~20px sur les côtés, ~80px en haut/bas).
+        <div className="absolute inset-0 z-10 bg-brand-bg lg:hidden">
+          <NetworkBackground />
 
           <div className="absolute inset-x-5 inset-y-20 rounded-3xl border border-white/25 sm:inset-x-6 sm:inset-y-24">
             {/* Badge haut-gauche (logo dans un carré arrondi), repris de la

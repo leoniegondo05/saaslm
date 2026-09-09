@@ -17,21 +17,23 @@ export default function SectionHeader({
   align = "left",
 }: SectionHeaderProps) {
   return (
-    <div
-      className={`flex flex-wrap items-start gap-4 ${
-        align === "center" ? "justify-center text-center" : ""
-      }`}
-    >
-      <SectionBadge />
-      <span
-        aria-hidden
-        className="hidden h-5 w-px rotate-12 bg-white/20 sm:block"
-      />
-      <div>
-        <h2 className="text-xl font-semibold sm:text-2xl">{title}</h2>
-        {subtitle && (
-          <p className="mt-1 text-sm text-brand-white/50">{subtitle}</p>
-        )}
+    <div className="flex justify-center w-full mb-5">
+      <div
+        className={`flex flex-wrap items-start gap-4 ${
+          align === "center" ? "justify-center text-center" : ""
+        }`}
+      >
+        <SectionBadge />
+        <span
+          aria-hidden
+          className="hidden h-5 w-px rotate-12 bg-white/20 sm:block"
+        />
+        <div>
+          <h2 className="text-xl font-semibold sm:text-2xl">{title}</h2>
+          {subtitle && (
+            <p className="mt-1 text-sm text-brand-white/50">{subtitle}</p>
+          )}
+        </div>
       </div>
     </div>
   );

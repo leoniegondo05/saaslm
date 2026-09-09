@@ -3,9 +3,18 @@ import HeroBrainVideo from "./HeroBrainVideo";
 
 export default function Hero() {
   return (
+    // Empilement façon "cartes qui se chevauchent" (technique CSS pure —
+    // voir test.html fourni par l'utilisateur) : chaque section de la page
+    // est sticky avec un top légèrement croissant (96/104/112/120/128/144px
+    // ici — mêmes écarts que la référence : 0/8/16/24/32/48px, décalés de
+    // 96px pour laisser la place à la Navbar fixe). Pas de z-index
+    // explicite : l'ordre du DOM suffit, une section plus bas dans le HTML
+    // se peint naturellement par-dessus celle du dessus. bg-brand-bg
+    // explicite indispensable : sans fond opaque, la section laisserait
+    // transparaître celle qu'elle est censée recouvrir.
     <section
       id="hero"
-      className="relative overflow-hidden px-6 pb-6 pt-20 md:px-16 md:pb-24 md:pt-16"
+      className="sticky top-[6px] flex min-h-[calc(100vh-6rem)] items-center overflow-hidden bg-brand-bg px-6 pb-6 pt-20 md:px-16 md:pb-24 md:pt-16"
     >
       {/* ── MOBILE ONLY : cerveau en arrière-plan, atténué ── */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden opacity-55 lg:hidden">
@@ -13,7 +22,7 @@ export default function Hero() {
       </div>
 
       {/* ── Grille principale ── */}
-      <div className="relative mx-auto grid max-w-[1320px] items-center gap-8 lg:grid-cols-[420px_1fr]">
+      <div className="relative mx-auto grid w-full max-w-[1320px] items-center gap-8 lg:grid-cols-[420px_1fr]">
 
         {/* Colonne texte — même disposition "en cascade" que le prototype
             hero-brain : chaque ligne du titre est indentée un peu plus que

@@ -6,9 +6,9 @@ export default function CTA() {
   return (
     <section
       id="cta"
-      className="bg-[linear-gradient(to_bottom,#000717_0%,#101625_25%,#3f4350_50%,#7b7d87_70%,#b5b4bd_85%,#faf7fc_100%)] px-6 py-24 md:px-16"
+      className="sticky top-[144px] flex min-h-[calc(100vh-6rem)] items-center bg-[linear-gradient(to_bottom,#000717_0%,#101625_25%,#3f4350_50%,#7b7d87_70%,#b5b4bd_85%,#faf7fc_100%)] px-6 py-24 md:px-16"
     >
-      <div className="mx-auto grid max-w-[1320px] items-center gap-12 lg:grid-cols-2">
+      <div className="mx-auto grid w-full max-w-[1320px] items-center gap-12 lg:grid-cols-2">
         <ScrollReveal>
           <SectionBadge />
 
@@ -32,12 +32,15 @@ export default function CTA() {
                 <span aria-hidden>»</span>
               </Link>
             </span>
-            <Link
-              href="/partenaire-agree"
-              className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition hover:opacity-90"
-            >
-              Devenir partenaire agréé
-            </Link>
+             <span className="inline-block rounded-xl bg-white p-px">
+              <Link
+                href="/partenaire-agree"
+                className="flex items-center gap-2 bg-white text-black rounded-[11px] bg-[#0a0e1c] px-[18px] py-4 text-sm font-semibold transition hover:opacity-90"
+              >
+                Devenir partenaire agréé
+                <span aria-hidden></span>
+              </Link>
+            </span>
           </div>
         </ScrollReveal>
 

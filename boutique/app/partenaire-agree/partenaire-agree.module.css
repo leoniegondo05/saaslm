@@ -9,8 +9,8 @@
   N'EST PAS reprise ici : la page utilise le composant <Navbar /> partagé
   du reste du site (même convention que app/partenaire-agree/page.tsx
   avant cette page, voir son historique), posé par-dessus le même fond
-  dégradé/diagonal. Seule reste ici la copie recolorée du titre (.calque)
-  qui traverse la diagonale, comme dans la maquette.
+  dégradé/diagonal. Seule reste ici la copie recolorée du titre et du texte
+  d'accroche (.calque) qui traverse la diagonale, comme dans la maquette.
 
   Les classes .frise/.etape-frise/.pastille-frise/.attente de la maquette
   d'origine ne sont référencées par aucun élément du <body> fourni — CSS
@@ -32,8 +32,8 @@
   --papier: #ffffff;
   --papier-2: #f3f0f8;
 
-  --coupe: polygon(0 0, 100% 0, 100% 30%, 0 68%);
-  --coupe-inverse: polygon(0 68%, 100% 30%, 100% 100%, 0 100%);
+  --coupe: polygon(0 0, 100% 0, 100% 30%, 0 88%);
+  --coupe-inverse: polygon(0 88%, 100% 30%, 100% 100%, 0 100%);
 
   --z: 1;
 
@@ -121,19 +121,16 @@
 .calque .titreHeros {
   color: var(--encre);
 }
+.calque .texteHeros {
+  color: var(--encre);
+  opacity: 0.72;
+}
 
 .texteHeros {
   max-width: 430px;
   margin-top: 36px;
   color: #ffffff;
   font-size: 16.5px;
-  -webkit-text-stroke: 0.6px #3a1d8a;
-  paint-order: stroke fill;
-  text-shadow:
-    -1px -1px 0 #3a1d8a,
-    1px -1px 0 #3a1d8a,
-    -1px 1px 0 #3a1d8a,
-    1px 1px 0 #3a1d8a;
 }
 
 .champ {

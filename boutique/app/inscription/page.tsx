@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import AuthOverlayText from "../components/AuthOverlayText";
+import NetworkBackground from "../components/vision/NetworkBackground";
 import InscriptionMobileFlow from "../components/InscriptionMobileFlow";
 import InscriptionForm from "../components/InscriptionForm";
 
@@ -23,25 +24,32 @@ export default function InscriptionPage() {
           à la hauteur naturelle de la colonne formulaire en face, donc grandit avec elle et
           défile avec la page (plus de cage figée à h-dvh/overflow-hidden côté desktop). */}
       <div className="relative hidden w-1/2 self-stretch overflow-hidden bg-brand-bg lg:flex lg:items-center">
-        <Image
-          src="/images/Login.png"
-          alt="Carte visuelle décorative aux dégradés violet et rose de LIIVRE MOI"
-          width={704}
-          height={1029}
-          className="h-auto w-full"
-          priority
-        />
+        {/* Même maillage de points que VisionHero (app/vision) plutôt qu'un
+            dégradé flou façon "mesh SaaS" — plus proche de l'identité du
+            site (réseau/connexions) et, comme lui, s'estompe vers
+            transparent sur les bords : révèle nativement le même
+            bg-brand-bg que la colonne formulaire, donc la jonction entre
+            les deux colonnes reste automatiquement alignée. */}
+        <NetworkBackground />
 
-        {/* La carte (marge sombre, bordure fine, point rose) est déjà cuite
-            dans l'image, pas besoin de la reconstruire en CSS comme sur
-            mobile (voir InscriptionMobileFlow.tsx, qui lui utilise
-            Rectangle.png — sans carte — car sa carte est plus petite que
-            l'écran).
-            Pas de "fill" : l'image garde son ratio 704×1029 et s'étire en
-            largeur pleine (w-full h-auto) au lieu d'être recadrée. Ce qui
-            dépasse en hauteur (colonne plus grande que l'image à cette
-            largeur) devient de l'espace haut/bas, centré par items-center
-            sur le conteneur, comblé par bg-brand-bg posé dessus. */}
+        {/* Cadre "carte" (bordure fine, coins arrondis, badge logo,
+            initiales) reconstruit en CSS — même principe que la version
+            mobile (voir InscriptionMobileFlow.tsx), plutôt qu'une carte
+            cuite dans une image. */}
+        <div className="absolute inset-6 rounded-3xl border border-white/20 sm:inset-8">
+          <span className="absolute left-6 top-6 flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-white/30 bg-black/20 backdrop-blur">
+            <Image
+              src="/images/logo.svg"
+              alt="Logo LIIVRE MOI"
+              width={40}
+              height={40}
+              className="h-full w-full scale-150 object-contain"
+            />
+          </span>
+          <span className="absolute bottom-6 left-6 text-sm font-semibold text-brand-white/60">
+            LM
+          </span>
+        </div>
 
         <AuthOverlayText
           label="Bienvenue sur LIIVRE MOI"
