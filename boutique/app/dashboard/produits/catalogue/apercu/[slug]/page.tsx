@@ -1,0 +1,33 @@
+import { notFound } from "next/navigation";
+import DashboardHeader from "../../../../../components/DashboardHeader";
+import DashboardSidebar from "../../../../../components/DashboardSidebar";
+import ApercuProduitDrop from "../../../../../components/dashboard-produits/ApercuProduitDrop";
+import { getDropProduit } from "../../../../../components/dashboard-produits/dropCatalogue";
+
+/*
+  Aperçu produit, atteint depuis le bouton "Voir la fiche" de l'aperçu en
+  avant du catalogue (Écran 05, CatalogueDrop.tsx) — voir ApercuProduitDrop.tsx
+  pour la différence avec la fiche complète (Écran 06,
+  /dashboard/produits/catalogue/[slug], atteinte elle depuis une tuile).
+  `params` est une promesse sous Next 16, cf.
+  node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/page.md.
+*/
+export default async function ApercuProduitPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const produit = getDropProduit(slug);
+
+  if (!produit || produit.prixDrop === null) notFound();
+
+  return (
+    <div className="min-h-screen w-full bg-[var(--dashboard-bg)] font-sans text-[var(--dashboard-text)] antialiased transition-colors">
+      <div className="mx-auto flex max-w-[1620px] flex-col gap-6 px-4 pb-28 pt-6 sm:px-6 md:px-10 lg:flex-row lg:pb-10 lg:pl-3 lg:pt-8">
+        <DashboardSidebar />
+
+        <div className="min-w-0 flex-1">
+          <DashboardHeader />
+          <ApercuProduitDrop produit={produit} />
+        </div>
+      </div>
+    </div>
+  );
+}
