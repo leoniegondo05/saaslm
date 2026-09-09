@@ -271,9 +271,9 @@ export default function Features() {
   return (
     <section
       id="flux-financiers"
-      className="px-6 py-16 md:px-16 xl:px-[122px] xl:pb-[188px] xl:pt-[18px]"
+      className="sticky top-[112px] flex min-h-[calc(100vh-6rem)] items-center bg-brand-bg px-6 py-16 md:px-16 xl:px-[122px] xl:pb-[188px] xl:pt-[18px]"
     >
-      <div className="mx-auto flex max-w-[1196px] flex-col gap-16 xl:gap-[91px]">
+      <div className="mx-auto flex w-full max-w-[1196px] flex-col gap-16 xl:gap-[91px]">
         <ScrollReveal>
           <SectionHeader title="Vos flux financiers se simplifient" />
         </ScrollReveal>

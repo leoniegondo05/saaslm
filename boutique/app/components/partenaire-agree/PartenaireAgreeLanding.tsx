@@ -414,7 +414,7 @@ export default function PartenaireAgreeLanding() {
           </div>
         </div>
 
-        {/* copie du titre, recolorée sous la diagonale */}
+        {/* copie du titre et du texte, recolorée sous la diagonale */}
         <div className={styles.calque} aria-hidden="true">
           <div className={styles.dedans}>
             <div className={styles.grilleHeros}>
@@ -422,6 +422,10 @@ export default function PartenaireAgreeLanding() {
                 <h1 className={styles.titreHeros}>
                   L&apos;infrastructure qui fait grandir votre logistique
                 </h1>
+                <p className={styles.texteHeros}>
+                  Rejoignez le réseau LM. Une plateforme pour piloter toute votre exploitation, et
+                  des e-commerçants à servir.
+                </p>
               </div>
             </div>
           </div>
