@@ -10,8 +10,10 @@ import { APPAREILS_CONNECTES_COUNT } from "./dashboard-profil/MonProfil";
 import { useDashboardTheme } from "./DashboardThemeProvider";
 import { useDashboardLangue } from "./DashboardLanguageProvider";
 
-// Écran "Paramètres" (Personnel et accès) retiré, reconstruction en cours —
-// valeur figée en attendant, à revenir sur la nouvelle source de données.
+// Compte de collaborateurs actifs affiché sur le bouton "Gérer les accès"
+// (voir PersonnelAcces.tsx, /dashboard/parametres/acces) — valeur figée
+// tant que l'API Laravel n'expose pas le vrai décompte, cf. mémoire
+// [[dashboard-mock-data-pending-laravel-api]].
 const PERSONNEL_ACTIF_COUNT = 4;
 
 /*
@@ -133,6 +135,7 @@ export default function DashboardHeader() {
   const router = useRouter();
   const [activeDate, setActiveDate] = useState(() => new Date(2026, 7, 1));
   const [showYearPicker, setShowYearPicker] = useState(false);
+  const [showDayPicker, setShowDayPicker] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   // Langue : état partagé (DashboardLanguageProvider, monté dans
   // app/dashboard/layout.tsx), même pattern que le mode nuit ci-dessous, pour
@@ -216,7 +219,22 @@ export default function DashboardHeader() {
     setShowYearPicker(false);
   };
 
+  const setDay = (day: number) => {
+    setActiveDate((current) => {
+      const next = new Date(current);
+      next.setDate(day);
+      return next;
+    });
+    setShowDayPicker(false);
+  };
+
   const yearOptions = Array.from({ length: 5 }, (_, i) => activeYear - 2 + i);
+  const activeDay = activeDate.getDate();
+  const daysInActiveMonth = new Date(activeYear, activeMonthIndex + 1, 0).getDate();
+  // Décalage pour aligner le 1er du mois sur sa colonne (grille lun-dim).
+  const firstWeekday = (new Date(activeYear, activeMonthIndex, 1).getDay() + 6) % 7;
+  const dayOptions = Array.from({ length: daysInActiveMonth }, (_, i) => i + 1);
+  const weekdayLabels = langue === "EN" ? ["M", "T", "W", "T", "F", "S", "S"] : ["L", "M", "M", "J", "V", "S", "D"];
 
   return (
     <header className="flex flex-wrap items-center justify-between gap-4">
@@ -230,7 +248,7 @@ export default function DashboardHeader() {
         />
 
         <div className="relative flex items-center gap-1.5 sm:gap-2">
-          <div className="flex items-center gap-0.5 rounded-full bg-white/70 p-1 shadow-[0_2px_10px_rgba(20,18,32,0.06)] dark:bg-white/10 sm:gap-1 sm:p-1.5">
+          <div className="relative flex items-center gap-0.5 rounded-full bg-white/70 p-1 shadow-[0_2px_10px_rgba(20,18,32,0.06)] dark:bg-white/10 sm:gap-1 sm:p-1.5">
             <button
               type="button"
               aria-label={t("Mois précédent", "Previous month")}
@@ -243,7 +261,17 @@ export default function DashboardHeader() {
               <button
                 key={key}
                 type="button"
-                onClick={() => shiftMonth(index - 1)}
+                onClick={() => {
+                  if (index === 1) {
+                    // Mois actif : clic ouvre le picker des jours de ce mois
+                    // (au lieu de le faire dépendre de la puce "jour" à part,
+                    // qui débordait la navbar, cf. retour utilisateur).
+                    setShowDayPicker((open) => !open);
+                    setShowYearPicker(false);
+                    return;
+                  }
+                  shiftMonth(index - 1);
+                }}
                 className={`rounded-full px-2.5 py-1 text-xs font-medium transition sm:px-4 sm:py-1.5 sm:text-sm ${
                   index === 1
                     ? "bg-white text-[#141220] shadow-[0_2px_8px_rgba(20,18,32,0.1)] dark:bg-white/15 dark:text-[var(--dashboard-text)]"
@@ -261,11 +289,44 @@ export default function DashboardHeader() {
             >
               <ChevronIcon direction="right" />
             </button>
+
+            {showDayPicker && (
+              <div className="absolute left-0 top-full z-10 mt-2 w-[220px] rounded-2xl bg-white p-3 shadow-[0_8px_24px_rgba(20,18,32,0.16)] dark:bg-[#1c1830]">
+                <p className="mb-2 px-1 text-xs font-semibold text-[#141220]/50 dark:text-white/40">
+                  {monthNames[activeMonthIndex]} {activeYear}
+                </p>
+                <div className="grid grid-cols-7 gap-y-1 text-center text-[11px] text-[#141220]/40 dark:text-white/40">
+                  {weekdayLabels.map((label, i) => (
+                    <span key={`${label}-${i}`}>{label}</span>
+                  ))}
+                  {Array.from({ length: firstWeekday }, (_, i) => (
+                    <span key={`empty-${i}`} />
+                  ))}
+                  {dayOptions.map((day) => (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => setDay(day)}
+                      className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition hover:bg-[#141220]/[0.06] dark:hover:bg-white/10 ${
+                        day === activeDay
+                          ? "bg-[#141220] text-white dark:bg-brand-pink"
+                          : "text-[#141220]/70 dark:text-white/70"
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <button
             type="button"
-            onClick={() => setShowYearPicker((open) => !open)}
+            onClick={() => {
+              setShowYearPicker((open) => !open);
+              setShowDayPicker(false);
+            }}
             className="shrink-0 rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-[#141220]/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:text-white/70 dark:hover:bg-white/15 sm:px-3 sm:py-1.5 sm:text-sm"
           >
             {activeYear}
@@ -287,30 +348,18 @@ export default function DashboardHeader() {
               ))}
             </div>
           )}
+
         </div>
       </div>
 
       <span className="inline-flex rounded-full bg-[linear-gradient(90deg,var(--color-brand-pink),rgba(20,18,32,0.08))] p-px shadow-[0_2px_10px_rgba(20,18,32,0.06)]">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white/90 px-5 py-2.5 text-sm font-medium text-[#141220] dark:bg-[#1c1830]/90 dark:text-[var(--dashboard-text)]">
+        <span className="inline-flex items-center gap-2 rounded-full bg-white/90 pl-2.5 pr-3.5 py-1.5 text-xs font-medium text-[#141220] dark:bg-[#1c1830]/90 dark:text-[var(--dashboard-text)]">
           <SparkleIcon />
           {t("solution LM", "LM solution")}
         </span>
       </span>
 
       <div className="flex items-center gap-2 sm:gap-3">
-        <Link
-          href="/dashboard/produits?tab=partenaire"
-          className="flex items-center gap-3 rounded-full bg-white/70 p-1.5 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15 sm:pr-5"
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-purple">
-            <BuildingIcon />
-          </span>
-          <span className="hidden leading-tight sm:block">
-            <span className="block text-xs text-[#141220]/50 dark:text-white/40">{t("Partenaire agréé", "Approved partner")}</span>
-            <span className="block text-sm font-semibold">Groupe Logistique Ivoire</span>
-          </span>
-        </Link>
-
         <div className="relative" ref={notifPanelRef}>
           <button
             type="button"
@@ -406,6 +455,19 @@ export default function DashboardHeader() {
           )}
         </div>
 
+        <Link
+          href="/dashboard/partenaire-agree"
+          className="flex items-center gap-3 rounded-full bg-white/70 p-1.5 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15 sm:pr-5"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-purple">
+            <BuildingIcon />
+          </span>
+          <span className="hidden leading-tight sm:block">
+            <span className="block text-xs text-[#141220]/50 dark:text-white/40">{t("Partenaire agréé", "Approved partner")}</span>
+            <span className="block text-sm font-semibold">Groupe Logistique Ivoire</span>
+          </span>
+        </Link>
+
         {/* Avatar utilisateur : cliquable, ouvre le menu de compte (profil,
             sécurité, droits, appareils, accès, langue, mode nuit, aide,
             déconnexion) — cf. maquette Figma fournie. */}
@@ -482,7 +544,7 @@ export default function DashboardHeader() {
                   <ChevronIcon direction="right" />
                 </Link>
                 <Link
-                  href="/dashboard/parametres"
+                  href="/dashboard/parametres/acces"
                   onClick={() => setShowAccountMenu(false)}
                   className="flex items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
                 >
