@@ -31,7 +31,13 @@ import type { CSSProperties } from "react";
 // Dimensions calées sur le calque Figma "group53" (animation complète :
 // étapes + fil + rayons + hub) fourni par la maquette.
 const VIEW_W = 1097;
-const VIEW_H = 638.7802734375;
+// VIEW_H réduit (638.78 → 360) par rapport au calque Figma d'origine :
+// l'essentiel de la hauteur ne servait qu'à l'écart vide entre le fil et
+// le hub (rien à y voir, juste les rayons) — utilisation peu uniforme de
+// l'espace. Compressé verticalement (mêmes proportions internes, juste
+// une boîte moins haute) pour que tout le bloc (titre + fil + CTA) tienne
+// dans la fenêtre visible avant d'être recouvert par la section suivante.
+const VIEW_H = 360;
 
 // Le tracé est utilisé à deux endroits qui doivent rester identiques :
 // le <path> du SVG (rendu visuel) et le `offset-path` du point rose
@@ -41,12 +47,11 @@ const VIEW_H = 638.7802734375;
 // à l'œil : il dépend de la largeur réelle du mot du badge (nombre de
 // caractères + padding du badge, voir PADDING/CHAR_WIDTH) — sans ça, un mot
 // long comme "Personnaliser" rapprochait ses voisins bien plus que les
-// autres paires. L'espace lui-même (GAPS) grossit de gauche à droite,
-// comme sur la capture de référence (l'écart Créer↔Personnaliser y est
-// nettement plus serré que Publier↔Commencer) : ce n'est pas un espacement
-// uniforme.
+// autres paires. L'espace lui-même (GAPS) est uniforme (même écart bord à
+// bord entre chaque paire de badges) : utilise la largeur disponible de
+// façon régulière plutôt que de la faire grossir de gauche à droite.
 const MARGIN = 34; // marge avant le centre du 1er badge
-const GAPS = [110, 150, 190]; // espace bord à bord, croissant, entre badges consécutifs
+const GAPS = [150, 150, 150]; // espace bord à bord, identique, entre badges consécutifs
 const PADDING = 60; // px-[22px] de chaque côté du badge, ramené au viewBox
 const CHAR_WIDTH = 9; // largeur moyenne d'un caractère (text-xs, Sora)
 
@@ -84,10 +89,10 @@ const STEP_X = buildStepsX(STEP_LABELS);
 // et le fil — sur la capture de référence, le trait ne touche jamais le
 // badge, il démarre nettement en dessous. Les rayons partent de ce même
 // PEAK_Y (voir STEPS ci-dessous) : ils prolongent la crête, pas le badge.
-const PEAK_Y = 100;
-const VALLEY_Y = 185;
-const START_Y = 151;
-const END_Y = 141;
+const PEAK_Y = 56;
+const VALLEY_Y = 104;
+const START_Y = 85;
+const END_Y = 79;
 
 // Points de passage de la courbe : une crête par étape (alignée sur son x),
 // une vallée au milieu de chaque paire de crêtes.
@@ -169,9 +174,8 @@ const WAVE_PATH_D = segmentsToPathD(WAVE_SEGMENTS);
 // — sommet = fin des segments 0/2/4/6 (buildWavePoints alterne sommet/
 // creux/sommet/...). @keyframes how-it-works-dot-move (globals.css) cale
 // le bond dessus (var(--dot-peak-N)) : sans ça, le bond (déclenché à un %
-// de TEMPS fixe) tombait à un % d'ARC quelconque, décalé du vrai sommet vu
-// l'espacement croissant des étapes (GAPS) — le point bondissait en plein
-// vol au lieu de pile sur le mot.
+// de TEMPS fixe) tombait à un % d'ARC quelconque, décalé du vrai sommet —
+// le point bondissait en plein vol au lieu de pile sur le mot.
 const SEGMENT_LENGTHS = WAVE_SEGMENTS.map((seg) => cubicLength(seg));
 const TOTAL_LENGTH = SEGMENT_LENGTHS.reduce((sum, len) => sum + len, 0);
 const PEAK_OFFSET_PERCENT = [0, 2, 4, 6].map((segIndex) => {
@@ -180,9 +184,11 @@ const PEAK_OFFSET_PERCENT = [0, 2, 4, 6].map((segIndex) => {
 });
 
 // Point de convergence des 4 rayons ("hub"), sous le fil conducteur —
-// centre bas du calque Figma "second animation" (left 299.43 + width
-// 808.7/2, top 228.78 + height 477.5, ramené au repère local du group53).
-const HUB = { x: 532.28, y: 544.78 };
+// x repris du calque Figma "second animation" (left 299.43 + width
+// 808.7/2, ramené au repère local du group53) ; y ramené à la même échelle
+// que la compression verticale de VIEW_H ci-dessus (même marge relative
+// sous le hub qu'à l'origine).
+const HUB = { x: 532.28, y: 305 };
 
 // Les 4 étapes : Créer → Personnaliser → Publier → Commencer. x/y = centres
 // des badges (voir STEP_X ci-dessus). Chaque badge a son propre rayon vers
@@ -198,7 +204,7 @@ const STEPS = STEP_LABELS.map((label, i) => ({
 export default function HowItWorksWave({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`relative mx-auto w-full max-w-[820px] ${className}`}
+      className={`relative mx-auto w-full max-w-[1320px] ${className}`}
       style={{ aspectRatio: `${VIEW_W} / ${VIEW_H}` }}
     >
       <svg

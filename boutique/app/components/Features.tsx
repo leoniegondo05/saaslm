@@ -145,11 +145,11 @@ function MoneyIcon({
 function RouteSide({ label, icon }: { label: string; icon: "bank" | "building" }) {
   return (
     <div className="text-center text-brand-white/60">
-      <p className="mb-4 text-xs font-bold uppercase tracking-wide text-brand-white/50">
+      <p className="mb-6 text-xs font-bold uppercase tracking-wide text-brand-white/50">
         {label}
       </p>
       <IconBox icon={icon} />
-      <GlobeIcon className="mx-auto mt-3 text-brand-white/60" />
+      <GlobeIcon className="mx-auto mt-5 text-brand-white/60" />
     </div>
   );
 }
@@ -273,20 +273,20 @@ export default function Features() {
       id="flux-financiers"
       className="sticky top-[112px] flex min-h-[calc(100vh-6rem)] items-center bg-brand-bg px-6 py-16 md:px-16 xl:px-[122px] xl:pb-[188px] xl:pt-[18px]"
     >
-      <div className="mx-auto flex w-full max-w-[1196px] flex-col gap-16 xl:gap-[91px]">
+      <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-16 xl:gap-[91px]">
         <ScrollReveal>
           <SectionHeader title="Vos flux financiers se simplifient" />
         </ScrollReveal>
 
         <ScrollReveal
           delay={100}
-          className="relative mx-auto flex w-full max-w-[1093px] flex-col items-center gap-16 sm:gap-20 xl:flex-row xl:items-center xl:justify-between xl:gap-0"
+          className="relative mx-auto flex w-full max-w-[1320px] flex-col items-center gap-16 sm:gap-20 xl:flex-row xl:items-start xl:justify-between xl:gap-0"
         >
           {/* Les deux routes restent toujours empilées (jamais côte à côte),
               comme sur la maquette Figma : la 2e est le miroir de la 1re.
               Pas de carte/bordure autour de chaque route — les deux flottent
               directement sur le fond de la section, comme sur la maquette. */}
-          <div className="flex w-full flex-col gap-16 sm:gap-20 xl:w-[597px]">
+          <div className="flex w-full flex-col gap-16 sm:gap-20 xl:w-[597px] xl:gap-36">
             {ROUTES.map((route, index) => (
               <div
                 key={`${route.from}-${route.to}`}
@@ -301,8 +301,13 @@ export default function Features() {
 
           {/* Aperçu de l'application mobile : châssis iPhone (encoche,
               boutons latéraux, coques noires) autour de l'écran de
-              confirmation de commande, comme sur la maquette Figma. */}
-          <div className="relative mx-auto w-48 shrink-0 rounded-[3rem] bg-[linear-gradient(160deg,#3a3a3f_0%,#0a0a0c_55%,#000_100%)] p-[3px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] xl:w-[192px]">
+              confirmation de commande, comme sur la maquette Figma. Décalé
+              vers le bas (xl:mt-32) plutôt qu'aligné avec les routes : sur
+              la maquette, le téléphone n'est pas au même niveau qu'elles,
+              il "dépasse" plus bas — mesuré sur la maquette (~37 % de sa
+              propre hauteur de décalage vers le bas par rapport au haut
+              du bloc des deux routes). */}
+          <div className="relative mx-auto w-48 shrink-0 rounded-[3rem] bg-[linear-gradient(160deg,#3a3a3f_0%,#0a0a0c_55%,#000_100%)] p-[3px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] xl:w-[192px] xl:mt-36">
             {/* Boutons latéraux (volume + power), comme sur un iPhone */}
             <span className="absolute -left-[3px] top-24 h-6 w-[3px] rounded-l-sm bg-[#1c1c1f]" />
             <span className="absolute -left-[3px] top-32 h-10 w-[3px] rounded-l-sm bg-[#1c1c1f]" />
