@@ -126,6 +126,20 @@ export default function LoginForm() {
         {loading ? "Connexion…" : "Connexion"}
       </button>
 
+      {/* TEMPORAIRE — lien de démo pour tester le site déployé (Vercel)
+          sans backend Laravel branché : /api/login échoue toujours
+          (NEXT_PUBLIC_API_URL absent, voir apiFetch dans lib/api/client.ts),
+          donc ce bouton saute l'appel réseau et va directement où mènerait
+          une connexion réussie (voir handleSubmit plus haut). À retirer
+          dès que l'API répond réellement. */}
+      <button
+        type="button"
+        onClick={() => router.push("/completer-profil")}
+        className="w-full rounded-2xl border border-dashed border-brand-pink/50 px-6 py-3.5 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/10"
+      >
+        Voir la démo (sans backend)
+      </button>
+
       <div className="flex items-center gap-4 pt-3 pb-1">
         <span className="h-px flex-1 bg-white/10" aria-hidden />
         <span className="text-sm text-brand-white/70">Ou continuer avec</span>
