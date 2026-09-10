@@ -6,7 +6,10 @@ import { getDropProduit } from "../../../../components/dashboard-produits/dropCa
 
 /*
   Écran 06 "La fiche d'un produit drop", atteint depuis une tuile du
-  catalogue (Écran 05). `params` est une promesse sous Next 16, cf.
+  catalogue (Écran 05, CatalogueDrop.tsx) — le bouton "Voir la fiche" de
+  l'aperçu en avant mène, lui, à l'aperçu plus léger
+  (/dashboard/produits/catalogue/apercu/[slug], voir ce dossier).
+  `params` est une promesse sous Next 16, cf.
   node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/page.md.
 */
 export default async function FicheProduitPage({ params }: { params: Promise<{ slug: string }> }) {

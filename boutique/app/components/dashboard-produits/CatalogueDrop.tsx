@@ -9,9 +9,15 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
 /*
   Écran 05 "Catalogue disponible en drop" : aperçu du produit en avant à
   gauche (les nouveautés de la catégorie), catégories au centre, produits de
-  la catégorie choisie en carrés à droite. Chaque tuile mène à sa fiche
-  (Écran 06, /dashboard/produits/catalogue/[slug]) — sauf les produits "à
-  venir", qui n'ont pas encore de fiche.
+  la catégorie choisie en carrés à droite. Deux destinations différentes,
+  volontairement pas les mêmes :
+  - le bouton "Voir la fiche" de l'aperçu en avant mène à l'aperçu produit,
+    plus léger (/dashboard/produits/catalogue/apercu/[slug],
+    ApercuProduitDrop.tsx) ;
+  - chaque tuile de la grille mène à la fiche complète (Écran 06,
+    /dashboard/produits/catalogue/[slug], FicheProduitDrop.tsx).
+  Les produits "à venir" (pas encore de prix) n'ont ni fiche ni aperçu :
+  tuile sans badge ni bouton, juste la date d'arrivée à la place du prix.
 */
 
 export default function CatalogueDrop({ first = true }: { first?: boolean }) {
@@ -44,9 +50,16 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
 
       <div className="grid gap-4 lg:grid-cols-[260px_200px_1fr] [&>*]:min-w-0">
         <div className="relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 lg:mb-60">
-          {/* Fond attend la photo du produit en avant (background-image sur cette
-              div) ; le dégradé ci-dessous fait le fondu vers le noir pour la
-              lisibilité du texte, cf. [[dashboard-mock-data-pending-laravel-api]]. */}
+          {/* Photo du produit en avant : première image du produit (les flèches
+              ci-dessous font défiler les produits, pas ses photos — pas de
+              ProduitCarousel imbriqué ici). Vide tant que le produit n'a pas de
+              photo, cf. [[dashboard-mock-data-pending-laravel-api]]. */}
+          {preview?.images?.[0] && (
+            <div
+              className="absolute inset-6 bg-contain bg-no-repeat bg-right"
+              style={{ backgroundImage: `url(${preview.images[0]})` }}
+            />
+          )}
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(217,217,217,0)_40%,#000000_92%)]" />
           {preview ? (
             <>
@@ -86,7 +99,7 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
                 </p>
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <Link
-                    href={`/dashboard/produits/catalogue/${preview.slug}`}
+                    href={`/dashboard/produits/catalogue/apercu/${preview.slug}`}
                     className="rounded-full bg-[#141220] px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:brightness-95 dark:bg-brand-pink"
                   >
                     {t("Voir la fiche", "View sheet")}
@@ -160,14 +173,16 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
                   : p.source === "P"
                   ? "bg-[linear-gradient(165deg,color-mix(in_srgb,var(--dashboard-text)_16%,transparent)_0%,color-mix(in_srgb,var(--dashboard-text)_2%,transparent)_100%)]"
                   : "bg-[var(--dashboard-text)]/[0.03]";
-              const badgeLabel = p.source === "AVENIR" ? t("À venir", "Coming soon") : p.source === "L" ? t("Drop", "Drop") : t("Stock Management", "Managed stock");
+              const badgeLabel = p.source === "L" ? t("Drop", "Drop") : p.source === "P" ? t("Stock Management", "Managed stock") : null;
               const badgeColor = p.source === "L" ? "#EC0C8C" : "#6b7280";
               const tile = (
                 <div className="relative">
                   <div className={`relative flex aspect-square items-center justify-center rounded-[20px] ${glow}`}>
-                    <span className="absolute left-2 top-2 rounded-full bg-[var(--dashboard-card-bg)] px-2 py-1 text-[9px] font-semibold" style={{ color: badgeColor }}>
-                      {badgeLabel}
-                    </span>
+                    {badgeLabel && (
+                      <span className="absolute left-2 top-2 rounded-full bg-[var(--dashboard-card-bg)] px-2 py-1 text-[9px] font-semibold" style={{ color: badgeColor }}>
+                        {badgeLabel}
+                      </span>
+                    )}
                     <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#141220]/45 backdrop-blur-sm">
                       <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
                         <path

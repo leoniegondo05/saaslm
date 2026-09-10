@@ -8,9 +8,10 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
 /*
   Écran 04 "Le partenaire agréé" : identité du partenaire, ses informations
   (barème logistique) et le prochain produit à venir chez lui, avec un lien
-  vers le catalogue drop complet (Écran 05). Atteint depuis l'onglet
-  "Partenaire agréé" de ProduitsNav, ou la chip "Partenaire agréé" du header
-  (voir DashboardHeader) sur n'importe quel écran du dashboard.
+  vers le catalogue drop complet (Écran 05). Atteint via la chip
+  "Partenaire agréé" du header (voir DashboardHeader), sur n'importe quel
+  écran du dashboard — page à part (/dashboard/partenaire-agree), plus un
+  onglet de l'onglet "Produits".
 
   Une seule fiche pour l'instant (le partenaire de la boutique connectée) —
   pas de tableau de partenaires, cf. mémoire
@@ -146,7 +147,7 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
             <p className="mt-2.5 text-3xl font-semibold tracking-tight">{t(PROCHAIN_PRODUIT.nom, PROCHAIN_PRODUIT.nomEn)}</p>
             <p className="mt-1 max-w-md text-xs text-white/60">{t(PROCHAIN_PRODUIT.note, PROCHAIN_PRODUIT.noteEn)}</p>
             <Link
-              href="/dashboard/produits?tab=catalogue"
+              href="/dashboard/produits/catalogue"
               className="mt-4 inline-block rounded-full border border-white/20 bg-black/40 px-4 py-2.5 text-xs font-semibold backdrop-blur-md"
             >
               {t("Voir les produits disponibles en drop", "View products available in drop")}

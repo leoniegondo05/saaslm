@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -18,11 +18,21 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
   prêt, cf. [[dashboard-mock-data-pending-laravel-api]]. Les flèches sont
   alors décoratives (rien à faire défiler) mais ne cassent rien : le calcul
   d'index se protège de la division par zéro.
+
+  Défilement auto (2,5 s) quand plus d'une image ; interagir avec les
+  flèches ou les points ne fait qu'avancer l'image, l'intervalle continue
+  derrière (pas besoin de le relancer/pauser pour un carousel aussi court).
 */
 export function ProduitCarousel({ images }: { images: string[] }) {
   const { t } = useDashboardLangue();
   const [index, setIndex] = useState(0);
   const count = images.length;
+
+  useEffect(() => {
+    if (count <= 1) return;
+    const id = setInterval(() => setIndex((i) => (i + 1) % count), 2500);
+    return () => clearInterval(id);
+  }, [count]);
 
   return (
     <>
@@ -61,7 +71,7 @@ export function ProduitCarousel({ images }: { images: string[] }) {
             type="button"
             onClick={() => setIndex(i)}
             aria-label={t(`Aller à l'image ${i + 1}`, `Go to image ${i + 1}`)}
-            className={`h-1.5 rounded-full transition-all ${i === index ? "w-4 bg-[#141220]" : "w-1.5 bg-[var(--dashboard-text)]/40"}`}
+            className={`h-1.5 rounded-full transition-all ${i === index ? "w-4 bg-white" : "w-1.5 bg-white/40"}`}
           />
         ))}
       </div>
@@ -90,7 +100,7 @@ export function SectionHeader({
       className="inline-flex rounded-full p-px shadow-[0_2px_12px_rgba(20,18,32,0.05)]"
       style={{ backgroundImage: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 58.35%, #FFFFFF 100%)" }}
     >
-      <span className="inline-flex items-center gap-2 rounded-full bg-[var(--dashboard-card-bg)]/80 px-4 py-2 text-sm font-semibold text-[var(--dashboard-text)] backdrop-blur-md">
+      <span className="inline-flex items-center gap-2 rounded-full bg-[var(--dashboard-card-bg)]/80 px-3 py-1.5 text-xs font-semibold text-[var(--dashboard-text)] backdrop-blur-md">
         <span className="h-1.5 w-1.5 rounded-full bg-brand-pink shadow-[0_0_10px_rgba(236,12,140,0.6)]" />
         {eyebrow}
       </span>
@@ -278,13 +288,16 @@ export function Btn({
   );
 }
 
-export function Nature({ code }: { code: "S" | "P" | "L" | "O" | "D" }) {
+export function Nature({ code }: { code: "S" | "P" | "L" | "O" | "D" | "B" }) {
   const styles: Record<string, string> = {
     S: "bg-[var(--dashboard-text)]/[0.08] text-[var(--dashboard-text)]/60",
     P: "bg-brand-purple/10 text-brand-purple",
     L: "bg-brand-pink/10 text-brand-pink",
     O: "border border-[var(--dashboard-text)]/15 text-[var(--dashboard-text)]/40",
     D: "bg-brand-pink/10 text-brand-pink",
+    // "Les deux" (stockage + drop) — commandes qui mélangent les deux
+    // façons de vendre, cf. légende de CommandesSection.
+    B: "border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/60",
   };
   return (
     <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[9px] font-bold ${styles[code]}`}>
@@ -578,21 +591,92 @@ export function ProductSelector({
 }
 
 export function Trend({ values }: { values?: number[] }) {
-  const bars = values && values.length ? values : [3, 5, 4, 8];
-  const max = Math.max(...bars);
+  const data = values && values.length ? values : [3, 5, 4, 8];
+  const w = 40;
+  const h = 20;
+  const pad = 3;
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const points = data.map((v, i) => ({
+    x: (i / (data.length - 1 || 1)) * w,
+    y: h - pad - ((v - min) / range) * (h - pad * 2),
+  }));
+  // Interpolation cubique monotone (Fritsch-Carlson) : contrairement à
+  // Catmull-Rom, la tangente est nulle à chaque pic/creux, donc pas de
+  // dépassement (l'ancien rendu créait des "hameçons" autour des extrema).
+  const n = points.length;
+  const dx = n > 1 ? points[1].x - points[0].x : 0;
+  const secants: number[] = [];
+  for (let k = 0; k < n - 1; k++) secants.push((points[k + 1].y - points[k].y) / (dx || 1));
+  const tangents: number[] = new Array(n).fill(0);
+  if (n > 1) {
+    tangents[0] = secants[0];
+    tangents[n - 1] = secants[n - 2];
+    for (let k = 1; k < n - 1; k++) tangents[k] = (secants[k - 1] + secants[k]) / 2;
+    for (let k = 0; k < n - 1; k++) {
+      if (secants[k] === 0) {
+        tangents[k] = 0;
+        tangents[k + 1] = 0;
+        continue;
+      }
+      const alpha = tangents[k] / secants[k];
+      const beta = tangents[k + 1] / secants[k];
+      if (alpha < 0) tangents[k] = 0;
+      if (beta < 0) tangents[k + 1] = 0;
+      const sq = alpha * alpha + beta * beta;
+      if (sq > 9) {
+        const tau = 3 / Math.sqrt(sq);
+        tangents[k] = tau * alpha * secants[k];
+        tangents[k + 1] = tau * beta * secants[k];
+      }
+    }
+  }
+  let d = `M ${points[0].x},${points[0].y}`;
+  for (let k = 0; k < n - 1; k++) {
+    const p0 = points[k];
+    const p1 = points[k + 1];
+    const cp1x = p0.x + dx / 3;
+    const cp1y = p0.y + (tangents[k] * dx) / 3;
+    const cp2x = p1.x - dx / 3;
+    const cp2y = p1.y - (tangents[k + 1] * dx) / 3;
+    d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p1.x},${p1.y}`;
+  }
+  const last = points[points.length - 1];
+  const avg = data.reduce((a, b) => a + b, 0) / data.length;
+  const avgY = h - pad - ((avg - min) / range) * (h - pad * 2);
+  const area = `${d} L ${last.x},${h} L ${points[0].x},${h} Z`;
+  const uid = useId();
   return (
-    <div className="flex h-5 items-end gap-[3px]" aria-hidden>
-      {bars.map((v, i) => (
-        <span
-          key={i}
-          className="w-1.5 rounded-sm"
-          style={{
-            height: `${Math.max((v / max) * 100, 12)}%`,
-            background: i === bars.length - 1 ? "var(--color-brand-pink)" : "#E4E1E8",
-          }}
-        />
-      ))}
-    </div>
+    <svg viewBox={`0 0 ${w} ${h}`} className="h-5 w-10 overflow-visible" aria-hidden fill="none">
+      <defs>
+        <linearGradient id={`trend-fill-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--color-brand-pink)" stopOpacity={0.32} />
+          <stop offset="100%" stopColor="var(--color-brand-pink)" stopOpacity={0} />
+        </linearGradient>
+        <filter id={`trend-glow-${uid}`} x="-150%" y="-150%" width="400%" height="400%">
+          <feGaussianBlur stdDeviation="1.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <line
+        x1={0}
+        y1={avgY}
+        x2={w}
+        y2={avgY}
+        stroke="var(--dashboard-text)"
+        strokeOpacity={0.18}
+        strokeWidth={0.6}
+        strokeDasharray="1.2 1.4"
+      />
+      <path d={area} fill={`url(#trend-fill-${uid})`} stroke="none" />
+      <path d={d} stroke="var(--color-brand-pink)" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={last.x} cy={last.y} r={2.4} fill="var(--color-brand-pink)" fillOpacity={0.35} filter={`url(#trend-glow-${uid})`} />
+      <circle cx={last.x} cy={last.y} r={1.5} fill="var(--color-brand-pink)" />
+    </svg>
   );
 }
 
@@ -651,7 +735,7 @@ export function Table({
                   {j === 0 ? (
                     <span className="font-semibold">{cell}</span>
                   ) : sourceCol === j ? (
-                    <Nature code={cell as "S" | "P" | "L" | "O"} />
+                    <Nature code={cell as "S" | "P" | "L" | "O" | "D" | "B"} />
                   ) : (
                     <span className={URGENT_CELLS.includes(cell) ? "text-brand-pink" : ""}>{cell}</span>
                   )}

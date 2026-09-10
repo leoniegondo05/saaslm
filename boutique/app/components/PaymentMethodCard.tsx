@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRef, useState } from "react";
 import { useDashboardLangue } from "./DashboardLanguageProvider";
 
@@ -7,8 +8,14 @@ import { useDashboardLangue } from "./DashboardLanguageProvider";
   Carte "Reversé sur ce compte" du dashboard Accueil : un jeu de cartes
   empilées (Orange Money, Wave, MTN MoMo, Moov Money), les pastilles en bas
   servent de sélecteur — cliquer une couleur affiche la carte du moyen de
-  paiement correspondant. Données statiques en attendant l'API Laravel,
-  cf. mémoire [[dashboard-mock-data-pending-laravel-api]].
+  paiement correspondant. Reproduction du modèle carte prépayée envoyé par
+  l'utilisateur : fond sombre teinté marque, arcs dégradés (rose → violet →
+  blanc, cf. couleurs fournies) dans le coin supérieur droit, vrai logo de
+  la marque (public/images) + nom en haut à gauche, "VISA" remplacé par
+  "Compte actif", "Card Balance" par "Reversé sur ce compte", numéro masqué
+  + icône sans-contact + puce en bas — pas de ligne cardholder/EXP/CVV,
+  l'utilisateur n'en a pas besoin. Données statiques en attendant l'API
+  Laravel, cf. mémoire [[dashboard-mock-data-pending-laravel-api]].
 */
 
 type Method = {
@@ -16,9 +23,9 @@ type Method = {
   label: string;
   short: string;
   dot: string;
-  gradient: string;
-  iconText: string;
-  textDark?: boolean;
+  base: string;
+  logoSrc: string;
+  logoWide?: boolean; // logo transparent, pas carré (ex: MTN) : pas de cadre arrondi
 };
 
 const METHODS: Method[] = [
@@ -27,35 +34,99 @@ const METHODS: Method[] = [
     label: "Orange Money",
     short: "OM",
     dot: "#FF7900",
-    gradient: "linear-gradient(118.07deg, #FFA24D 0%, #FF7900 46%, #B85200 100%)",
-    iconText: "#FF7900",
+    base: "#1A0F06",
+    logoSrc: "/images/ORANGE.png",
   },
   {
     id: "wave",
     label: "Wave",
     short: "WV",
     dot: "#1BA1F2",
-    gradient: "linear-gradient(118.07deg, #6DC5FA 0%, #1BA1F2 46%, #0A3D91 100%)",
-    iconText: "#0A3D91",
+    base: "#071726",
+    logoSrc: "/images/wave.png",
   },
   {
     id: "mtn",
     label: "MTN MoMo",
     short: "MTN",
     dot: "#FFCC00",
-    gradient: "linear-gradient(118.07deg, #FFE066 0%, #FFCC00 46%, #B38F00 100%)",
-    iconText: "#B38F00",
-    textDark: true,
+    base: "#14120A",
+    logoSrc: "/images/MTN.svg",
+    logoWide: true,
   },
   {
     id: "moov",
     label: "Moov Money",
     short: "MV",
     dot: "#2F72D6",
-    gradient: "linear-gradient(118.07deg, #6E9EEB 0%, #2F72D6 46%, #123B7A 100%)",
-    iconText: "#123B7A",
+    base: "#0A1020",
+    logoSrc: "/images/MOOV.png",
   },
 ];
+
+// Dégradé exact fourni (rose → violet → blanc) pour les traits, ancré en
+// coordonnées absolues (userSpaceOnUse) pour que les 4 lignes partagent le
+// même balayage de couleur au lieu de répéter chacune tout le dégradé.
+const TRAIT_GRADIENT_ID = "payment-card-trait-gradient";
+const CARD_W = 340;
+const CARD_H = 224; // carte agrandie (cf. min-h-56 plus bas) pour laisser respirer la courbe
+
+// Plat depuis le bord gauche jusqu'à ~65-70% de la largeur (reste dans
+// l'espace vide entre logo/nom et badge "Compte actif"), puis grande courbe
+// fluide (cubique, pas d'angle serré) vers le haut — reste à l'intérieur de
+// la carte, ne touche jamais bord droit ni bord haut, jamais lu comme un
+// contour de carte. Remonté pour rester au-dessus du numéro masqué en bas.
+//
+// 3 tracés distincts (pas une seule translation verticale) : un dy uniforme
+// écrase l'écart visuel là où la courbe devient presque verticale (l'écart
+// vertical constant devient une distance perpendiculaire minuscule sur un
+// segment quasi vertical → traits qui semblent collés/fondus en un seul en
+// haut). Ici chaque trait a son propre point de cambrure et sa propre fin,
+// légèrement décalés en x ET en y, pour garder un écart visible tout du long.
+const TRAIT_LINES = [
+  { path: "M0,138 L185,138 C204,138 220,80 220,8", width: 6 },
+  { path: "M0,130 L180,130 C197,130 210,74 210,4", width: 5 },
+  { path: "M0,122 L175,122 C190,122 202,67 202,0", width: 4 },
+];
+
+function CardArcs() {
+  return (
+    <svg
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      viewBox={`0 0 ${CARD_W} ${CARD_H}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id={TRAIT_GRADIENT_ID} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={CARD_W} y2="0">
+          <stop offset="0%" stopColor="#EC0C8C" />
+          <stop offset="58.35%" stopColor="#3A1D8A" />
+          <stop offset="100%" stopColor="#FFFFFF" />
+        </linearGradient>
+      </defs>
+      {TRAIT_LINES.map((line) => (
+        <path
+          key={line.path}
+          d={line.path}
+          stroke={`url(#${TRAIT_GRADIENT_ID})`}
+          strokeWidth={line.width}
+          strokeLinecap="round"
+          fill="none"
+        />
+      ))}
+    </svg>
+  );
+}
+
+function ContactlessIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" className="text-white/70">
+      <path d="M5 8.5a8 8 0 0 1 0 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M8.5 5.5a12.5 12.5 0 0 1 0 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 2.5a16 16 0 0 1 0 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 const SWIPE_THRESHOLD = 40;
 
@@ -108,12 +179,12 @@ export default function PaymentMethodCard() {
     <div className="relative pt-6">
       {/* cartes empilées derrière — profondeur : plus loin = plus flou */}
       <div
-        className="absolute inset-x-6 top-0 h-40 rounded-2xl border border-white/20 opacity-60 backdrop-blur-md transition-[background] duration-300 ease-out"
-        style={{ background: behind2.gradient }}
+        className="absolute inset-x-6 top-0 h-56 rounded-2xl border border-white/10 opacity-60 backdrop-blur-md transition-[background] duration-300 ease-out"
+        style={{ background: behind2.base }}
       />
       <div
-        className="absolute inset-x-2 top-2 h-40 rounded-2xl opacity-85 transition-[background] duration-300 ease-out"
-        style={{ background: behind1.gradient }}
+        className="absolute inset-x-2 top-2 h-56 rounded-2xl opacity-85 transition-[background] duration-300 ease-out"
+        style={{ background: behind1.base }}
       />
 
       <div
@@ -135,54 +206,50 @@ export default function PaymentMethodCard() {
             if (e.key === "ArrowRight" || e.key === "Enter" || e.key === " ") next();
             if (e.key === "ArrowLeft") prev();
           }}
-          className={`relative touch-pan-y cursor-grab overflow-hidden rounded-2xl p-4 shadow-[0_18px_40px_rgba(20,18,32,0.28)] select-none active:cursor-grabbing ${
-            method.textDark ? "text-[#141220]" : "text-white"
-          }`}
+          className="relative min-h-56 touch-pan-y cursor-grab overflow-hidden rounded-2xl px-4 pt-4 pb-1.5 text-white shadow-[0_18px_40px_rgba(20,18,32,0.28)] select-none active:cursor-grabbing"
           style={{
-            background: method.gradient,
+            background: method.base,
             transform: `translateX(${dragX}px)`,
             transition: draggingRef.current ? "none" : "transform 0.2s ease",
           }}
         >
-          <span
-            className={`pointer-events-none absolute rounded-full ${
-              method.textDark ? "bg-black/[0.06]" : ""
-            }`}
-            style={{ right: -30, top: -40, width: 130, height: 130, background: method.textDark ? undefined : "#FFFFFF29" }}
-          />
-          <span
-            className={`pointer-events-none absolute rounded-full ${
-              method.textDark ? "bg-black/[0.06]" : ""
-            }`}
-            style={{ left: -34, top: -40, width: 105, height: 105, background: method.textDark ? undefined : "#FFFFFF29" }}
-          />
-          <span
-            className={`pointer-events-none absolute rounded-full ${
-              method.textDark ? "bg-black/[0.06]" : ""
-            }`}
-            style={{ left: -32, bottom: -46, width: 115, height: 115, background: method.textDark ? undefined : "#FFFFFF29" }}
-          />
-          <div className="relative flex items-center justify-between gap-2">
-            <span className="flex items-center gap-2 text-sm font-bold">
-              <span
-                className="flex h-6 w-6 items-center justify-center rounded-md bg-white/90 text-[10px] font-extrabold"
-                style={{ color: method.iconText }}
-              >
-                {method.short}
+          <CardArcs />
+
+          <div className="relative flex h-full flex-col justify-between">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                {/* vrai logo marque */}
+                {method.logoWide ? (
+                  <Image src={method.logoSrc} alt={method.label} width={40} height={20} className="h-6 w-auto" />
+                ) : (
+                  <Image
+                    src={method.logoSrc}
+                    alt={method.label}
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 rounded-lg object-cover"
+                  />
+                )}
+                <span className="text-base font-bold tracking-tight">{method.label}</span>
               </span>
-              {method.label}
-            </span>
-            <span className="rounded-full border border-white/30 bg-white/20 px-3 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
-              {t("Compte actif", "Active account")}
-            </span>
-          </div>
-          <p className={`mt-4 text-[10px] uppercase tracking-[0.16em] ${method.textDark ? "text-black/50" : "text-white/70"}`}>
-            {t("Reversé sur ce compte", "Paid out to this account")}
-          </p>
-          <p className="mt-1 text-3xl font-bold tracking-tight">318 000 F</p>
-          <div className={`mt-3 flex items-center justify-between text-[10px] ${method.textDark ? "text-black/50" : "text-white/70"}`}>
-            <span className="tracking-[0.18em]">•••• •••• 4417</span>
-            <span>30 / 08</span>
+              <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-semibold text-white/90">
+                {t("Compte actif", "Active account")}
+              </span>
+            </div>
+
+            <p className="mt-4 text-[10px] uppercase tracking-[0.16em] text-white/50">
+              {t("Reversé sur ce compte", "Paid out to this account")}
+            </p>
+            <p className="mt-1 text-3xl font-bold tracking-tight">318 000 F</p>
+
+            <div className="mt-12 flex items-center justify-between">
+              <span className="text-xs tracking-[0.22em] text-white/70">•••• •••• •••• 4417</span>
+              <span className="flex items-center gap-1.5">
+                <ContactlessIcon />
+                {/* puce carte */}
+                <Image src="/images/sim.png" alt="" width={24} height={20} className="h-5 w-6 object-contain" />
+              </span>
+            </div>
           </div>
         </div>
       </div>

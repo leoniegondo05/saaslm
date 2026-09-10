@@ -12,7 +12,9 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
   bas, haut du réseau), la description, et un simulateur qui recalcule ce
   qu'il vous reste selon le prix de vente que vous fixez. Reçoit le produit
   déjà résolu (voir app/dashboard/produits/catalogue/[slug]/page.tsx) plutôt
-  que de refaire la recherche ici.
+  que de refaire la recherche ici. Atteint depuis une tuile du catalogue
+  (Écran 05, CatalogueDrop.tsx) — le bouton "Voir la fiche" de l'aperçu en
+  avant mène, lui, à l'aperçu plus léger (ApercuProduitDrop.tsx).
 */
 
 // Barème logistique du partenaire (voir Écran 04) : mêmes 1 500 F de frais
@@ -38,7 +40,7 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
   return (
     <>
       <Link
-        href="/dashboard/produits?tab=catalogue"
+        href="/dashboard/produits/catalogue"
         className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-card-bg)]/60 px-3.5 py-2 text-xs font-semibold"
       >
         <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
