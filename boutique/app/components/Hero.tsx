@@ -43,6 +43,10 @@ export default function Hero() {
           </p>
 
           <div className="ml-20 mt-[2.4rem] flex flex-col items-start gap-3">
+            {/* Bouton conforme à la maquette Figma (mesuré en pixels :
+                218×52, fond quasi-noir #050C1C, fine bordure dégradée
+                rose→violet, texte blanc) — priorité à la maquette sur la
+                charte graphique en cas de conflit, comme demandé. */}
             <span className="inline-block rounded-2xl bg-[linear-gradient(90deg,var(--color-brand-pink),var(--color-brand-purple))] p-px">
               <Link
                 href="/login"
