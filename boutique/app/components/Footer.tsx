@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import Wordmark from "./Wordmark";
 
 const LEGAL_LINKS = [
   { label: "Politique de confidentialité", href: "/politique-confidentialite" },
@@ -169,7 +170,7 @@ export default function Footer() {
             height={28}
             className="hidden h-7 w-7 object-contain opacity-70 sm:block"
           />
-          <p>© 2026 LIIVRE MOI. Tous droits réservés.</p>
+          <p>© 2026 <Wordmark />. Tous droits réservés.</p>
           <button
             type="button"
             aria-label="Changer de langue"

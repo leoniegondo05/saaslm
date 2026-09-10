@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 /*
   Mode nuit du dashboard : état partagé entre toutes les pages (Ma journée,
-  Accueil, Produits, Paramètres, Profil...) via ce contexte, monté une seule
+  Accueil, Produits, Réglages, Profil...) via ce contexte, monté une seule
   fois dans app/dashboard/layout.tsx — au lieu du booléen purement local qui
   vivait avant dans DashboardHeader (cf. commentaire retiré là-bas) et ne
   changeait donc jamais rien à l'écran.

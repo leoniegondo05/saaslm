@@ -24,11 +24,14 @@ import {
   (disponibilité des fonds). Le détail de lecture d'une ligne — icônes,
   couleurs, litiges, devises — est sa propre fiche : voir LireUneLigne
   (Écran 12), atteinte depuis CommandesNav.
+
+  `recherche` vient de DashboardSearchBar, posée au-dessus de CommandesNav
+  dans dashboard/commandes/page.tsx (plus d'input dupliqué ici) : filtre par
+  id ou nom de produit, jour par jour, un jour sans résultat disparaît.
 */
 
-export default function CommandesListe({ first = false }: { first?: boolean }) {
+export default function CommandesListe({ first = false, recherche = "" }: { first?: boolean; recherche?: string }) {
   const { t } = useDashboardLangue();
-  const [recherche, setRecherche] = useState("");
   const [aidePourquoi, setAidePourquoi] = useState(false);
   const [litigeOuvert, setLitigeOuvert] = useState<string | null>(null);
 
@@ -64,19 +67,7 @@ export default function CommandesListe({ first = false }: { first?: boolean }) {
         layout="inline"
       />
 
-      <div className="flex flex-wrap items-center gap-2.5">
-        <div className="relative min-w-[220px] flex-1">
-          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--dashboard-text)]/35">
-            <SearchIcon />
-          </span>
-          <input
-            type="text"
-            value={recherche}
-            onChange={(e) => setRecherche(e.target.value)}
-            placeholder={t("Rechercher une commande ou un produit…", "Search an order or product…")}
-            className="w-full rounded-full border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] py-2.5 pl-10 pr-4 text-xs font-medium text-[var(--dashboard-text)] outline-none transition focus:border-brand-pink/50"
-          />
-        </div>
+      <div className="flex flex-wrap items-center justify-end gap-2.5">
         <button
           type="button"
           onClick={() => setAidePourquoi((v) => !v)}
@@ -342,15 +333,6 @@ function NombreEtMot({ nombre, mot, couleur }: { nombre: number; mot: string; co
       </span>
       <span className="text-[10px] text-[var(--dashboard-text)]/45">{mot}</span>
     </span>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden>
-      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-      <path d="m21 21-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
   );
 }
 

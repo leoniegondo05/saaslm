@@ -14,7 +14,7 @@ export const REGLAGES_TABS = [
 export type ReglagesTab = (typeof REGLAGES_TABS)[number]["key"];
 
 /*
-  Barre d'onglets de l'onglet "Paramètres" du rail (voir DashboardSidebar) —
+  Barre d'onglets de l'onglet "Réglages" du rail (voir DashboardSidebar) —
   même mécanique que CommandesNav (dashboard-commandes/CommandesNav.tsx) :
   active = null → toutes les fiches s'affichent empilées, cliquer un onglet
   filtre sur cette seule fiche. "Personnel et accès" (dans le profil) et

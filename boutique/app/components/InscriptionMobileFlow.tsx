@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, type ReactNode } from "react";
 import AuthOverlayText from "./AuthOverlayText";
 import NetworkBackground from "./vision/NetworkBackground";
+import Wordmark from "./Wordmark";
 
 /*
   Symétrique de LoginMobileFlow.tsx, pour app/inscription/page.tsx.
@@ -53,7 +54,7 @@ export default function InscriptionMobileFlow({
             </span>
 
             <AuthOverlayText
-              label="Bienvenue sur LIIVRE MOI"
+              label={<>Bienvenue sur <Wordmark /></>}
               heading="Ici commence votre indépendance commerciale."
               cta={
                 <button

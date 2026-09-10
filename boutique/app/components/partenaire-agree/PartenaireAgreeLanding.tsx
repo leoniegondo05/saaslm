@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import styles from "../../partenaire-agree/partenaire-agree.module.css";
 import CandidatureForm from "./CandidatureForm";
+import Wordmark from "../Wordmark";
 
 /*
   Page "Partenaire agréé LM", portée depuis la maquette HTML/CSS fournie
@@ -721,7 +722,7 @@ export default function PartenaireAgreeLanding() {
           </div>
         </div>
         <div className={styles.piedBas}>
-          <span>© 2026 LIIVRE MOI. Tous droits réservés.</span>
+          <span>© 2026 <Wordmark />. Tous droits réservés.</span>
           <nav>
             <Link href="/politique-confidentialite">Politique confidentialité</Link>
             <Link href="/conditions-utilisation">Conditions d&apos;utilisation</Link>

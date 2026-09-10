@@ -21,7 +21,7 @@ export default function AuthOverlayText({
   heading,
   cta,
 }: {
-  label: string;
+  label: ReactNode;
   heading: ReactNode;
   /* Bouton optionnel affiché sous l'accroche (ex. "Continuer" sur l'écran
      d'accueil mobile de app/login/page.tsx, voir LoginMobileFlow.tsx) —

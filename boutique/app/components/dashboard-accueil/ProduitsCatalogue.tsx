@@ -104,7 +104,7 @@ function produitDepuisFormulaire(donnees: NouveauProduit, statut: "brouillon" | 
   };
 }
 
-export default function ProduitsCatalogue({ first = true }: { first?: boolean }) {
+export default function ProduitsCatalogue({ first = true, recherche = "" }: { first?: boolean; recherche?: string }) {
   const { t, langue } = useDashboardLangue();
   const numberLocale = langue === "EN" ? "en-US" : "fr-FR";
   const F = (n: number) => `${n.toLocaleString(numberLocale)} F`;
@@ -170,6 +170,22 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
   const benefice = produit.achat !== null
     ? produit.vente - produit.achat - (produit.fraisPreleves ?? 0)
     : Math.round((produit.vente * produit.margePct) / 100);
+
+  // Filtre du tableau par DashboardSearchBar (voir dashboard/produits/page.tsx) :
+  // sur le nom FR/EN, pas sur les autres colonnes — c'est la recherche d'un
+  // produit par nom, pas une recherche plein texte du tableau. Les stats
+  // au-dessus (publiés, en stockage...) et la fiche à droite restent sur
+  // `produits` en entier : ce sont des chiffres globaux de la boutique, pas
+  // un résultat de recherche.
+  const termeRecherche = recherche.trim().toLowerCase();
+  const lignesTableau = produits
+    .map((p, i) => ({ p, i }))
+    .filter(
+      ({ p }) =>
+        !termeRecherche ||
+        p.nom.toLowerCase().includes(termeRecherche) ||
+        p.nomEn.toLowerCase().includes(termeRecherche)
+    );
 
   return (
     <>
@@ -243,30 +259,38 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
                 </tr>
               </thead>
               <tbody>
-                {produits.map((p, i) => (
-                  <tr
-                    key={`${p.nom}-${i}`}
-                    onClick={() => setSelected(i)}
-                    className={`cursor-pointer border-b border-[var(--dashboard-text)]/[0.05] last:border-0 hover:bg-[var(--dashboard-text)]/[0.03] ${
-                      i === selected ? "bg-brand-pink/5" : ""
-                    }`}
-                  >
-                    <td className="py-2 pr-3 font-semibold">{t(p.nom, p.nomEn)}</td>
-                    <td className="py-2 pr-3"><Nature code={sourceBadge(p.nature)} /></td>
-                    <td className="py-2 pr-3">{p.achat !== null ? F(p.achat) : "—"}</td>
-                    <td className="py-2 pr-3">{F(p.vente)}</td>
-                    <td className="py-2 pr-3">{p.stock}</td>
-                    <td className="py-2 pr-3">{p.vendu}</td>
-                    <td className="py-2 pr-3">{p.margePct} %</td>
-                    <td className="py-2 pr-3">{p.avis !== null ? p.avis.toLocaleString(numberLocale) : "—"}</td>
-                    <td className="py-2 pr-3">
-                      <Tag tone={p.etat.tone}>{t(p.etat.label, p.etat.labelEn)}</Tag>
-                    </td>
-                    <td className="py-2 pr-3">
-                      <Trend values={p.tendance} />
+                {lignesTableau.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="py-6 text-center text-[var(--dashboard-text)]/40">
+                      {t(`Aucun produit pour « ${recherche} ».`, `No product for “${recherche}”.`)}
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  lignesTableau.map(({ p, i }) => (
+                    <tr
+                      key={`${p.nom}-${i}`}
+                      onClick={() => setSelected(i)}
+                      className={`cursor-pointer border-b border-[var(--dashboard-text)]/[0.05] last:border-0 hover:bg-[var(--dashboard-text)]/[0.03] ${
+                        i === selected ? "bg-brand-pink/5" : ""
+                      }`}
+                    >
+                      <td className="py-2 pr-3 font-semibold">{t(p.nom, p.nomEn)}</td>
+                      <td className="py-2 pr-3"><Nature code={sourceBadge(p.nature)} /></td>
+                      <td className="py-2 pr-3">{p.achat !== null ? F(p.achat) : "—"}</td>
+                      <td className="py-2 pr-3">{F(p.vente)}</td>
+                      <td className="py-2 pr-3">{p.stock}</td>
+                      <td className="py-2 pr-3">{p.vendu}</td>
+                      <td className="py-2 pr-3">{p.margePct} %</td>
+                      <td className="py-2 pr-3">{p.avis !== null ? p.avis.toLocaleString(numberLocale) : "—"}</td>
+                      <td className="py-2 pr-3">
+                        <Tag tone={p.etat.tone}>{t(p.etat.label, p.etat.labelEn)}</Tag>
+                      </td>
+                      <td className="py-2 pr-3">
+                        <Trend values={p.tendance} />
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

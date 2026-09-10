@@ -3,17 +3,19 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import DashboardHeader from "../../components/DashboardHeader";
+import DashboardSearchBar from "../../components/DashboardSearchBar";
 import DashboardSidebar from "../../components/DashboardSidebar";
-import Abonnement from "../../components/dashboard-parametres/Abonnement";
-import Confidentialite from "../../components/dashboard-parametres/Confidentialite";
-import FinancesReglements from "../../components/dashboard-parametres/FinancesReglements";
-import MaBoutique from "../../components/dashboard-parametres/MaBoutique";
-import PageDeCommande from "../../components/dashboard-parametres/PageDeCommande";
-import ReglagesNav, { ReglagesTab } from "../../components/dashboard-parametres/ReglagesNav";
-import ReglesDeVente from "../../components/dashboard-parametres/ReglesDeVente";
+import Abonnement from "../../components/dashboard-reglages/Abonnement";
+import Confidentialite from "../../components/dashboard-reglages/Confidentialite";
+import FinancesReglements from "../../components/dashboard-reglages/FinancesReglements";
+import MaBoutique from "../../components/dashboard-reglages/MaBoutique";
+import PageDeCommande from "../../components/dashboard-reglages/PageDeCommande";
+import ReglagesNav, { REGLAGES_TABS, ReglagesTab } from "../../components/dashboard-reglages/ReglagesNav";
+import ReglesDeVente from "../../components/dashboard-reglages/ReglesDeVente";
+import { useDashboardLangue } from "../../components/DashboardLanguageProvider";
 
 /*
-  Onglet "Paramètres" du dashboard, atteint depuis l'icône engrenage du
+  Onglet "Réglages" du dashboard, atteint depuis l'icône engrenage du
   rail (voir DashboardSidebar) — même mécanique que l'onglet "Produits"
   (voir app/dashboard/produits/page.tsx) : tab null → tout empilé, tab
   choisi → une seule fiche, via ReglagesNav.
@@ -47,14 +49,27 @@ const TAB_ORDER: ReglagesTab[] = [
   "confidentialite",
 ];
 
-export default function ParametresPage() {
+export default function ReglagesPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useDashboardLangue();
   const initialTab = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<ReglagesTab | null>(
     initialTab && TAB_ORDER.includes(initialTab as ReglagesTab) ? (initialTab as ReglagesTab) : null
   );
+  const [recherche, setRecherche] = useState("");
+
+  // Même logique que sur "Accueil" (app/dashboard/accueil/page.tsx) : pas de
+  // donnée commune entre les 6 fiches de réglages pour un filtrage plein
+  // texte, la recherche filtre donc par titre de fiche.
+  const termeRecherche = recherche.trim().toLowerCase();
+  const tabsAffiches = termeRecherche
+    ? TAB_ORDER.filter((tab) => {
+        const meta = REGLAGES_TABS.find((r) => r.key === tab)!;
+        return meta.label.toLowerCase().includes(termeRecherche) || meta.labelEn.toLowerCase().includes(termeRecherche);
+      })
+    : TAB_ORDER;
 
   const handleChange = useCallback(
     (tab: ReglagesTab | null) => {
@@ -72,15 +87,20 @@ export default function ParametresPage() {
 
         <div className="min-w-0 flex-1 lg:px-6">
           <DashboardHeader />
+          <DashboardSearchBar onChange={setRecherche} />
           <ReglagesNav active={activeTab} onChange={handleChange} />
 
           {activeTab === null ? (
-            <>
-              {TAB_ORDER.map((tab, index) => {
+            tabsAffiches.length === 0 ? (
+              <p className="mt-10 text-center text-xs text-[var(--dashboard-text)]/45">
+                {t(`Aucun réglage pour « ${recherche} ».`, `No setting for “${recherche}”.`)}
+              </p>
+            ) : (
+              tabsAffiches.map((tab, index) => {
                 const Section = SECTIONS[tab];
                 return <Section key={tab} first={index === 0} />;
-              })}
-            </>
+              })
+            )
           ) : (
             (() => {
               const ActiveSection = SECTIONS[activeTab];

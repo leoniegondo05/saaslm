@@ -258,7 +258,6 @@ function QuestionShell({
     <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-6 py-10">
       <div className="flex items-center gap-5 border-b border-white/10 pb-6">
         <Image src="/images/logo.svg" alt="Logo LIIVRE MOI" width={52} height={52} className="h-[52px] w-[52px] shrink-0 object-contain" />
-        <b className="text-[15px] font-bold tracking-tight text-brand-white">LM</b>
         <ProgressBar step={step} />
         <span className="ml-auto shrink-0 text-[9.5px] font-bold uppercase tracking-[0.1em] text-brand-white/40">
           Question {step} sur {NB_QUESTIONS}
@@ -692,7 +691,6 @@ export default function CompleterProfilWizard() {
     <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-6 py-10">
       <div className="flex items-center gap-3">
         <Image src="/images/logo.svg" alt="Logo LIIVRE MOI" width={52} height={52} className="h-[52px] w-[52px] shrink-0 object-contain" />
-        <b className="text-[15px] font-bold tracking-tight text-brand-white">LM</b>
         <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-white/50">Terminé</span>
       </div>
 

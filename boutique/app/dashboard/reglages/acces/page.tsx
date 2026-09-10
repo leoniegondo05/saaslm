@@ -1,10 +1,10 @@
 import DashboardHeader from "../../../components/DashboardHeader";
 import DashboardSidebar from "../../../components/DashboardSidebar";
-import PersonnelAcces from "../../../components/dashboard-parametres/PersonnelAcces";
+import PersonnelAcces from "../../../components/dashboard-reglages/PersonnelAcces";
 
 /*
   "Gérer les accès" — atteint depuis le bouton du même nom dans le menu du
-  compte (voir DashboardHeader). Page à part de /dashboard/parametres (les
+  compte (voir DashboardHeader). Page à part de /dashboard/reglages (les
   6 fiches Réglages) : c'est l'ancien Écran 07 "Personnel et accès",
   cf. PersonnelAcces.tsx.
 */
