@@ -40,8 +40,12 @@ export type DropProduit = {
    *  prixConseille (juste une recommandation) : sert de valeur de départ au
    *  simulateur "Fixer mon prix". Absent -> le simulateur part du conseillé. */
   prixVenteActuel?: number;
-  /** Photos produit pour le carousel de la fiche (Écran 06). Aucune pour
-   *  l'instant, cf. [[dashboard-mock-data-pending-laravel-api]]. */
+  /** Photos produit pour le carousel de la fiche (Écran 06) et l'aperçu du
+   *  catalogue (Écran 05). Aucune pour l'instant : les seuls visuels mock du
+   *  dashboard (enceinte, téléphone) ne correspondent à aucun produit réel
+   *  du catalogue et rendraient la fiche trompeuse (mauvaise photo sur le
+   *  bon produit) plutôt que "pas encore de photo" — laissé vide en
+   *  attendant les vraies photos, cf. [[dashboard-mock-data-pending-laravel-api]]. */
   images?: string[];
 };
 
@@ -178,11 +182,9 @@ export const DROP_PRODUITS: DropProduit[] = [
     nom: "Coffret soin nuit",
     nomEn: "Night care gift set",
     categorie: "Beauté et soins",
-    source: "AVENIR",
-    prixDrop: null,
-    prixConseille: null,
-    arriveeLe: "12 septembre",
-    arriveeLeEn: "Sept. 12",
+    source: "P",
+    prixDrop: 3500,
+    prixConseille: 8000,
   },
   {
     slug: "gel-nettoyant",

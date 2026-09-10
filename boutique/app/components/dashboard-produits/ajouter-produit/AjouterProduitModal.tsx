@@ -199,6 +199,22 @@ export default function AjouterProduitModal({
         )}
       </p>
 
+      {/* "Comment se crée un produit" (Écran 08) : remonté en haut d'écran,
+          avant le premier champ — la boutique lit l'ordre des six étapes
+          avant de remplir, pas après avoir tout saisi (l'emplacement bas de
+          maquette obligeait à scroller tout le formulaire pour la voir). */}
+      <p className="mt-6 text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">
+        {t("Comment se crée un produit", "How a product gets created")}
+      </p>
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        {ETAPES.map(({ titre, titreEn, texte, texteEn }) => (
+          <div key={titre} className="rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-3">
+            <p className="text-[11px] font-semibold">{t(titre, titreEn)}</p>
+            <p className="mt-0.5 text-[9px] leading-snug text-[var(--dashboard-text)]/40">{t(texte, texteEn)}</p>
+          </div>
+        ))}
+      </div>
+
       <div className="mt-6">
         <MediaProduit
           valeur={{ video, photos }}
@@ -254,21 +270,6 @@ export default function AjouterProduitModal({
             prixVenteGlobal={prixVente}
           />
         </div>
-      </div>
-
-      {/* "Comment se crée un produit" (Écran 08, bas de maquette) : repris
-          tel quel, texte pour texte — la boutique voit d'un coup d'œil
-          l'ordre des six étapes avant de se lancer dans le détail. */}
-      <p className="mt-6 text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">
-        {t("Comment se crée un produit", "How a product gets created")}
-      </p>
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        {ETAPES.map(({ titre, titreEn, texte, texteEn }) => (
-          <div key={titre} className="rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-3">
-            <p className="text-[11px] font-semibold">{t(titre, titreEn)}</p>
-            <p className="mt-0.5 text-[9px] leading-snug text-[var(--dashboard-text)]/40">{t(texte, texteEn)}</p>
-          </div>
-        ))}
       </div>
 
       {/* Avertissement vente à perte (Écran 08) : affiché seulement quand

@@ -44,7 +44,7 @@ export default function AccueilNav({
 }) {
   const { t } = useDashboardLangue();
   return (
-    <nav className="mt-6 flex flex-wrap items-center justify-center gap-2">
+    <nav className="mt-10 flex flex-wrap items-center justify-center gap-2">
       <NavButton label={t("Tout", "All")} isActive={active === null} onClick={() => onChange(null)} />
       {ACCUEIL_TABS.map((tab) => (
         <NavButton key={tab} label={t(tab, TAB_LABELS_EN[tab])} isActive={tab === active} onClick={() => onChange(tab)} />
@@ -59,7 +59,7 @@ function NavButton({ label, isActive, onClick }: { label: string; isActive: bool
       type="button"
       onClick={onClick}
       aria-current={isActive ? "page" : undefined}
-      className={`rounded-full px-4 py-2.5 text-xs font-semibold transition sm:px-5 sm:text-sm ${
+      className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition sm:px-3.5 sm:py-2 sm:text-xs ${
         isActive
           ? "bg-[linear-gradient(135deg,var(--color-brand-pink),#2a1668_45%,#1a2a8a_100%)] text-white shadow-[0_8px_24px_rgba(58,29,138,0.28)]"
           : "bg-[var(--dashboard-card-bg)]/70 text-[var(--dashboard-text)]/60 shadow-[0_2px_10px_rgba(20,18,32,0.06)] hover:bg-[var(--dashboard-card-bg)] hover:text-[var(--dashboard-text)]"

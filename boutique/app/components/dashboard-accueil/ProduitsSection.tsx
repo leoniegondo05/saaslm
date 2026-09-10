@@ -86,11 +86,8 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
             <span className="h-full bg-brand-pink" style={{ width: "18%" }} />
           </div>
           <NatureRow code="S" name={t("Stockage Management", "Management warehousing")} value="4 · 284 500" note={t("Marge 46 % · 240 unités immobilisées · 22 j de couverture", "46% margin · 240 units tied up · 22 days of cover")} />
-          <NatureRow code="D" name={t("Drop", "Drop")} value="8 · 112 000" note={t("Marge 71 % · vous livrez vous-même · aucun frais partenaire", "71% margin · you deliver yourself · no partner fees")} />
-          <NatureRow code="D" name={t("Drop", "Drop")} value="7 · 301 000" note={t("Marge 34 % · aucun stock avancé · 1 litige", "34% margin · no advance stock · 1 dispute")} />
-          <NatureRow code="D" name={t("Drop", "Drop")} value="5 · 145 000" note={t("Marge 31 % · catalogue de la plateforme · 3 litiges", "31% margin · platform catalog · 3 disputes")} last />
+          <NatureRow code="D" name={t("Drop", "Drop")} value="8 · 112 000" note={t("Marge 71 % · vous livrez vous-même · aucun frais partenaire", "71% margin · you deliver yourself · no partner fees")} last />
           <Divider />
-          <StatRow label={t("Nature la plus rentable", "Most profitable type")} value={t("Produit propre", "Own product")} />
           <StatRow label={t("Nature qui vend le plus", "Best-selling type")} value={t("Drop du partenaire", "Partner drop")} />
         </Card>
 
@@ -129,7 +126,6 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
 
           <Card title={t("Catalogue accessible", "Accessible catalog")} titleTab className="mt-3 !bg-[var(--dashboard-glass)]">
             <StatRow label={t("Drop", "Drop")} value="117" />
-            <StatRow label={t("Drop", "Drop")} value="64" />
             <StatRow label={t("Nouveautés ce mois", "New this month")} value="12" />
             <StatRow label={t("Produits à venir", "Coming soon")} value="6" />
             <StatRow label={t("Jamais vendus chez vous", "Never sold by you")} value="3" />

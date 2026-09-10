@@ -265,10 +265,10 @@ export default function StockSection({ first = true }: { first?: boolean }) {
               [t("Coffret parfum", "Perfume gift set"), t("2 août", "Aug 2"), "40", "40", "0", "40", "0", t("Rupture", "Out of stock")],
             ]}
             evolutions={[
-              [4, 6, 8, 9],
-              [2, 5, 4, 8],
-              [5, 5, 6, 8],
-              [6, 4, 2, 1],
+              [4, 5, 4, 6, 5, 7, 6, 8, 7, 9],
+              [2, 3, 2, 5, 3, 4, 5, 6, 7, 8],
+              [5, 4, 5, 5, 6, 5, 7, 6, 7, 8],
+              [6, 7, 5, 6, 4, 5, 3, 2, 2, 1],
             ]}
             activeIndex={index}
             onRowClick={setIndex}
@@ -296,19 +296,19 @@ export default function StockSection({ first = true }: { first?: boolean }) {
               t("Litiges", "Disputes"),
             ]}
             rows={[
-              [t("Montre connectée S8", "S8 connected watch"), "L", "6 200", "48", "340", "21 j", "31 %", "3"],
-              [t("Casque sans fil X2", "X2 wireless headset"), "P", "4 800", "21", "96", "13 j", "34 %", "1"],
-              [t("Lotion tonique", "Toning lotion"), "L", "3 800", "9", "210", "40 j", "38 %", "0"],
-              [t("Masque argile", "Clay mask"), "P", "3 400", "6", "18", "6 j", "29 %", "0"],
-              [t("Gel nettoyant", "Cleansing gel"), "P", "2 200", "4", "140", "35 j", "36 %", "0"],
+              [t("Montre connectée S8", "S8 connected watch"), "D", "6 200", "48", "340", "21 j", "31 %", "3"],
+              [t("Casque sans fil X2", "X2 wireless headset"), "S", "4 800", "21", "96", "13 j", "34 %", "1"],
+              [t("Lotion tonique", "Toning lotion"), "D", "3 800", "9", "210", "40 j", "38 %", "0"],
+              [t("Masque argile", "Clay mask"), "S", "3 400", "6", "18", "6 j", "29 %", "0"],
+              [t("Gel nettoyant", "Cleansing gel"), "S", "2 200", "4", "140", "35 j", "36 %", "0"],
             ]}
             sourceCol={1}
             evolutions={[
-              [3, 6, 5, 9],
-              [4, 3, 6, 7],
-              [2, 3, 5, 6],
-              [5, 4, 3, 3],
-              [3, 3, 2, 4],
+              [3, 4, 3, 5, 4, 6, 5, 7, 6, 9],
+              [4, 5, 3, 4, 5, 4, 6, 5, 6, 7],
+              [2, 3, 2, 4, 3, 5, 4, 5, 5, 6],
+              [5, 4, 5, 3, 4, 2, 3, 2, 3, 3],
+              [3, 2, 3, 4, 2, 3, 1, 2, 3, 4],
             ]}
           />
         </Card>

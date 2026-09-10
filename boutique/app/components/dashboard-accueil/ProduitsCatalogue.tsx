@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
-import { Btn, Card, Divider, Nature, ProductSelector, SectionHeader, StatRow, Tag } from "./shared";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Btn, Card, Divider, Nature, ProductSelector, SectionHeader, StatRow, Tag, Trend } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
-import AjouterProduitModal from "../dashboard-produits/ajouter-produit/AjouterProduitModal";
 import CreerCategorieModal from "../dashboard-produits/CreerCategorieModal";
 import { CATEGORIES_DEFAUT } from "../dashboard-produits/ajouter-produit/categoriesDefaut";
+import { lireEtViderProduitEnAttente, lireEtViderCategoriesEnAttente } from "../dashboard-produits/ajouter-produit/pendingProduitStore";
 import type { Categorie, NouveauProduit } from "../dashboard-produits/ajouter-produit/types";
 
 /*
@@ -19,9 +20,11 @@ import type { Categorie, NouveauProduit } from "../dashboard-produits/ajouter-pr
   Chiffres statiques pour l'instant, cf. mémoire
   [[dashboard-mock-data-pending-laravel-api]] — à brancher sur l'API Laravel
   quand elle expose le catalogue produits. Le bouton "Ajouter un produit"
-  ouvre AjouterProduitModal (voir ../dashboard-produits/ajouter-produit/) :
-  tant qu'il n'y a pas d'endpoint de création, le produit saisi est
-  simplement ajouté à cette liste locale.
+  mène à /dashboard/produits/ajouter (page à part, voir
+  app/dashboard/produits/ajouter/page.tsx — pas un modal en state ici :
+  une actualisation dessus doit y rester, pas ramener à cette page) ; le
+  produit saisi revient via pendingProduitStore et s'ajoute à cette liste
+  locale au montage.
 */
 
 type Nature4 = "S" | "P" | "L";
@@ -48,30 +51,21 @@ type Produit = {
 };
 
 const PRODUITS_INITIAUX: Produit[] = [
-  { nom: "Montre connectée S8", nomEn: "S8 connected watch", nature: "L", achat: 6200, vente: 14000, stock: 340, vendu: 48, margePct: 31, avis: 4.5, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 1660, couverture: "21 jours", couvertureEn: "21 days", litiges: 3, tendance: [5, 7, 6, 9, 10, 11] },
-  { nom: "Sérum éclat 30 ml", nomEn: "Radiance serum 30 ml", nature: "S", achat: 4300, vente: 12000, stock: 83, vendu: 37, margePct: 46, avis: 4.7, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 2180, couverture: "22 jours", couvertureEn: "22 days", litiges: 0, tendance: [4, 6, 5, 8, 9, 5] },
-  { nom: "Casque sans fil X2", nomEn: "X2 wireless headset", nature: "P", achat: 4800, vente: 11000, stock: 96, vendu: 21, margePct: 34, avis: 3.4, etat: { label: "Avis négatifs", labelEn: "Negative reviews", tone: "warn" }, fraisPreleves: 1420, couverture: "13 jours", couvertureEn: "13 days", litiges: 1, tendance: [6, 5, 4, 3, 2, 1] },
-  { nom: "Huile de ricin 100 ml", nomEn: "Castor oil 100 ml", nature: "S", achat: 2600, vente: 7500, stock: 2, vendu: 58, margePct: 44, avis: 4.8, etat: { label: "Rupture · 1 j", labelEn: "Out of stock · 1 day", tone: "ko" }, fraisPreleves: 1580, couverture: "1 jour", couvertureEn: "1 day", litiges: 0, tendance: [7, 9, 11, 13, 12, 14] },
-  { nom: "Beurre de karité 200 g", nomEn: "Shea butter 200 g", nature: "S", achat: 4100, vente: 9000, stock: 127, vendu: 73, margePct: 42, avis: 4.6, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 1120, couverture: "34 jours", couvertureEn: "34 days", litiges: 0, tendance: [8, 8, 9, 10, 9, 10] },
-  { nom: "Bracelet cuir", nomEn: "Leather bracelet", nature: "S", achat: 3800, vente: 6000, stock: 28, vendu: 2, margePct: 29, avis: 4.2, etat: { label: "Rotation lente", labelEn: "Slow turnover", tone: "warn" }, fraisPreleves: 460, couverture: "60+ jours", couvertureEn: "60+ days", litiges: 0, tendance: [2, 1, 1, 0, 1, 0] },
-  { nom: "Lotion tonique", nomEn: "Toning lotion", nature: "L", achat: 3800, vente: 8900, stock: 210, vendu: 9, margePct: 38, avis: 4.4, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 1440, couverture: "40 jours", couvertureEn: "40 days", litiges: 0, tendance: [3, 2, 3, 2, 4, 3] },
-  { nom: "Gel nettoyant", nomEn: "Cleansing gel", nature: "P", achat: 2200, vente: 6000, stock: 140, vendu: 4, margePct: 36, avis: null, etat: { label: "Jamais vendu", labelEn: "Never sold", tone: "warn" }, fraisPreleves: 940, couverture: "35 jours", couvertureEn: "35 days", litiges: 0, tendance: [0, 0, 1, 0, 0, 1] },
+  { nom: "Montre connectée S8", nomEn: "S8 connected watch", nature: "L", achat: 6200, vente: 14000, stock: 340, vendu: 48, margePct: 31, avis: 4.5, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 1660, couverture: "21 jours", couvertureEn: "21 days", litiges: 3, tendance: [5, 6, 5, 7, 6, 8, 7, 9, 10, 11] },
+  { nom: "Sérum éclat 30 ml", nomEn: "Radiance serum 30 ml", nature: "S", achat: 4300, vente: 12000, stock: 83, vendu: 37, margePct: 46, avis: 4.7, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 2180, couverture: "22 jours", couvertureEn: "22 days", litiges: 0, tendance: [4, 5, 4, 6, 5, 7, 6, 8, 9, 5] },
+  { nom: "Casque sans fil X2", nomEn: "X2 wireless headset", nature: "P", achat: 4800, vente: 11000, stock: 96, vendu: 21, margePct: 34, avis: 3.4, etat: { label: "Avis négatifs", labelEn: "Negative reviews", tone: "warn" }, fraisPreleves: 1420, couverture: "13 jours", couvertureEn: "13 days", litiges: 1, tendance: [6, 6, 5, 5, 4, 4, 3, 3, 2, 1] },
+  { nom: "Huile de ricin 100 ml", nomEn: "Castor oil 100 ml", nature: "S", achat: 2600, vente: 7500, stock: 2, vendu: 58, margePct: 44, avis: 4.8, etat: { label: "Rupture · 1 j", labelEn: "Out of stock · 1 day", tone: "ko" }, fraisPreleves: 1580, couverture: "1 jour", couvertureEn: "1 day", litiges: 0, tendance: [7, 8, 7, 9, 10, 11, 12, 13, 12, 14] },
+  { nom: "Beurre de karité 200 g", nomEn: "Shea butter 200 g", nature: "S", achat: 4100, vente: 9000, stock: 127, vendu: 73, margePct: 42, avis: 4.6, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 1120, couverture: "34 jours", couvertureEn: "34 days", litiges: 0, tendance: [8, 8, 7, 8, 9, 8, 9, 10, 9, 10] },
+  { nom: "Bracelet cuir", nomEn: "Leather bracelet", nature: "S", achat: 3800, vente: 6000, stock: 28, vendu: 2, margePct: 29, avis: 4.2, etat: { label: "Rotation lente", labelEn: "Slow turnover", tone: "warn" }, fraisPreleves: 460, couverture: "60+ jours", couvertureEn: "60+ days", litiges: 0, tendance: [2, 2, 1, 1, 1, 0, 1, 0, 1, 0] },
+  { nom: "Lotion tonique", nomEn: "Toning lotion", nature: "L", achat: 3800, vente: 8900, stock: 210, vendu: 9, margePct: 38, avis: 4.4, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 1440, couverture: "40 jours", couvertureEn: "40 days", litiges: 0, tendance: [3, 2, 3, 2, 3, 2, 4, 3, 4, 3] },
+  { nom: "Gel nettoyant", nomEn: "Cleansing gel", nature: "P", achat: 2200, vente: 6000, stock: 140, vendu: 4, margePct: 36, avis: null, etat: { label: "Jamais vendu", labelEn: "Never sold", tone: "warn" }, fraisPreleves: 940, couverture: "35 jours", couvertureEn: "35 days", litiges: 0, tendance: [0, 0, 0, 1, 0, 0, 1, 0, 0, 1] },
 ];
 
-function MiniTrend({ data }: { data: number[] }) {
-  const max = Math.max(...data, 1);
-  return (
-    <div className="flex h-5 items-end gap-[3px]">
-      {data.map((v, i) => (
-        <span
-          key={i}
-          className={`w-1.5 rounded-full ${i === data.length - 1 ? "bg-brand-pink" : "bg-[var(--dashboard-text)]/15"}`}
-          style={{ height: `${Math.max((v / max) * 100, 12)}%` }}
-        />
-      ))}
-    </div>
-  );
-}
+// Code affiché dans la colonne "Source" du tableau : L (LM) et P (partenaire)
+// sont deux variantes de drop — on les affiche sous le même badge "D", S
+// (stockage) reste distinct. Le champ `nature` d'origine garde P/L intacts
+// pour les compteurs "dropPartenaire"/"dropLm" ci-dessous.
+const sourceBadge = (nature: Nature4) => (nature === "S" ? "S" : "D");
 
 /*
   Transforme la charge du formulaire "Ajouter un produit" en une ligne du
@@ -118,7 +112,6 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
   const [categories, setCategories] = useState<Categorie[]>(CATEGORIES_DEFAUT);
   const [selected, setSelectedRaw] = useState(0);
   const [photo, setPhoto] = useState(0);
-  const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const [categorieModalOuverte, setCategorieModalOuverte] = useState(false);
   const produit = produits[selected];
   const photos = produit.images ?? [];
@@ -134,7 +127,6 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
   const ajouterProduit = (donnees: NouveauProduit, statut: "brouillon" | "publie") => {
     setProduits((prev) => [produitDepuisFormulaire(donnees, statut), ...prev]);
     setSelected(0);
-    setAjoutOuvert(false);
   };
 
   // Une catégorie créée depuis le formulaire "Ajouter un produit" doit
@@ -144,19 +136,18 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
     setCategories((prev) => [...prev, { id: `cat-${Math.random().toString(36).slice(2, 9)}`, nom, nomEn: nom }]);
   };
 
-  // Remplace tout l'écran "Produits" par le formulaire — DashboardSidebar
-  // et DashboardHeader restent affichés puisqu'ils sont rendus par la page
-  // parente (app/dashboard/produits/page.tsx), pas par ce composant.
-  if (ajoutOuvert) {
-    return (
-      <AjouterProduitModal
-        categoriesInitiales={categories}
-        onFermer={() => setAjoutOuvert(false)}
-        onCreer={ajouterProduit}
-        onCategorieCreee={(c) => setCategories((prev) => [...prev, c])}
-      />
-    );
-  }
+  // Le formulaire vit maintenant sur sa propre page
+  // (/dashboard/produits/ajouter) : ce qu'il produit revient via
+  // pendingProduitStore plutôt qu'un callback direct, donc on le lit une
+  // seule fois au montage puis on vide le pont pour ne pas réappliquer le
+  // même produit à chaque re-render.
+  useEffect(() => {
+    const enAttente = lireEtViderProduitEnAttente();
+    if (enAttente) ajouterProduit(enAttente.produit, enAttente.statut);
+    const nouvellesCategories = lireEtViderCategoriesEnAttente();
+    if (nouvellesCategories.length > 0) setCategories((prev) => [...prev, ...nouvellesCategories]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Nombre réel de produits par catégorie — pas un chiffre d'exemple :
   // les produits de démonstration ci-dessus n'ont pas de categorieId, donc
@@ -216,13 +207,12 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
               <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white dark:bg-brand-pink">
                 {t("Déposer un stock", "Deposit stock")}
               </button>
-              <button
-                type="button"
-                onClick={() => setAjoutOuvert(true)}
+              <Link
+                href="/dashboard/produits/ajouter"
                 className="rounded-full bg-[var(--dashboard-card-bg)] px-4 py-2 text-xs font-semibold shadow-[0_2px_10px_rgba(20,18,32,0.08)]"
               >
                 {t("Ajouter un produit", "Add a product")}
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -262,7 +252,7 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
                     }`}
                   >
                     <td className="py-2 pr-3 font-semibold">{t(p.nom, p.nomEn)}</td>
-                    <td className="py-2 pr-3"><Nature code={p.nature} /></td>
+                    <td className="py-2 pr-3"><Nature code={sourceBadge(p.nature)} /></td>
                     <td className="py-2 pr-3">{p.achat !== null ? F(p.achat) : "—"}</td>
                     <td className="py-2 pr-3">{F(p.vente)}</td>
                     <td className="py-2 pr-3">{p.stock}</td>
@@ -273,7 +263,7 @@ export default function ProduitsCatalogue({ first = true }: { first?: boolean })
                       <Tag tone={p.etat.tone}>{t(p.etat.label, p.etat.labelEn)}</Tag>
                     </td>
                     <td className="py-2 pr-3">
-                      <MiniTrend data={p.tendance} />
+                      <Trend values={p.tendance} />
                     </td>
                   </tr>
                 ))}
