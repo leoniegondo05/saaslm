@@ -5,7 +5,7 @@ import { Divider, Tag } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
-  Écran "Créer un collaborateur" (/dashboard/parametres/creer), atteint
+  Écran "Créer un collaborateur" (/dashboard/reglages/creer), atteint
   depuis le bouton du même nom sur "Gérer les accès" (voir
   PersonnelAcces.tsx). Quatre blocs indépendants — qui, son rôle, combien
   de temps, ses accès — chacun repris seul quand l'API Laravel de gestion

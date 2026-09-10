@@ -17,7 +17,7 @@ export type AccueilTab = (typeof ACCUEIL_TABS)[number];
 // Les valeurs ci-dessus servent aussi de clé pour SECTIONS (accueil/page.tsx)
 // et de valeur d'URL (?tab=...) : elles restent en FR, seul le libellé
 // affiché change avec la langue.
-const TAB_LABELS_EN: Record<AccueilTab, string> = {
+export const TAB_LABELS_EN: Record<AccueilTab, string> = {
   Finances: "Finances",
   Commandes: "Orders",
   Clients: "Customers",

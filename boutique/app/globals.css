@@ -16,16 +16,78 @@
   site avec des classes Tailwind comme "bg-brand-bg" ou "text-brand-pink".
 */
 @theme inline {
-  --color-brand-bg: #000717; /* fond principal — valeur exacte mesurée sur la maquette Figma (prioritaire sur la charte en cas de conflit) */
+  --color-brand-bg: #000717; /* fond principal, bleu nuit très sombre — valeur exacte mesurée sur la maquette Figma, gardée telle quelle sur demande (prioritaire sur la charte en cas de conflit ; diffère du bleu nuit #011847 de la charte) */
   --color-brand-pink: #ec0c8c; /* rose fuchsia, couleur d'accent */
-  --color-brand-purple: #3a1d8a; /* violet, utilisé dans les dégradés */
-  --color-brand-white: #faf7fc; /* blanc légèrement teinté */
+  --color-brand-purple: #3a1d8a; /* indigo, utilisé dans les dégradés (couleur secondaire charte) */
+  --color-brand-white: #faf7fc; /* blanc cassé */
+  --color-brand-pink-light: #ffc2e2; /* rose claire, couleur secondaire charte */
+  --color-brand-slate: #5a6072; /* gris ardoise, couleur secondaire charte */
   --font-sans: var(--font-sora);
 }
 
 body {
   background: var(--color-brand-bg);
   color: var(--color-brand-white);
+}
+
+/*
+  Dégradé "Hero" de la charte graphique : Noir → Bleu → Indigo → Rose
+  fuchsia → Blanc cassé, réservé exclusivement à la section hero (règle de
+  la charte) — ne pas réutiliser ailleurs.
+*/
+.bg-hero-gradient {
+  background: linear-gradient(
+    135deg,
+    #000000 0%,
+    var(--color-brand-bg) 30%,
+    var(--color-brand-purple) 60%,
+    var(--color-brand-pink) 85%,
+    var(--color-brand-white) 100%
+  );
+}
+
+/*
+  Boutons officiels de la charte graphique (section "Boutons") : CTA
+  principal (fond rose fuchsia + glassmorphism 80%, bordure blanche 3px) et
+  CTA secondaire (fond transparent + glassmorphism 20%, bordure multicolore
+  3px) — à réserver aux actions principales de page, pas aux petits boutons
+  d'interface du dashboard (chips, actions de ligne, etc.).
+*/
+.btn-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 50px;
+  border: 3px solid rgba(255, 255, 255, 0.45);
+  background: rgba(236, 12, 140, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--color-brand-white);
+  font-family: var(--font-sora);
+  font-weight: 600;
+  padding: 1rem 1.125rem;
+}
+
+.btn-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 50px;
+  border: 3px solid transparent;
+  border-image: linear-gradient(
+      90deg,
+      var(--color-brand-pink),
+      var(--color-brand-purple),
+      var(--color-brand-slate)
+    )
+    1;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--color-brand-white);
+  font-family: var(--font-sora);
+  font-weight: 600;
+  padding: 1rem 1.125rem;
 }
 
 /*

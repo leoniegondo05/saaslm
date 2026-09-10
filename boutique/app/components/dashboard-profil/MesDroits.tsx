@@ -14,11 +14,11 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
   connectée est mise en avant (ici Administrateur, cf. PROFIL.role dans
   MonProfil) et seul un administrateur peut retirer une page à quelqu'un à
   l'intérieur de son rôle (bouton "Gérer les accès", voir
-  DashboardHeader → /dashboard/parametres).
+  DashboardHeader → /dashboard/reglages).
 
   Effectifs par rôle et matrice de droits statiques pour l'instant, cf.
   mémoire [[dashboard-mock-data-pending-laravel-api]] — cohérents avec les
-  collaborateurs listés dans dashboard-parametres/PersonnelAcces.tsx
+  collaborateurs listés dans dashboard-reglages/PersonnelAcces.tsx
   (Fatou Silué = Finances, Yao Pacôme + Ismaël Traoré = Commandes,
   Nadège Ouattara = Stock) ; à remplacer par les vrais comptes et droits
   dès que l'API Laravel les exposera.

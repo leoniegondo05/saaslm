@@ -398,7 +398,7 @@
 }
 .h2 {
   font-size: clamp(30px, 3.6vw, 46px);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.028em;
   line-height: 1.12;
   max-width: 19ch;

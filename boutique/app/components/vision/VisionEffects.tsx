@@ -25,7 +25,7 @@ export default function VisionEffects() {
       <div className="mx-auto max-w-[1320px]">
         <ScrollReveal>
           <VisionEyebrow>Les effets</VisionEyebrow>
-          <h2 className="mt-4 max-w-md text-3xl font-bold leading-tight sm:text-4xl">
+          <h2 className="mt-4 max-w-md text-3xl font-semibold leading-tight sm:text-4xl">
             Ce que l&apos;infrastructure produit
           </h2>
         </ScrollReveal>
@@ -39,7 +39,7 @@ export default function VisionEffects() {
               delay={i * 100}
               className="border-t border-white/15 pt-6"
             >
-              <h3 className="text-xl font-bold">{col.title}</h3>
+              <h3 className="text-xl font-medium">{col.title}</h3>
               <p className="mt-4 text-brand-white/70">{col.body}</p>
             </ScrollReveal>
           ))}

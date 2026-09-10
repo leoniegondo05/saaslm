@@ -86,6 +86,7 @@ export function SectionHeader({
   count,
   first = false,
   layout = "stack",
+  actions,
 }: {
   eyebrow: string;
   title: string;
@@ -94,6 +95,8 @@ export function SectionHeader({
   first?: boolean;
   /** "stack": badge au-dessus du titre (défaut). "inline": badge / titre sur une même ligne. */
   layout?: "stack" | "inline";
+  /** Boutons optionnels à droite du header (ex: "Exporter", "Comparer à la période précédente"). */
+  actions?: React.ReactNode;
 }) {
   const badge = (
     <span
@@ -108,7 +111,8 @@ export function SectionHeader({
   );
 
   return (
-    <div className={`flex flex-wrap items-end justify-between gap-3 ${layout === "inline" ? "mb-12" : "mb-4"} ${first ? "mt-8" : "mt-12"}`}>
+    <div className={first ? "mt-8" : "mt-12"}>
+      <div className={`flex flex-wrap items-end justify-between gap-3 ${layout === "inline" ? "mb-12" : "mb-4"}`}>
       {layout === "inline" ? (
         <div className="flex items-center gap-3">
           {badge}
@@ -125,12 +129,35 @@ export function SectionHeader({
           {subtitle && <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/50">{subtitle}</p>}
         </div>
       )}
-      {count && (
-        <span className="rounded-full bg-[var(--dashboard-card-bg)]/70 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-[var(--dashboard-text)]/40 shadow-[0_2px_10px_rgba(20,18,32,0.06)]">
-          {count}
-        </span>
+      {actions ? (
+        <div className="flex flex-wrap items-center gap-2.5">{actions}</div>
+      ) : (
+        count && (
+          <span className="rounded-full bg-[var(--dashboard-card-bg)]/70 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-[var(--dashboard-text)]/40 shadow-[0_2px_10px_rgba(20,18,32,0.06)]">
+            {count}
+          </span>
+        )
       )}
+      </div>
     </div>
+  );
+}
+
+/*
+  Bouton pilule contour rose, sans remplissage — pour les actions de header
+  ("Exporter", "Comparer à la période précédente") du document envoyé.
+  Distinct de Btn (qui est toujours pleine largeur, pensé pour les CTA de
+  carte) : celui-ci reste à sa largeur de contenu, pour s'aligner en ligne.
+*/
+export function HeaderActionBtn({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="shrink-0 rounded-full border border-brand-pink/50 px-4 py-2 text-[11px] font-semibold text-[var(--dashboard-text)] transition hover:bg-brand-pink/5 sm:px-5 sm:py-2.5 sm:text-xs"
+    >
+      {children}
+    </button>
   );
 }
 
@@ -173,7 +200,7 @@ export function Card({
       )}
       {title && !titleTab && (
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{title}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]">{title}</p>
           {badge}
         </div>
       )}
@@ -204,14 +231,19 @@ export function StatRow({
   );
 }
 
-export function LegendRow({ color, label, value }: { color: string; label: string; value: React.ReactNode }) {
+export function LegendRow({ color, label, value, badge }: { color: string; label: string; value: React.ReactNode; badge?: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 text-xs">
-      <span className="flex items-center gap-1.5 text-[var(--dashboard-text)]/50">
-        <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: color }} />
-        {label}
+    <div className="text-xs">
+      <span className="flex items-center gap-1.5">
+        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color }} />
+        <span className="font-semibold">{value}</span>
+        {badge ? (
+          <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border border-[var(--dashboard-text)]/30 text-[8px] font-semibold text-[var(--dashboard-text)]/60">
+            {badge}
+          </span>
+        ) : null}
       </span>
-      <span className="font-semibold">{value}</span>
+      <p className="mt-0.5 pl-4 text-[10px] leading-tight text-[var(--dashboard-text)]/40">{label}</p>
     </div>
   );
 }
@@ -220,9 +252,9 @@ export function Divider() {
   return <div className="my-3 h-px bg-[var(--dashboard-text)]/10" />;
 }
 
-export function Bar({ pct, color = "bg-brand-pink", background }: { pct: number; color?: string; background?: string }) {
+export function Bar({ pct, color = "bg-brand-pink", background, height = "h-1.5" }: { pct: number; color?: string; background?: string; height?: string }) {
   return (
-    <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]">
+    <div className={`mt-1.5 ${height} w-full overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]`}>
       <div
         className={`h-full rounded-full ${background ? "" : color}`}
         style={{ width: `${Math.min(100, Math.max(0, pct))}%`, ...(background ? { background } : {}) }}
@@ -677,6 +709,211 @@ export function Trend({ values }: { values?: number[] }) {
       <circle cx={last.x} cy={last.y} r={2.4} fill="var(--color-brand-pink)" fillOpacity={0.35} filter={`url(#trend-glow-${uid})`} />
       <circle cx={last.x} cy={last.y} r={1.5} fill="var(--color-brand-pink)" />
     </svg>
+  );
+}
+
+// Bruit déterministique (même formule fractale que le fake-noise GLSL
+// classique) : pas de Math.random, donc pas de désaccord SSR/hydratation
+// et le graphe reste identique à chaque rendu.
+function pseudoNoise(seed: number) {
+  const x = Math.sin(seed) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+/*
+  Grand graphe en aire (Trésorerie / Trésorerie attendue), façon ticker
+  boursier (cf. capture Yahoo Finance envoyée) : segments DROITS (pas de
+  lissage Bézier) subdivisés en micro-dents façon cours de bourse — chaque
+  point réel (un jour) reste exact, les points intermédiaires zigzaguent
+  autour du segment. Aire en dégradé qui s'évanouit vers le bas, seul le
+  dernier point est marqué (point plein + halo).
+*/
+export function AreaChart({
+  values,
+  color = "#22C55E",
+  markers = [],
+}: {
+  values: number[];
+  color?: string;
+  /** Indices (dans `values`) des points "fin de suspension" : trait vertical pointillé + point blanc, comme sur le document envoyé. */
+  markers?: number[];
+}) {
+  const data = values;
+  const w = 300;
+  const h = 100;
+  const padY = 6;
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  // Arrondi des coordonnées : Math.sin (utilisé ci-dessous par pseudoNoise
+  // et pour le damping) n'est pas garanti bit-à-bit identique entre le
+  // moteur JS du serveur (SSR) et celui du navigateur — sans cet arrondi,
+  // le `d` du path diffère de quelques ULP et React signale un désaccord
+  // d'hydratation même si le tracé est visuellement identique.
+  const round = (n: number) => Math.round(n * 1000) / 1000;
+  const real = data.map((v, i) => ({
+    x: round((i / (data.length - 1 || 1)) * w),
+    y: round(h - padY - ((v - min) / range) * (h - padY * 2)),
+  }));
+  // Subdivision de chaque segment réel en micro-dents : les extrémités
+  // (t=0 et t=1) restent exactes, l'intérieur zigzague avec un bruit
+  // déterministe dont l'amplitude s'annule aux deux bouts du segment
+  // (pas de discontinuité entre segments successifs).
+  const subSteps = 6;
+  const jitter = (h - padY * 2) * 0.05;
+  const points: { x: number; y: number }[] = [];
+  for (let i = 0; i < real.length - 1; i++) {
+    const p0 = real[i];
+    const p1 = real[i + 1];
+    for (let s = 0; s < subSteps; s++) {
+      const t = s / subSteps;
+      const x = p0.x + (p1.x - p0.x) * t;
+      const y = p0.y + (p1.y - p0.y) * t;
+      const damp = Math.sin(t * Math.PI); // 0 aux bouts, max au milieu
+      const n = (pseudoNoise(i * 12.9898 + s * 3.71) - 0.5) * 2;
+      points.push({ x: round(x), y: round(y + n * damp * jitter) });
+    }
+  }
+  points.push(real[real.length - 1]);
+  const d = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x},${p.y}`).join(" ");
+  const last = points[points.length - 1];
+  const area = `${d} L ${last.x},${h} L ${points[0].x},${h} Z`;
+  // React 18 useId() renvoie des ":" (ex. ":r4:") : légaux en XML mais
+  // connus pour casser la résolution de url(#id) dans un gradient/filter
+  // sur certains moteurs de rendu — l'élément qui référence l'id invalide
+  // n'est alors PAS rendu du tout (comportement spec SVG pour un filter
+  // cassé). On nettoie l'id pour rester sur des caractères sans risque.
+  const uid = useId().replace(/:/g, "");
+  // Les points (marqueurs + dernier point) sortent du SVG : preserveAspectRatio="none"
+  // étire x et y avec des échelles différentes, donc un <circle> y devient une
+  // ellipse. En overlay HTML (position % + taille fixe en px), le rond reste rond
+  // quel que soit l'étirement du graphe.
+  return (
+    <div className="relative mt-3 h-24 w-full sm:h-28">
+      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-full w-full overflow-visible" aria-hidden fill="none">
+        <defs>
+          <linearGradient id={`area-fill-${uid}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.28} />
+            <stop offset="100%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        {/* fallback "none" après l'IRI : si la réf gradient ne résout jamais,
+            on obtient un remplissage transparent plutôt qu'un aplat noir/blanc
+            par défaut du moteur de rendu. */}
+        <path d={area} fill={`url(#area-fill-${uid}) none`} stroke="none" />
+        <path d={d} stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        {markers.map((i) => {
+          const p = real[i];
+          if (!p) return null;
+          return (
+            <line key={i} x1={p.x} y1={-4} x2={p.x} y2={h} stroke="var(--dashboard-text)" strokeOpacity={0.35} strokeWidth={1} strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+          );
+        })}
+      </svg>
+      {markers.map((i) => {
+        const p = real[i];
+        if (!p) return null;
+        return (
+          <span
+            key={i}
+            className="absolute rounded-full"
+            style={{ left: `${(p.x / w) * 100}%`, top: `${(p.y / h) * 100}%`, width: 4, height: 4, background: "#141220", transform: "translate(-50%,-50%)" }}
+          />
+        );
+      })}
+      <span
+        className="absolute rounded-full"
+        style={{ left: `${(last.x / w) * 100}%`, top: `${(last.y / h) * 100}%`, width: 5, height: 5, background: color, transform: "translate(-50%,-50%)" }}
+      />
+    </div>
+  );
+}
+
+/*
+  Graphe en cascade (compte de résultat de la période) : chaque colonne est
+  soit un total posé depuis 0 (encaissé de départ, résultat net final —
+  kind "total"), soit un delta flottant entre le total courant et le
+  suivant (kind "delta", amount signé). Les pointillés horizontaux entre
+  colonnes relient le sommet d'une barre au départ de la suivante, comme
+  dans le document envoyé — pas de lissage, segments droits uniquement.
+*/
+export function WaterfallChart({
+  items,
+}: {
+  items: { label: string; display: string; amount: number; kind: "total" | "delta" }[];
+}) {
+  const n = items.length;
+  let running = 0;
+  const bars = items.map((it) => {
+    let start: number;
+    let end: number;
+    if (it.kind === "total") {
+      start = 0;
+      end = it.amount;
+      running = it.amount;
+    } else {
+      start = running;
+      end = running + it.amount;
+      running = end;
+    }
+    return { ...it, start, end };
+  });
+  const max = Math.max(...bars.map((b) => Math.max(b.start, b.end))) || 1;
+  const colW = 100;
+  const w = n * colW;
+  const h = 200;
+  const topPad = 14;
+  const y = (v: number) => topPad + (h - topPad) * (1 - v / max);
+  const gap = colW * 0.3;
+  const uid = useId();
+
+  return (
+    <div className="mt-4">
+      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-40 w-full overflow-visible sm:h-48" aria-hidden fill="none">
+        {bars.slice(0, -1).map((b, i) => {
+          const cy = y(b.end);
+          const x1 = i * colW + colW - gap / 2;
+          const x2 = (i + 1) * colW + gap / 2;
+          return (
+            <line
+              key={`${uid}-c${i}`}
+              x1={x1}
+              y1={cy}
+              x2={x2}
+              y2={cy}
+              stroke="var(--dashboard-text)"
+              strokeOpacity={0.2}
+              strokeWidth={1.5}
+              strokeDasharray="4 4"
+            />
+          );
+        })}
+        {bars.map((b, i) => {
+          const x = i * colW + gap / 2;
+          const bw = colW - gap;
+          const barTop = y(Math.max(b.start, b.end));
+          const barBottom = y(Math.min(b.start, b.end));
+          const bh = Math.max(barBottom - barTop, 3);
+          const color = b.kind === "total" ? (i === 0 ? "#9096AA" : "#4FE0AE") : "#F08289";
+          return <rect key={`${uid}-b${i}`} x={x} y={barTop} width={bw} height={bh} rx={5} fill={color} />;
+        })}
+      </svg>
+      <div className="mt-2 grid gap-1" style={{ gridTemplateColumns: `repeat(${n}, minmax(0,1fr))` }}>
+        {bars.map((b, i) => (
+          <div key={`${uid}-l${i}`} className="text-center">
+            <p className="truncate text-[7.5px] leading-tight text-[var(--dashboard-text)]/40 sm:text-[8px]" title={b.label}>
+              {b.label}
+            </p>
+            <p
+              className="mt-0.5 truncate text-[8.5px] font-bold sm:text-[10px]"
+              style={{ color: b.kind === "delta" ? "#DC3A45" : i === 0 ? undefined : "#0E9F6E" }}
+            >
+              {b.display}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

@@ -5,6 +5,7 @@ import AuthOverlayText from "../components/AuthOverlayText";
 import NetworkBackground from "../components/vision/NetworkBackground";
 import InscriptionMobileFlow from "../components/InscriptionMobileFlow";
 import InscriptionForm from "../components/InscriptionForm";
+import Wordmark from "../components/Wordmark";
 
 export const metadata: Metadata = {
   title: "Inscription — LIIVRE MOI",
@@ -52,7 +53,7 @@ export default function InscriptionPage() {
         </div>
 
         <AuthOverlayText
-          label="Bienvenue sur LIIVRE MOI"
+          label={<>Bienvenue sur <Wordmark /></>}
           heading="Ici commence votre indépendance commerciale."
         />
       </div>

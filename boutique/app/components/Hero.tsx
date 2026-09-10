@@ -30,7 +30,7 @@ export default function Hero() {
             s'engager" suivent avec leur propre décalage (ml-20, puis un
             ml-20 supplémentaire rien que pour "Sans s'engager"). */}
         <div>
-          <h1 className="text-left text-4xl font-extrabold leading-[1.16] tracking-[-0.02em] sm:text-5xl lg:text-[56px]">
+          <h1 className="text-left text-4xl font-bold leading-[1.16] tracking-[-0.02em] sm:text-5xl lg:text-[56px]">
             <span className="block">une vente</span>
             <span className="ml-4 block">un réseau</span>
             <span className="ml-8 block">

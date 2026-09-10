@@ -17,7 +17,7 @@ export default function CTA() {
             <br />
             Entreprise de logistique :
           </p>
-          <h2 className="mt-2 text-3xl font-bold sm:text-4xl">
+          <h2 className="mt-2 text-3xl font-semibold sm:text-4xl">
             votre voyage commence{" "}
             <span className="text-brand-pink">ici</span>.
           </h2>

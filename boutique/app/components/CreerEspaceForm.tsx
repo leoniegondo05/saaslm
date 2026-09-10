@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
+import Wordmark from "./Wordmark";
 
 /*
   Formulaire "Créer mon espace", reproduction pixel de la maquette
@@ -145,7 +146,7 @@ export default function CreerEspaceForm({
             />
           </svg>
         </div>
-        <h3 className="mt-3 text-2xl font-bold tracking-[-0.02em] text-[#0B1030]">
+        <h3 className="mt-3 text-2xl font-medium tracking-[-0.02em] text-[#0B1030]">
           Votre espace est prêt
         </h3>
         <p className="mx-auto mt-2 max-w-[42ch] text-[#6E6880]">
@@ -168,7 +169,9 @@ export default function CreerEspaceForm({
         <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl bg-[#0B1030]">
           <i className="block h-3 w-3 rounded-full bg-[#EC0C8C]" />
         </span>
-        <b className="text-base font-bold tracking-[-0.02em] text-[#0B1030]">LIIVRE MOI</b>
+        <b className="text-base font-bold tracking-[-0.02em] text-[#0B1030]">
+          <Wordmark />
+        </b>
       </div>
 
       {/* ---------- étape 1 ---------- */}
@@ -177,7 +180,7 @@ export default function CreerEspaceForm({
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#EC0C8C]">
             Étape 1 sur 2
           </p>
-          <h2 className="text-[31px] font-bold tracking-[-0.032em] text-[#0B1030]">
+          <h2 className="text-[31px] font-semibold tracking-[-0.032em] text-[#0B1030]">
             Votre compte
           </h2>
           <p className="mb-8 mt-2 text-[15.5px] text-[#6E6880]">
@@ -265,7 +268,7 @@ export default function CreerEspaceForm({
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#EC0C8C]">
             Étape 2 sur 2
           </p>
-          <h2 className="text-[31px] font-bold tracking-[-0.032em] text-[#0B1030]">
+          <h2 className="text-[31px] font-semibold tracking-[-0.032em] text-[#0B1030]">
             Votre entreprise
           </h2>
           <p className="mb-8 mt-2 text-[15.5px] text-[#6E6880]">

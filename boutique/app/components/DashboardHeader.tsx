@@ -11,7 +11,7 @@ import { useDashboardTheme } from "./DashboardThemeProvider";
 import { useDashboardLangue } from "./DashboardLanguageProvider";
 
 // Compte de collaborateurs actifs affiché sur le bouton "Gérer les accès"
-// (voir PersonnelAcces.tsx, /dashboard/parametres/acces) — valeur figée
+// (voir PersonnelAcces.tsx, /dashboard/reglages/acces) — valeur figée
 // tant que l'API Laravel n'expose pas le vrai décompte, cf. mémoire
 // [[dashboard-mock-data-pending-laravel-api]].
 const PERSONNEL_ACTIF_COUNT = 4;
@@ -237,58 +237,62 @@ export default function DashboardHeader() {
   const weekdayLabels = langue === "EN" ? ["M", "T", "W", "T", "F", "S", "S"] : ["L", "M", "M", "J", "V", "S", "D"];
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
+    <header className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex items-center gap-2.5">
         <Image
           src="/images/logo.svg"
           alt="Logo LIIVRE MOI"
           width={44}
           height={44}
-          className="h-11 w-11 shrink-0 object-contain"
+          className="h-8 w-8 shrink-0 object-contain sm:h-11 sm:w-11"
         />
 
         <div className="relative flex items-center gap-1.5 sm:gap-2">
-          <div className="relative flex items-center gap-0.5 rounded-full bg-white/70 p-1 shadow-[0_2px_10px_rgba(20,18,32,0.06)] dark:bg-white/10 sm:gap-1 sm:p-1.5">
-            <button
-              type="button"
-              aria-label={t("Mois précédent", "Previous month")}
-              onClick={() => shiftMonth(-1)}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white dark:text-white/50 dark:hover:bg-white/15 sm:h-8 sm:w-8"
-            >
-              <ChevronIcon direction="left" />
-            </button>
-            {visibleMonths.map(({ key, date }, index) => (
+          {/* Anneau de contour en 1px (bg + p-px), même épaisseur que le
+              badge "solution LM" ci-dessous (cf. retour utilisateur). */}
+          <div className="relative rounded-full bg-[#141220]/10 p-px dark:bg-white/15">
+            <div className="flex items-center gap-0.5 rounded-full bg-white/70 p-0.5 dark:bg-white/10 sm:gap-1 sm:p-1">
               <button
-                key={key}
                 type="button"
-                onClick={() => {
-                  if (index === 1) {
-                    // Mois actif : clic ouvre le picker des jours de ce mois
-                    // (au lieu de le faire dépendre de la puce "jour" à part,
-                    // qui débordait la navbar, cf. retour utilisateur).
-                    setShowDayPicker((open) => !open);
-                    setShowYearPicker(false);
-                    return;
-                  }
-                  shiftMonth(index - 1);
-                }}
-                className={`rounded-full px-2.5 py-1 text-xs font-medium transition sm:px-4 sm:py-1.5 sm:text-sm ${
-                  index === 1
-                    ? "bg-white text-[#141220] shadow-[0_2px_8px_rgba(20,18,32,0.1)] dark:bg-white/15 dark:text-[var(--dashboard-text)]"
-                    : "hidden text-[#141220]/45 hover:text-[#141220]/70 dark:text-white/40 dark:hover:text-white/70 sm:inline-block"
-                }`}
+                aria-label={t("Mois précédent", "Previous month")}
+                onClick={() => shiftMonth(-1)}
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white dark:text-white/50 dark:hover:bg-white/15 sm:h-6 sm:w-6"
               >
-                {monthNames[date.getMonth()]}
+                <ChevronIcon direction="left" />
               </button>
-            ))}
-            <button
-              type="button"
-              aria-label={t("Mois suivant", "Next month")}
-              onClick={() => shiftMonth(1)}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white dark:text-white/50 dark:hover:bg-white/15 sm:h-8 sm:w-8"
-            >
-              <ChevronIcon direction="right" />
-            </button>
+              {visibleMonths.map(({ key, date }, index) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => {
+                    if (index === 1) {
+                      // Mois actif : clic ouvre le picker des jours de ce mois
+                      // (au lieu de le faire dépendre de la puce "jour" à part,
+                      // qui débordait la navbar, cf. retour utilisateur).
+                      setShowDayPicker((open) => !open);
+                      setShowYearPicker(false);
+                      return;
+                    }
+                    shiftMonth(index - 1);
+                  }}
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium transition sm:px-2.5 sm:py-1 sm:text-[11px] ${
+                    index === 1
+                      ? "bg-white text-[#141220] shadow-[0_2px_8px_rgba(20,18,32,0.1)] dark:bg-white/15 dark:text-[var(--dashboard-text)]"
+                      : "hidden text-[#141220]/45 hover:text-[#141220]/70 dark:text-white/40 dark:hover:text-white/70 sm:inline-block"
+                  }`}
+                >
+                  {monthNames[date.getMonth()]}
+                </button>
+              ))}
+              <button
+                type="button"
+                aria-label={t("Mois suivant", "Next month")}
+                onClick={() => shiftMonth(1)}
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white dark:text-white/50 dark:hover:bg-white/15 sm:h-6 sm:w-6"
+              >
+                <ChevronIcon direction="right" />
+              </button>
+            </div>
 
             {showDayPicker && (
               <div className="absolute left-0 top-full z-10 mt-2 w-[220px] rounded-2xl bg-white p-3 shadow-[0_8px_24px_rgba(20,18,32,0.16)] dark:bg-[#1c1830]">
@@ -321,16 +325,19 @@ export default function DashboardHeader() {
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setShowYearPicker((open) => !open);
-              setShowDayPicker(false);
-            }}
-            className="shrink-0 rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-[#141220]/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:text-white/70 dark:hover:bg-white/15 sm:px-3 sm:py-1.5 sm:text-sm"
-          >
-            {activeYear}
-          </button>
+          {/* Même anneau 1px que le sélecteur de mois ci-dessus. */}
+          <span className="shrink-0 rounded-full bg-[#141220]/10 p-px shadow-[0_2px_10px_rgba(20,18,32,0.06)] dark:bg-white/15">
+            <button
+              type="button"
+              onClick={() => {
+                setShowYearPicker((open) => !open);
+                setShowDayPicker(false);
+              }}
+              className="block rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] font-medium text-[#141220]/70 transition hover:bg-white dark:bg-white/10 dark:text-white/70 dark:hover:bg-white/15 sm:px-2 sm:py-1 sm:text-[11px]"
+            >
+              {activeYear}
+            </button>
+          </span>
 
           {showYearPicker && (
             <div className="absolute left-0 top-full z-10 mt-2 flex flex-col overflow-hidden rounded-2xl bg-white py-1 shadow-[0_8px_24px_rgba(20,18,32,0.16)] dark:bg-[#1c1830]">
@@ -352,14 +359,14 @@ export default function DashboardHeader() {
         </div>
       </div>
 
-      <span className="inline-flex rounded-full bg-[linear-gradient(90deg,var(--color-brand-pink),rgba(20,18,32,0.08))] p-px shadow-[0_2px_10px_rgba(20,18,32,0.06)]">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white/90 pl-2.5 pr-3.5 py-1.5 text-xs font-medium text-[#141220] dark:bg-[#1c1830]/90 dark:text-[var(--dashboard-text)]">
+      <span className="hidden rounded-full bg-[linear-gradient(90deg,var(--color-brand-pink),rgba(20,18,32,0.08))] p-px shadow-[0_2px_10px_rgba(20,18,32,0.06)] sm:inline-flex">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 pl-2 pr-3 py-1 text-[11px] font-medium text-[#141220] dark:bg-[#1c1830]/90 dark:text-[var(--dashboard-text)]">
           <SparkleIcon />
           {t("solution LM", "LM solution")}
         </span>
       </span>
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-4">
         <div className="relative" ref={notifPanelRef}>
           <button
             type="button"
@@ -367,7 +374,7 @@ export default function DashboardHeader() {
             aria-haspopup="menu"
             aria-expanded={showNotifPanel}
             onClick={() => setShowNotifPanel((open) => !open)}
-            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15"
+            className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15"
           >
             <BellIcon />
             {nbNonLues > 0 && (
@@ -457,14 +464,14 @@ export default function DashboardHeader() {
 
         <Link
           href="/dashboard/partenaire-agree"
-          className="flex items-center gap-3 rounded-full bg-white/70 p-1.5 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15 sm:pr-5"
+          className="flex items-center gap-1.5 rounded-full bg-white/70 p-1 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15 sm:pr-3.5"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-purple">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-purple">
             <BuildingIcon />
           </span>
           <span className="hidden leading-tight sm:block">
-            <span className="block text-xs text-[#141220]/50 dark:text-white/40">{t("Partenaire agréé", "Approved partner")}</span>
-            <span className="block text-sm font-semibold">Groupe Logistique Ivoire</span>
+            <span className="block text-[10px] text-[#141220]/50 dark:text-white/40">{t("Partenaire agréé", "Approved partner")}</span>
+            <span className="block text-[11px] font-semibold">Groupe Logistique Ivoire</span>
           </span>
         </Link>
 
@@ -478,100 +485,100 @@ export default function DashboardHeader() {
             aria-haspopup="menu"
             aria-expanded={showAccountMenu}
             onClick={() => setShowAccountMenu((open) => !open)}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15"
           >
-            <UserIcon />
+            <UserIcon className="h-4 w-4" />
           </button>
 
           {showAccountMenu && (
             <div
               role="menu"
-              className="absolute right-0 top-full z-20 mt-2 w-[300px] overflow-hidden rounded-[28px] bg-white shadow-[0_20px_48px_-12px_rgba(20,18,32,0.35)] dark:bg-[#1c1830]"
+              className="absolute right-0 top-full z-20 mt-2 w-[240px] overflow-hidden rounded-[24px] bg-white shadow-[0_20px_48px_-12px_rgba(20,18,32,0.35)] dark:bg-[#1c1830]"
             >
               <Link
                 href="/dashboard/profil"
                 onClick={() => setShowAccountMenu(false)}
-                className="flex items-center gap-3 p-3 transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
+                className="flex items-center gap-2 p-2 transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
               >
                 <span
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl text-white"
                   style={{ background: "linear-gradient(135deg,#EC0C8C,#3A1D8A)" }}
                 >
-                  <UserIcon className="h-5 w-5 text-white" />
+                  <UserIcon className="h-3.5 w-3.5 text-white" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-bold">Awa K.</span>
-                  <span className="block text-xs text-[#141220]/45 dark:text-white/40">{t("Voir mon profil", "View my profile")}</span>
+                  <span className="block truncate text-xs font-bold">Awa K.</span>
+                  <span className="block text-[10px] text-[#141220]/45 dark:text-white/40">{t("Voir mon profil", "View my profile")}</span>
                 </span>
                 <ChevronIcon direction="right" />
               </Link>
 
-              <div className="px-2 pb-2">
+              <div className="px-1.5 pb-1.5">
                 <Link
                   href="/dashboard/profil/securite"
                   onClick={() => setShowAccountMenu(false)}
-                  className="flex items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
+                  className="flex items-center gap-2.5 rounded-2xl px-1.5 py-1.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-purple/10 text-brand-purple">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-purple/10 text-brand-purple">
                     <ShieldIcon />
                   </span>
-                  <span className="flex-1 text-sm font-medium">{t("Mot de passe et sécurité", "Password & security")}</span>
+                  <span className="flex-1 text-xs font-medium">{t("Mot de passe et sécurité", "Password & security")}</span>
                   <ChevronIcon direction="right" />
                 </Link>
                 <Link
                   href="/dashboard/profil/droits"
                   onClick={() => setShowAccountMenu(false)}
-                  className="flex items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
+                  className="flex items-center gap-2.5 rounded-2xl px-1.5 py-1.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dcf5e3] text-[#178a3f]">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#dcf5e3] text-[#178a3f]">
                     <UserCheckIcon />
                   </span>
-                  <span className="flex-1 text-sm font-medium">{t("Mes droits", "My permissions")}</span>
+                  <span className="flex-1 text-xs font-medium">{t("Mes droits", "My permissions")}</span>
                   <ChevronIcon direction="right" />
                 </Link>
                 <Link
                   href="/dashboard/profil/appareils"
                   onClick={() => setShowAccountMenu(false)}
-                  className="flex items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
+                  className="flex items-center gap-2.5 rounded-2xl px-1.5 py-1.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dbeafe] text-[#1d4ed8]">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#dbeafe] text-[#1d4ed8]">
                     <DeviceIcon />
                   </span>
-                  <span className="flex-1 text-sm font-medium">{t("Mes appareils", "My devices")}</span>
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#141220] px-1.5 text-[11px] font-semibold text-white">
+                  <span className="flex-1 text-xs font-medium">{t("Mes appareils", "My devices")}</span>
+                  <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#141220] px-1 text-[10px] font-semibold text-white">
                     {APPAREILS_CONNECTES_COUNT}
                   </span>
                   <ChevronIcon direction="right" />
                 </Link>
                 <Link
-                  href="/dashboard/parametres/acces"
+                  href="/dashboard/reglages/acces"
                   onClick={() => setShowAccountMenu(false)}
-                  className="flex items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
+                  className="flex items-center gap-2.5 rounded-2xl px-1.5 py-1.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ffe1e2] text-[#c8262d]">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ffe1e2] text-[#c8262d]">
                     <PersonPlusIcon />
                   </span>
-                  <span className="flex-1 text-sm font-medium">{t("Gérer les accès", "Manage access")}</span>
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#141220] px-1.5 text-[11px] font-semibold text-white">
+                  <span className="flex-1 text-xs font-medium">{t("Gérer les accès", "Manage access")}</span>
+                  <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#141220] px-1 text-[10px] font-semibold text-white">
                     {PERSONNEL_ACTIF_COUNT}
                   </span>
                   <ChevronIcon direction="right" />
                 </Link>
               </div>
 
-              <div className="mx-4 h-px bg-[#141220]/10 dark:bg-white/10" />
+              <div className="mx-3.5 h-px bg-[#141220]/10 dark:bg-white/10" />
 
-              <div className="px-2 py-2">
-                <div className="flex items-center gap-3 px-2 py-2.5">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#141220]/[0.06] text-[#141220]/60 dark:bg-white/10 dark:text-white/60">
+              <div className="px-1.5 py-1.5">
+                <div className="flex items-center gap-2.5 px-1.5 py-2">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#141220]/[0.06] text-[#141220]/60 dark:bg-white/10 dark:text-white/60">
                     <GlobeIcon />
                   </span>
-                  <span className="flex-1 text-sm font-medium">{t("Langue", "Language")}</span>
-                  <div className="flex items-center rounded-full bg-[#141220]/[0.06] p-0.5 text-xs font-semibold dark:bg-white/10">
+                  <span className="flex-1 text-xs font-medium">{t("Langue", "Language")}</span>
+                  <div className="flex items-center rounded-full bg-[#141220]/[0.06] p-0.5 text-[11px] font-semibold dark:bg-white/10">
                     <button
                       type="button"
                       onClick={() => setLangue("FR")}
-                      className={`rounded-full px-2.5 py-1 transition ${
+                      className={`rounded-full px-2 py-0.5 transition ${
                         langue === "FR" ? "bg-[#141220] text-white" : "text-[#141220]/40 dark:text-white/40"
                       }`}
                     >
@@ -580,7 +587,7 @@ export default function DashboardHeader() {
                     <button
                       type="button"
                       onClick={() => setLangue("EN")}
-                      className={`rounded-full px-2.5 py-1 transition ${
+                      className={`rounded-full px-2 py-0.5 transition ${
                         langue === "EN" ? "bg-[#141220] text-white" : "text-[#141220]/40 dark:text-white/40"
                       }`}
                     >
@@ -589,21 +596,21 @@ export default function DashboardHeader() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 px-2 py-2.5">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-purple/10 text-brand-purple">
+                <div className="flex items-center gap-2.5 px-1.5 py-2">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-purple/10 text-brand-purple">
                     <MoonIcon />
                   </span>
-                  <span className="flex-1 text-sm font-medium">{t("Mode nuit", "Dark mode")}</span>
+                  <span className="flex-1 text-xs font-medium">{t("Mode nuit", "Dark mode")}</span>
                   <button
                     type="button"
                     role="switch"
                     aria-checked={modeNuit}
                     onClick={toggleModeNuit}
-                    className={`flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition ${
+                    className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition ${
                       modeNuit ? "justify-end bg-[#141220] dark:bg-brand-pink" : "justify-start bg-[#141220]/20 dark:bg-white/20"
                     }`}
                   >
-                    <span className="h-5 w-5 rounded-full bg-white shadow" />
+                    <span className="h-4 w-4 rounded-full bg-white shadow" />
                   </button>
                 </div>
 
@@ -615,18 +622,18 @@ export default function DashboardHeader() {
                 />
               </div>
 
-              <div className="mx-4 h-px bg-[#141220]/10 dark:bg-white/10" />
+              <div className="mx-3.5 h-px bg-[#141220]/10 dark:bg-white/10" />
 
               <button
                 type="button"
                 onClick={handleLogout}
                 disabled={loggingOut}
-                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-[#ffe1e2]/40 disabled:opacity-60"
+                className="flex w-full items-center gap-2.5 px-3.5 py-3 text-left transition hover:bg-[#ffe1e2]/40 disabled:opacity-60"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ffe1e2] text-[#c8262d]">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ffe1e2] text-[#c8262d]">
                   <LogoutIcon />
                 </span>
-                <span className="text-sm font-semibold text-[#c8262d]">
+                <span className="text-xs font-semibold text-[#c8262d]">
                   {loggingOut ? t("Déconnexion…", "Signing out…") : t("Se déconnecter", "Sign out")}
                 </span>
               </button>
@@ -655,14 +662,14 @@ function AccountMenuRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
+      className="flex w-full items-center gap-2.5 rounded-2xl px-1.5 py-1.5 text-left transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
     >
-      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconBg}`}>
+      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${iconBg}`}>
         {icon}
       </span>
-      <span className="flex-1 text-sm font-medium">{label}</span>
+      <span className="flex-1 text-xs font-medium">{label}</span>
       {badge && (
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#141220] px-1.5 text-[11px] font-semibold text-white">
+        <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#141220] px-1 text-[10px] font-semibold text-white">
           {badge}
         </span>
       )}
@@ -675,7 +682,7 @@ function AccountMenuRow({
 
 export function ChevronIcon({ direction }: { direction: "left" | "right" }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+    <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden>
       <path
         d={direction === "left" ? "M15 5 8 12l7 7" : "M9 5l7 7-7 7"}
         stroke="currentColor"
@@ -697,7 +704,7 @@ export function SparkleIcon({ className = "text-brand-pink" }: { className?: str
 
 function BuildingIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+    <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden>
       <rect x="5" y="3" width="14" height="18" rx="1.5" stroke="white" strokeWidth="1.6" />
       <path
         d="M9 7h1.5M13.5 7H15M9 11h1.5M13.5 11H15M9 15h1.5M13.5 15H15"
@@ -711,7 +718,7 @@ function BuildingIcon() {
 
 function BellIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
       <path
         d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 14 6 10Z"
         stroke="currentColor"

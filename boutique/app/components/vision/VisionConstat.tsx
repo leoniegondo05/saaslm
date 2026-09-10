@@ -16,7 +16,7 @@ export default function VisionConstat() {
       <div className="mx-auto max-w-[1320px]">
         <ScrollReveal>
           <VisionEyebrow>Le constat</VisionEyebrow>
-          <h2 className="mt-4 max-w-md text-3xl font-bold leading-tight sm:text-4xl">
+          <h2 className="mt-4 max-w-md text-3xl font-semibold leading-tight sm:text-4xl">
             La coordination est le point de rupture
           </h2>
 

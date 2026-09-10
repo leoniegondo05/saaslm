@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
 import { register } from "../../lib/api/services/auth";
 import { useApiRequest } from "../../lib/api/hooks/useApiRequest";
 
@@ -65,6 +65,57 @@ const CGU_ARTICLES = [
 const inputBox =
   "mt-2 w-full rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-5 py-3 text-sm text-brand-white placeholder-brand-white/30 outline-none transition focus:border-brand-pink/60 sm:mt-3 sm:py-4";
 
+// Règles mot de passe — vérifiées en direct pendant la saisie (checklist
+// sous le champ) et rejouées au submit avant d'ouvrir l'écran des CGU.
+// "chiffres qui se suivent" = deux chiffres adjacents consécutifs, dans
+// un sens ou l'autre (12, 21, 89, 98…). "même caractère deux fois" =
+// n'importe quel caractère répété n'importe où dans le mot de passe, pas
+// seulement à la suite.
+function aDesChiffresConsecutifs(pw: string) {
+  for (let i = 0; i < pw.length - 1; i += 1) {
+    const a = pw[i];
+    const b = pw[i + 1];
+    if (/\d/.test(a) && /\d/.test(b) && Math.abs(Number(b) - Number(a)) === 1) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function aUnCaractereRepete(pw: string) {
+  return new Set(pw).size !== pw.length;
+}
+
+function contientLeNom(pw: string, nom: string) {
+  const pwMin = pw.toLowerCase();
+  return nom
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((mot) => mot.length >= 2)
+    .some((mot) => pwMin.includes(mot));
+}
+
+function contientLeTelephone(pw: string, telephone: string) {
+  const chiffres = telephone.replace(/\D/g, "");
+  if (chiffres.length < 4) return false;
+  for (let i = 0; i <= chiffres.length - 4; i += 1) {
+    if (pw.includes(chiffres.slice(i, i + 4))) return true;
+  }
+  return false;
+}
+
+function reglesMotDePasse(pw: string, nom: string, telephone: string) {
+  return {
+    longueur: pw.length >= 8,
+    majusculeMinuscule: /[A-Z]/.test(pw) && /[a-z]/.test(pw),
+    chiffre: /\d/.test(pw),
+    pasDeSuite: !aDesChiffresConsecutifs(pw),
+    pasDeRepetition: !aUnCaractereRepete(pw),
+    pasLeNom: !contientLeNom(pw, nom),
+    pasLeTelephone: !contientLeTelephone(pw, telephone),
+  };
+}
+
 export default function InscriptionForm() {
   const router = useRouter();
   // `run` pas appelé pour l'instant — voir handleAccepterConditions plus
@@ -82,11 +133,71 @@ export default function InscriptionForm() {
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [cguAccepte, setCguAccepte] = useState(false);
+  const [erreurMotDePasse, setErreurMotDePasse] = useState<string | null>(null);
+
+  // Code de confirmation envoyé par e-mail : pas d'endpoint Laravel pour
+  // l'instant (voir lib/api/services/auth.ts, rien pour
+  // send-code/verify-code) — mot de passe verrouillé tant que le code (6
+  // chiffres) n'est pas saisi. À brancher sur le vrai flux dès que la
+  // route existe. Pas de bouton "Envoyer le code" : la case se débloque
+  // toute seule dès qu'une adresse e-mail valide est saisie, et le code
+  // est pris en compte tout seul dès la 6e case remplie (codeValide plus
+  // bas débloque déjà le mot de passe).
+  // Une case par chiffre plutôt qu'un champ texte unique (maquette OTP
+  // classique) : chaque case ne prend qu'un caractère, le focus avance
+  // tout seul sur la suivante, recule au backspace sur une case vide.
+  const CODE_LENGTH = 6;
+  const [codeDigits, setCodeDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
+  const codeBoxRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const emailValide = /\S+@\S+\.\S+/.test(email);
+  const confirmationCode = codeDigits.join("");
+  const codeValide = confirmationCode.length === CODE_LENGTH;
+  const regles = reglesMotDePasse(password, name, phone);
+  const motDePasseValide = Object.values(regles).every(Boolean);
+
+  function handleCodeDigitChange(index: number, raw: string) {
+    const digit = raw.replace(/\D/g, "").slice(-1);
+    setCodeDigits((prev) => {
+      const next = [...prev];
+      next[index] = digit;
+      return next;
+    });
+    if (digit && index < CODE_LENGTH - 1) {
+      codeBoxRefs.current[index + 1]?.focus();
+    }
+  }
+
+  function handleCodeDigitKeyDown(index: number, event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Backspace" && !codeDigits[index] && index > 0) {
+      codeBoxRefs.current[index - 1]?.focus();
+    }
+  }
+
+  function handleCodePaste(event: ClipboardEvent<HTMLInputElement>) {
+    const pasted = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, CODE_LENGTH);
+    if (!pasted) return;
+    event.preventDefault();
+    setCodeDigits((prev) => {
+      const next = [...prev];
+      for (let i = 0; i < CODE_LENGTH; i += 1) next[i] = pasted[i] ?? "";
+      return next;
+    });
+    codeBoxRefs.current[Math.min(pasted.length, CODE_LENGTH - 1)]?.focus();
+  }
 
   // Le clic sur "Créer ma boutique" ne crée rien tant que les CGU ne sont
   // pas acceptées : il ouvre la liste des conditions à la place (écran 35).
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!motDePasseValide) {
+      setErreurMotDePasse("Le mot de passe ne respecte pas toutes les conditions ci-dessous.");
+      return;
+    }
+    if (password !== passwordConfirmation) {
+      setErreurMotDePasse("Les deux mots de passe ne correspondent pas.");
+      return;
+    }
+    setErreurMotDePasse(null);
     setVue("conditions");
   }
 
@@ -112,7 +223,7 @@ export default function InscriptionForm() {
             <path d="m6.6 12.4 3.6 3.6 7.2-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           </svg>
         </div>
-        <h2 className="mt-5 text-2xl font-bold tracking-tight text-brand-white">Votre identité est enregistrée</h2>
+        <h2 className="mt-5 text-2xl font-semibold tracking-tight text-brand-white">Votre identité est enregistrée</h2>
         <p className="mt-2 text-sm font-light text-brand-white/60">
           Un message de bienvenue vient de partir vers votre adresse. Il contient votre identifiant et le lien de connexion.
         </p>
@@ -258,6 +369,40 @@ export default function InscriptionForm() {
         </div>
       </div>
 
+      <div>
+        <label htmlFor="confirmation-code" className="text-sm font-semibold text-brand-white">
+          Code de confirmation
+        </label>
+        <div className="mt-2 flex gap-2 sm:mt-3 sm:gap-3">
+          {codeDigits.map((digit, index) => (
+            <input
+              key={index}
+              ref={(el) => {
+                codeBoxRefs.current[index] = el;
+              }}
+              id={index === 0 ? "confirmation-code" : undefined}
+              name={`confirmation-code-${index}`}
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={1}
+              required
+              disabled={!emailValide}
+              value={digit}
+              onChange={(event) => handleCodeDigitChange(index, event.target.value)}
+              onKeyDown={(event) => handleCodeDigitKeyDown(index, event)}
+              onPaste={handleCodePaste}
+              className={`h-12 w-10 rounded-xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] text-center text-lg font-semibold text-brand-white outline-none transition focus:border-brand-pink/60 disabled:cursor-not-allowed disabled:opacity-40 sm:h-14 sm:w-12`}
+            />
+          ))}
+        </div>
+        <p className="mt-1.5 text-xs font-light text-brand-white/40">
+          {emailValide
+            ? "Code à 6 chiffres envoyé à votre adresse e-mail."
+            : "Renseignez une adresse e-mail valide pour débloquer la case du code."}
+        </p>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
         <div>
           <label htmlFor="phone" className="text-sm font-semibold text-brand-white">
@@ -338,10 +483,11 @@ export default function InscriptionForm() {
             autoComplete="new-password"
             required
             minLength={8}
+            disabled={!codeValide}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="********"
-            className={inputBox}
+            className={`${inputBox} disabled:cursor-not-allowed disabled:opacity-40`}
           />
           {error?.fieldError("password") && (
             <p className="mt-1.5 text-xs text-red-400">{error.fieldError("password")}</p>
@@ -359,13 +505,46 @@ export default function InscriptionForm() {
             autoComplete="new-password"
             required
             minLength={8}
+            disabled={!codeValide}
             value={passwordConfirmation}
             onChange={(event) => setPasswordConfirmation(event.target.value)}
             placeholder="********"
-            className={inputBox}
+            className={`${inputBox} disabled:cursor-not-allowed disabled:opacity-40`}
           />
         </div>
       </div>
+
+      {password.length > 0 && (
+        <ul className="grid gap-1.5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-xs font-light sm:grid-cols-2">
+          <li className={regles.longueur ? "text-[#4FE0AE]" : "text-brand-white/45"}>
+            {regles.longueur ? "✓" : "○"} Huit caractères au minimum
+          </li>
+          <li className={regles.majusculeMinuscule ? "text-[#4FE0AE]" : "text-brand-white/45"}>
+            {regles.majusculeMinuscule ? "✓" : "○"} Une majuscule et une minuscule
+          </li>
+          <li className={regles.chiffre ? "text-[#4FE0AE]" : "text-brand-white/45"}>
+            {regles.chiffre ? "✓" : "○"} Au moins un chiffre
+          </li>
+          <li className={regles.pasDeSuite ? "text-[#4FE0AE]" : "text-brand-white/45"}>
+            {regles.pasDeSuite ? "✓" : "○"} Pas de chiffres qui se suivent
+          </li>
+          <li className={regles.pasDeRepetition ? "text-[#4FE0AE]" : "text-brand-white/45"}>
+            {regles.pasDeRepetition ? "✓" : "○"} Pas deux fois le même caractère
+          </li>
+          <li className={regles.pasLeNom ? "text-[#4FE0AE]" : "text-brand-white/45"}>
+            {regles.pasLeNom ? "✓" : "○"} Rien qui reprenne votre nom
+          </li>
+          <li className={regles.pasLeTelephone ? "text-[#4FE0AE]" : "text-brand-white/45"}>
+            {regles.pasLeTelephone ? "✓" : "○"} Rien qui reprenne votre téléphone
+          </li>
+        </ul>
+      )}
+
+      {erreurMotDePasse && (
+        <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {erreurMotDePasse}
+        </p>
+      )}
 
       <Link
         href="/login"
