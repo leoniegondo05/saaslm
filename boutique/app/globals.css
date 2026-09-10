@@ -16,7 +16,7 @@
   site avec des classes Tailwind comme "bg-brand-bg" ou "text-brand-pink".
 */
 @theme inline {
-  --color-brand-bg: #000717; /* fond principal, bleu nuit très sombre */
+  --color-brand-bg: #000717; /* fond principal — valeur exacte mesurée sur la maquette Figma (prioritaire sur la charte en cas de conflit) */
   --color-brand-pink: #ec0c8c; /* rose fuchsia, couleur d'accent */
   --color-brand-purple: #3a1d8a; /* violet, utilisé dans les dégradés */
   --color-brand-white: #faf7fc; /* blanc légèrement teinté */
@@ -595,6 +595,15 @@ html.dark {
     how-it-works-hub-glow 2.6s ease-in-out infinite,
     how-it-works-hub-reveal 14.14s ease-in-out infinite;
 }
+
+/* Hub Abidjan (Reach/ReachAfricaMap.tsx) : même respiration que le hub du
+   fil conducteur (how-it-works-hub-glow), mais SANS la boucle de visibilité
+   (how-it-works-hub-reveal) qui la cale sur l'animation de 14.14s de
+   HowItWorks — ici le hub doit rester visible en permanence, pas de
+   contenu à synchroniser avec. */
+.reach-hub-glow {
+  animation: how-it-works-hub-glow 2.6s ease-in-out infinite;
+}
 @keyframes how-it-works-hub-glow {
   0%,
   100% {
@@ -624,9 +633,21 @@ html.dark {
   }
 }
 
-/* Climax : "sans affiliation" + CTA, point culminant où tout reste
-   connecté simultanément (les 4 rayons + le hub sont déjà tous actifs) —
-   ne remonte qu'une fois le hub apparu (81.47%), jamais avant. */
+/* Climax : "sans affiliation" + CTA — n'apparaît qu'une fois le fil
+   conducteur terminé (les 4 rayons arrivés au hub, 11,34s), comme à la fin
+   de la vidéo de référence, pas affiché en continu. Mêmes instants que le
+   minutage documenté au-dessus de @keyframes how-it-works-dot-move
+   (11,52s→12,24s remontée, plateau jusqu'à 13,74s, fondu de sortie avec le
+   reste jusqu'à 14,14s).
+
+   Remarque : une version antérieure affichait ce bloc en permanence
+   (opacity 1 fixe) car la section pouvait alors déborder de la fenêtre
+   épinglée (sticky) et le CTA, tout en bas, se retrouvait carrément hors
+   écran — indépendamment de l'animation. Ce débordement est corrigé
+   (hauteur du contenu réduite, voir HowItWorksWave.tsx/HowItWorks.tsx) :
+   le bloc tient maintenant entièrement dans la fenêtre épinglée, donc la
+   fenêtre de visibilité de la boucle (~1,5s sur 14,14s) est de nouveau
+   suffisante pour être vue pendant le défilement. */
 .how-it-works-cta {
   opacity: 0;
   transform: translateY(12px);
@@ -756,7 +777,8 @@ html.dark {
     transform: none !important;
   }
 
-  .how-it-works-hub-glow {
+  .how-it-works-hub-glow,
+  .reach-hub-glow {
     animation: none !important;
     opacity: 1 !important;
     transform: scale(1) !important;
