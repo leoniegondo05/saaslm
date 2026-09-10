@@ -23,6 +23,12 @@ export default function CTA() {
           </h2>
 
           <div className="mt-8 flex flex-wrap gap-4">
+            {/* Boutons conformes à la maquette Figma (mesurée en pixels),
+                voir Hero.tsx. Le bouton secondaire corrige au passage un
+                bug : il portait deux classes de fond contradictoires
+                (bg-white ET bg-[#0a0e1c] sur le même élément) — la maquette
+                montre un vrai pilule blanche pleine à texte noir, donc
+                bg-[#0a0e1c] (le résidu en trop) est simplement retiré. */}
             <span className="inline-block rounded-xl bg-[linear-gradient(90deg,var(--color-brand-pink),var(--color-brand-purple))] p-px">
               <Link
                 href="/login"
@@ -32,15 +38,12 @@ export default function CTA() {
                 <span aria-hidden>»</span>
               </Link>
             </span>
-             <span className="inline-block rounded-xl bg-white p-px">
-              <Link
-                href="/partenaire-agree"
-                className="flex items-center gap-2 bg-white text-black rounded-[11px] bg-[#0a0e1c] px-[18px] py-4 text-sm font-semibold transition hover:opacity-90"
-              >
-                Devenir partenaire agréé
-                <span aria-hidden></span>
-              </Link>
-            </span>
+            <Link
+              href="/partenaire-agree"
+              className="flex items-center gap-2 rounded-xl bg-white px-[18px] py-4 text-sm font-semibold text-black transition hover:opacity-90"
+            >
+              Devenir partenaire agréé
+            </Link>
           </div>
         </ScrollReveal>
 
