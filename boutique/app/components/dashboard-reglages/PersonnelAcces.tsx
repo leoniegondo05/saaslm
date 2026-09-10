@@ -6,7 +6,7 @@ import { Card, Divider, SectionHeader, Tag } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
-  Écran "Gérer les accès" (/dashboard/parametres/acces), atteint depuis le
+  Écran "Gérer les accès" (/dashboard/reglages/acces), atteint depuis le
   bouton du même nom dans le menu du compte (voir DashboardHeader). Reprend
   l'ancien écran 07 "Personnel et accès" (git : PersonnelAcces.tsx avant son
   retrait du 2026-09-07, cf. commentaire dans DashboardHeader) : la fiche
@@ -16,7 +16,7 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
   Différence avec l'ancienne version : le formulaire de création n'est plus
   une 3e colonne encastrée ici — c'est son propre écran, plus détaillé,
   atteint via le bouton "Créer un collaborateur" ci-dessous
-  (CreerCollaborateur.tsx, /dashboard/parametres/creer).
+  (CreerCollaborateur.tsx, /dashboard/reglages/creer).
 
   Chiffres et comptes statiques pour l'instant, cf. mémoire
   [[dashboard-mock-data-pending-laravel-api]] — à brancher sur l'API Laravel
@@ -197,7 +197,7 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
             </p>
             <Divider />
             <Link
-              href="/dashboard/parametres/creer"
+              href="/dashboard/reglages/creer"
               className="flex w-full items-center justify-center gap-2 rounded-full bg-[#141220] px-4 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
             >
               <PersonPlusIcon />

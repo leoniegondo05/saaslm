@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Wordmark from "./Wordmark";
 
 const NAV_LINKS = [
   { label: "Ce que nous construisons", href: "/vision" },
@@ -36,9 +37,7 @@ export default function Navbar() {
               className="h-[38px] w-[38px] object-contain"
             />
 
-            <span className="text-[15px] font-bold tracking-tight text-white">
-              LIIVRE MOI
-            </span>
+            <Wordmark className="text-[15px] font-bold tracking-tight text-white" />
           </a>
         ) : (
           <Link
@@ -54,9 +53,7 @@ export default function Navbar() {
               className="h-[38px] w-[38px] object-contain"
             />
 
-            <span className="text-[15px] font-bold tracking-tight text-white">
-              LIIVRE MOI
-            </span>
+            <Wordmark className="text-[15px] font-bold tracking-tight text-white" />
           </Link>
         )}
 
@@ -66,7 +63,7 @@ export default function Navbar() {
             href="#hero"
             className="flex items-center gap-2.5 rounded-full border border-white/15 bg-white/[0.04] px-5 py-2 text-sm text-white/90 shadow-[0_0_20px_rgba(236,12,140,0.12)] transition hover:bg-white/[0.08]"
           >
-            <span className="h-2 w-2 rounded-full bg-[#EC0C8C] shadow-[0_0_8px_#EC0C8C]" />
+            <span className="h-2 w-2 rounded-full bg-brand-pink shadow-[0_0_8px_var(--color-brand-pink)]" />
 
             <span className="hidden sm:inline">
               La solution LM
@@ -77,7 +74,7 @@ export default function Navbar() {
             href="/"
             className="flex items-center gap-2.5 rounded-full border border-white/15 bg-white/[0.04] px-5 py-2 text-sm text-white/90 shadow-[0_0_20px_rgba(236,12,140,0.12)] transition hover:bg-white/[0.08]"
           >
-            <span className="h-2 w-2 rounded-full bg-[#EC0C8C] shadow-[0_0_8px_#EC0C8C]" />
+            <span className="h-2 w-2 rounded-full bg-brand-pink shadow-[0_0_8px_var(--color-brand-pink)]" />
 
             <span className="hidden sm:inline">
               La solution LM
@@ -94,7 +91,7 @@ export default function Navbar() {
             >
               {index > 0 && (
                 <span
-                  className="inline-block h-1 w-1 rounded-full bg-[#EC0C8C]"
+                  className="inline-block h-1 w-1 rounded-full bg-brand-pink"
                   aria-hidden="true"
                 />
               )}

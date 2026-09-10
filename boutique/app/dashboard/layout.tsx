@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import FloatingAiAssistant from "../components/FloatingAiAssistant";
 import { DashboardThemeProvider, STORAGE_KEY } from "../components/DashboardThemeProvider";
 import { DashboardLanguageProvider, LANG_STORAGE_KEY, type Langue } from "../components/DashboardLanguageProvider";
 
@@ -53,7 +52,6 @@ export default async function DashboardLayout({
       <DashboardLanguageProvider initialLangue={initialLangue}>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
         {children}
-        <FloatingAiAssistant />
       </DashboardLanguageProvider>
     </DashboardThemeProvider>
   );

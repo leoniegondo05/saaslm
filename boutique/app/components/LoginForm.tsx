@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { login } from "../../lib/api/services/auth";
 import { useApiRequest } from "../../lib/api/hooks/useApiRequest";
+import { API_BASE_URL } from "../../lib/api/config";
 
 /*
   Formulaire de connexion, extrait de app/login/page.tsx pour pouvoir être
@@ -25,6 +26,18 @@ export default function LoginForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    // Tant que NEXT_PUBLIC_API_URL n'est pas configuré (démo Vercel sans
+    // backend Laravel), POST /api/login échouerait toujours (voir apiFetch
+    // dans lib/api/client.ts) : on saute l'appel réseau et on va direct où
+    // mènerait une connexion réussie, même principe que
+    // InscriptionForm.tsx/handleAccepterConditions. À retirer dès que
+    // l'API répond réellement.
+    if (!API_BASE_URL) {
+      router.push("/completer-profil");
+      return;
+    }
+
     const result = await run({ email, password, remember });
     if (result) {
       // Avant le dashboard : 9 questions sur l'activité + fiche
@@ -124,20 +137,6 @@ export default function LoginForm() {
         className="w-full rounded-2xl bg-white px-6 py-3.5 text-sm font-semibold text-brand-bg transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60 sm:py-4"
       >
         {loading ? "Connexion…" : "Connexion"}
-      </button>
-
-      {/* TEMPORAIRE — lien de démo pour tester le site déployé (Vercel)
-          sans backend Laravel branché : /api/login échoue toujours
-          (NEXT_PUBLIC_API_URL absent, voir apiFetch dans lib/api/client.ts),
-          donc ce bouton saute l'appel réseau et va directement où mènerait
-          une connexion réussie (voir handleSubmit plus haut). À retirer
-          dès que l'API répond réellement. */}
-      <button
-        type="button"
-        onClick={() => router.push("/completer-profil")}
-        className="w-full rounded-2xl border border-dashed border-brand-pink/50 px-6 py-3.5 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/10"
-      >
-        Voir la démo (sans backend)
       </button>
 
       <div className="flex items-center gap-4 pt-3 pb-1">

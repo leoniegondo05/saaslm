@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import DashboardHeader from "../../../components/DashboardHeader";
 import DashboardSidebar from "../../../components/DashboardSidebar";
-import CreerCollaborateur from "../../../components/dashboard-parametres/CreerCollaborateur";
+import CreerCollaborateur from "../../../components/dashboard-reglages/CreerCollaborateur";
 
 /*
   Écran "Créer un collaborateur", atteint depuis le bouton du même nom sur
@@ -28,8 +28,8 @@ export default function CreerCollaborateurPage() {
         <div className="min-w-0 flex-1 lg:px-6">
           <DashboardHeader />
           <CreerCollaborateur
-            onAnnuler={() => router.push("/dashboard/parametres/acces")}
-            onCreer={() => router.push("/dashboard/parametres/acces")}
+            onAnnuler={() => router.push("/dashboard/reglages/acces")}
+            onCreer={() => router.push("/dashboard/reglages/acces")}
           />
         </div>
       </div>

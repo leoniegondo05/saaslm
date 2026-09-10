@@ -3,8 +3,10 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import DashboardHeader from "../../components/DashboardHeader";
+import DashboardSearchBar from "../../components/DashboardSearchBar";
 import DashboardSidebar from "../../components/DashboardSidebar";
-import AccueilNav, { ACCUEIL_TABS, AccueilTab } from "../../components/dashboard-accueil/AccueilNav";
+import AccueilNav, { ACCUEIL_TABS, AccueilTab, TAB_LABELS_EN } from "../../components/dashboard-accueil/AccueilNav";
+import { useDashboardLangue } from "../../components/DashboardLanguageProvider";
 import FinancesSection from "../../components/dashboard-accueil/FinancesSection";
 import CommandesSection from "../../components/dashboard-accueil/CommandesSection";
 import ClientsSection from "../../components/dashboard-accueil/ClientsSection";
@@ -48,10 +50,23 @@ export default function AccueilPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useDashboardLangue();
   const initialTab = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<AccueilTab | null>(
     initialTab && (ACCUEIL_TABS as readonly string[]).includes(initialTab) ? (initialTab as AccueilTab) : null
   );
+  const [recherche, setRecherche] = useState("");
+
+  // Pas de forme de donnée commune entre les 7 sections (finances, stock,
+  // clients...) pour un filtrage plein texte unique : la recherche filtre
+  // donc quelles sections rester affichées, par leur titre (comme AccueilNav
+  // à côté), plutôt que leur contenu.
+  const termeRecherche = recherche.trim().toLowerCase();
+  const tabsAffiches = termeRecherche
+    ? ACCUEIL_TABS.filter(
+        (tab) => tab.toLowerCase().includes(termeRecherche) || TAB_LABELS_EN[tab].toLowerCase().includes(termeRecherche)
+      )
+    : ACCUEIL_TABS;
 
   // Même bug que sur /dashboard/produits (cf. commentaire dans ce fichier
   // avant ce correctif) : le clic d'onglet ne touchait pas l'URL, donc un
@@ -73,18 +88,27 @@ export default function AccueilPage() {
 
         <div className="min-w-0 flex-1 lg:px-6">
           <DashboardHeader />
+          <DashboardSearchBar onChange={setRecherche} />
 
           <AccueilNav active={activeTab} onChange={handleChange} />
 
-          {activeTab === null
-            ? ACCUEIL_TABS.map((tab, index) => {
+          {activeTab === null ? (
+            tabsAffiches.length === 0 ? (
+              <p className="mt-10 text-center text-xs text-[var(--dashboard-text)]/45">
+                {t(`Aucune section pour « ${recherche} ».`, `No section for “${recherche}”.`)}
+              </p>
+            ) : (
+              tabsAffiches.map((tab, index) => {
                 const Section = SECTIONS[tab];
                 return <Section key={tab} first={index === 0} />;
               })
-            : (() => {
-                const ActiveSection = SECTIONS[activeTab];
-                return <ActiveSection />;
-              })()}
+            )
+          ) : (
+            (() => {
+              const ActiveSection = SECTIONS[activeTab];
+              return <ActiveSection />;
+            })()
+          )}
         </div>
       </div>
     </div>
