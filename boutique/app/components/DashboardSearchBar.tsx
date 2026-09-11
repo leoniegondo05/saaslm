@@ -16,16 +16,22 @@ import { useDashboardLangue } from "./DashboardLanguageProvider";
   ses propres données (tableau produits, liste commandes, sections
   finances, cartes réglages — pas de forme commune entre elles, donc pas
   de logique de filtrage partagée ici).
+
+  `initialValue` optionnel : préremplit le champ (texte tapé initial), pour
+  une page qui arrive avec un terme déjà choisi (ex. lien "Voir" d'un signal
+  qui pointe vers /dashboard/produits?q=...).
 */
 export default function DashboardSearchBar({
   placeholder,
   onChange,
+  initialValue = "",
 }: {
   placeholder?: string;
   onChange?: (value: string) => void;
+  initialValue?: string;
 }) {
   const { t } = useDashboardLangue();
-  const [value, setValueRaw] = useState("");
+  const [value, setValueRaw] = useState(initialValue);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const setValue = (next: string) => {

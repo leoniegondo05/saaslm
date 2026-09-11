@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
+import { useFiltrable } from "../DashboardRecherche";
 
 /*
   Petits composants d'appui partagés par toutes les sections de l'onglet
@@ -90,7 +91,7 @@ export function SectionHeader({
 }: {
   eyebrow: string;
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   count?: string;
   first?: boolean;
   /** "stack": badge au-dessus du titre (défaut). "inline": badge / titre sur une même ligne. */
@@ -112,12 +113,12 @@ export function SectionHeader({
 
   return (
     <div className={first ? "mt-8" : "mt-12"}>
-      <div className={`flex flex-wrap items-end justify-between gap-3 ${layout === "inline" ? "mb-12" : "mb-4"}`}>
+      <div className={`flex flex-wrap items-start justify-between gap-3 ${layout === "inline" ? "mb-12" : "mb-4"}`}>
       {layout === "inline" ? (
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           {badge}
           <span className="text-lg font-light text-[var(--dashboard-text)]/20">/</span>
-          <div>
+          <div className="min-w-0">
             <h2 className="text-xs font-bold tracking-tight sm:text-sm">{title}</h2>
             {subtitle && <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/50">{subtitle}</p>}
           </div>
@@ -130,7 +131,7 @@ export function SectionHeader({
         </div>
       )}
       {actions ? (
-        <div className="flex flex-wrap items-center gap-2.5">{actions}</div>
+        <div className="mt-5 flex shrink-0 flex-wrap items-center gap-2.5">{actions}</div>
       ) : (
         count && (
           <span className="rounded-full bg-[var(--dashboard-card-bg)]/70 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-[var(--dashboard-text)]/40 shadow-[0_2px_10px_rgba(20,18,32,0.06)]">
@@ -144,8 +145,11 @@ export function SectionHeader({
 }
 
 /*
-  Bouton pilule contour rose, sans remplissage — pour les actions de header
-  ("Exporter", "Comparer à la période précédente") du document envoyé.
+  Bouton pilule contour dégradé — pour les actions de header ("Exporter",
+  "Comparer à la période précédente") du document envoyé. Même recette que
+  le badge "solution LM" (DashboardHeader) et l'onglet actif d'AccueilNav :
+  span extérieur en dégradé + p-px = liseré, span/bouton intérieur en fond
+  plein pour l'effet "contour de couleur" sans le remplir.
   Distinct de Btn (qui est toujours pleine largeur, pensé pour les CTA de
   carte) : celui-ci reste à sa largeur de contenu, pour s'aligner en ligne.
 */
@@ -186,8 +190,17 @@ export function Card({
   style?: React.CSSProperties;
   children?: React.ReactNode;
 }) {
+  // Se cache seule quand une recherche est active (DashboardSearchBar) et
+  // qu'aucun texte affiché ici — titre, StatRow, Table... peu importe — ne
+  // la contient. Sans effet hors d'Accueil/Réglages (RechercheProvider),
+  // cf. DashboardRecherche.tsx.
+  const { ref, match } = useFiltrable();
   return (
-    <div className={`rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] ${className}`} style={style}>
+    <div
+      ref={ref}
+      className={`rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] ${className}`}
+      style={match ? style : { ...style, display: "none" }}
+    >
       {title && titleTab && (
         <div className={`relative -mt-4 mb-5 flex items-center ${titleAlign === "left" ? "justify-start" : "justify-center"}`}>
           <p
@@ -325,7 +338,9 @@ export function Btn({
 
 export function Nature({ code }: { code: "S" | "P" | "L" | "O" | "D" | "B" }) {
   const styles: Record<string, string> = {
-    S: "bg-[var(--dashboard-text)]/[0.08] text-[var(--dashboard-text)]/60",
+    // Stockage = bleu (cf. [[dashboard-chart-colors-stockage-drop]]) — même
+    // bleu que STOCK_COLOR dans CommandesSection.tsx, jamais de gris neutre.
+    S: "bg-[#5AA9FF]/10 text-[#5AA9FF]",
     P: "bg-brand-purple/10 text-brand-purple",
     L: "bg-brand-pink/10 text-brand-pink",
     O: "border border-[var(--dashboard-text)]/15 text-[var(--dashboard-text)]/40",
@@ -735,18 +750,29 @@ export function AreaChart({
   values,
   color = "#22C55E",
   markers = [],
+  compareValues,
+  compareColor,
+  gapColor,
 }: {
   values: number[];
   color?: string;
   /** Indices (dans `values`) des points "fin de suspension" : trait vertical pointillé + point blanc, comme sur le document envoyé. */
   markers?: number[];
+  /** Deuxième courbe superposée sur la même échelle (ex. "Vendu" face à "Demande" dans StockSection). Quand fourni, remplace le dégradé d'aire par la zone entre les deux courbes. */
+  compareValues?: number[];
+  compareColor?: string;
+  /** Couleur de la zone entre les deux courbes (ex. rouge = vente perdue sur rupture). */
+  gapColor?: string;
 }) {
   const data = values;
   const w = 300;
   const h = 100;
   const padY = 6;
-  const max = Math.max(...data);
-  const min = Math.min(...data);
+  // Échelle commune aux deux séries : sinon "Vendu" et "Demande" ne seraient
+  // pas comparables visuellement (chacune étirée sur son propre min/max).
+  const allValues = compareValues ? [...data, ...compareValues] : data;
+  const max = Math.max(...allValues);
+  const min = Math.min(...allValues);
   const range = max - min || 1;
   // Arrondi des coordonnées : Math.sin (utilisé ci-dessous par pseudoNoise
   // et pour le damping) n'est pas garanti bit-à-bit identique entre le
@@ -754,33 +780,47 @@ export function AreaChart({
   // le `d` du path diffère de quelques ULP et React signale un désaccord
   // d'hydratation même si le tracé est visuellement identique.
   const round = (n: number) => Math.round(n * 1000) / 1000;
-  const real = data.map((v, i) => ({
-    x: round((i / (data.length - 1 || 1)) * w),
-    y: round(h - padY - ((v - min) / range) * (h - padY * 2)),
-  }));
-  // Subdivision de chaque segment réel en micro-dents : les extrémités
-  // (t=0 et t=1) restent exactes, l'intérieur zigzague avec un bruit
-  // déterministe dont l'amplitude s'annule aux deux bouts du segment
-  // (pas de discontinuité entre segments successifs).
   const subSteps = 6;
   const jitter = (h - padY * 2) * 0.05;
-  const points: { x: number; y: number }[] = [];
-  for (let i = 0; i < real.length - 1; i++) {
-    const p0 = real[i];
-    const p1 = real[i + 1];
-    for (let s = 0; s < subSteps; s++) {
-      const t = s / subSteps;
-      const x = p0.x + (p1.x - p0.x) * t;
-      const y = p0.y + (p1.y - p0.y) * t;
-      const damp = Math.sin(t * Math.PI); // 0 aux bouts, max au milieu
-      const n = (pseudoNoise(i * 12.9898 + s * 3.71) - 0.5) * 2;
-      points.push({ x: round(x), y: round(y + n * damp * jitter) });
+  // Subdivision de chaque segment réel en micro-dents : les extrémités
+  // (t=0 et t=1) restent exactes, l'intérieur zigzague avec un bruit
+  // déterministe dont l'amplitude s'annule aux deux bouts du segment (pas
+  // de discontinuité entre segments successifs). `seedBase` décale le bruit
+  // d'une série à l'autre pour que deux courbes superposées ne zigzaguent
+  // pas de façon identique.
+  function buildPoints(series: number[], seedBase: number) {
+    const real = series.map((v, i) => ({
+      x: round((i / (series.length - 1 || 1)) * w),
+      y: round(h - padY - ((v - min) / range) * (h - padY * 2)),
+    }));
+    const points: { x: number; y: number }[] = [];
+    for (let i = 0; i < real.length - 1; i++) {
+      const p0 = real[i];
+      const p1 = real[i + 1];
+      for (let s = 0; s < subSteps; s++) {
+        const t = s / subSteps;
+        const x = p0.x + (p1.x - p0.x) * t;
+        const y = p0.y + (p1.y - p0.y) * t;
+        const damp = Math.sin(t * Math.PI); // 0 aux bouts, max au milieu
+        const n = (pseudoNoise(seedBase + i * 12.9898 + s * 3.71) - 0.5) * 2;
+        points.push({ x: round(x), y: round(y + n * damp * jitter) });
+      }
     }
+    points.push(real[real.length - 1]);
+    return { real, points };
   }
-  points.push(real[real.length - 1]);
+  const { real, points } = buildPoints(data, 0);
   const d = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x},${p.y}`).join(" ");
   const last = points[points.length - 1];
   const area = `${d} L ${last.x},${h} L ${points[0].x},${h} Z`;
+  const compare = compareValues ? buildPoints(compareValues, 1000) : null;
+  const compareD = compare ? compare.points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x},${p.y}`).join(" ") : null;
+  // Zone entre les deux courbes : contour de la première à l'aller, contour
+  // de la seconde au retour, refermé — ex. "argent que personne n'a
+  // encaissé" entre Demande et Vendu dans StockSection.
+  const gapPath = compare
+    ? `${d} L ${[...compare.points].reverse().map((p) => `${p.x},${p.y}`).join(" L ")} Z`
+    : null;
   // React 18 useId() renvoie des ":" (ex. ":r4:") : légaux en XML mais
   // connus pour casser la résolution de url(#id) dans un gradient/filter
   // sur certains moteurs de rendu — l'élément qui référence l'id invalide
@@ -800,11 +840,18 @@ export function AreaChart({
             <stop offset="100%" stopColor={color} stopOpacity={0} />
           </linearGradient>
         </defs>
-        {/* fallback "none" après l'IRI : si la réf gradient ne résout jamais,
-            on obtient un remplissage transparent plutôt qu'un aplat noir/blanc
-            par défaut du moteur de rendu. */}
-        <path d={area} fill={`url(#area-fill-${uid}) none`} stroke="none" />
+        {compare && gapPath ? (
+          <path d={gapPath} fill={gapColor ?? color} fillOpacity={0.35} stroke="none" />
+        ) : (
+          // fallback "none" après l'IRI : si la réf gradient ne résout jamais,
+          // on obtient un remplissage transparent plutôt qu'un aplat noir/blanc
+          // par défaut du moteur de rendu.
+          <path d={area} fill={`url(#area-fill-${uid}) none`} stroke="none" />
+        )}
         <path d={d} stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        {compare && compareD && (
+          <path d={compareD} stroke={compareColor ?? "#5AA9FF"} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        )}
         {markers.map((i) => {
           const p = real[i];
           if (!p) return null;
@@ -828,7 +875,83 @@ export function AreaChart({
         className="absolute rounded-full"
         style={{ left: `${(last.x / w) * 100}%`, top: `${(last.y / h) * 100}%`, width: 5, height: 5, background: color, transform: "translate(-50%,-50%)" }}
       />
+      {compare && compare.points.length > 0 && (
+        <span
+          className="absolute rounded-full"
+          style={{
+            left: `${(compare.points[compare.points.length - 1].x / w) * 100}%`,
+            top: `${(compare.points[compare.points.length - 1].y / h) * 100}%`,
+            width: 5,
+            height: 5,
+            background: compareColor ?? "#5AA9FF",
+            transform: "translate(-50%,-50%)",
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+/*
+  Bandeau "volume" sous l'aire Niveau (StockSection, "Le mouvement de votre
+  stock") — même idée qu'un histogramme de volume sous un cours de bourse
+  (cf. [[dashboard-chart-colors-stockage-drop]], rendu bourse/trading
+  préféré) : une barre par jour, calculée depuis la variation `values[i] -
+  values[i-1]`. Dépôt (variation positive) = vert, monte depuis l'axe
+  central ; sortie/vente (variation négative) = gris, descend depuis l'axe
+  central. Même palette que Niveau (bleu, inchangé) pour que les trois
+  couleurs du bandeau de légende gardent chacune un seul sens dans toute la
+  carte.
+*/
+export function MovementBars({
+  values,
+  positive = "#4FE0AE",
+  negative = "#9096AA",
+}: {
+  values: number[];
+  /** Couleur des barres de dépôt (variation positive). */
+  positive?: string;
+  /** Couleur des barres de sortie (variation négative). */
+  negative?: string;
+}) {
+  const w = 300;
+  const h = 36;
+  const n = values.length;
+  const deltas = [];
+  for (let i = 1; i < n; i++) {
+    deltas.push({ x: (i / (n - 1)) * w, d: values[i] - values[i - 1] });
+  }
+  // Échelles séparées dépôts / sorties : les dépôts (deux gros ressauts)
+  // sont un ordre de grandeur au-dessus des sorties (petite baisse
+  // quotidienne) — une échelle commune écrasait les barres grises à 1-2px.
+  // Chaque côté de l'axe central utilise donc son propre maximum, pour que
+  // sorties et dépôts restent lisibles l'un comme l'autre.
+  const maxPos = Math.max(...deltas.filter((p) => p.d > 0).map((p) => p.d), 1);
+  const maxNeg = Math.max(...deltas.filter((p) => p.d < 0).map((p) => Math.abs(p.d)), 1);
+  const barW = n > 1 ? (w / (n - 1)) * 0.6 : w;
+  const uid = useId().replace(/:/g, "");
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="mt-1 h-9 w-full overflow-visible" aria-hidden fill="none">
+      <line x1={0} y1={h / 2} x2={w} y2={h / 2} stroke="var(--dashboard-text)" strokeOpacity={0.1} strokeWidth={1} vectorEffect="non-scaling-stroke" />
+      {deltas.map((p, i) => {
+        const isDeposit = p.d > 0;
+        const ref = isDeposit ? maxPos : maxNeg;
+        const half = Math.max((Math.abs(p.d) / ref) * (h / 2 - 2), 2);
+        const y = isDeposit ? h / 2 - half : h / 2;
+        return (
+          <rect
+            key={`${uid}-${i}`}
+            x={p.x - barW / 2}
+            y={y}
+            width={barW}
+            height={half}
+            rx={barW / 2}
+            fill={isDeposit ? positive : negative}
+            fillOpacity={isDeposit ? 0.95 : 0.75}
+          />
+        );
+      })}
+    </svg>
   );
 }
 
