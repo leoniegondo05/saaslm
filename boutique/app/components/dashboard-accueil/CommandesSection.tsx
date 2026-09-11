@@ -763,7 +763,6 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           <div className="mt-3">
             <MotifRow code="B" label={t("Injoignable après trois appels", "Unreachable after three calls")} value={9} pct={100} />
             <MotifRow code="B" label={t("A changé d'avis", "Changed their mind")} value={7} pct={78} />
-            <MotifRow code="B" label={t("Frais de livraison jugés élevés", "Delivery fees seen as too high")} value={2} pct={22} />
             <MotifRow code="D" label={t("Produit non conforme à l'attente", "Product not as expected")} value={2} pct={22} />
             <MotifRow code="B" label={t("Adresse introuvable", "Address not found")} value={1} pct={11} />
             <MotifRow code="B" label={t("Doublon ou hors zone", "Duplicate or out of zone")} value={2} pct={22} last />
