@@ -579,7 +579,10 @@ html.dark {
    restaient à leur opacité par défaut (1), affichées en permanence toutes
    ensemble au lieu de défiler l'une après l'autre au fil du scroll. */
 .pilule-vague { opacity: 0; transform-box: fill-box; transform-origin: center; }
-.pilule-vague rect { fill: rgba(20,16,38,.9); stroke: rgba(250,247,252,.28); }
+/* Même style que le bouton "commencer maintenant" du Hero : fond quasi
+   noir + fine bordure dégradée rose→violet (url(#pilule-bordure), voir
+   HowItWorksWave.tsx), pas un simple liseré blanc translucide. */
+.pilule-vague rect { fill: #0a0e1c; stroke: url(#pilule-bordure); }
 .pilule-vague text { fill: var(--color-brand-white); font-size: 21px; font-weight: 400; }
 .halo-crete { opacity: 0; }
 .rayon { opacity: 0; }
@@ -678,4 +681,1290 @@ html.dark {
 
 @media (max-width: 1080px) {
   .piste-vague { height: 340vh; }
+}
+
+
+/* ============================================================
+   HERO — entrée en cascade
+   ============================================================ */
+@keyframes hero-line-in {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes hero-sub-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hero-cta-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes hero-video-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.94);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.hero-line {
+  display: block;
+  opacity: 0;
+  animation: hero-line-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hero-line-1 { animation-delay: 0.15s; }
+.hero-line-2 { animation-delay: 0.30s; }
+.hero-line-3 { animation-delay: 0.45s; }
+
+.hero-sub {
+  opacity: 0;
+  animation: hero-sub-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.70s forwards;
+}
+
+.hero-cta {
+  opacity: 0;
+  animation: hero-cta-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.90s forwards;
+}
+
+.hero-mention {
+  opacity: 0;
+  animation: hero-sub-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) 1.05s forwards;
+}
+
+.hero-video {
+  opacity: 0;
+  animation: hero-video-in 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-line,
+  .hero-sub,
+  .hero-cta,
+  .hero-mention,
+  .hero-video {
+    opacity: 1 !important;
+    animation: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
+/* ============================================================
+   NAVBAR — le point rose arrive en arc depuis le bas
+   ============================================================ */
+
+/* Le point démarre très bas et à gauche, puis remonte en arc oblique
+   vers sa position finale dans la navbar (en haut à droite).
+   La clé : translateY descend plus vite que translateX ne bouge,
+   ce qui crée une courbe en quart de cercle oblique. */
+
+/* Trajectoire "canne de hockey" (croquis fourni par l'utilisateur) : le
+   point part du bas et glisse d'abord surtout à l'HORIZONTALE (0%→35%, Y
+   ne bouge presque pas), puis remonte à la VERTICALE en une courbe serrée
+   (35%→100%, X est presque déjà arrivé, c'est Y qui fait l'essentiel du
+   chemin) — pas une diagonale régulière comme avant, un vrai coin. */
+/* Trajectoire recalée sur la géométrie réelle du Hero (mesurée : titre
+   "une vente/un réseau/Tout s'active" ne dépasse jamais x=549 ; "Sans
+   s'engager" est à peu près en x=194-296/y=660-677 ; le vrai vide entre
+   les deux colonnes du Hero est x≈692-732 ; le point atterrit en x≈480,
+   y≈45 dans la navbar) :
+     0%   sous "Sans s'engager" (en dessous, pas dedans)
+     35%  a filé vers la droite EN RESTANT sous tout le texte (y encore
+          bas) jusqu'à l'aplomb du vide entre les deux blocs
+     55%  toujours dans ce vide, commence à monter
+     75%  bien remonté, revient doucement vers sa position finale
+     100% posé dans la navbar
+   Résultat : ça ne traverse jamais le texte du titre — passe dessous
+   d'abord, puis dans l'espace vide entre les deux blocs, jamais dedans. */
+@keyframes nav-dot-arc {
+  0% {
+    opacity: 0;
+    transform: translate(-235px, 655px) scale(0.5);
+  }
+  12% {
+    opacity: 1;
+  }
+  35% {
+    transform: translate(170px, 645px) scale(0.7);
+  }
+  55% {
+    transform: translate(225px, 435px) scale(0.9);
+  }
+  75% {
+    transform: translate(140px, 155px) scale(1.15);
+  }
+  90% {
+    transform: translate(20px, 15px) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+/* Sous ~1024px (lg), le Hero passe en une seule colonne empilée : plus de
+   "vide entre deux blocs" horizontal, et la pastille finale est bien plus
+   proche du bord gauche — la trajectoire ci-dessus (calée sur le Hero 2
+   colonnes) enverrait le point hors écran sur un téléphone. Version
+   réduite, même forme (bas → glisse → monte), amplitude divisée par ~3.6
+   pour rester dans un écran étroit. */
+@media (max-width: 1023px) {
+  @keyframes nav-dot-arc {
+    0% {
+      opacity: 0;
+      transform: translate(-65px, 180px) scale(0.5);
+    }
+    12% {
+      opacity: 1;
+    }
+    35% {
+      transform: translate(47px, 178px) scale(0.7);
+    }
+    55% {
+      transform: translate(62px, 120px) scale(0.9);
+    }
+    75% {
+      transform: translate(39px, 43px) scale(1.15);
+    }
+    90% {
+      transform: translate(6px, 4px) scale(1.05);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(0, 0) scale(1);
+    }
+  }
+}
+
+.nav-dot {
+  opacity: 0;
+  transform: translate(-235px, 655px) scale(0.5);
+  /* will-change aide le navigateur à anticiper l'animation */
+  will-change: transform, opacity;
+}
+@media (max-width: 1023px) {
+  .nav-dot {
+    transform: translate(-65px, 180px) scale(0.5);
+  }
+}
+
+.nav-dot.nav-dot-arc {
+  animation: nav-dot-arc 1.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Le bloc (coque) : pas de overflow:hidden/max-width ici — le point est un
+   ENFANT de .nav-pill, et un ancêtre à overflow:hidden (ou à opacity:0, qui
+   se cumule sur tous ses descendants) le fait disparaître pendant tout son
+   trajet en arc, qui ne redevient visible qu'au tout dernier instant en
+   sortant enfin de la zone masquée — exactement le bug "pas visible avant
+   d'être visible" signalé. La coque (fond/bordure/flou) vit maintenant sur
+   un ::before séparé, dont c'est le SEUL élément dont l'opacité est animée
+   ici — le point, lui, n'a plus aucun ancêtre à l'opacité ou au overflow
+   restreints : son propre trajet (transform/opacity du keyframe
+   nav-dot-arc) reste seul maître de sa visibilité, du tout premier au tout
+   dernier instant. */
+.nav-pill {
+  position: relative;
+  isolation: isolate;
+}
+.nav-pill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(18, 12, 34, 0.85);
+  border: 1px solid rgba(236, 12, 140, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  z-index: -1;
+}
+
+.nav-pill.nav-pill-open::before {
+  opacity: 1;
+}
+
+.nav-pill-text {
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 0.35s ease 0.2s,
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
+  white-space: nowrap;
+}
+
+.nav-pill.nav-pill-open .nav-pill-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Aura lumineuse qui suit le point pendant son voyage — optionnel mais
+   ça renforce l'effet "le point est vivant et arrive". */
+.nav-dot.nav-dot-arc::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(236,12,140,0.65), transparent 70%);
+  animation: nav-dot-trail 1.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes nav-dot-trail {
+  0%, 60% { opacity: 0.9; }
+  100%    { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-dot {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .nav-dot.nav-dot-arc::after {
+    display: none;
+  }
+  .nav-pill::before {
+    opacity: 1 !important;
+    transition: none !important;
+  }
+  .nav-pill-text {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   FEATURES — entrée en cascade dans le sens du flux
+   ============================================================ */
+
+/* Tracé progressif des courbes Cash (stroke-dasharray/offset) */
+@keyframes feat-curve-draw {
+  from { stroke-dashoffset: var(--flow-len); }
+  to   { stroke-dashoffset: 0; }
+}
+
+.feat-curve {
+  stroke-dasharray: var(--flow-len);
+  stroke-dashoffset: var(--flow-len);
+}
+.feat-section.is-visible .feat-curve {
+  animation: feat-curve-draw 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.feat-section.is-visible .feat-curve.delay-1 {
+  animation-delay: 0.2s;
+}
+.feat-section.is-visible .feat-curve.delay-2 {
+  animation-delay: 0.35s;
+}
+
+/* Icônes (boutique, immeuble, globe) qui "pop" en cascade */
+@keyframes feat-icon-pop {
+  0%   { opacity: 0; transform: scale(0.4); }
+  60%  { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.feat-icon {
+  opacity: 0;
+  transform: scale(0.4);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.feat-section.is-visible .feat-icon {
+  animation: feat-icon-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.feat-section.is-visible .feat-icon.feat-d-1 { animation-delay: 0.50s; }
+.feat-section.is-visible .feat-icon.feat-d-2 { animation-delay: 0.65s; }
+.feat-section.is-visible .feat-icon.feat-d-3 { animation-delay: 0.80s; }
+.feat-section.is-visible .feat-icon.feat-d-4 { animation-delay: 0.95s; }
+.feat-section.is-visible .feat-icon.feat-d-5 { animation-delay: 1.10s; }
+.feat-section.is-visible .feat-icon.feat-d-6 { animation-delay: 1.25s; }
+.feat-section.is-visible .feat-icon.feat-d-7 { animation-delay: 1.40s; }
+.feat-section.is-visible .feat-icon.feat-d-8 { animation-delay: 1.55s; }
+
+/* Billets : n'apparaissent qu'une fois les courbes dessinées */
+.feat-billet {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.feat-section.is-visible .feat-billet {
+  opacity: 1;
+  transition-delay: 1.4s;
+}
+
+/* Téléphone : glisse depuis la droite avec un léger overshoot */
+@keyframes feat-phone-in {
+  0% {
+    opacity: 0;
+    transform: translateX(60px) scale(0.95);
+    filter: blur(6px);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(-4px) scale(1.01);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.feat-phone {
+  opacity: 0;
+}
+.feat-section.is-visible .feat-phone {
+  animation: feat-phone-in 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+}
+
+/* prefers-reduced-motion : on fige tout */
+@media (prefers-reduced-motion: reduce) {
+  .feat-curve,
+  .feat-icon,
+  .feat-billet,
+  .feat-phone {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   AFFILIATION — construction narrative, TOUT animé
+   ============================================================ */
+
+/* --- Utilitaire : un élément de base qui entre en fondu + glisse --- */
+@keyframes aff-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes aff-slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes aff-pop {
+  0%   { opacity: 0; transform: scale(0.4); }
+  60%  { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes aff-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ------------------------------------------------------------
+   Carte Evan store (coque + texte + icône) : entre en bloc
+   ------------------------------------------------------------ */
+.aff-card {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.aff-section.is-visible .aff-card {
+  animation: aff-slide-left 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0s forwards;
+}
+
+/* ------------------------------------------------------------
+   Point rose d'Evan store
+   ------------------------------------------------------------ */
+.aff-dot {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.aff-section.is-visible .aff-dot {
+  animation: aff-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.45s forwards;
+}
+
+/* ------------------------------------------------------------
+   Fil Evan -> entreprise : se dessine
+   ------------------------------------------------------------ */
+.affiliation-trace {
+  stroke-dasharray: var(--l, 2000);
+  stroke-dashoffset: var(--l, 2000);
+}
+.aff-section.is-visible .affiliation-trace {
+  animation: aff-trace 1.4s cubic-bezier(0.4, 0, 0.2, 1) 0.65s forwards;
+}
+@keyframes aff-trace {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ------------------------------------------------------------
+   Grille d'immeubles : chaque cellule en fondu + scale
+   Les délais sont posés en inline style côté JS.
+   ------------------------------------------------------------ */
+.aff-grid-cell {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.aff-section.is-visible .aff-grid-cell {
+  animation: aff-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ------------------------------------------------------------
+   Hub (rectangle + immeuble violet) : entre en bloc avec glow
+   ------------------------------------------------------------ */
+.aff-hub {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.aff-section.is-visible .aff-hub {
+  animation: aff-hub-pop 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 1.5s forwards;
+}
+@keyframes aff-hub-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+    filter: drop-shadow(0 0 0 rgba(236, 12, 140, 0));
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 28px rgba(236, 12, 140, 0.9));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 12px rgba(236, 12, 140, 0.4));
+  }
+}
+
+/* ------------------------------------------------------------
+   Les 7 fils en éventail : se dessinent un par un
+   ------------------------------------------------------------ */
+.aff-fil {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+}
+.aff-section.is-visible .aff-fil {
+  animation: aff-trace-fil 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes aff-trace-fil {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ------------------------------------------------------------
+   Les 7 boutiques en éventail : pop en cascade
+   ------------------------------------------------------------ */
+.aff-icon {
+  opacity: 0;
+  /* transform-box: view-box permet de garder le rotate() SVG intact
+     pendant qu'on anime le scale. */
+  transform-box: view-box;
+  transform-origin: center;
+}
+.aff-section.is-visible .aff-icon {
+  animation: aff-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ------------------------------------------------------------
+   Carte de l'entreprise (coque + immeuble + stats) : entre en bloc
+   ------------------------------------------------------------ */
+.aff-company {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.aff-section.is-visible .aff-company {
+  animation: aff-slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 2.5s forwards;
+}
+
+/* ------------------------------------------------------------
+   Sceau final (texte + 2 cercles) : entre en bloc
+   ------------------------------------------------------------ */
+.aff-seal {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.aff-section.is-visible .aff-seal {
+  animation: aff-slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 3.0s forwards;
+}
+
+/* Cercles du sceau : se dessinent après l'apparition du bloc */
+.aff-seal-circle {
+  stroke-dasharray: 140;
+  stroke-dashoffset: 140;
+}
+.aff-section.is-visible .aff-seal-circle {
+  animation: aff-trace 0.6s cubic-bezier(0.4, 0, 0.2, 1) 3.15s forwards;
+}
+.aff-section.is-visible .aff-seal-circle.delay {
+  animation-delay: 3.3s;
+}
+
+/* ------------------------------------------------------------
+   prefers-reduced-motion : on fige tout sur l'état final
+   ------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .aff-card,
+  .aff-dot,
+  .aff-hub,
+  .aff-icon,
+  .aff-company,
+  .aff-seal,
+  .aff-grid-cell {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation: none !important;
+  }
+  .affiliation-trace,
+  .aff-fil,
+  .aff-seal-circle {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+   REACH — maillage du continent, construit nœud par nœud
+   ============================================================ */
+
+/* Contour du continent : se dessine en fondu */
+@keyframes reach-continent-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+.reach-continent {
+  opacity: 0;
+}
+.reach-section.is-visible .reach-continent {
+  animation: reach-continent-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0s forwards;
+}
+
+/* Titre de la section */
+.reach-titre {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.reach-section.is-visible .reach-titre {
+  animation: reach-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0s forwards;
+}
+@keyframes reach-fade-up {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hub Abidjan : pop + pulse infini */
+@keyframes reach-hub-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.reach-hub {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.reach-section.is-visible .reach-hub {
+  animation: reach-hub-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s forwards;
+}
+
+/* Le halo d'Abidjan pulse en continu */
+.reach-hub-halo {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.reach-section.is-visible .reach-hub-halo {
+  animation:
+    reach-hub-halo-in 0.6s ease 0.7s forwards,
+    reach-hub-halo-pulse 2.4s ease-in-out 1.4s infinite;
+}
+@keyframes reach-hub-halo-in {
+  to { opacity: 1; }
+}
+@keyframes reach-hub-halo-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.22; }
+  50%      { transform: scale(1.6); opacity: 0.08; }
+}
+
+/* Le label "ABIDJAN" arrive après */
+.reach-hub-label {
+  opacity: 0;
+}
+.reach-section.is-visible .reach-hub-label {
+  animation: reach-fade-up 0.5s ease 0.9s forwards;
+}
+
+/* Les arcs du maillage : chaque arc reçoit un animation-delay en JS */
+.arc {
+  stroke-dasharray: var(--l, 400);
+  stroke-dashoffset: var(--l, 400);
+}
+.reach-section.is-visible .arc {
+  animation: reach-arc-draw 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes reach-arc-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Les villes du maillage : pop au moment où leur arc est arrivé
+   (animation-delay posé en JS, calé sur la durée de l'arc) */
+@keyframes reach-ville-pop {
+  0%   { opacity: 0; transform: scale(0); }
+  60%  { opacity: 1; transform: scale(1.5); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.ville {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.reach-section.is-visible .ville {
+  animation: reach-ville-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Les points muets : fondu simple en cascade */
+@keyframes reach-muet-in {
+  from { opacity: 0; transform: scale(0.5); }
+  to   { opacity: 0.85; transform: scale(1); }
+}
+.ville-muette {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.reach-section.is-visible .ville-muette {
+  animation: reach-muet-in 0.4s ease forwards;
+}
+
+/* prefers-reduced-motion : tout figé sur l'état final */
+@media (prefers-reduced-motion: reduce) {
+  .reach-continent,
+  .reach-titre,
+  .reach-hub,
+  .reach-hub-halo,
+  .reach-hub-label,
+  .ville,
+  .ville-muette {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation: none !important;
+  }
+  .arc {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+   STATEMENT — phrase signature : reflet + particules
+   ============================================================ */
+
+.statement-section {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ---- Le texte : entrée douce + léger scale ---- */
+@keyframes statement-text-in {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+    filter: blur(8px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+.statement-text {
+  opacity: 0;
+  position: relative;
+  display: inline-block;
+}
+.statement-section.is-visible .statement-text {
+  animation: statement-text-in 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+}
+
+/* ---- Reflet lumineux qui traverse la phrase ---- */
+/* On superpose un dégradé clair en position absolue sur le texte,
+   masqué par background-clip:text → seule la zone de texte reçoit l'éclat. */
+.statement-shine {
+  position: relative;
+  display: inline-block;
+  background: linear-gradient(
+    100deg,
+    var(--color-brand-white) 0%,
+    var(--color-brand-white) 40%,
+    var(--color-brand-pink-light) 48%,
+    #ffffff 50%,
+    var(--color-brand-pink-light) 52%,
+    var(--color-brand-white) 60%,
+    var(--color-brand-white) 100%
+  );
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.statement-section.is-visible .statement-shine {
+  animation: statement-shine-sweep 1.6s cubic-bezier(0.5, 0, 0.2, 1) 1.1s forwards;
+}
+@keyframes statement-shine-sweep {
+  0%   { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
+
+/* ---- Particules roses qui flottent autour ---- */
+.statement-particule {
+  position: absolute;
+  border-radius: 999px;
+  background: var(--color-brand-pink);
+  box-shadow: 0 0 8px 2px rgba(236, 12, 140, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+@keyframes statement-particle-float {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.4);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-30px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.6);
+  }
+}
+
+.statement-section.is-visible .statement-particule {
+  animation: statement-particle-float 3.5s ease-in-out infinite;
+}
+
+/* Tailles et positions des particules — fixées à l'écran,
+   chaque particule reçoit son animation-delay en JS. */
+.statement-particule.p1 { width: 6px;  height: 6px;  top: 22%; left: 12%; }
+.statement-particule.p2 { width: 4px;  height: 4px;  top: 68%; left: 18%; }
+.statement-particule.p3 { width: 5px;  height: 5px;  top: 38%; left: 30%; }
+.statement-particule.p4 { width: 3px;  height: 3px;  top: 74%; left: 42%; }
+.statement-particule.p5 { width: 7px;  height: 7px;  top: 28%; left: 55%; }
+.statement-particule.p6 { width: 4px;  height: 4px;  top: 62%; left: 68%; }
+.statement-particule.p7 { width: 5px;  height: 5px;  top: 34%; left: 78%; }
+.statement-particule.p8 { width: 3px;  height: 3px;  top: 70%; left: 88%; }
+.statement-particule.p9 { width: 6px;  height: 6px;  top: 48%; left: 8%;  }
+.statement-particule.p10{ width: 4px;  height: 4px;  top: 52%; left: 92%; }
+
+/* ---- Halo rose derrière le mot "orchestré" ---- */
+.statement-word {
+  position: relative;
+  display: inline-block;
+}
+.statement-word::after {
+  content: "";
+  position: absolute;
+  inset: -8px -14px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(236, 12, 140, 0.35),
+    transparent 70%
+  );
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+.statement-section.is-visible .statement-word::after {
+  animation: statement-halo-pulse 3s ease-in-out 1.8s infinite;
+}
+@keyframes statement-halo-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.95); }
+  50%      { opacity: 0.7; transform: scale(1.05); }
+}
+
+/* ---- prefers-reduced-motion : tout figé ---- */
+@media (prefers-reduced-motion: reduce) {
+  .statement-text,
+  .statement-shine {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation: none !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--color-brand-white) !important;
+    color: var(--color-brand-white) !important;
+  }
+  .statement-particule {
+    display: none;
+  }
+  .statement-word::after {
+    animation: none !important;
+    opacity: 0.4 !important;
+  }
+}
+
+/* ============================================================
+   CTA — entrée en cascade narrative + pulse du mot "ici"
+   ============================================================ */
+
+/* ---- Bloc texte : entrée depuis la gauche ---- */
+@keyframes cta-slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+  }
+}
+
+.cta-ligne-1 {
+  opacity: 0;
+}
+.cta-section.is-visible .cta-ligne-1 {
+  animation: cta-slide-left 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0s forwards;
+}
+
+.cta-ligne-2 {
+  opacity: 0;
+}
+.cta-section.is-visible .cta-ligne-2 {
+  animation: cta-slide-left 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+}
+
+/* ---- Boutons : entrée depuis le bas ---- */
+@keyframes cta-btn-in {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.cta-bouton-1 {
+  opacity: 0;
+  display: inline-block;
+}
+.cta-section.is-visible .cta-bouton-1 {
+  animation: cta-btn-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s forwards;
+}
+
+.cta-bouton-2 {
+  opacity: 0;
+  display: inline-block;
+}
+.cta-section.is-visible .cta-bouton-2 {
+  animation: cta-btn-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.95s forwards;
+}
+
+/* ---- Vidéo : fondu + zoom léger ---- */
+@keyframes cta-video-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.06);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+/* La vidéo (porte.MP4) est filmée en portrait (ratio ~9/16) : sans borne
+   de hauteur, elle prend sa hauteur intrinsèque à largeur de colonne
+   pleine (~1230px sur desktop), dépassant largement l'écran. Même ratio
+   que l'ancien .visuel-cta (presque carré) + un plafond en vh pour rester
+   raisonnable même sur un écran haut. */
+.cta-video {
+  opacity: 0;
+  transform: scale(1.06);
+  aspect-ratio: 1 / 1.05;
+  max-height: min(70vh, 620px);
+  margin-inline: auto;
+}
+.cta-section.is-visible .cta-video {
+  animation: cta-video-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+}
+
+/* ---- Le mot "ici" : pulse + glow permanent ---- */
+@keyframes cta-ici-pulse {
+  0%   { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(236, 12, 140, 0)); }
+  50%  { transform: scale(1.18); filter: drop-shadow(0 0 22px rgba(236, 12, 140, 0.9)); }
+  100% { transform: scale(1);    filter: drop-shadow(0 0 12px rgba(236, 12, 140, 0.5)); }
+}
+
+.cta-ici {
+  display: inline-block;
+  transform-origin: center;
+  /* Le glow subtil reste après le pulse grâce à filter en fin d'anim */
+}
+.cta-section.is-visible .cta-ici {
+  animation: cta-ici-pulse 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s forwards;
+}
+
+/* ---- Dégradé de fond : respiration légère ---- */
+@keyframes cta-gradient-breathe {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.94; }
+}
+.cta-section.is-visible .cta-gradient {
+  animation: cta-gradient-breathe 5s ease-in-out 1.5s infinite;
+}
+
+/* ---- prefers-reduced-motion : tout figé ---- */
+@media (prefers-reduced-motion: reduce) {
+  .cta-ligne-1,
+  .cta-ligne-2,
+  .cta-bouton-1,
+  .cta-bouton-2,
+  .cta-video,
+  .cta-ici {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation: none !important;
+  }
+  .cta-section.is-visible .cta-gradient {
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+   NAVBAR — MENU LATÉRAL DROIT (mobile)
+   ============================================================ */
+
+/* Overlay sombre derrière le panneau */
+.nav-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(5, 7, 22, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.nav-menu-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Panneau latéral droit */
+.nav-menu-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 95;
+  width: min(88vw, 360px);
+  padding: 5.5rem 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+
+  /* Fond verre dépoli */
+  background: rgba(10, 14, 30, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  /* Bordure gauche dégradée rose → violet */
+  border-left: 1px solid transparent;
+  background-clip: padding-box;
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.5);
+
+  /* Animation d'entrée */
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-menu-panel.is-open {
+  transform: translateX(0);
+}
+
+/* Le liseré dégradé à gauche, via ::before */
+.nav-menu-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--color-brand-pink) 20%,
+    var(--color-brand-purple) 80%,
+    transparent 100%
+  );
+  opacity: 0.7;
+}
+
+/* Petite lueur rose en haut du panneau */
+.nav-menu-panel::after {
+  content: "";
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(
+    circle,
+    rgba(236, 12, 140, 0.35),
+    transparent 70%
+  );
+  pointer-events: none;
+  filter: blur(30px);
+}
+
+/* En-tête du panneau (petit label "Navigation") */
+.nav-menu-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-brand-slate);
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.4s ease 0.15s,
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
+}
+.nav-menu-panel.is-open .nav-menu-eyebrow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Liste des liens */
+.nav-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  position: relative;
+}
+
+/* Le point rose qui glisse verticalement */
+.nav-menu-dot {
+  position: absolute;
+  left: -12px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-brand-pink);
+  box-shadow: 0 0 12px 2px rgba(236, 12, 140, 0.7);
+  opacity: 0;
+  transition:
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.3s ease;
+  pointer-events: none;
+}
+.nav-menu-panel.is-open .nav-menu-dot.is-visible {
+  opacity: 1;
+}
+
+/* Chaque lien */
+.nav-menu-link {
+  position: relative;
+  display: block;
+  padding: 1rem 0.5rem 1rem 1.25rem;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--color-brand-white);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: color 0.2s ease, background 0.2s ease;
+
+  /* Entrée en cascade */
+  opacity: 0;
+  transform: translateX(20px);
+}
+.nav-menu-panel.is-open .nav-menu-link {
+  animation: nav-menu-link-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.nav-menu-panel.is-open .nav-menu-link:nth-child(2) { animation-delay: 0.15s; }
+.nav-menu-panel.is-open .nav-menu-link:nth-child(3) { animation-delay: 0.22s; }
+.nav-menu-panel.is-open .nav-menu-link:nth-child(4) { animation-delay: 0.29s; }
+
+@keyframes nav-menu-link-in {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.nav-menu-link:hover,
+.nav-menu-link.actif {
+  color: var(--color-brand-pink-light);
+  background: rgba(236, 12, 140, 0.06);
+}
+
+/* Flèche discrète à droite du lien au survol */
+.nav-menu-link::after {
+  content: "→";
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translate(8px, -50%);
+  opacity: 0;
+  color: var(--color-brand-pink);
+  transition:
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s ease;
+  font-size: 1rem;
+}
+.nav-menu-link:hover::after {
+  transform: translate(0, -50%);
+  opacity: 1;
+}
+
+/* Pied du panneau (bas) */
+.nav-menu-footer {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(250, 247, 252, 0.08);
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.4s ease 0.35s,
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.35s;
+}
+.nav-menu-panel.is-open .nav-menu-footer {
+  opacity: 1;
+  transform: translateY(0);
+}
+.nav-menu-footer .brand {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-brand-white);
+  letter-spacing: -0.01em;
+}
+.nav-menu-footer .brand em {
+  color: var(--color-brand-pink);
+  font-style: normal;
+}
+.nav-menu-footer .tagline {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--color-brand-slate);
+  line-height: 1.5;
+}
+
+/* Burger : animation en croix */
+.nav-burger-line {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--color-brand-white);
+  border-radius: 999px;
+  transition:
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s ease;
+}
+.nav-burger.is-open .nav-burger-line:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.nav-burger.is-open .nav-burger-line:nth-child(2) {
+  opacity: 0;
+}
+.nav-burger.is-open .nav-burger-line:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .nav-menu-overlay,
+  .nav-menu-panel,
+  .nav-menu-eyebrow,
+  .nav-menu-link,
+  .nav-menu-footer,
+  .nav-burger-line {
+    transition: none !important;
+    animation: none !important;
+  }
+  .nav-menu-panel {
+    transform: translateX(0) !important;
+  }
+  .nav-menu-link,
+  .nav-menu-eyebrow,
+  .nav-menu-footer {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

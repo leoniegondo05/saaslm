@@ -7,7 +7,23 @@ export default function Navbar() {
   const [actif, setActif] = useState(false);
   const [titre, setTitre] = useState("");
   const [sous, setSous] = useState("");
+  const [menuOuvert, setMenuOuvert] = useState(false);
+  const [lienSurvole, setLienSurvole] = useState<number | null>(null);
 
+  const [dotArc, setDotArc] = useState(false);
+  const [pillOpen, setPillOpen] = useState(false);
+
+  // ---- Animation d'entrée du point rose + pastille ----
+  useEffect(() => {
+    const t1 = setTimeout(() => setDotArc(true), 80);
+    const t2 = setTimeout(() => setPillOpen(true), 80 + 1350);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
+  // ---- Scroll + IntersectionObserver ----
   useEffect(() => {
     const onScroll = () => {
       setReplie(window.scrollY > window.innerHeight * 0.65);
@@ -39,101 +55,187 @@ export default function Navbar() {
     };
   }, []);
 
+  // ---- Fermeture au clavier (Échap) + blocage du scroll ----
+  useEffect(() => {
+    if (!menuOuvert) return;
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOuvert(false);
+    };
+    document.addEventListener("keydown", onKey);
+
+    // Bloque le scroll de la page quand le menu est ouvert
+    const oldOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = oldOverflow;
+    };
+  }, [menuOuvert]);
+
+  const dotClasses = (size: string) =>
+    `${size} rounded-full bg-brand-pink shadow-[0_0_10px_rgba(236,12,140,0.9)] shrink-0 nav-dot relative ${
+      dotArc ? "nav-dot-arc" : ""
+    }`;
+
+  const pillClasses = (extra: string) =>
+    `nav-pill flex items-center rounded-full font-medium whitespace-nowrap pointer-events-auto ${extra} ${
+      pillOpen ? "nav-pill-open" : ""
+    }`;
+
+  // Liste des liens (réutilisée pour le menu mobile)
+  const liens = [
+    { href: "/vision", label: "Ce que nous construisons" },
+    { href: "/partenaire-agree-lm.html", label: "Partenaire agréé LM" },
+  ];
+
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-100 pointer-events-none
-        px-3 py-3 sm:px-8 sm:py-5.5
-        ${actif ? "navbar-actif" : ""}
-        ${replie ? "navbar-hide" : ""}
-      `}
-    >
-      {/* ============================================================
-          MOBILE : deux lignes, tout compact
-          ============================================================ */}
-      <div className="flex flex-col gap-2.5 lg:hidden">
-        {/* Ligne 1 : logo + liens */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="navbar-fade shrink-0 w-8 h-8 rounded-[10px] bg-linear-[150deg] from-[#1B1233] to-[#0D0A1C] border border-brand-pink/35 flex items-center justify-center">
-            <img src="/favicon.svg" alt="logo" className="w-4.5 h-4.5" />
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-100 pointer-events-none
+          px-3 py-3 sm:px-8 sm:py-5.5
+          ${actif ? "navbar-actif" : ""}
+          ${replie ? "navbar-hide" : ""}
+        `}
+      >
+        {/* ============================================================
+            MOBILE
+            ============================================================ */}
+        <div className="flex flex-col gap-2.5 lg:hidden">
+          {/* Ligne 1 : logo + burger */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="navbar-fade shrink-0 w-8 h-8 rounded-[10px] flex items-center justify-center">
+              <img src="/favicon.svg" alt="logo" className="w-10 h-10" />
+            </div>
+
+            <button
+              type="button"
+              aria-label={menuOuvert ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-expanded={menuOuvert}
+              onClick={() => setMenuOuvert((v) => !v)}
+              className={`nav-burger pointer-events-auto shrink-0 w-9 h-9 flex flex-col items-center justify-center gap-1.5 rounded-md ${
+                menuOuvert ? "is-open" : ""
+              }`}
+            >
+              <span className="nav-burger-line" />
+              <span className="nav-burger-line" />
+              <span className="nav-burger-line" />
+            </button>
           </div>
 
-          <nav className="navbar-fade pointer-events-auto flex items-center gap-1.5 text-[11px] leading-none min-w-0">
+          {/* Ligne 2 : pastille centrée */}
+          <div className="flex items-center justify-center gap-2 min-w-0">
+            <div className={pillClasses("gap-1.5 px-2.5 py-1.5 text-[11px]")}>
+              <i className={dotClasses("w-2 h-2")} />
+              <span className="nav-pill-text">La solution LM</span>
+            </div>
+
+            {actif && (
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="nav-trait w-px h-5 bg-brand-white/45 rotate-20 origin-center shrink-0" />
+                <div className="nav-suite max-w-[140px] min-w-0">
+                  <b className="block text-[11px] font-semibold leading-tight truncate">
+                    {titre}
+                  </b>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ============================================================
+            DESKTOP
+            ============================================================ */}
+        <div className="hidden lg:flex items-start justify-between">
+          <div className="navbar-fade w-10.5 h-10.5 flex items-center justify-center">
+            <img src="/favicon.svg" alt="logo" className="w-6 h-6" />
+          </div>
+
+          <div className="flex items-center gap-4 pt-1">
+            <div className={pillClasses("gap-2.5 px-5 py-2.25 text-sm")}>
+              <i className={dotClasses("w-2.5 h-2.5")} />
+              <span className="nav-pill-text">La solution LM</span>
+            </div>
+            <div className="nav-trait w-px h-8.5 bg-brand-white/45 rotate-20 origin-center" />
+            <div className="nav-suite">
+              <b className="block text-[15px] font-semibold leading-tight">{titre}</b>
+              <span className="block text-xs text-brand-slate leading-snug">
+                {sous}
+              </span>
+            </div>
+          </div>
+
+          <nav className="navbar-fade pointer-events-auto flex items-center gap-3 text-[14.5px] pt-2.25">
             <a
               href="/vision"
-              className="text-brand-white no-underline opacity-90 hover:opacity-100 hover:text-brand-pink-light whitespace-nowrap"
+              className="pointer-events-auto text-brand-white no-underline opacity-90 hover:opacity-100 hover:text-brand-pink-light cursor-pointer"
             >
               Ce que nous construisons
             </a>
             <em className="text-brand-pink not-italic">·</em>
             <a
               href="/partenaire-agree-lm.html"
-              className="text-brand-white no-underline opacity-90 hover:opacity-100 hover:text-brand-pink-light whitespace-nowrap"
+              className="pointer-events-auto text-brand-white no-underline opacity-90 hover:opacity-100 hover:text-brand-pink-light cursor-pointer"
             >
               Partenaire agréé LM
             </a>
           </nav>
         </div>
-
-        {/* Ligne 2 : pastille centrée */}
-        <div className="flex items-center justify-center gap-2 min-w-0">
-          <div className="pointer-events-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[rgba(18,12,34,0.85)] border border-brand-pink/30 backdrop-blur-[10px] text-[11px] font-medium whitespace-nowrap">
-            <i className="w-2 h-2 rounded-full bg-brand-pink shadow-[0_0_10px_rgba(236,12,140,0.9)]" />
-            La solution LM
-          </div>
-
-          {actif && (
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="nav-trait w-px h-5 bg-brand-white/45 rotate-20 origin-center shrink-0" />
-              <div className="nav-suite max-w-[140px] min-w-0">
-                <b className="block text-[11px] font-semibold leading-tight truncate">
-                  {titre}
-                </b>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      </header>
 
       {/* ============================================================
-          DESKTOP : disposition 3 colonnes d'origine
+          MENU LATÉRAL DROIT (mobile uniquement)
           ============================================================ */}
-      <div className="hidden lg:flex items-start justify-between">
-        <div className="navbar-fade w-10.5 h-10.5 rounded-[13px] bg-linear-[150deg] from-[#1B1233] to-[#0D0A1C] border border-brand-pink/35 flex items-center justify-center">
-          <img src="/favicon.svg" alt="logo" className="w-6 h-6" />
-        </div>
+      {/* Overlay */}
+      <div
+        className={`nav-menu-overlay lg:hidden ${menuOuvert ? "is-open" : ""}`}
+        onClick={() => setMenuOuvert(false)}
+        aria-hidden={!menuOuvert}
+      />
 
-        <div className="flex items-center gap-4 pt-1">
-          <div className="pointer-events-auto flex items-center gap-2.5 px-5 py-2.25 rounded-full bg-[rgba(18,12,34,0.85)] border border-brand-pink/30 backdrop-blur-[10px] text-sm font-medium whitespace-nowrap">
-            <i className="w-2.5 h-2.5 rounded-full bg-brand-pink shadow-[0_0_10px_rgba(236,12,140,0.9)]" />
-            La solution LM
-          </div>
-          <div className="nav-trait w-px h-8.5 bg-brand-white/45 rotate-20 origin-center" />
-          <div className="nav-suite">
-            <b className="block text-[15px] font-semibold leading-tight">
-              {titre}
-            </b>
-            <span className="block text-xs text-brand-slate leading-snug">
-              {sous}
-            </span>
-          </div>
-        </div>
+      {/* Panneau */}
+      <aside
+        className={`nav-menu-panel lg:hidden ${menuOuvert ? "is-open" : ""}`}
+        aria-hidden={!menuOuvert}
+      >
 
-        <nav className="navbar-fade pointer-events-auto flex items-center gap-3 text-[14.5px] pt-2.25">
-          <a
-            href="/vision"
-            className="pointer-events-auto text-brand-white no-underline opacity-90 hover:opacity-100 hover:text-brand-pink-light cursor-pointer"
-          >
-            Ce que nous construisons
-          </a>
-          <em className="text-brand-pink not-italic">·</em>
-          <a
-            href="/partenaire-agree-lm.html"
-            className="pointer-events-auto text-brand-white no-underline opacity-90 hover:opacity-100 hover:text-brand-pink-light cursor-pointer"
-          >
-            Partenaire agréé LM
-          </a>
+        <nav className="nav-menu-list" onMouseLeave={() => setLienSurvole(null)}>
+          {/* Le point rose qui se déplace verticalement */}
+          <span
+            className={`nav-menu-dot ${
+              lienSurvole !== null ? "is-visible" : ""
+            }`}
+            style={{
+              top: lienSurvole !== null ? `${lienSurvole * 56 + 28}px` : "28px",
+            }}
+          />
+
+          {liens.map((lien, i) => (
+            <a
+              key={lien.href}
+              href={lien.href}
+              className={`nav-menu-link ${
+                lienSurvole === i ? "actif" : ""
+              }`}
+              onMouseEnter={() => setLienSurvole(i)}
+              onFocus={() => setLienSurvole(i)}
+              onClick={() => setMenuOuvert(false)}
+            >
+              {lien.label}
+            </a>
+          ))}
         </nav>
-      </div>
-    </header>
+
+        <div className="nav-menu-footer">
+          <span className="brand">
+            LIIVRE <em>MOI</em>
+          </span>
+          <span className="tagline">
+            Le commerce digital orchestré de bout en bout.
+          </span>
+        </div>
+      </aside>
+    </>
   );
 }
