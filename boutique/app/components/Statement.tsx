@@ -7,12 +7,12 @@ export default function Statement() {
   return (
     <section
       id="commerce-digital"
-      className="sticky top-[128px] flex min-h-[calc(100vh-6rem)] items-center bg-brand-bg px-6 py-32 text-center md:px-16"
+      className="flex items-center bg-brand-bg px-6 py-32 text-center md:px-16"
     >
       <ScrollReveal className="w-full">
-        <div className="flex justify-center">
+        {/* <div className="flex justify-center">
           <SectionBadge />
-        </div>
+        </div> */}
         <p className="mx-auto mt-8 max-w-3xl text-2xl font-semibold sm:text-4xl">
           Le commerce digital orchestré de bout en bout.
         </p>

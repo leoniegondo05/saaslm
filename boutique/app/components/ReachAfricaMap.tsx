@@ -1,217 +1,158 @@
 /*
   Carte de l'Afrique : Abidjan comme point de départ ("hub") des connexions
-  vers de nombreuses villes du continent. Remplace l'ancienne version où le
-  graphiste avait tout exporté depuis Figma en une seule image PNG (pastille
-  "La solution LM", titre, carte, noms de villes compris) — pas pratique :
-  aucun texte réel (illisible pour un lecteur d'écran, imprécis au zoom) et
-  impossible à faire évoluer sans re-exporter depuis Figma.
+  vers de nombreuses villes du continent. Reprend à l'identique la
+  silhouette, la liste de villes et le calcul des arcs de la maquette de
+  référence fournie par l'utilisateur (accueil-lm-anime.html, section
+  "Un continent, des millions d'opportunités") — contrairement à une
+  version précédente qui utilisait un fond de carte géographiquement exact
+  (SVG du domaine public), remplacée ici pour rester identique à la
+  référence.
 
-  Ici, la carte elle-même reste un tracé vectoriel (fond de carte du domaine
-  public — voir /public/images/africa-map.svg, silhouette des pays, pas de
-  contenu éditorial dedans), chargée comme une image de fond. Par-dessus,
-  un SVG "overlay" (même repère de coordonnées que le fond, superposition
-  au pixel près par positionnement en %, comme HowItWorksWave.tsx) dessine
-  les rayons + les points, et les noms de ville sont de vrais <span> HTML —
-  donc du vrai texte, accessible et net à n'importe quelle résolution.
+  Le calcul des arcs (Q d'une quadratique, courbée perpendiculairement au
+  segment Abidjan→ville) est fait une seule fois au chargement du module,
+  comme HowItWorksWave.tsx — pas de useEffect qui injecte du innerHTML
+  comme dans la référence (c'était nécessaire en JS/DOM vanilla, pas en
+  React où le rendu déclaratif suffit).
 
-  Coordonnées des villes : pas une projection géographique — un simple
-  repérage visuel (mesure des pixels de l'ancienne image de référence,
-  recalé sur les vrais contours de chaque pays dans ce fond de carte) pour
-  rester fidèle à la maquette d'origine.
+  Couleurs : rose/violet = nos tokens de marque (--color-brand-pink/-purple/
+  -pink-light, mêmes valeurs que --fuchsia/--violet/--dragee dans la
+  référence) ; le remplissage du continent (#111726) et le mauve des arcs
+  (rgba(196,150,240,.6)) sont des couleurs d'illustration ponctuelles, sans
+  équivalent dans nos tokens de marque, gardées telles quelles.
 */
-const VIEW_W = 1123.0895;
-const VIEW_H = 1105.1122;
+type City = {
+  name: string;
+  x: number;
+  y: number;
+  fontSize: number;
+  side?: "left";
+};
 
-// Abidjan : point de départ de toutes les connexions.
-const HUB = { x: 275, y: 510 };
-
-type City = { id: string; label: string; x: number; y: number };
+const ABIDJAN = { x: 260, y: 431 };
 
 const CITIES: City[] = [
-  { id: "alger", label: "ALGER", x: 350, y: 100 },
-  { id: "bamako", label: "BAMAKO", x: 290, y: 370 },
-  { id: "khartoum", label: "KHARTOUM", x: 660, y: 300 },
-  { id: "accra", label: "ACCRA", x: 330, y: 505 },
-  { id: "lagos", label: "LAGOS", x: 400, y: 510 },
-  { id: "yaounde", label: "YAOUNDÉ", x: 510, y: 480 },
-  { id: "libreville", label: "LIBREVILLE", x: 465, y: 570 },
-  { id: "kinshasa", label: "KINSHASA", x: 525, y: 610 },
-  { id: "kampala", label: "KAMPALA", x: 742, y: 565 },
-  { id: "nairobi", label: "NAIROBI", x: 815, y: 590 },
-  { id: "luanda", label: "LUANDA", x: 505, y: 685 },
-  { id: "lusaka", label: "LUSAKA", x: 680, y: 765 },
-  { id: "windhoek", label: "WINDHOEK", x: 545, y: 880 },
-  { id: "bissau", label: "BISSAU", x: 163, y: 424 },
+  { name: "ALGER", x: 349, y: 62, fontSize: 11 },
+  { name: "BISSAU", x: 113, y: 354, fontSize: 11, side: "left" },
+  { name: "BAMAKO", x: 209, y: 345, fontSize: 11 },
+  { name: "ACCRA", x: 308, y: 427, fontSize: 11 },
+  { name: "Lagos", x: 354, y: 417, fontSize: 11 },
+  { name: "KHARTOUM", x: 717, y: 317, fontSize: 11 },
+  { name: "YAOUNDE", x: 457, y: 447, fontSize: 11 },
+  { name: "Libreville", x: 430, y: 488, fontSize: 10 },
+  { name: "KAMPALA", x: 725, y: 489, fontSize: 8 },
+  { name: "NAIROBI", x: 778, y: 508, fontSize: 8 },
+  { name: "KINSHASA", x: 505, y: 544, fontSize: 11 },
+  { name: "LUANDA", x: 479, y: 596, fontSize: 11 },
+  { name: "LUSAKA", x: 670, y: 673, fontSize: 11 },
+  { name: "WINDHOEK", x: 528, y: 757, fontSize: 8 },
 ];
 
-// Liens entre villes (pas seulement vers Abidjan) : chaque ville reliée à
-// ses 2 plus proches voisines (distance euclidienne sur les coordonnées
-// ci-dessus), pour un vrai réseau interconnecté plutôt qu'une simple
-// étoile centrée sur le hub. Un maillage complet (91 paires pour 14
-// villes) aurait été illisible — 2 voisines par ville donne un maillage
-// visible sans surcharger la carte, tracé en dessous des rayons vers
-// Abidjan (plus discret, pas de dégradé).
-const CITY_LINKS: [string, string][] = [
-  ["accra", "bamako"],
-  ["accra", "bissau"],
-  ["accra", "lagos"],
-  ["alger", "bamako"],
-  ["alger", "khartoum"],
-  ["bamako", "bissau"],
-  ["kampala", "khartoum"],
-  ["kampala", "lusaka"],
-  ["kampala", "nairobi"],
-  ["khartoum", "yaounde"],
-  ["kinshasa", "libreville"],
-  ["kinshasa", "luanda"],
-  ["lagos", "libreville"],
-  ["lagos", "yaounde"],
-  ["libreville", "luanda"],
-  ["libreville", "yaounde"],
-  ["luanda", "lusaka"],
-  ["luanda", "windhoek"],
-  ["lusaka", "nairobi"],
-  ["lusaka", "windhoek"],
+// Points secondaires, sans nom — juste pour densifier la carte comme sur
+// la référence.
+const MUTED_DOTS: [number, number][] = [
+  [513, 71], [439, 151], [479, 206], [680, 234], [766, 226], [898, 151],
+  [919, 248], [994, 340], [901, 355], [957, 499], [981, 587], [892, 641],
+  [944, 672], [843, 671], [845, 763], [1081, 642], [684, 51], [432, 261],
+  [573, 327], [661, 316], [795, 346], [715, 366],
 ];
 
-// Petits points décoratifs (sans nom), pour donner à la carte la même
-// densité que la capture de référence — pas de rayon, juste un repère
-// visuel discret.
-const DECORATIVE_DOTS: [number, number][] = [
-  [702.4, 837.0],
-  [965.5, 837.0],
-  [72.4, 234.1],
-  [127.8, 301.8],
-  [792.0, 662.8],
-  [826.1, 769.4],
-  [637.0, 986.2],
-  [413.7, 112.5],
-  [406.6, 336.9],
-  [176.2, 136.3],
-  [844.6, 467.3],
-  [715.2, 484.8],
-  [740.8, 354.4],
-  [710.9, 234.1],
-  [776.4, 873.4],
-  [527.5, 326.9],
-  [634.1, 873.4],
-];
-
-const CITY_BY_ID = new Map(CITIES.map((city) => [city.id, city]));
+// Arc quadratique Abidjan→ville, courbé perpendiculairement au segment —
+// même formule que la référence : le milieu du segment est décalé de
+// 0.17× sa propre longueur, dans la direction perpendiculaire (-dy, dx).
+// (Dans le JS d'origine ce facteur était normalisé par la longueur du
+// segment puis multiplié par cette même longueur : les deux s'annulent,
+// il ne reste donc que `-dy*0.17`/`dx*0.17` — pas la peine de recalculer
+// une racine carrée pour un résultat identique.)
+function arcPathTo(city: City) {
+  const mx = (ABIDJAN.x + city.x) / 2;
+  const my = (ABIDJAN.y + city.y) / 2;
+  const dx = city.x - ABIDJAN.x;
+  const dy = city.y - ABIDJAN.y;
+  const cx = mx - dy * 0.17;
+  const cy = my + dx * 0.17;
+  return `M${ABIDJAN.x},${ABIDJAN.y} Q${cx.toFixed(1)},${cy.toFixed(1)} ${city.x},${city.y}`;
+}
 
 export default function ReachAfricaMap() {
   return (
-    <div
-      className="relative mx-auto w-full max-w-[580px]"
-      style={{ aspectRatio: `${VIEW_W} / ${VIEW_H}` }}
-    >
-      {/* Fond de carte (silhouette des pays) — pur habillage visuel, le
-          contenu qui compte (villes, titre) est du vrai texte à côté. */}
-      <img
-        src="/images/africa-map.svg"
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 h-full w-full"
-      />
+    <div className="mx-auto w-full max-w-[720px]">
+      <svg viewBox="0 0 1000 950" aria-hidden="true">
+        {/* Silhouette simplifiée du continent + une petite île (Madagascar). */}
+        <path
+          d="M237,74 L440,62 L565,117 L691,128 L724,143 L784,263 L859,357
+             L963,354 L887,469 L816,540 L811,573 L829,663 L725,794 L705,841
+             L565,898 L545,888 L495,760 L466,670 L479,596 L467,563 L462,549
+             L434,446 L381,443 L326,422 L260,431 L174,420 L143,394 L90,321
+             L108,281 L133,212 L189,137 Z"
+          fill="#111726"
+          stroke="rgba(250,247,252,.13)"
+          strokeWidth={1.2}
+          strokeLinejoin="round"
+        />
+        <path
+          d="M934,628 C948,650 952,700 944,742 C938,776 922,792 910,784
+             C898,776 898,742 904,706 C910,668 920,632 934,628 Z"
+          fill="#111726"
+          stroke="rgba(250,247,252,.13)"
+          strokeWidth={1.2}
+        />
 
-      <svg
-        className="absolute inset-0 h-full w-full"
-        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <defs>
+        {/* Arcs + villes : le trait se dessine (stroke-dashoffset) et les
+            points/étiquettes apparaissent en fondu quand la section entre
+            dans le viewport — voir .affiliation-trace/.affiliation-icon
+            dans globals.css (déclenchées par ScrollReveal, comme le
+            diagramme de la section "S'affilier"). */}
+        <g fill="none" strokeWidth={1.2}>
           {CITIES.map((city) => (
-            <linearGradient
-              key={city.id}
-              id={`reach-ray-gradient-${city.id}`}
-              gradientUnits="userSpaceOnUse"
-              x1={city.x}
-              y1={city.y}
-              x2={HUB.x}
-              y2={HUB.y}
-            >
-              <stop offset="0%" stopColor="#ffffff" stopOpacity={0} />
-              <stop offset="35%" stopColor="var(--color-brand-purple)" stopOpacity={0.7} />
-              <stop offset="100%" stopColor="var(--color-brand-pink)" stopOpacity={1} />
-            </linearGradient>
-          ))}
-        </defs>
-
-        {DECORATIVE_DOTS.map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r={3.5} fill="var(--color-brand-pink)" fillOpacity={0.5} />
-        ))}
-
-        {/* Maillage ville à ville (voir CITY_LINKS) — tracé en dessous des
-            rayons vers Abidjan, trait plein discret (pas de dégradé) pour
-            que le hub reste le point le plus lumineux de la carte. */}
-        {CITY_LINKS.map(([fromId, toId]) => {
-          const from = CITY_BY_ID.get(fromId)!;
-          const to = CITY_BY_ID.get(toId)!;
-          return (
-            <line
-              key={`${fromId}-${toId}`}
-              x1={from.x}
-              y1={from.y}
-              x2={to.x}
-              y2={to.y}
-              stroke="var(--color-brand-purple)"
-              strokeOpacity={0.75}
-              strokeWidth={1.5}
-              strokeLinecap="round"
+            <path
+              key={city.name}
+              className="affiliation-trace"
+              d={arcPathTo(city)}
+              stroke="rgba(196,150,240,.6)"
             />
-          );
-        })}
+          ))}
+        </g>
 
-        {CITIES.map((city) => (
-          <line
-            key={city.id}
-            x1={city.x}
-            y1={city.y}
-            x2={HUB.x}
-            y2={HUB.y}
-            stroke={`url(#reach-ray-gradient-${city.id})`}
-            strokeWidth={1.25}
-            strokeLinecap="round"
-          />
-        ))}
+        <g className="affiliation-icon">
+          {CITIES.map((city) => {
+            const isLeft = city.side === "left";
+            return (
+              <g key={city.name}>
+                <circle cx={city.x} cy={city.y} r={5} fill="var(--color-brand-pink)" />
+                <text
+                  x={isLeft ? city.x - 10 : city.x}
+                  y={isLeft ? city.y + 4 : city.y + city.fontSize + 6}
+                  fill="var(--color-brand-white)"
+                  fontSize={city.fontSize}
+                  fontWeight={600}
+                  textAnchor={isLeft ? "end" : "middle"}
+                  letterSpacing={0.5}
+                >
+                  {city.name}
+                </text>
+              </g>
+            );
+          })}
+          {MUTED_DOTS.map(([x, y], i) => (
+            <circle key={i} cx={x} cy={y} r={4} fill="var(--color-brand-pink)" fillOpacity={0.85} />
+          ))}
+        </g>
 
-        {CITIES.map((city) => (
-          <circle key={city.id} cx={city.x} cy={city.y} r={4.5} fill="var(--color-brand-pink)" />
-        ))}
-
-        {/* Abidjan : point de départ, plus gros que les autres villes.
-            Le halo lumineux est un <span> HTML séparé juste en dessous
-            (reach-hub-glow, voir globals.css) : box-shadow ne s'applique
-            pas de façon fiable à une forme SVG, voir HowItWorksWave.tsx
-            pour le même choix sur le hub du fil conducteur. */}
-        <circle cx={HUB.x} cy={HUB.y} r={9} fill="var(--color-brand-pink)" />
-      </svg>
-
-      {/* Halo du hub Abidjan — <span> HTML, pas SVG (voir commentaire
-          ci-dessus). */}
-      <span
-        className="reach-hub-glow absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-pink"
-        style={{ left: `${(HUB.x / VIEW_W) * 100}%`, top: `${(HUB.y / VIEW_H) * 100}%` }}
-        aria-hidden="true"
-      />
-
-      {CITIES.map((city) => (
-        <span
-          key={city.id}
-          className="absolute -translate-x-1/2 translate-y-[10px] whitespace-nowrap text-[9px] font-semibold tracking-wide text-brand-white/80 sm:text-[10px]"
-          style={{ left: `${(city.x / VIEW_W) * 100}%`, top: `${(city.y / VIEW_H) * 100}%` }}
+        {/* Abidjan : point de départ de toutes les connexions. */}
+        <circle cx={ABIDJAN.x} cy={ABIDJAN.y} r={11} fill="var(--color-brand-pink)" />
+        <circle cx={ABIDJAN.x} cy={ABIDJAN.y} r={22} fill="var(--color-brand-pink)" fillOpacity={0.22} />
+        <text
+          x={ABIDJAN.x}
+          y={ABIDJAN.y + 39}
+          fill="var(--color-brand-white)"
+          fontSize={21}
+          fontWeight={600}
+          textAnchor="middle"
+          letterSpacing={1}
         >
-          {city.label}
-        </span>
-      ))}
-
-      <span
-        className="absolute -translate-x-1/2 translate-y-[14px] whitespace-nowrap text-xs font-bold text-brand-white sm:text-sm"
-        style={{ left: `${(HUB.x / VIEW_W) * 100}%`, top: `${(HUB.y / VIEW_H) * 100}%` }}
-      >
-        ABIDJAN
-      </span>
+          ABIDJAN
+        </text>
+      </svg>
     </div>
   );
 }
