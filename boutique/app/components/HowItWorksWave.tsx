@@ -139,6 +139,14 @@ export default function HowItWorksWave() {
                 <stop offset="45%" stopColor="#EC0C8C" stopOpacity=".45" />
                 <stop offset="100%" stopColor="#EC0C8C" stopOpacity="0" />
               </radialGradient>
+              {/* Même dégradé rose→violet que la bordure du bouton
+                  "commencer maintenant" du Hero — appliqué aux 4 pilules
+                  (Créer/Personnaliser/Publier/Commencer), voir
+                  .pilule-vague rect dans globals.css. */}
+              <linearGradient id="pilule-bordure" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="var(--color-brand-pink)" />
+                <stop offset="100%" stopColor="var(--color-brand-purple)" />
+              </linearGradient>
             </defs>
 
             {/* Les rayons partent maintenant des crêtes de la vague,
