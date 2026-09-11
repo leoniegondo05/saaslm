@@ -1,6 +1,8 @@
 "use client";
 
-import { Bar, Card, Divider, Nature, SectionHeader, StatRow, Table, Tag } from "./shared";
+import Link from "next/link";
+import { AreaChart, Bar, Card, Divider, HeaderActionBtn, Nature, SectionHeader, StatRow, Table, Tag } from "./shared";
+import RetentionCard from "./RetentionCard";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -10,7 +12,13 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
   parcours de la commande, rythme (jour, mois, heure), centre d'appel,
   livraison, panier/risque, temps par étape, motifs de refus, communes,
   clients qui reviennent, comparaison au réseau, litiges, signaux à traiter,
-  projection à 7 jours et bloc assistance IA.
+  projection à 7 jours.
+
+  L'ancien bloc "assistance IA" (14 questions statiques en pied de section)
+  est parti dans le bouton "solution LM" du navbar (DashboardHeader.tsx →
+  AssistanceLMModal.tsx) : ouvert sur cet onglet Commandes, il montre les
+  mêmes questions (dashboard-accueil/assistanceQuestions.ts), plus besoin
+  de scroller toute la section pour les voir.
 
   Chiffres statiques en attendant l'API Laravel, cf. mémoire
   [[dashboard-mock-data-pending-laravel-api]].
@@ -22,6 +30,43 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
 // de forme).
 const DAILY_ORDERS = [4, 5, 7, 6, 8, 10, 6, 9, 11, 7];
 const STOCK_SHARE = 0.655; // 65,5 % des commandes en stockage management
+
+// Convention couleur dashboard : stockage = bleu, dropshipping = rose,
+// sur toute barre de progression / graph qui oppose les deux (cf. mémoire
+// dashboard-chart-colors-stockage-drop).
+const STOCK_COLOR = "#5AA9FF";
+
+// --- "Le panier et son risque" — barres = nb commandes par tranche de
+// panier (colonne "Cmd" de la table), ligne pointillée = taux de livraison
+// en % (colonne "Livrées"). Mêmes valeurs des deux côtés, une seule source.
+const BASKET_LABELS = ["< 10 k", "10-20 k", "20-50 k", "> 50 k"];
+const BASKET_ORDERS = [21, 67, 48, 12];
+const BASKET_DELIVERY_RATE = [91, 86, 74, 58];
+// Même violet que "Commandes passées" (FunnelStep plus haut dans ce fichier,
+// box={{ color: "#8B5CF6" }}) — pas brand-purple (#3A1D8A, trop sombre/indigo).
+const ORDERS_COLOR = "#8B5CF6";
+const DELIVERY_RATE_COLOR = "#4FE0AE";
+
+// Courbe lissée (Catmull-Rom → Bézier cubique, tension 1/6) pour le combo
+// aire/ligne de "Le panier et son risque" — remplace l'ancien histogramme
+// à colonnes plates par une forme continue, cohérente avec le reste du
+// dashboard (AreaChart de shared.tsx utilise le même principe de lissage).
+function smoothPath(pts: { x: number; y: number }[]) {
+  if (pts.length < 2) return "";
+  let d = `M ${pts[0].x},${pts[0].y}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${c1x},${c1y} ${c2x},${c2y} ${p2.x},${p2.y}`;
+  }
+  return d;
+}
 
 // --- "Le cycle du mois" — 10 tranches de ~3 jours sur le mois ; la zone de
 // paie (autour du 25 au 5) ressort nettement plus haute.
@@ -38,21 +83,23 @@ const MONTH_BUCKETS = [
   { pct: 100, paie: true }, // 28–31
 ];
 
-// 24 barres pour la bande "heures de commande" — pic 20h-22h.
-const HOURLY_ORDERS = [
-  0.06, 0.05, 0.05, 0.05, 0.06, 0.09, 0.14, 0.2, 0.26, 0.3, 0.34, 0.4, 0.44, 0.38, 0.34, 0.36, 0.42, 0.5, 0.5, 0.7, 1, 1,
-  0.6, 0.2,
-];
+// --- "Quand vos clients commandent" — densité par jour × tranche de 2 h
+// (8 colonnes, 7 h30-23 h30 en pratique, étiquette = heure centrale de la
+// tranche). Intensité 0-1, colorée en rose brand_pink (cf. formule de
+// couleur sur la cellule) : basse = à peine teintée, haute = pleine
+// couleur. Samedi ressort nettement au-dessus (meilleur jour, ~1,4× la
+// moyenne), 20 h-22 h est la tranche la plus chargée sur toute la semaine.
+const HOUR_SLOTS = ["8 h", "10 h", "12 h", "14 h", "16 h", "18 h", "20 h", "22 h"] as const;
 
-const WEEKDAYS = [
-  { fr: "Lun", en: "Mon", value: 8 },
-  { fr: "Mar", en: "Tue", value: 9 },
-  { fr: "Mer", en: "Wed", value: 11 },
-  { fr: "Jeu", en: "Thu", value: 10 },
-  { fr: "Ven", en: "Fri", value: 16 },
-  { fr: "Sam", en: "Sat", value: 14 },
-  { fr: "Dim", en: "Sun", value: 5 },
-] as const;
+const WEEK_HOURLY: { fr: string; en: string; values: number[] }[] = [
+  { fr: "Lun", en: "Mon", values: [0.1, 0.12, 0.55, 0.5, 0.18, 0.15, 0.62, 0.8] },
+  { fr: "Mar", en: "Tue", values: [0.12, 0.14, 0.6, 0.55, 0.2, 0.16, 0.68, 0.72] },
+  { fr: "Mer", en: "Wed", values: [0.14, 0.15, 0.58, 0.52, 0.22, 0.18, 0.66, 0.88] },
+  { fr: "Jeu", en: "Thu", values: [0.13, 0.14, 0.62, 0.58, 0.2, 0.17, 0.7, 0.82] },
+  { fr: "Ven", en: "Fri", values: [0.16, 0.18, 0.65, 0.6, 0.24, 0.2, 0.74, 0.78] },
+  { fr: "Sam", en: "Sat", values: [0.22, 0.26, 0.85, 0.8, 0.34, 0.3, 0.92, 1] },
+  { fr: "Dim", en: "Sun", values: [0.15, 0.16, 0.72, 0.66, 0.22, 0.18, 0.78, 0.74] },
+];
 
 // --- "7 prochains jours" — projection, aujourd'hui + 6 jours.
 const PROJECTION = [
@@ -75,13 +122,42 @@ function SegmentBar({ segments }: { segments: { pct: number; color: string }[] }
   );
 }
 
-function FunnelStep({ value, label, rate, tone }: { value: string; label: string; rate?: string; tone?: "ok" | "mid" | "bad" }) {
-  const rateColor = tone === "ok" ? "text-[#178a3f]" : tone === "bad" ? "text-[#c8262d]" : tone === "mid" ? "text-[#a8690a]" : "text-[var(--dashboard-text)]/40";
+// Boîte + chiffre d'une étape du parcours, carte "Le parcours d'une
+// commande" — reproduction de la maquette : la 1re étape est un pavé au
+// contour marqué (pas encore de couleur, c'est la visite brute) SANS ligne
+// de taux dessous, donc sa boîte est plus haute que les 4 suivantes (value
+// + label + taux, 3 lignes). Le slot (div flex items-end) a une hauteur
+// fixe commune à toutes les étapes : la boîte grise s'y étire pleine
+// hauteur, les boîtes colorées s'y calent en BAS — donc value/label/taux
+// restent tous à la même ligne malgré la différence de hauteur des boîtes.
+function FunnelStep({
+  value,
+  label,
+  rate,
+  rateColor,
+  box,
+}: {
+  value: string;
+  label: string;
+  rate?: string;
+  rateColor?: string;
+  box: { variant: "outline" | "solid"; color?: string };
+}) {
   return (
     <div className="text-center">
-      <p className="text-lg font-bold tracking-tight sm:text-xl">{value}</p>
+      <div className="flex h-32 items-end sm:h-36">
+        <div
+          className={`w-full rounded-2xl ${rate ? "h-24 sm:h-28" : "h-full"} ${box.variant === "outline" ? "border-2 border-[var(--dashboard-text)]/30 bg-[var(--dashboard-text)]/[0.06]" : "border-2 border-white/20"}`}
+          style={box.variant === "solid" ? { background: box.color } : undefined}
+        />
+      </div>
+      <p className="mt-3 text-xl font-bold tracking-tight sm:text-2xl">{value}</p>
       <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{label}</p>
-      {rate && <p className={`mt-1 text-[10px] font-semibold ${rateColor}`}>{rate}</p>}
+      {rate && (
+        <p className="mt-1 text-[10px] font-semibold" style={{ color: rateColor }}>
+          {rate}
+        </p>
+      )}
     </div>
   );
 }
@@ -123,27 +199,65 @@ function MotifRow({
   );
 }
 
+// Dégradé de la barre selon la performance de la commune : vert → bleu tant
+// que la livraison tient (Cocody, Marcory, Treichville), orange → rose dès
+// qu'elle résiste (Yopougon, Abobo, Bouaké) — cf. maquette "Où vous livrez,
+// et où ça résiste". Distinct de la convention stockage=bleu/drop=rose
+// (mémoire [[dashboard-chart-colors-stockage-drop]]) : ici la couleur note
+// la performance de livraison, pas la façon de vendre.
+const ZONE_GRADIENT_GOOD = "linear-gradient(90deg, #22C55E 0%, #38BDF8 100%)";
+const ZONE_GRADIENT_BAD = "linear-gradient(90deg, #FFB020 0%, #F5576C 100%)";
+
 function ZoneRow({ commune, pct, volume, delai, bad = false }: { commune: string; pct: number; volume: string; delai: string; bad?: boolean }) {
   return (
-    <div className="mt-2.5 first:mt-3">
-      <div className="flex items-center justify-between gap-3 text-xs">
-        <span className={bad ? "text-[#c8262d]" : ""}>{commune}</span>
-        <span className="font-semibold">{pct} %</span>
-        <span className="w-14 shrink-0 text-right text-[var(--dashboard-text)]/40">{volume}</span>
-        <span className="w-14 shrink-0 text-right text-[var(--dashboard-text)]/40">{delai}</span>
+    <div className="mt-3 flex items-center gap-3 text-xs first:mt-4">
+      <span className="w-20 shrink-0 font-semibold">{commune}</span>
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]">
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${Math.min(100, Math.max(0, pct))}%`, background: bad ? ZONE_GRADIENT_BAD : ZONE_GRADIENT_GOOD }}
+        />
       </div>
-      <Bar pct={pct} color={bad ? "bg-[#FFB020]" : "bg-brand-pink"} />
+      <span className={`w-10 shrink-0 text-right font-bold ${bad ? "text-[#FFB020]" : ""}`}>{pct} %</span>
+      <span className="w-14 shrink-0 text-right text-[var(--dashboard-text)]/40">{volume}</span>
+      <span className="w-16 shrink-0 text-right text-[var(--dashboard-text)]/40">{delai}</span>
     </div>
   );
 }
 
-function BenchRow({ label, you, network, delta }: { label: string; you: string; network: string; delta: string }) {
+function BenchBar({ youPct, networkPct }: { youPct: number; networkPct: number }) {
   return (
-    <div className="mt-2.5 grid grid-cols-[1fr_auto_auto_auto] items-baseline gap-3 text-xs first:mt-3">
-      <span className="text-[var(--dashboard-text)]/50">{label}</span>
-      <span className="font-semibold text-[#178a3f]">{you}</span>
-      <span className="text-[var(--dashboard-text)]/40">{network}</span>
-      <span className="text-[10px] font-semibold text-[#178a3f]">{delta}</span>
+    <div className="mt-1.5 space-y-2 first:mt-0">
+      <div className="h-2 rounded-full bg-brand-pink" style={{ width: `${youPct}%` }} />
+      <div className="h-2 rounded-full bg-[#9096AA]" style={{ width: `${networkPct}%` }} />
+    </div>
+  );
+}
+
+function BenchRow({
+  label,
+  you,
+  network,
+  delta,
+  youPct,
+  networkPct,
+}: {
+  label: string;
+  you: string;
+  network: string;
+  delta: string;
+  youPct: number;
+  networkPct: number;
+}) {
+  return (
+    <div className="mt-3 first:mt-0">
+      <BenchBar youPct={youPct} networkPct={networkPct} />
+      <div className="mt-1.5 grid grid-cols-[1fr_auto_auto_auto] items-baseline gap-3 text-xs">
+        <span className="text-[var(--dashboard-text)]/50">{label}</span>
+        <span className="font-semibold text-[#178a3f]">{you}</span>
+        <span className="text-[var(--dashboard-text)]/40">{network}</span>
+        <span className="text-[10px] font-semibold text-[#178a3f]">{delta}</span>
+      </div>
     </div>
   );
 }
@@ -163,7 +277,15 @@ function DisputeReasonRow({ code, label, note, pct }: { code: "S" | "D" | "B"; l
   );
 }
 
-function Signal({ tone, title, desc, cta }: { tone: "ko" | "warn" | "info"; title: string; desc: string; cta: string }) {
+// `href` : Sérum éclat pointe vers /dashboard/produits?q=... (préremplit
+// DashboardSearchBar, l'id existe dans ProduitsCatalogue, filtre réel).
+// Les 4 autres renvoient vers la liste des commandes sans filtre : les
+// identifiants C-4828/C-4829 et la ville Bouaké sont propres à ce panneau,
+// absents des données mock de CommandesListe (cf.
+// [[dashboard-mock-data-pending-laravel-api]]) — un lien filtré donnerait
+// "aucun résultat", donc on renvoie sur la liste plutôt que sur un filtre
+// qui mentirait.
+function Signal({ tone, title, desc, cta, href }: { tone: "ko" | "warn" | "info"; title: string; desc: string; cta: string; href: string }) {
   const dot = tone === "ko" ? "bg-[#FF5A62] text-white" : tone === "warn" ? "bg-[#FFB020] text-white" : "bg-brand-purple/15 text-brand-purple";
   const border = tone === "ko" ? "border-[#FF5A62]/25" : "border-[var(--dashboard-text)]/10";
   return (
@@ -173,7 +295,12 @@ function Signal({ tone, title, desc, cta }: { tone: "ko" | "warn" | "info"; titl
         <p className="text-xs font-semibold">{title}</p>
         <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{desc}</p>
       </div>
-      <span className="shrink-0 rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[10px] font-semibold">{cta}</span>
+      <Link
+        href={href}
+        className="shrink-0 rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[10px] font-semibold transition hover:border-[var(--dashboard-text)]/30 hover:bg-[var(--dashboard-text)]/5"
+      >
+        {cta}
+      </Link>
     </div>
   );
 }
@@ -217,23 +344,6 @@ function LiveOrderRow({
   );
 }
 
-const IA_QUESTIONS = [
-  { fr: "Pourquoi Abobo refuse plus que Cocody ?", en: "Why does Abobo refuse more than Cocody?" },
-  { fr: "Combien me coûtent les clients injoignables ?", en: "How much do unreachable customers cost me?" },
-  { fr: "À quelle heure dois-je faire appeler ?", en: "What time should I have calls made?" },
-  { fr: "Le dropshipping se refuse-t-il plus que mon stock ?", en: "Does drop-shipping get refused more than my own stock?" },
-  { fr: "Quel jour dois-je pousser ma publicité ?", en: "Which day should I push my ads?" },
-  { fr: "Combien vaut un client qui revient ?", en: "What's a returning customer worth?" },
-  { fr: "Où est-ce que je perds le plus, la transformation ou la livraison ?", en: "Where do I lose the most, conversion or delivery?" },
-  { fr: "Dois-je continuer à livrer Bouaké ?", en: "Should I keep delivering to Bouaké?" },
-  { fr: "Pourquoi mes gros paniers ne se livrent pas ?", en: "Why don't my large baskets get delivered?" },
-  { fr: "Quand dois-je relancer un client qui a acheté une fois ?", en: "When should I follow up with a one-time buyer?" },
-  { fr: "Suis-je au-dessus ou en dessous des autres boutiques ?", en: "Am I above or below other shops?" },
-  { fr: "Quelle référence va manquer avant samedi ?", en: "Which item will run out before Saturday?" },
-  { fr: "Mes litiges viennent-ils du produit ou de l'emballage ?", en: "Do my disputes come from the product or the packaging?" },
-  { fr: "Combien vaut dix minutes gagnées sur le délai d'appel ?", en: "What's ten minutes saved on call delay worth?" },
-] as const;
-
 export default function CommandesSection({ first = true }: { first?: boolean }) {
   const { t } = useDashboardLangue();
   return (
@@ -245,9 +355,14 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           "De la visite de votre page jusqu'à la fin du délai de litige — et où, méthodiquement, elle se perd.",
           "From the visit to your page through to the end of the dispute window — and where, methodically, it gets lost."
         )}
-        count={t("38 indicateurs", "38 metrics")}
         first={first}
         layout="inline"
+        actions={
+          <>
+            <HeaderActionBtn>{t("Exporter", "Export")}</HeaderActionBtn>
+            <HeaderActionBtn>{t("Comparer à la période précédente", "Compare to previous period")}</HeaderActionBtn>
+          </>
+        }
       />
 
       {/* Légende : quelle couleur renvoie à quelle façon de vendre */}
@@ -287,8 +402,10 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
         </Card>
       </div>
 
-      {/* Le parcours d'une commande */}
-      <Card className="mt-3 !bg-[var(--dashboard-glass)]">
+      {/* Le parcours d'une commande — fond adaptatif au thème comme le
+          reste de la carte (var(--dashboard-*)), seules les boîtes de
+          l'entonnoir gardent leur couleur pleine fixe. */}
+      <Card className="mt-3 overflow-hidden !bg-[var(--dashboard-glass)]">
         <div className="flex items-center justify-between gap-2">
           <div>
             <p className="text-sm font-semibold">{t("Le parcours d'une commande, étape par étape", "The order journey, step by step")}</p>
@@ -296,22 +413,19 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           </div>
           <Nature code="B" />
         </div>
-        <div className="mt-4 grid grid-cols-5 gap-2">
-          <FunnelStep value="8 420" label={t("Visites de la page", "Page visits")} />
-          <FunnelStep value="148" label={t("Commandes passées", "Orders placed")} rate={t("1,76 % de transformation", "1.76% conversion")} tone="bad" />
-          <FunnelStep value="134" label={t("Confirmées à l'appel", "Confirmed by phone")} rate="90,5 %" tone="ok" />
-          <FunnelStep value="119" label={t("Livrées et payées", "Delivered and paid")} rate="88,8 %" tone="mid" />
-          <FunnelStep value="117" label={t("Sans litige", "Without dispute")} rate="98,3 %" tone="ok" />
+        <div className="mt-4 grid grid-cols-5 gap-2 sm:gap-3">
+          <FunnelStep value="8 420" label={t("Visites de la page", "Page visits")} box={{ variant: "outline" }} />
+          <FunnelStep
+            value="148"
+            label={t("Commandes passées", "Orders placed")}
+            rate={t("1,76 % de transformation", "1.76% conversion")}
+            rateColor="#EC0C8C"
+            box={{ variant: "solid", color: "#8B5CF6" }}
+          />
+          <FunnelStep value="134" label={t("Confirmées à l'appel", "Confirmed by phone")} rate="90,5 %" rateColor="#178a3f" box={{ variant: "solid", color: "#5AA9FF" }} />
+          <FunnelStep value="119" label={t("Livrées et payées", "Delivered and paid")} rate="88,8 %" rateColor="#a8690a" box={{ variant: "solid", color: "#4FE0AE" }} />
+          <FunnelStep value="117" label={t("Sans litige", "Without dispute")} rate="98,3 %" rateColor="#178a3f" box={{ variant: "solid", color: "#3DA88C" }} />
         </div>
-        <SegmentBar
-          segments={[
-            { pct: 40, color: "rgba(255,255,255,0.12)" },
-            { pct: 15, color: "#8B5CF6" },
-            { pct: 15, color: "#5AA9FF" },
-            { pct: 15, color: "#4FE0AE" },
-            { pct: 15, color: "#EC0C8C" },
-          ]}
-        />
         <Divider />
         <p className="text-xs font-semibold">{t("Où vous perdez le plus", "Where you lose the most")}</p>
         <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
@@ -334,7 +448,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
                 <div key={i} className="flex flex-1 flex-col justify-end" style={{ height: "100%" }}>
                   <div className="flex flex-1 flex-col justify-end" style={{ height: `${(v / max) * 100}%` }}>
                     <span className="rounded-t bg-brand-pink" style={{ height: `${(d / v) * 100}%` }} />
-                    <span className="bg-[var(--dashboard-text)]/25" style={{ height: `${(s / v) * 100}%` }} />
+                    <span style={{ height: `${(s / v) * 100}%`, background: STOCK_COLOR }} />
                   </div>
                 </div>
               );
@@ -342,7 +456,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           </div>
           <Divider />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatBar value="97" label={t("Stockage · 65,5 %", "Warehousing · 65.5%")} pct={65.5} color="bg-[var(--dashboard-text)]/40" />
+            <StatBar value="97" label={t("Stockage · 65,5 %", "Warehousing · 65.5%")} pct={65.5} color="bg-[#5AA9FF]" />
             <StatBar value="51" label={t("Dropshipping · 34,5 %", "Drop-shipping · 34.5%")} pct={34.5} />
             <div>
               <p className="text-lg font-bold tracking-tight">8</p>
@@ -356,15 +470,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
         </Card>
 
         <Card title={t("Le cycle du mois", "The monthly cycle")} titleTab titleAlign="left" className="!bg-[var(--dashboard-surface-2)]" badge={<Tag tone="warn">{t("Zone de paie", "Payday window")}</Tag>}>
-          <div className="mt-2 flex h-28 items-end gap-1.5">
-            {MONTH_BUCKETS.map((b, i) => (
-              <span
-                key={i}
-                className="flex-1 rounded-t"
-                style={{ height: `${b.pct}%`, background: b.paie ? "linear-gradient(180deg,#FF8BC4,#EC0C8C)" : "rgba(255,255,255,0.16)" }}
-              />
-            ))}
-          </div>
+          <AreaChart values={MONTH_BUCKETS.map((b) => b.pct)} color="#EC0C8C" markers={[0, 8]} />
           <div className="mt-1.5 flex justify-between text-[9px] text-[var(--dashboard-text)]/40">
             <span>1</span>
             <span>10</span>
@@ -383,7 +489,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
       </div>
 
       {/* Centre d'appel + performance de livraison */}
-      <div className="mt-3 grid gap-3 lg:grid-cols-2 [&>*]:min-w-0">
+      <div className="mt-3 grid items-start gap-3 lg:grid-cols-2 [&>*]:min-w-0">
         <Card className="!bg-[var(--dashboard-glass)]">
           <div className="flex items-center justify-between gap-2">
             <div>
@@ -453,32 +559,152 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
             <p className="text-sm font-semibold">{t("Le panier et son risque", "The basket and its risk")}</p>
             <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Plus le panier monte, moins il se livre", "The bigger the basket, the less it delivers")}</p>
           </div>
-          <Nature code="B" />
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-[10px] text-[var(--dashboard-text)]/60">
+              <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-1" style={{ background: `${ORDERS_COLOR}1a` }}>
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: ORDERS_COLOR }} />
+                {t("Commandes", "Orders")}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-1" style={{ background: `${DELIVERY_RATE_COLOR}1a` }}>
+                <span className="h-[2px] w-3 rounded-full" style={{ background: DELIVERY_RATE_COLOR }} />
+                {t("Taux de livraison", "Delivery rate")}
+              </span>
+            </div>
+            <Nature code="B" />
+          </div>
         </div>
         <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_1.4fr]">
-          <div className="flex h-32 items-end gap-2">
-            {[91, 86, 74, 58].map((v, i) => (
-              <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1.5">
-                <span className="text-[10px] font-semibold">{v} %</span>
-                <span className="w-full rounded-t bg-brand-purple/70" style={{ height: `${v}%` }} />
-              </div>
-            ))}
+          <div>
+            {/* Combo aire (commandes, échelle propre à la série) + ligne
+                pointillée (taux de livraison, échelle 0-100 directe) —
+                remplace l'histogramme à colonnes plates par une forme
+                continue lissée (smoothPath), plus lisible sur la tendance
+                baissière du taux de livraison. */}
+            <div className="relative h-32 overflow-hidden rounded-xl" style={{ background: "var(--dashboard-surface-2)" }}>
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">
+                {/* Repères horizontaux discrets — 25/50/75 % de la hauteur. */}
+                {[25, 50, 75].map((y) => (
+                  <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="var(--dashboard-text)" strokeOpacity={0.06} strokeWidth={1} vectorEffect="non-scaling-stroke" />
+                ))}
+                <defs>
+                  <linearGradient id="basket-orders-fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={ORDERS_COLOR} stopOpacity={0.32} />
+                    <stop offset="100%" stopColor={ORDERS_COLOR} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                {(() => {
+                  const maxOrders = Math.max(...BASKET_ORDERS);
+                  const ordersPts = BASKET_ORDERS.map((count, i) => ({
+                    x: (i + 0.5) * (100 / BASKET_ORDERS.length),
+                    y: 100 - (count / maxOrders) * 88,
+                  }));
+                  const ordersLine = smoothPath(ordersPts);
+                  const ordersArea = `${ordersLine} L ${ordersPts[ordersPts.length - 1].x},100 L ${ordersPts[0].x},100 Z`;
+                  const deliveryPts = BASKET_DELIVERY_RATE.map((v, i) => ({
+                    x: (i + 0.5) * (100 / BASKET_DELIVERY_RATE.length),
+                    y: 100 - v,
+                  }));
+                  return (
+                    <>
+                      <path d={ordersArea} fill="url(#basket-orders-fill)" stroke="none" />
+                      <path d={ordersLine} fill="none" stroke={ORDERS_COLOR} strokeWidth={1.6} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                      <path
+                        d={smoothPath(deliveryPts)}
+                        fill="none"
+                        stroke={DELIVERY_RATE_COLOR}
+                        strokeWidth={1.5}
+                        strokeDasharray="4 3"
+                        strokeLinecap="round"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </>
+                  );
+                })()}
+              </svg>
+              {/* Points en overlay HTML (pas dans le SVG) : le viewBox est étiré en
+                  non-uniforme (preserveAspectRatio="none"), un <circle> suivrait cet
+                  étirement et deviendrait une ellipse — même souci et même fix que
+                  AreaChart, cf. shared.tsx. */}
+              {BASKET_ORDERS.map((count, i) => {
+                const maxOrders = Math.max(...BASKET_ORDERS);
+                return (
+                  <span
+                    key={i}
+                    className="pointer-events-none absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2"
+                    style={{
+                      left: `${(i + 0.5) * (100 / BASKET_ORDERS.length)}%`,
+                      top: `${100 - (count / maxOrders) * 88}%`,
+                      background: ORDERS_COLOR,
+                      // @ts-expect-error -- CSS var custom prop pour la couleur du ring Tailwind
+                      "--tw-ring-color": "var(--dashboard-glass)",
+                    }}
+                  />
+                );
+              })}
+              {BASKET_DELIVERY_RATE.map((v, i) => (
+                <span
+                  key={i}
+                  className="pointer-events-none absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                  style={{
+                    left: `${(i + 0.5) * (100 / BASKET_DELIVERY_RATE.length)}%`,
+                    top: `${100 - v}%`,
+                    background: DELIVERY_RATE_COLOR,
+                  }}
+                />
+              ))}
+            </div>
+            <div className="mt-1.5 flex gap-2 text-[9px] text-[var(--dashboard-text)]/40">
+              {BASKET_LABELS.map((label) => (
+                <span key={label} className="flex-1 text-center">{label}</span>
+              ))}
+            </div>
           </div>
-          <Table
-            head={[t("Tranche", "Bracket"), t("Cmd", "Orders"), t("Livrées", "Delivered"), t("Marge moyenne", "Average margin")]}
-            rows={[
-              [t("Moins de 10 000 F", "Under 10 000 F"), "21", "91 %", "2 180 F"],
-              [t("10 000 à 20 000 F", "10 000 to 20 000 F"), "67", "86 %", "4 420 F"],
-              [t("20 000 à 50 000 F", "20 000 to 50 000 F"), "48", "74 %", "7 890 F"],
-              [t("Plus de 50 000 F", "Over 50 000 F"), "12", "58 %", "13 200 F"],
-            ]}
-          />
-        </div>
-        <Divider />
-        <div className="grid gap-2 sm:grid-cols-3">
-          <StatRow label={t("Articles par commande", "Items per order")} value="1,4" bold={false} />
-          <StatRow label={t("Commandes à plusieurs articles", "Multi-item orders")} value="27 %" bold={false} />
-          <StatRow label={t("Panier moyen d'une commande multiple", "Average basket, multi-item order")} value={<span className="text-[#178a3f]">31 700 F</span>} />
+          <div>
+            {/* Table maison (pas le composant `Table` partagé) : "Livrées" a
+                besoin d'une couleur par palier + la pire tranche d'une teinte
+                de fond — le `Table` partagé ne fait que du texte plat, cf.
+                shared.tsx. Même seuils/couleurs que le reste du dashboard :
+                vert #178a3f (bon), orange #a8690a (moyen), rouge #c8262d (mauvais). */}
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[420px] border-collapse text-left text-xs">
+                <thead>
+                  <tr className="border-b border-[var(--dashboard-text)]/10">
+                    {[t("Tranche", "Bracket"), t("Cmd", "Orders"), t("Livrées", "Delivered"), t("Marge moyenne", "Average margin")].map((h) => (
+                      <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    [t("Moins de 10 000 F", "Under 10 000 F"), BASKET_ORDERS[0], BASKET_DELIVERY_RATE[0], "2 180 F"],
+                    [t("10 000 à 20 000 F", "10 000 to 20 000 F"), BASKET_ORDERS[1], BASKET_DELIVERY_RATE[1], "4 420 F"],
+                    [t("20 000 à 50 000 F", "20 000 to 50 000 F"), BASKET_ORDERS[2], BASKET_DELIVERY_RATE[2], "7 890 F"],
+                    [t("Plus de 50 000 F", "Over 50 000 F"), BASKET_ORDERS[3], BASKET_DELIVERY_RATE[3], "13 200 F"],
+                  ].map((row, i) => {
+                    const [bracket, cmd, delivered, margin] = row as [string, number, number, string];
+                    const worst = delivered < 60;
+                    const deliveredColor = delivered >= 85 ? "#178a3f" : delivered >= 60 ? "#a8690a" : "#c8262d";
+                    return (
+                      <tr key={bracket} className={`border-b border-[var(--dashboard-text)]/[0.05] last:border-0 ${worst ? "bg-[#c8262d0d]" : ""}`}>
+                        <td className="py-2 pr-3"><span className="font-semibold">{bracket}</span></td>
+                        <td className="py-2 pr-3">{cmd}</td>
+                        <td className="py-2 pr-3" style={{ color: deliveredColor }}>{delivered} %</td>
+                        <td className="py-2 pr-3">{margin}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <Divider />
+            <div className="flex flex-col gap-2">
+              <StatRow label={t("Articles par commande", "Items per order")} value="1,4" bold={false} />
+              <StatRow label={t("Commandes à plusieurs articles", "Multi-item orders")} value="27 %" bold={false} />
+              <StatRow label={t("Panier moyen d'une commande multiple", "Average basket, multi-item order")} value={<span className="text-[#178a3f]">31 700 F</span>} />
+            </div>
+          </div>
         </div>
         <Divider />
         <p className="text-xs font-semibold">{t("Le gros panier rapporte plus et arrive moins", "The big basket pays more and arrives less")}</p>
@@ -491,7 +717,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
       </Card>
 
       {/* Où passe le temps + pourquoi les commandes n'aboutissent pas */}
-      <div className="mt-3 grid gap-3 lg:grid-cols-2 [&>*]:min-w-0">
+      <div className="mt-3 grid items-start gap-3 lg:grid-cols-2 [&>*]:min-w-0">
         <Card className="!bg-[var(--dashboard-glass)]">
           <div className="flex items-center justify-between gap-2">
             <div>
@@ -554,7 +780,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
       </div>
 
       {/* Communes + heures de commande */}
-      <div className="mt-3 grid gap-3 lg:grid-cols-[1.1fr_1fr] [&>*]:min-w-0">
+      <div className="mt-3 grid items-start gap-3 lg:grid-cols-[1.1fr_1fr] [&>*]:min-w-0">
         <Card className="!bg-[var(--dashboard-glass)]">
           <div className="flex items-center justify-between gap-2">
             <div>
@@ -563,9 +789,12 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
             </div>
             <Nature code="B" />
           </div>
-          <div className="mt-3 flex justify-between text-[9px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
-            <span>{t("Commune", "District")}</span>
-            <span>{t("Livraison · volume · délai", "Delivery · volume · time")}</span>
+          <div className="mt-4 flex items-center gap-3 text-[9px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+            <span className="w-20 shrink-0">{t("Commune", "District")}</span>
+            <span className="flex-1 text-center">{t("Taux de livraison", "Delivery rate")}</span>
+            <span className="w-10 shrink-0" />
+            <span className="w-14 shrink-0 text-right">{t("Volume", "Volume")}</span>
+            <span className="w-16 shrink-0 text-right">{t("Délai", "Time")}</span>
           </div>
           <ZoneRow commune="Cocody" pct={89} volume={t("38 cmd", "38 ord.")} delai="3 h 40" />
           <ZoneRow commune="Marcory" pct={86} volume={t("22 cmd", "22 ord.")} delai="3 h 55" />
@@ -573,122 +802,114 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           <ZoneRow commune="Yopougon" pct={74} volume={t("31 cmd", "31 ord.")} delai="4 h 45" bad />
           <ZoneRow commune="Abobo" pct={68} volume={t("24 cmd", "24 ord.")} delai="5 h 20" bad />
           <ZoneRow commune="Bouaké" pct={61} volume={t("18 cmd", "18 ord.")} delai="11 h 30" bad />
-          <Divider />
-          <p className="text-xs font-semibold">{t("28 points d'écart entre Cocody et Bouaké", "28 points between Cocody and Bouaké")}</p>
-          <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
-            {t(
-              "Bouaké représente 12 % de vos commandes et 26 % de vos refus. À 61 % de livraison et 11 h 30 de délai, chaque commande y rapporte moins qu'ailleurs une fois les refus payés. Deux réponses possibles : demander un acompte sur cette zone, ou ne plus y pousser de publicité.",
-              "Bouaké makes up 12% of your orders and 26% of your refusals. At 61% delivery and an 11h30 lead time, each order there earns less once refusals are paid for. Two options: ask for a deposit in that zone, or stop advertising there."
-            )}
-          </p>
+          <div className="mt-4 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
+            <p className="text-xs font-semibold">{t("Vingt-huit points d'écart entre Cocody et Bouaké", "Twenty-eight points between Cocody and Bouaké")}</p>
+            <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
+              {t(
+                "Bouaké représente 12 % de vos commandes et 26 % de vos refus. À 61 % de livraison et 11 h 30 de délai, chaque commande y rapporte moins qu'ailleurs une fois les refus payés. Deux réponses possibles : demander un acompte sur cette zone, ou ne plus y pousser de publicité.",
+                "Bouaké makes up 12% of your orders and 26% of your refusals. At 61% delivery and an 11h30 lead time, each order there earns less once refusals are paid for. Two options: ask for a deposit in that zone, or stop advertising there."
+              )}
+            </p>
+          </div>
         </Card>
 
         <Card className="!bg-[var(--dashboard-glass)]">
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-sm font-semibold">{t("Quand vos clients commandent", "When your customers order")}</p>
-              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Densité des commandes par heure de la journée", "Order density by hour of day")}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Densité des commandes par jour et par tranche horaire", "Order density by day and time slot")}</p>
             </div>
             <Nature code="B" />
           </div>
-          <div className="mt-3 grid gap-[3px]" style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}>
-            {HOURLY_ORDERS.map((v, i) => {
-              const isPeak = i >= 19;
-              const background = isPeak
-                ? v > 0.75
-                  ? "#EC0C8C"
-                  : `rgba(236,12,140,${Math.max(0.25, v * 0.9)})`
-                : `color-mix(in srgb, var(--dashboard-text) ${Math.round(Math.max(0.08, v * 0.6) * 100)}%, transparent)`;
-              return <span key={i} className="h-4 rounded-sm" style={{ background }} />;
-            })}
-          </div>
-          <div className="mt-1.5 flex justify-between text-[9px] text-[var(--dashboard-text)]/40">
-            <span>{t("00 h", "12am")}</span>
-            <span>{t("06 h", "6am")}</span>
-            <span>{t("12 h", "12pm")}</span>
-            <span>{t("18 h", "6pm")}</span>
-            <span>{t("23 h", "11pm")}</span>
-          </div>
-          <Divider />
-          <div className="grid grid-cols-4 gap-2 text-center sm:grid-cols-7">
-            {WEEKDAYS.map(({ fr, en, value }) => (
-              <div key={fr}>
-                <p className="text-[9px] text-[var(--dashboard-text)]/40">{t(fr, en)}</p>
-                <p className={`text-xs font-semibold ${value >= 14 ? "text-brand-pink" : ""}`}>{value}</p>
+          <div className="mt-4 space-y-1.5">
+            {WEEK_HOURLY.map(({ fr, en, values }) => (
+              <div key={fr} className="flex items-center gap-2">
+                <span className="w-7 shrink-0 text-[9px] text-[var(--dashboard-text)]/40">{t(fr, en)}</span>
+                <div className="grid flex-1 gap-1.5" style={{ gridTemplateColumns: `repeat(${HOUR_SLOTS.length}, minmax(0, 1fr))` }}>
+                  {values.map((v, i) => (
+                    <span key={i} className="h-5 rounded-md" style={{ background: `rgba(236,12,140,${(0.12 + v * 0.78).toFixed(2)})` }} />
+                  ))}
+                </div>
               </div>
             ))}
           </div>
+          <div className="mt-1.5 flex items-center gap-2 text-[9px] text-[var(--dashboard-text)]/40">
+            <span className="w-7 shrink-0" />
+            <div className="grid flex-1 gap-1.5" style={{ gridTemplateColumns: `repeat(${HOUR_SLOTS.length}, minmax(0, 1fr))` }}>
+              {HOUR_SLOTS.map((h) => (
+                <span key={h} className="text-center">{h}</span>
+              ))}
+            </div>
+          </div>
           <Divider />
-          <StatRow label={t("Heure de pointe", "Peak hour")} value={t("20 h – 22 h · 31 % des commandes", "8pm – 10pm · 31% of orders")} bold={false} />
-          <StatRow label={t("Taux de confirmation le soir", "Confirmation rate in the evening")} value={<span className="text-[#a8690a]">{t("82 % contre 94 % le matin", "82% vs 94% in the morning")}</span>} />
-          <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/50">
-            {t(
-              "Trente et un pour cent des commandes tombent entre vingt et vingt-deux heures, et ce sont celles qui se confirment le moins bien : douze points de moins que les commandes du matin. Douze heures séparent la commande de l'appel, et l'envie retombe.",
-              "Thirty-one percent of orders land between 8 and 10pm, and those confirm worst: twelve points below morning orders. Twelve hours separate the order from the call, and desire fades."
-            )}
-          </p>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">{t("Heure de pointe", "Peak hour")}</p>
+              <p className="mt-1 text-base font-bold tracking-tight">{t("20 h – 22 h", "8pm – 10pm")}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("31 % des commandes", "31% of orders")}</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">{t("Meilleur jour", "Best day")}</p>
+              <p className="mt-1 text-base font-bold tracking-tight">{t("Samedi", "Saturday")}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("1,4 fois la moyenne", "1.4× the average")}</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">{t("Taux de confirmation le soir", "Confirmation rate in the evening")}</p>
+              <p className="mt-1 text-base font-bold tracking-tight text-[#a8690a]">82 %</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("contre 94 % le matin", "vs 94% in the morning")}</p>
+            </div>
+          </div>
+          <div className="mt-4 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
+            <p className="text-xs font-semibold">{t("Vos clients commandent le soir, vos appels partent le matin", "Your customers order at night, your calls go out in the morning")}</p>
+            <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
+              {t(
+                "Trente et un pour cent des commandes tombent entre vingt et vingt-deux heures, et ce sont celles qui se confirment le moins bien : douze points de moins que les commandes du matin. Douze heures séparent la commande de l'appel, et l'envie retombe.",
+                "Thirty-one percent of orders land between 8 and 10pm, and those confirm worst: twelve points below morning orders. Twelve hours separate the order from the call, and desire fades."
+              )}
+            </p>
+          </div>
         </Card>
       </div>
 
       {/* Clients qui reviennent + comparaison au réseau */}
       <div className="mt-3 grid gap-3 lg:grid-cols-2 [&>*]:min-w-0">
-        <Card className="!bg-[var(--dashboard-glass)]">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-sm font-semibold">{t("Vos clients reviennent-ils ?", "Do your customers come back?")}</p>
-              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Part de chaque semaine d'acquisition qui a recommandé", "Share of each acquisition week that reordered")}</p>
-            </div>
-            <Nature code="B" />
-          </div>
-          <Table
-            className="mt-3"
-            head={[t("Semaine", "Week"), t("À 30 jours", "At 30 days"), t("À 60 jours", "At 60 days"), t("À 90 jours", "At 90 days")]}
-            rows={[
-              [t("Semaine 1", "Week 1"), "14 %", "21 %", "26 %"],
-              [t("Semaine 2", "Week 2"), "12 %", "19 %", "24 %"],
-              [t("Semaine 3", "Week 3"), "16 %", "23 %", "—"],
-              [t("Semaine 4", "Week 4"), "11 %", "17 %", "—"],
-              [t("Semaine 5", "Week 5"), "13 %", "—", "—"],
-              [t("Semaine 6", "Week 6"), "9 %", "—", "—"],
-            ]}
-          />
-          <Divider />
-          <StatRow label={t("Délai moyen entre la 1re et la 2e commande", "Average time between order 1 and 2")} value={t("34 jours", "34 days")} bold={false} />
-          <StatRow label={t("Commandes par client sur 12 mois", "Orders per customer over 12 months")} value="1,4" bold={false} />
-          <StatRow label={t("Valeur d'un client sur sa vie", "Customer lifetime value")} value={<span className="text-[#178a3f]">27 100 F</span>} />
-          <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/50">
-            {t(
-              "Un client sur quatre revient dans les trois mois, et le second achat arrive vers le trente-quatrième jour. Une relance au vingt-huitième jour tomberait juste avant cette fenêtre.",
-              "One customer in four returns within three months, and the second purchase lands around day thirty-four. A follow-up on day twenty-eight would land just before that window."
-            )}
-          </p>
-        </Card>
+        <RetentionCard />
 
-        <Card className="!bg-[var(--dashboard-glass)]">
+        <Card className="!bg-[var(--dashboard-glass)] flex flex-col">
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-sm font-semibold">{t("Vous, comparée aux autres", "You, compared to others")}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Moyenne des boutiques du réseau, même catégorie et même taille", "Average of network shops in your category and size")}</p>
             </div>
           </div>
-          <div className="mt-3 grid grid-cols-[1fr_auto_auto_auto] gap-3 text-[9px] uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">
+          <div className="mt-3 grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 text-[9px] uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">
             <span />
-            <span>{t("Vous", "You")}</span>
-            <span>{t("Réseau", "Network")}</span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-0.5 w-3 rounded-full bg-brand-pink" />
+              {t("Vous", "You")}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-0.5 w-3 rounded-full bg-[#9096AA]" />
+              {t("Réseau", "Network")}
+            </span>
             <span />
           </div>
-          <BenchRow label={t("Transformation", "Conversion")} you="1,76 %" network="1,42 %" delta="+24 %" />
-          <BenchRow label={t("Confirmation à l'appel", "Phone confirmation")} you="90,5 %" network="84,0 %" delta="+8 %" />
-          <BenchRow label={t("Livraison", "Delivery")} you="80,4 %" network="72,5 %" delta="+11 %" />
-          <BenchRow label={t("Taux de litige", "Dispute rate")} you="1,7 %" network="3,1 %" delta={t("2× moins", "2× less")} />
-          <BenchRow label={t("Délai de bout en bout", "End-to-end time")} you="26 h" network="31 h" delta="−16 %" />
-          <Divider />
-          <p className="text-[10px] text-[var(--dashboard-text)]/50">
-            {t(
-              "Ces moyennes sont calculées sur les boutiques de votre catégorie et de votre volume, jamais sur une boutique identifiable. Vous êtes devant sur les cinq indicateurs : votre marge de progression est ailleurs, dans la transformation de vos visites.",
-              "These averages are computed across shops in your category and volume, never a single identifiable shop. You're ahead on all five metrics: your room for improvement lies elsewhere, in converting your visits."
-            )}
-          </p>
+          <div className="mt-3 space-y-3">
+            <BenchRow label={t("Transformation", "Conversion")} you="1,76 %" network="1,42 %" delta="+24 %" youPct={100} networkPct={78} />
+            <BenchRow label={t("Confirmation à l'appel", "Phone confirmation")} you="90,5 %" network="84,0 %" delta="+8 %" youPct={100} networkPct={90} />
+            <BenchRow label={t("Livraison", "Delivery")} you="80,4 %" network="72,5 %" delta="+11 %" youPct={100} networkPct={86} />
+            <BenchRow label={t("Taux de litige", "Dispute rate")} you="1,7 %" network="3,1 %" delta={t("2× moins", "2× less")} youPct={48} networkPct={40} />
+            <BenchRow label={t("Délai de bout en bout", "End-to-end time")} you="26 h" network="31 h" delta="−16 %" youPct={100} networkPct={82} />
+          </div>
+          <div className="mt-auto">
+            <Divider />
+            <p className="text-[10px] text-[var(--dashboard-text)]/50">
+              {t(
+                "Ces moyennes sont calculées sur les boutiques de votre catégorie et de votre volume, jamais sur une boutique identifiable. Vous êtes devant sur les cinq indicateurs : votre marge de progression est ailleurs, dans la transformation de vos visites.",
+                "These averages are computed across shops in your category and volume, never a single identifiable shop. You're ahead on all five metrics: your room for improvement lies elsewhere, in converting your visits."
+              )}
+            </p>
+          </div>
         </Card>
       </div>
 
@@ -722,7 +943,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
       </Card>
 
       {/* À regarder aujourd'hui + projection 7 jours */}
-      <div className="mt-3 grid gap-3 lg:grid-cols-[1.4fr_1fr] [&>*]:min-w-0">
+      <div className="mt-3 grid items-start gap-3 lg:grid-cols-[1.4fr_1fr] [&>*]:min-w-0">
         <Card className="!bg-[var(--dashboard-glass)]">
           <div className="flex items-center justify-between gap-2">
             <div>
@@ -737,30 +958,35 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
               title={t("2 commandes bloquées depuis plus de 6 heures", "2 orders stuck for over 6 hours")}
               desc={t("C-4828 et C-4829 attendent une confirmation. Au-delà de six heures, elles ne se confirment plus qu'à 61 %.", "C-4828 and C-4829 are awaiting confirmation. Past six hours, confirmation drops to 61%.")}
               cta={t("Voir", "View")}
+              href="/dashboard/commandes?tab=commandes"
             />
             <Signal
               tone="warn"
               title={t("Un même numéro, 4 commandes refusées", "Same number, 4 refused orders")}
               desc={t("Toutes annulées à l'appel en douze jours. À mettre en liste d'attente avant de relancer une course.", "All cancelled by phone within twelve days. Hold before sending another courier.")}
               cta={t("Voir", "View")}
+              href="/dashboard/commandes?tab=commandes"
             />
             <Signal
               tone="warn"
               title={t("3 adresses identiques, clients différents", "3 identical addresses, different customers")}
               desc={t("Même repère, trois noms. Souvent un point de retrait informel, parfois autre chose.", "Same landmark, three names. Often an informal pickup point, sometimes something else.")}
               cta={t("Voir", "View")}
+              href="/dashboard/commandes?tab=commandes"
             />
             <Signal
               tone="info"
               title={t("Sérum éclat : 8 commandes, 4 jours de stock", "Radiance serum: 8 orders, 4 days of stock")}
               desc={t("Au rythme actuel, rupture le 12 septembre. Le réapprovisionnement met 4 jours.", "At the current pace, stockout on Sept. 12. Restocking takes 4 days.")}
               cta={t("Voir", "View")}
+              href={`/dashboard/produits?q=${encodeURIComponent(t("Sérum éclat", "Radiance serum"))}`}
             />
             <Signal
               tone="info"
               title={t("Bouaké : 61 % de livraison sur 18 commandes", "Bouaké: 61% delivery on 18 orders")}
               desc={t("Vingt points sous votre moyenne. Le volume commence à peser sur le résultat.", "Twenty points below your average. Volume is starting to weigh on results.")}
               cta={t("Voir", "View")}
+              href="/dashboard/commandes?tab=commandes"
             />
           </div>
         </Card>
@@ -773,11 +999,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
             </div>
             <Tag tone="blue" className="shrink-0">{t("Projection", "Projection")}</Tag>
           </div>
-          <div className="mt-3 flex h-20 items-end gap-1.5">
-            {PROJECTION.map(({ fr, pct }, i) => (
-              <span key={fr} className="flex-1 rounded-t" style={{ height: `${pct}%`, background: i >= 4 ? "#EC0C8C" : "rgba(236,12,140,0.35)" }} />
-            ))}
-          </div>
+          <AreaChart values={PROJECTION.map((p) => p.pct)} color="#EC0C8C" markers={[4]} />
           <div className="mt-1.5 flex justify-between text-[9px] text-[var(--dashboard-text)]/40">
             {PROJECTION.map(({ fr, en }) => (
               <span key={fr}>{t(fr, en)}</span>
@@ -800,9 +1022,12 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
       {/* Clients + commandes en cours */}
       <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_1.4fr] [&>*]:min-w-0">
         <Card className="!bg-[var(--dashboard-glass)]">
-          <div>
-            <p className="text-sm font-semibold">{t("Vos clients", "Your customers")}</p>
-            <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Nouveaux, revenants, et ce qu'ils valent", "New, returning, and what they're worth")}</p>
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-sm font-semibold">{t("Vos clients", "Your customers")}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Nouveaux, revenants, et ce qu'ils valent", "New, returning, and what they're worth")}</p>
+            </div>
+            <Nature code="B" />
           </div>
           <div className="mt-4 flex items-center gap-4">
             <div
@@ -839,7 +1064,12 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
               <p className="text-sm font-semibold">{t("Ce qui bouge en ce moment", "What's moving right now")}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Les six commandes encore en route", "The six orders still on their way")}</p>
             </div>
-            <span className="shrink-0 rounded-full border border-[var(--dashboard-text)]/15 px-3.5 py-2 text-[10px] font-semibold">{t("Ouvrir les commandes", "Open orders")}</span>
+            <Link
+              href="/dashboard/commandes"
+              className="shrink-0 rounded-full border border-[var(--dashboard-text)]/15 px-3.5 py-2 text-[10px] font-semibold transition hover:border-[var(--dashboard-text)]/30 hover:bg-[var(--dashboard-text)]/5"
+            >
+              {t("Ouvrir les commandes", "Open orders")}
+            </Link>
           </div>
           <div className="mt-3 divide-y divide-[var(--dashboard-text)]/[0.05]">
             <LiveOrderRow code="S" id="C-4831" label={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} status={t("Livraison", "Delivery")} statusKey="liv" since={t("2 h 10", "2h10")} amount="21 500 F" />
@@ -851,36 +1081,6 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           </div>
         </Card>
       </div>
-
-      {/* Bloc assistance IA */}
-      <Card className="mt-3 border border-brand-purple/25 !bg-[var(--dashboard-glass)]">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-purple/15 text-brand-purple">
-              <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4"><path d="M12 3.2l2 5.6 5.6 2-5.6 2-2 5.6-2-5.6-5.6-2 5.6-2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /></svg>
-            </span>
-            <div>
-              <p className="text-sm font-semibold">{t("Ce que l'assistance peut répondre depuis cet écran", "What support can answer from this screen")}</p>
-              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Toutes ces questions se répondent avec les seules données affichées ci-dessus", "All of these can be answered using only the data shown above")}</p>
-            </div>
-          </div>
-          <Tag tone="blue" className="shrink-0">{t("38 variables croisables", "38 cross-referenceable metrics")}</Tag>
-        </div>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          {IA_QUESTIONS.map(({ fr, en }) => (
-            <p key={fr} className="rounded-xl bg-[var(--dashboard-surface-2)] px-3 py-2.5 text-[11px] text-[var(--dashboard-text)]/70">
-              « {t(fr, en)} »
-            </p>
-          ))}
-        </div>
-      </Card>
-
-      <p className="mt-3 max-w-3xl border-l-2 border-brand-pink/40 pl-3 text-[11px] text-[var(--dashboard-text)]/50">
-        {t(
-          "Un taux de refus ne veut rien dire sans sa nature de vente. En stockage management, une commande refusée renvoie votre marchandise, déjà payée, dans un entrepôt. En dropshipping elle ne vous coûte que la course et la publicité. Le même pourcentage cache deux réalités financières opposées.",
-          "A refusal rate means nothing without its way of selling. In warehousing, a refused order sends your merchandise, already paid for, back into storage. In drop-shipping it only costs you the courier run and the ad spend. The same percentage hides two opposite financial realities."
-        )}
-      </p>
     </>
   );
 }

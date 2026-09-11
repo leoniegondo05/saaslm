@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import DashboardHeader from "../../components/DashboardHeader";
 import DashboardSearchBar from "../../components/DashboardSearchBar";
@@ -23,9 +24,14 @@ import ProduitsCatalogue from "../../components/dashboard-accueil/ProduitsCatalo
   Accueil, Commande, Réglages — gardent la barre visuelle seule pour
   l'instant) : le texte tapé filtre les lignes du tableau dans
   ProduitsCatalogue, cf. commentaire là-bas.
+
+  `?q=` dans l'URL préremplit la recherche : utilisé par le bouton "Voir"
+  du signal rupture dans CommandesSection (à regarder aujourd'hui), qui
+  pointe ici sur le nom exact du produit concerné.
 */
 export default function ProduitsPage() {
-  const [recherche, setRecherche] = useState("");
+  const searchParams = useSearchParams();
+  const [recherche, setRecherche] = useState(searchParams.get("q") ?? "");
   return (
     <div className="min-h-screen w-full bg-[var(--dashboard-bg)] font-sans text-[var(--dashboard-text)] antialiased transition-colors">
       <div className="mx-auto flex max-w-[1620px] flex-col gap-6 px-4 pb-28 pt-6 sm:px-6 md:px-10 lg:flex-row lg:pb-10 lg:pl-3 lg:pt-8">
@@ -33,7 +39,7 @@ export default function ProduitsPage() {
 
         <div className="min-w-0 flex-1 lg:px-6">
           <DashboardHeader />
-          <DashboardSearchBar onChange={setRecherche} />
+          <DashboardSearchBar onChange={setRecherche} initialValue={recherche} />
           <ProduitsCatalogue recherche={recherche} />
         </div>
       </div>
