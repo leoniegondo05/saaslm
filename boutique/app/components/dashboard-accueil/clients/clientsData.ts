@@ -537,24 +537,3 @@ export const ACTIONS_AUJOURDHUI: ActionAujourdhui[] = [
     tagD: true,
   },
 ];
-
-export const IA_QUESTIONS_CLIENTS = [
-  { fr: "Qui dois-je relancer aujourd'hui, et avec quel produit ?", en: "Who should I re-engage today, and with which product?" },
-  { fr: "Combien vaut un client, et combien me coûte-t-il ?", en: "How much is a customer worth, and what do they cost?" },
-  { fr: "Quel produit fait revenir les clients ?", en: "Which product drives the highest repeat orders?" },
-  { fr: "Au bout de combien de jours faut-il relancer ?", en: "After how many days should outreach occur?" },
-  { fr: "Pourquoi mes clients de Bouaké ne reviennent-ils pas ?", en: "Why aren't my Bouaké customers returning?" },
-  { fr: "Quel canal amène les meilleurs clients ?", en: "Which channel brings the highest-value customers?" },
-  { fr: "Combien de chiffre dort dans mon fichier ?", en: "How much dormant revenue is sleeping in my customer base?" },
-  { fr: "Quels numéros dois-je faire payer d'avance ?", en: "Which phone numbers should be asked to prepay?" },
-  { fr: "Le drop me fait-il de bons clients ?", en: "Does dropshipping yield valuable loyal customers?" },
-  { fr: "Qui sont mes meilleurs clients ?", en: "Who are my highest-performing customers?" },
-  { fr: "Est-ce que je recrute plus que je ne fidélise ?", en: "Am I acquiring more than I am retaining?" },
-  { fr: "Sur quel produit dois-je mettre ma publicité pour gagner des clients fidèles ?", en: "Which product should I advertise to gain long-term repeat buyers?" },
-  { fr: "Comment faire payer plus de clients à l'avance ?", en: "How can I convert more customers to upfront prepayment?" },
-  { fr: "Quels clients dois-je servir uniquement en achat direct ?", en: "Which customers should strictly be served via prepaid orders?" },
-  { fr: "Combien de clients ne connaissent qu'un seul produit ?", en: "How many customers have only tried a single product?" },
-  { fr: "À quoi ressemblera mon portefeuille dans un an ?", en: "What will my active customer portfolio look like in one year?" },
-  { fr: "Un litige fait-il partir mes clients ?", en: "Does an unresolved dispute cause customers to churn?" },
-  { fr: "Quels clients à gros panier me coûtent des courses ?", en: "Which high-basket buyers generate wasted courier runs?" },
-];

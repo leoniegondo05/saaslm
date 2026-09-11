@@ -12,6 +12,26 @@ import { useDashboardLangue } from "./DashboardLanguageProvider";
 
   "Réglages" pointe vers Écran 07 "Personnel et accès" (voir
   app/dashboard/reglages/page.tsx).
+
+  Desktop (lg+) : le rail est en `fixed` (jamais en `sticky`) pour ne
+  JAMAIS bouger au scroll. Avant, il était en `sticky` à l'intérieur de la
+  ligne flex (voir toutes les pages app/dashboard/.../page.tsx) — or cette
+  ligne est aussi haute que la colonne de contenu, elle-même souvent plus
+  haute que l'écran ; le rail "sticky", plus court que sa ligne, finissait
+  donc par décrocher et remonter avec le contenu en fin de scroll (visible
+  précisément "quand on scroll pour aller en bas").
+
+  Le rail étant sorti du flux, on rend en plus un espaceur invisible de
+  même largeur juste avant lui : c'est lui qui réserve la place dans la
+  ligne flex de chaque page, sans avoir à toucher ces ~20 fichiers un par
+  un. Le décalage horizontal du rail fixed (classe `lg:left-[...]`
+  ci-dessous) est calculé pour coller exactement au bord gauche de cet
+  espaceur, donc au conteneur `mx-auto max-w-[1620px] ... lg:pl-3` de
+  chaque page — CE SONT LES MÊMES 1620px / 0.75rem (lg:pl-3) que côté
+  page : si l'un des deux change un jour, mettre à jour l'autre.
+  (Classe Tailwind arbitraire écrite en dur car le JIT scanne le code
+  source statiquement — un calc() construit dynamiquement en JS ne
+  serait pas détecté.)
 */
 
 const NAV_LINKS = [
@@ -29,33 +49,39 @@ export default function DashboardSidebar() {
   const { t } = useDashboardLangue();
 
   return (
-    <aside className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 rounded-full border border-white/50 bg-white/40 px-2 py-2 shadow-[0_8px_32px_rgba(20,18,32,0.16),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/5 lg:inset-auto lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:w-[90px] lg:shrink-0 lg:rounded-none lg:border-0 lg:border-r lg:border-[#141220]/10 lg:bg-transparent lg:px-3 lg:pt-6 lg:pb-2 lg:shadow-none lg:backdrop-blur-none lg:backdrop-saturate-100 dark:lg:border-white/10">
-      <nav className="flex flex-row items-center justify-around gap-2 lg:h-full lg:flex-col lg:justify-between lg:gap-0">
-        <div className="flex flex-row items-center justify-around gap-2 lg:flex-1 lg:flex-col lg:justify-center lg:gap-3">
-          {NAV_LINKS.map(({ href, fr, en, Icon }) => (
-            <SidebarIcon key={href} href={href} label={t(fr, en)} active={pathname === href}>
-              <Icon />
+    <>
+      {/* Espaceur : occupe la même largeur que le rail dans la ligne flex
+          de chaque page, puisque le rail lui-même est en `fixed` (hors
+          flux) à partir de lg — voir commentaire plus haut. */}
+      <div aria-hidden className="hidden lg:block lg:w-[90px] lg:shrink-0" />
+      <aside className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 rounded-full border border-white/50 bg-white/40 px-2 py-2 shadow-[0_8px_32px_rgba(20,18,32,0.16),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/5 lg:inset-x-auto lg:bottom-8 lg:top-8 lg:left-[max(0px,calc((100vw_-_1620px)/2_+_0.75rem))] lg:w-[90px] lg:rounded-none lg:border-0 lg:border-r lg:border-[#141220]/10 lg:bg-transparent lg:px-3 lg:pt-6 lg:pb-2 lg:shadow-none lg:backdrop-blur-none lg:backdrop-saturate-100 dark:lg:border-white/10">
+        <nav className="flex flex-row items-center justify-around gap-2 lg:h-full lg:flex-col lg:justify-between lg:gap-0">
+          <div className="flex flex-row items-center justify-around gap-2 lg:flex-1 lg:flex-col lg:justify-center lg:gap-3">
+            {NAV_LINKS.map(({ href, fr, en, Icon }) => (
+              <SidebarIcon key={href} href={href} label={t(fr, en)} active={pathname === href}>
+                <Icon />
+              </SidebarIcon>
+            ))}
+            <SidebarIcon
+              href={REGLAGES.href}
+              label={t(REGLAGES.fr, REGLAGES.en)}
+              active={pathname === REGLAGES.href}
+              className="lg:hidden"
+            >
+              <GearIcon />
             </SidebarIcon>
-          ))}
+          </div>
           <SidebarIcon
             href={REGLAGES.href}
             label={t(REGLAGES.fr, REGLAGES.en)}
             active={pathname === REGLAGES.href}
-            className="lg:hidden"
+            className="hidden lg:flex"
           >
             <GearIcon />
           </SidebarIcon>
-        </div>
-        <SidebarIcon
-          href={REGLAGES.href}
-          label={t(REGLAGES.fr, REGLAGES.en)}
-          active={pathname === REGLAGES.href}
-          className="hidden lg:flex"
-        >
-          <GearIcon />
-        </SidebarIcon>
-      </nav>
-    </aside>
+        </nav>
+      </aside>
+    </>
   );
 }
 

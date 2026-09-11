@@ -16,7 +16,16 @@ import ClientsGeoAndChannels from "./clients/ClientsGeoAndChannels";
 import ClientsProductsCountAndForecast from "./clients/ClientsProductsCountAndForecast";
 import ClientsSegmentQuality from "./clients/ClientsSegmentQuality";
 import ClientsActionsToday from "./clients/ClientsActionsToday";
-import ClientsAiAssistance from "./clients/ClientsAiAssistance";
+
+/*
+  Comme pour CommandesSection et StockSection, le bloc "assistance IA" en
+  pied de section (bulles de questions) est parti dans le bouton
+  "solution LM" du navbar (DashboardHeader.tsx → AssistanceLMModal.tsx) :
+  ouvert sur l'onglet Clients, il montre les mêmes questions
+  (dashboard-accueil/assistanceQuestions.ts, clé "Clients"), plus besoin de
+  scroller toute la section pour les voir. Ancien composant
+  clients/ClientsAiAssistance.tsx supprimé, devenu mort.
+*/
 
 export default function ClientsSection({ first = true }: { first?: boolean }) {
   const { t } = useDashboardLangue();
@@ -170,9 +179,6 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
 
       {/* ── SECTION 12 : À FAIRE AUJOURD'HUI (ACTIONS & RELANCES PRÊTES) ── */}
       <ClientsActionsToday />
-
-      {/* ── SECTION 13 : CE QUE L'ASSISTANCE IA PEUT RÉPONDRE DEPUIS CET ÉCRAN ── */}
-      <ClientsAiAssistance />
     </div>
   );
 }

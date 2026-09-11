@@ -130,12 +130,12 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
             )}
           </Card>
 
-          <button
-            type="button"
-            className="mt-3 w-full rounded-full border border-brand-pink/45 bg-[var(--dashboard-card-bg)]/60 px-4 py-2.5 text-center text-xs font-semibold text-brand-pink"
+          <Link
+            href="/dashboard/demandes"
+            className="mt-3 block w-full rounded-full border border-brand-pink/45 bg-[var(--dashboard-card-bg)]/60 px-4 py-2.5 text-center text-xs font-semibold text-brand-pink"
           >
-            {t("Ouvrir un litige", "Open a dispute")}
-          </button>
+            {t("Besoin d'assistance", "Need help")}
+          </Link>
         </div>
 
         <div className="relative flex min-h-[480px] flex-col justify-end overflow-hidden rounded-3xl bg-[var(--dashboard-card-bg)] p-6 text-white">
