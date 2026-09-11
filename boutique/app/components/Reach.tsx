@@ -95,26 +95,29 @@ export default function Reach() {
       }
 
       // On teste chaque candidat : est-il à l'intérieur du continent ?
-      candidats.forEach(([x, y]) => {
-        // On utilise un <svg> temporaire pour le point (nécessaire pour isPointInFill)
-        const svgNS = "http://www.w3.org/2000/svg";
-        const pt = (continent.ownerSVGElement || continent).createSVGPoint();
-        pt.x = x;
-        pt.y = y;
-        try {
-          if (continent.isPointInFill(pt)) {
-            // On évite les points trop proches d'une ville nommée
-            const tropProche = Object.values(VILLES).some((v) => {
-              const dx = v.x - x;
-              const dy = v.y - y;
-              return Math.sqrt(dx * dx + dy * dy) < 30;
-            });
-            if (!tropProche) {
-              muetsValides.push([x, y]);
+      const svgEl = continent.ownerSVGElement;
+      if (svgEl) {
+        candidats.forEach(([x, y]) => {
+          const pt = svgEl.createSVGPoint();
+          pt.x = x;
+          pt.y = y;
+          try {
+            if (continent.isPointInFill(pt)) {
+              // On évite les points trop proches d'une ville nommée
+              const tropProche = Object.values(VILLES).some((v) => {
+                const dx = v.x - x;
+                const dy = v.y - y;
+                return Math.sqrt(dx * dx + dy * dy) < 30;
+              });
+              if (!tropProche) {
+                muetsValides.push([x, y]);
+              }
             }
+          } catch {
+            // isPointInFill peut échouer dans certains navigateurs
           }
-        } catch {}
-      });
+        });
+      }
 
       // On garde au hasard ~22 points pour ne pas surcharger
       for (let i = muetsValides.length - 1; i > 0; i--) {
