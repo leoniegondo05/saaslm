@@ -6,6 +6,7 @@ type Props = {
   children: ReactNode;
   className?: string;
   as?: keyof JSX.IntrinsicElements;
+  delay?: number;
   /** Attributs data-* pour le titre de la Navbar */
   dataTitre?: string;
   dataSous?: string;
@@ -16,6 +17,7 @@ export default function ScrollReveal({
   children,
   className = "",
   as: Tag = "section",
+  delay,
   dataTitre,
   dataSous,
   dataSection,
@@ -45,14 +47,16 @@ export default function ScrollReveal({
   if (dataTitre !== undefined) dataAttrs["data-titre"] = dataTitre;
   if (dataSous !== undefined) dataAttrs["data-sous"] = dataSous;
 
+  const DynamicTag = Tag as any;
+
   return (
-    <Tag
-      // @ts-expect-error - Tag dynamique
+    <DynamicTag
       ref={ref}
       className={`scroll-reveal ${className}`}
+      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
       {...dataAttrs}
     >
       {children}
-    </Tag>
+    </DynamicTag>
   );
 }
