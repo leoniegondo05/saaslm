@@ -648,7 +648,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
       />
 
       <div className="grid gap-3">
-        <div className="grid items-start gap-3 lg:grid-cols-[minmax(260px,320px)_1fr]">
+        <div className="grid items-start gap-3 lg:grid-cols-[minmax(300px,380px)_1fr]">
           <PaymentMethodCard />
           {soldeCard}
         </div>

@@ -5,12 +5,13 @@ import { useCallback, useState } from "react";
 import DashboardHeader from "../../components/DashboardHeader";
 import DashboardSearchBar from "../../components/DashboardSearchBar";
 import DashboardSidebar from "../../components/DashboardSidebar";
+import { Filtrable, RechercheProvider } from "../../components/DashboardRecherche";
 import Abonnement from "../../components/dashboard-reglages/Abonnement";
 import Confidentialite from "../../components/dashboard-reglages/Confidentialite";
 import FinancesReglements from "../../components/dashboard-reglages/FinancesReglements";
 import MaBoutique from "../../components/dashboard-reglages/MaBoutique";
 import PageDeCommande from "../../components/dashboard-reglages/PageDeCommande";
-import ReglagesNav, { REGLAGES_TABS, ReglagesTab } from "../../components/dashboard-reglages/ReglagesNav";
+import ReglagesNav, { ReglagesTab } from "../../components/dashboard-reglages/ReglagesNav";
 import ReglesDeVente from "../../components/dashboard-reglages/ReglesDeVente";
 import { useDashboardLangue } from "../../components/DashboardLanguageProvider";
 
@@ -60,16 +61,16 @@ export default function ReglagesPage() {
   );
   const [recherche, setRecherche] = useState("");
 
-  // Même logique que sur "Accueil" (app/dashboard/accueil/page.tsx) : pas de
-  // donnée commune entre les 6 fiches de réglages pour un filtrage plein
-  // texte, la recherche filtre donc par titre de fiche.
-  const termeRecherche = recherche.trim().toLowerCase();
-  const tabsAffiches = termeRecherche
-    ? TAB_ORDER.filter((tab) => {
-        const meta = REGLAGES_TABS.find((r) => r.key === tab)!;
-        return meta.label.toLowerCase().includes(termeRecherche) || meta.labelEn.toLowerCase().includes(termeRecherche);
-      })
-    : TAB_ORDER;
+  // Même mécanique que sur "Accueil" (app/dashboard/accueil/page.tsx,
+  // cf. DashboardRecherche.tsx) : chaque fiche se cache seule dès que rien de
+  // son contenu affiché — titre compris — ne correspond au terme tapé, pas
+  // de forme de donnée commune entre les 6 fiches pour un filtrage plein
+  // texte en amont. `visibles` ne sert qu'à afficher "Aucun résultat" quand
+  // elles ont toutes fini par disparaître.
+  const [visibles, setVisibles] = useState<Record<ReglagesTab, boolean>>(() =>
+    Object.fromEntries(TAB_ORDER.map((tab) => [tab, true])) as Record<ReglagesTab, boolean>
+  );
+  const aucunResultat = recherche.trim() !== "" && TAB_ORDER.every((tab) => !visibles[tab]);
 
   const handleChange = useCallback(
     (tab: ReglagesTab | null) => {
@@ -90,23 +91,35 @@ export default function ReglagesPage() {
           <DashboardSearchBar onChange={setRecherche} />
           <ReglagesNav active={activeTab} onChange={handleChange} />
 
-          {activeTab === null ? (
-            tabsAffiches.length === 0 ? (
-              <p className="mt-10 text-center text-xs text-[var(--dashboard-text)]/45">
-                {t(`Aucun réglage pour « ${recherche} ».`, `No setting for “${recherche}”.`)}
-              </p>
+          <RechercheProvider value={recherche}>
+            {activeTab === null ? (
+              <>
+                {aucunResultat && (
+                  <p className="mt-10 text-center text-xs text-[var(--dashboard-text)]/45">
+                    {t(`Aucun réglage pour « ${recherche} ».`, `No setting for “${recherche}”.`)}
+                  </p>
+                )}
+                {TAB_ORDER.map((tab, index) => {
+                  const Section = SECTIONS[tab];
+                  return (
+                    <Filtrable
+                      key={tab}
+                      onMatchChange={(match) =>
+                        setVisibles((v) => (v[tab] === match ? v : { ...v, [tab]: match }))
+                      }
+                    >
+                      <Section first={index === 0} />
+                    </Filtrable>
+                  );
+                })}
+              </>
             ) : (
-              tabsAffiches.map((tab, index) => {
-                const Section = SECTIONS[tab];
-                return <Section key={tab} first={index === 0} />;
-              })
-            )
-          ) : (
-            (() => {
-              const ActiveSection = SECTIONS[activeTab];
-              return <ActiveSection first />;
-            })()
-          )}
+              (() => {
+                const ActiveSection = SECTIONS[activeTab];
+                return <ActiveSection first />;
+              })()
+            )}
+          </RechercheProvider>
         </div>
       </div>
     </div>

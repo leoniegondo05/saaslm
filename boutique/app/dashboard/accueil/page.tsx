@@ -5,7 +5,8 @@ import { useCallback, useState } from "react";
 import DashboardHeader from "../../components/DashboardHeader";
 import DashboardSearchBar from "../../components/DashboardSearchBar";
 import DashboardSidebar from "../../components/DashboardSidebar";
-import AccueilNav, { ACCUEIL_TABS, AccueilTab, TAB_LABELS_EN } from "../../components/dashboard-accueil/AccueilNav";
+import { Filtrable, RechercheProvider } from "../../components/DashboardRecherche";
+import AccueilNav, { ACCUEIL_TABS, AccueilTab } from "../../components/dashboard-accueil/AccueilNav";
 import { useDashboardLangue } from "../../components/DashboardLanguageProvider";
 import FinancesSection from "../../components/dashboard-accueil/FinancesSection";
 import CommandesSection from "../../components/dashboard-accueil/CommandesSection";
@@ -57,16 +58,17 @@ export default function AccueilPage() {
   );
   const [recherche, setRecherche] = useState("");
 
-  // Pas de forme de donnée commune entre les 7 sections (finances, stock,
-  // clients...) pour un filtrage plein texte unique : la recherche filtre
-  // donc quelles sections rester affichées, par leur titre (comme AccueilNav
-  // à côté), plutôt que leur contenu.
-  const termeRecherche = recherche.trim().toLowerCase();
-  const tabsAffiches = termeRecherche
-    ? ACCUEIL_TABS.filter(
-        (tab) => tab.toLowerCase().includes(termeRecherche) || TAB_LABELS_EN[tab].toLowerCase().includes(termeRecherche)
-      )
-    : ACCUEIL_TABS;
+  // Chaque section se cache seule (via Card, cf. DashboardRecherche.tsx) dès
+  // que rien de son contenu affiché — titre compris — ne correspond au terme
+  // tapé : pas de forme de donnée commune entre les 7 sections (finances,
+  // stock, clients...) pour un filtrage plein texte unique en amont, donc on
+  // laisse chaque carte se juger elle-même sur son propre texte rendu.
+  // `visibles` ne sert qu'à savoir si TOUTES ont fini par disparaître, pour
+  // afficher "Aucun résultat" plutôt qu'une pile de sections vides.
+  const [visibles, setVisibles] = useState<Record<AccueilTab, boolean>>(() =>
+    Object.fromEntries(ACCUEIL_TABS.map((tab) => [tab, true])) as Record<AccueilTab, boolean>
+  );
+  const aucunResultat = recherche.trim() !== "" && ACCUEIL_TABS.every((tab) => !visibles[tab]);
 
   // Même bug que sur /dashboard/produits (cf. commentaire dans ce fichier
   // avant ce correctif) : le clic d'onglet ne touchait pas l'URL, donc un
@@ -87,28 +89,40 @@ export default function AccueilPage() {
         <DashboardSidebar />
 
         <div className="min-w-0 flex-1 lg:px-6">
-          <DashboardHeader />
+          <DashboardHeader activeAccueilTab={activeTab} />
           <DashboardSearchBar onChange={setRecherche} />
 
           <AccueilNav active={activeTab} onChange={handleChange} />
 
-          {activeTab === null ? (
-            tabsAffiches.length === 0 ? (
-              <p className="mt-10 text-center text-xs text-[var(--dashboard-text)]/45">
-                {t(`Aucune section pour « ${recherche} ».`, `No section for “${recherche}”.`)}
-              </p>
+          <RechercheProvider value={recherche}>
+            {activeTab === null ? (
+              <>
+                {aucunResultat && (
+                  <p className="mt-10 text-center text-xs text-[var(--dashboard-text)]/45">
+                    {t(`Aucune section pour « ${recherche} ».`, `No section for “${recherche}”.`)}
+                  </p>
+                )}
+                {ACCUEIL_TABS.map((tab, index) => {
+                  const Section = SECTIONS[tab];
+                  return (
+                    <Filtrable
+                      key={tab}
+                      onMatchChange={(match) =>
+                        setVisibles((v) => (v[tab] === match ? v : { ...v, [tab]: match }))
+                      }
+                    >
+                      <Section first={index === 0} />
+                    </Filtrable>
+                  );
+                })}
+              </>
             ) : (
-              tabsAffiches.map((tab, index) => {
-                const Section = SECTIONS[tab];
-                return <Section key={tab} first={index === 0} />;
-              })
-            )
-          ) : (
-            (() => {
-              const ActiveSection = SECTIONS[activeTab];
-              return <ActiveSection />;
-            })()
-          )}
+              (() => {
+                const ActiveSection = SECTIONS[activeTab];
+                return <ActiveSection />;
+              })()
+            )}
+          </RechercheProvider>
         </div>
       </div>
     </div>

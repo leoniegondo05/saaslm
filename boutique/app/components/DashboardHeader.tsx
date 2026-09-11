@@ -9,6 +9,8 @@ import { clearToken } from "../../lib/api/token";
 import { APPAREILS_CONNECTES_COUNT } from "./dashboard-profil/MonProfil";
 import { useDashboardTheme } from "./DashboardThemeProvider";
 import { useDashboardLangue } from "./DashboardLanguageProvider";
+import type { AccueilTab } from "./dashboard-accueil/AccueilNav";
+import AssistanceLMModal from "./dashboard-accueil/AssistanceLMModal";
 
 // Compte de collaborateurs actifs affiché sur le bouton "Gérer les accès"
 // (voir PersonnelAcces.tsx, /dashboard/reglages/acces) — valeur figée
@@ -131,12 +133,24 @@ const MONTH_NAMES_EN = [
   "December",
 ] as const;
 
-export default function DashboardHeader() {
+export default function DashboardHeader({
+  activeAccueilTab = null,
+}: {
+  /**
+   * Onglet actif de l'écran Accueil (AccueilNav), passé par
+   * app/dashboard/accueil/page.tsx : détermine si "solution LM" ouvre les
+   * questions d'une seule section ou le briefing des 7. Sur toute autre
+   * page du dashboard (pas de notion d'onglet-section), reste à null →
+   * le bouton ouvre le briefing, cf. AssistanceLMModal.tsx.
+   */
+  activeAccueilTab?: AccueilTab | null;
+}) {
   const router = useRouter();
   const [activeDate, setActiveDate] = useState(() => new Date(2026, 7, 1));
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [showDayPicker, setShowDayPicker] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [showAssistance, setShowAssistance] = useState(false);
   // Langue : état partagé (DashboardLanguageProvider, monté dans
   // app/dashboard/layout.tsx), même pattern que le mode nuit ci-dessous, pour
   // que le bascule agisse sur tout le dashboard et pas juste ce menu.
@@ -238,7 +252,14 @@ export default function DashboardHeader() {
 
   return (
     <header className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-2.5">
+      {/* Ligne 1 mobile : logo+date d'un côté, icônes (notif/partenaire/user)
+          de l'autre, jamais coupée entre elles (retour utilisateur : tout
+          info importante, doit tenir sur 1 ligne en mobile). À partir de sm,
+          "contents" efface ce wrapper : logo+date, badge et icônes
+          redeviennent 3 enfants directs du header (layout desktop inchangé,
+          badge au milieu via l'ordre ci-dessous). */}
+      <div className="flex w-full items-center justify-between gap-3 sm:contents">
+        <div className="flex items-center gap-2.5 sm:order-1">
         <Image
           src="/images/logo.svg"
           alt="Logo LIIVRE MOI"
@@ -359,14 +380,10 @@ export default function DashboardHeader() {
         </div>
       </div>
 
-      <span className="hidden rounded-full bg-[linear-gradient(90deg,var(--color-brand-pink),rgba(20,18,32,0.08))] p-px shadow-[0_2px_10px_rgba(20,18,32,0.06)] sm:inline-flex">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 pl-2 pr-3 py-1 text-[11px] font-medium text-[#141220] dark:bg-[#1c1830]/90 dark:text-[var(--dashboard-text)]">
-          <SparkleIcon />
-          {t("solution LM", "LM solution")}
-        </span>
-      </span>
-
-      <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-4">
+      {/* Icônes : notif, partenaire agréé, avatar. Reste dans le même
+          wrapper que logo+date en mobile (ligne 1, justify-between) ;
+          sm:order-3 la remet à droite du badge en desktop. */}
+      <div className="flex items-center gap-1.5 sm:order-3 sm:gap-2 lg:gap-4">
         <div className="relative" ref={notifPanelRef}>
           <button
             type="button"
@@ -641,6 +658,27 @@ export default function DashboardHeader() {
           )}
         </div>
       </div>
+      </div>
+
+      {/* Bouton "solution LM" : order-3 + w-full en mobile → passe sur sa
+          propre ligne sous logo/date+icônes (flex-wrap du header), centré.
+          À partir de sm, sm:order-2 le replace au milieu, sur la même
+          ligne que logo/date et icônes (layout desktop inchangé). Ouvre
+          AssistanceLMModal : questions de l'onglet Accueil actif, ou
+          briefing des 7 sections si aucun (cf. commentaire sur le prop
+          activeAccueilTab plus haut). */}
+      <span className="order-3 flex w-full justify-center rounded-full bg-[linear-gradient(90deg,var(--color-brand-pink),rgba(20,18,32,0.08))] p-px shadow-[0_2px_10px_rgba(20,18,32,0.06)] sm:order-2 sm:w-auto sm:inline-flex sm:justify-start">
+        <button
+          type="button"
+          onClick={() => setShowAssistance(true)}
+          className="inline-flex items-center gap-1.5 rounded-full bg-white/90 pl-2 pr-3 py-1 text-[11px] font-medium text-[#141220] transition hover:bg-white dark:bg-[#1c1830]/90 dark:text-[var(--dashboard-text)] dark:hover:bg-[#1c1830]"
+        >
+          <SparkleIcon />
+          {t("solution LM", "LM solution")}
+        </button>
+      </span>
+
+      {showAssistance && <AssistanceLMModal activeTab={activeAccueilTab} onFermer={() => setShowAssistance(false)} />}
     </header>
   );
 }

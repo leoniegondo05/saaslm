@@ -69,7 +69,7 @@ const METHODS: Method[] = [
 // même balayage de couleur au lieu de répéter chacune tout le dégradé.
 const TRAIT_GRADIENT_ID = "payment-card-trait-gradient";
 const CARD_W = 340;
-const CARD_H = 224; // carte agrandie (cf. min-h-56 plus bas) pour laisser respirer la courbe
+const CARD_H = 208; // carte agrandie (cf. min-h-52 plus bas) pour laisser respirer la courbe
 
 // Plat depuis le bord gauche jusqu'à ~65-70% de la largeur (reste dans
 // l'espace vide entre logo/nom et badge "Compte actif"), puis grande courbe
@@ -179,11 +179,11 @@ export default function PaymentMethodCard() {
     <div className="relative pt-6">
       {/* cartes empilées derrière — profondeur : plus loin = plus flou */}
       <div
-        className="absolute inset-x-6 top-0 h-56 rounded-2xl border border-white/10 opacity-60 backdrop-blur-md transition-[background] duration-300 ease-out"
+        className="absolute inset-x-6 top-0 h-52 rounded-2xl border border-white/10 opacity-60 backdrop-blur-md transition-[background] duration-300 ease-out"
         style={{ background: behind2.base }}
       />
       <div
-        className="absolute inset-x-2 top-2 h-56 rounded-2xl opacity-85 transition-[background] duration-300 ease-out"
+        className="absolute inset-x-2 top-2 h-52 rounded-2xl opacity-85 transition-[background] duration-300 ease-out"
         style={{ background: behind1.base }}
       />
 
@@ -206,7 +206,7 @@ export default function PaymentMethodCard() {
             if (e.key === "ArrowRight" || e.key === "Enter" || e.key === " ") next();
             if (e.key === "ArrowLeft") prev();
           }}
-          className="relative min-h-56 touch-pan-y cursor-grab overflow-hidden rounded-2xl px-4 pt-4 pb-1.5 text-white shadow-[0_18px_40px_rgba(20,18,32,0.28)] select-none active:cursor-grabbing"
+          className="relative min-h-52 touch-pan-y cursor-grab overflow-hidden rounded-2xl px-4 pt-4 pb-1.5 text-white shadow-[0_18px_40px_rgba(20,18,32,0.28)] select-none active:cursor-grabbing"
           style={{
             background: method.base,
             transform: `translateX(${dragX}px)`,
