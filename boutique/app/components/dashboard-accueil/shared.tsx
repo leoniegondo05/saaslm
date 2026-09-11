@@ -155,15 +155,16 @@ export function SectionHeader({
 */
 export function HeaderActionBtn({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   return (
-    <span className="inline-flex shrink-0 rounded-full bg-[linear-gradient(90deg,var(--color-brand-pink),rgba(20,18,32,0.08))] p-px shadow-[0_2px_10px_rgba(20,18,32,0.06)]">
-      <button
-        type="button"
-        onClick={onClick}
-        className="rounded-full bg-white/90 px-3.5 py-1.5 text-[11px] font-semibold text-[var(--dashboard-text)] transition hover:bg-white dark:bg-[#1c1830]/90 dark:hover:bg-[#1c1830]"
-      >
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative inline-flex shrink-0 rounded-full p-px transition-all shadow-[0_2px_12px_rgba(20,18,32,0.05)] hover:opacity-95"
+      style={{ backgroundImage: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 58.35%, #FFFFFF 100%)" }}
+    >
+      <span className="inline-flex items-center rounded-full bg-[var(--dashboard-card-bg)]/90 px-3.5 py-1.5 text-xs font-semibold text-[var(--dashboard-text)] backdrop-blur-md transition group-hover:bg-[var(--dashboard-card-bg)]/70">
         {children}
-      </button>
-    </span>
+      </span>
+    </button>
   );
 }
 
