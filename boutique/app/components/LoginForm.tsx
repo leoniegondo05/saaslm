@@ -16,12 +16,43 @@ import { API_BASE_URL } from "../../lib/api/config";
   répond, il suffit de vérifier le format retourné dans
   lib/api/services/auth.ts (AuthResponse) — rien ici à changer.
 */
+
+// Bouton "oeil" pour basculer le champ mot de passe en clair — icône
+// barrée quand le mot de passe est déjà visible (clic = repasser en
+// masqué). Copie de celui d'InscriptionForm.tsx (composants de formulaire
+// autonomes dans ce projet, pas de dossier ui/ partagé pour l'instant).
+function BoutonOeil({ visible, onClick }: { visible: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+      tabIndex={-1}
+      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-white/40 transition hover:text-brand-white/80"
+    >
+      <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" aria-hidden>
+        <path
+          d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+        <circle cx="12" cy="12" r="2.6" stroke="currentColor" strokeWidth="1.6" fill="none" />
+        {visible && <path d="M3.5 3.5l17 17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />}
+      </svg>
+    </button>
+  );
+}
+
 export default function LoginForm() {
   const router = useRouter();
   const { run, loading, error } = useApiRequest(login);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [remember, setRemember] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -81,18 +112,25 @@ export default function LoginForm() {
         <label htmlFor="password" className="text-sm font-semibold text-brand-white">
           Mot de passe
         </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          minLength={8}
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          placeholder="********"
-          className="mt-2 w-full rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-5 py-3 text-sm text-brand-white placeholder-brand-white/30 outline-none transition focus:border-brand-pink/60 sm:mt-3 sm:py-4"
-        />
+        {/* mt-2/sm:mt-3 porté par le div, pas par l'input : sinon le
+            div s'agrandit de cette marge et le bouton oeil (centré via
+            inset-y-0/my-auto) se retrouve décalé vers le haut — voir
+            InscriptionForm.tsx pour le détail de la mesure du bug. */}
+        <div className="relative mt-2 sm:mt-3">
+          <input
+            id="password"
+            name="password"
+            type={passwordVisible ? "text" : "password"}
+            autoComplete="current-password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="********"
+            className="w-full rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-5 py-3 pr-11 text-sm text-brand-white placeholder-brand-white/30 outline-none transition focus:border-brand-pink/60 sm:py-4"
+          />
+          <BoutonOeil visible={passwordVisible} onClick={() => setPasswordVisible((v) => !v)} />
+        </div>
         {error?.fieldError("password") && (
           <p className="mt-1.5 text-xs text-red-400">{error.fieldError("password")}</p>
         )}

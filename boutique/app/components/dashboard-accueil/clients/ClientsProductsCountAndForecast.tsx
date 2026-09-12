@@ -2,9 +2,10 @@
 
 import { useId, useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { Tag } from "../shared";
+import { TypeAchatTag } from "../shared";
+import { TypeAchat } from "./clientsData";
 
-export default function ClientsProductsCountAndForecast() {
+export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAchat: TypeAchat }) {
   const { t } = useDashboardLangue();
   const uid = useId();
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
@@ -26,7 +27,7 @@ export default function ClientsProductsCountAndForecast() {
                 )}
               </p>
             </div>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <TypeAchatTag typeAchat={typeAchat} />
           </div>
 
           {/* Barres de proportions des références */}

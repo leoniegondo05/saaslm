@@ -1,10 +1,17 @@
 "use client";
 
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { ACTIONS_AUJOURDHUI } from "./clientsData";
+import { ACTIONS_AUJOURDHUI, TypeAchat } from "./clientsData";
 
-export default function ClientsActionsToday() {
+export default function ClientsActionsToday({ typeAchat }: { typeAchat: TypeAchat }) {
   const { t } = useDashboardLangue();
+
+  // Seule l'action "drop-jamais-revenus" est marquée tagD (propre au
+  // dropshipping) — aucune action n'est marquée comme propre au stockage,
+  // donc en vue "stockage" on masque cette seule ligne hors sujet ; en vue
+  // "dropshipping" et "les-deux", rien à retirer.
+  const actions =
+    typeAchat === "stockage" ? ACTIONS_AUJOURDHUI.filter((a) => !a.tagD) : ACTIONS_AUJOURDHUI;
 
   return (
     <div className="rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-4 shadow-[0_4px_16px_-4px_rgba(20,18,32,0.1)] transition-colors sm:p-5">
@@ -22,13 +29,15 @@ export default function ClientsActionsToday() {
           </p>
         </div>
         <span className="rounded-full border border-[#f59e0b]/30 bg-[#f59e0b]/10 px-2.5 py-1 text-[10px] font-bold text-[#f59e0b]">
-          {t("8 actions · 523 clients", "8 actions · 523 clients")}
+          {typeAchat === "les-deux"
+            ? t("8 actions · 523 clients", "8 actions · 523 clients")
+            : t(`${actions.length} actions`, `${actions.length} actions`)}
         </span>
       </div>
 
-      {/* Liste des 8 actions prêtes */}
+      {/* Liste des actions prêtes (filtrée par typeAchat) */}
       <div className="mt-4 space-y-2.5">
-        {ACTIONS_AUJOURDHUI.map((action) => {
+        {actions.map((action) => {
           const isDanger = action.typeIcone === "danger";
           const isWarn = action.typeIcone === "warn";
 

@@ -122,12 +122,6 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
           <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
         </div>
         <p className="mt-2 text-2xl font-bold tracking-tight">1 482 300 F</p>
-        <p className="mt-2 text-[11px] text-[var(--dashboard-text)]/50">
-          {t(
-            "Rien ne se demande : dès qu'un client paie, la plateforme répartit le montant entre les sous-comptes de chaque acteur. Votre part arrive sur le portefeuille de l'opérateur choisi par le client.",
-            "Nothing to request: as soon as a client pays, the platform splits the amount between each party's sub-account. Your share lands on the wallet of the operator the client used."
-          )}
-        </p>
         <div className="mt-3 flex h-2.5 w-full overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]">
           <span className="h-full" style={{ width: "69%", background: "linear-gradient(90deg,#4FE0AE,#38BDF8)" }} />
           <span className="h-full" style={{ width: "31%", background: "linear-gradient(90deg,#FFB84D,#FF9A3D)" }} />

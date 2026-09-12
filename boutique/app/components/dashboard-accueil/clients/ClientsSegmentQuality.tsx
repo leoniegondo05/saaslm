@@ -1,10 +1,10 @@
 "use client";
 
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { Tag } from "../shared";
-import { SEGMENTS_QUALITY } from "./clientsData";
+import { TypeAchatTag } from "../shared";
+import { SEGMENTS_QUALITY, TypeAchat } from "./clientsData";
 
-export default function ClientsSegmentQuality() {
+export default function ClientsSegmentQuality({ typeAchat }: { typeAchat: TypeAchat }) {
   const { t } = useDashboardLangue();
 
   return (
@@ -22,7 +22,7 @@ export default function ClientsSegmentQuality() {
             )}
           </p>
         </div>
-        <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+        <TypeAchatTag typeAchat={typeAchat} />
       </div>
 
       {/* Tableau des segments */}

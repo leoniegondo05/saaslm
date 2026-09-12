@@ -2,9 +2,10 @@
 
 import { useId, useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { Tag } from "../shared";
+import { TypeAchatTag } from "../shared";
+import { TypeAchat } from "./clientsData";
 
-export default function ClientsValueDonut() {
+export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat }) {
   const { t } = useDashboardLangue();
   const uid = useId();
   const [hoveredDecile, setHoveredDecile] = useState<number | null>(null);
@@ -37,7 +38,7 @@ export default function ClientsValueDonut() {
                 {t("Sur toute la durée de la relation", "Over customer lifetime relationship")}
               </p>
             </div>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <TypeAchatTag typeAchat={typeAchat} />
           </div>
 
           {/* Jauges horizontales */}
@@ -141,7 +142,7 @@ export default function ClientsValueDonut() {
                 {t("Vos clients rangés par dix pour cent, du meilleur au moins bon", "Customers ranked in 10% deciles, from best to lowest")}
               </p>
             </div>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <TypeAchatTag typeAchat={typeAchat} />
           </div>
 
           {/* Toggles interactifs type Shakuro (○ / ●) */}

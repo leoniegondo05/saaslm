@@ -5,18 +5,26 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 /*
-  Parcours "Compléter mon profil" : 9 questions (une par page) + une fiche
-  récapitulative, affichées une seule fois après la connexion et avant le
-  tableau de bord — reproduction du flux décrit dans la maquette fournie
-  par l'utilisateur (LM Inscription boutique.html, écrans 37 à 47).
+  Parcours "Compléter mon profil" : 9 questions (une par page) + un écran de
+  nommage de la boutique + une fiche récapitulative, affichés une seule fois
+  après la connexion et avant le tableau de bord — reproduction du flux
+  décrit dans la maquette fournie par l'utilisateur (LM Inscription
+  boutique.html, écrans 37 à 47).
+
+  L'écran de nommage (écran 46, step 10) est désormais le SEUL endroit où
+  nom et lien de la boutique sont demandés (demande utilisateur) —
+  InscriptionForm.tsx ne les recueille plus (RegisterPayload n'a plus
+  shop_name/shop_slug, voir lib/api/services/auth.ts). Le lien s'affiche
+  ici sous la forme "lm.ci/slug" ; brancher une vraie route API devra
+  choisir ce format ou l'aligner sur autre chose déjà en place ailleurs.
+  L'identifiant "B-24187" et le statut "Disponible" du lien sont pour
+  l'instant des valeurs mock, faute de backend pour vérifier la
+  disponibilité réelle ou générer l'identifiant.
 
   Ce que ces écrans NE couvrent PAS (hors scope de ce composant, voir la
   question posée avant de coder) : l'écran d'identité en deux colonnes
-  avec code de vérification par email (écrans 32-34), les conditions
-  d'utilisation dépliantes (écran 35) et l'écran de nommage de la
-  boutique (écran 46) — la boutique a déjà un nom et un lien à
-  l'inscription (voir InscriptionForm.tsx, champs shop_name/shop_slug),
-  contrairement à la maquette qui les demande plus tard.
+  avec code de vérification par email (écrans 32-34) et les conditions
+  d'utilisation dépliantes (écran 35).
 
   Aucune route API pour l'instant : les réponses restent en state React,
   perdues à la fermeture de l'onglet. Quand le backend exposera une route
@@ -45,6 +53,7 @@ type Answers = {
   canaux: string[];
   modele: Modele | null;
   distribution: string[];
+  nomBoutique: string;
 };
 
 const ANSWERS_VIDES: Answers = {
@@ -57,9 +66,23 @@ const ANSWERS_VIDES: Answers = {
   canaux: [],
   modele: null,
   distribution: [],
+  nomBoutique: "",
 };
 
 const NB_QUESTIONS = 9;
+
+// Mock en attendant une route API (voir commentaire en tête de fichier).
+const IDENTIFIANT_BOUTIQUE_MOCK = "B-24187";
+
+function slugifier(nom: string): string {
+  return nom
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 const EXPERIENCE_OPTIONS: { value: Experience; label: string; niveau: string; desc: string }[] = [
   { value: "debutant", label: "Moins d'un an", niveau: "Débutant", desc: "Je commence tout juste." },
@@ -134,7 +157,13 @@ const PAYS_DISPONIBLES: { nom: string; indicatif: string; drapeau: string }[] = 
   { nom: "Canada", indicatif: "+1", drapeau: "linear-gradient(90deg,#FF0000 25%,#fff 25%,#fff 75%,#FF0000 75%)" },
 ];
 const PAYS_ORIGINE = "Côte d'Ivoire";
+const VILLE_ORIGINE = "Abidjan";
 const DRAPEAU_ORIGINE = "linear-gradient(90deg,#F77F00 33.33%,#fff 33.33%,#fff 66.66%,#009E60 66.66%)";
+
+function drapeauPays(nom: string): string {
+  if (nom === PAYS_ORIGINE) return DRAPEAU_ORIGINE;
+  return PAYS_DISPONIBLES.find((p) => p.nom === nom)?.drapeau ?? "#333";
+}
 
 const CANAUX = [
   "Publicité Facebook",
@@ -300,7 +329,7 @@ function QuestionShell({
 
 export default function CompleterProfilWizard() {
   const router = useRouter();
-  // 1..9 = questions, 10 = fiche récapitulative
+  // 1..9 = questions, 10 = nommage de la boutique (écran 46), 11 = fiche récapitulative
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<Answers>(ANSWERS_VIDES);
   const [paysChoisi, setPaysChoisi] = useState(PAYS_DISPONIBLES[0]?.nom ?? "");
@@ -349,7 +378,7 @@ export default function CompleterProfilWizard() {
   }
 
   function suivant() {
-    setStep((s) => Math.min(s + 1, NB_QUESTIONS + 1));
+    setStep((s) => Math.min(s + 1, NB_QUESTIONS + 2));
   }
   function precedent() {
     setStep((s) => Math.max(s - 1, 1));
@@ -469,7 +498,7 @@ export default function CompleterProfilWizard() {
     return (
       <QuestionShell
         step={5}
-        question="Dans quelles catégories vendez-vous ?"
+        question="Quel est votre catalogue ?"
         sub={`Trois réponses au maximum · ${answers.categories.length}/${MAX_CATEGORIES} choisies.`}
         canContinue={answers.categories.length > 0}
         onBack={precedent}
@@ -661,11 +690,141 @@ export default function CompleterProfilWizard() {
             />
           ))}
         </div>
+
+        <div className="mt-5 rounded-2xl border border-[#2A6E8C]/40 bg-[linear-gradient(160deg,rgba(24,64,98,0.22),rgba(20,26,48,0.4))] p-4">
+          <p className="text-[13px] font-semibold text-brand-white">Ce que votre réponse ouvrira</p>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            <div className="flex items-start gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#2E6FA0] text-[13px] font-bold text-brand-white">
+                S
+              </span>
+              <div>
+                <p className="text-[12.5px] font-semibold text-brand-white">Stockage Management</p>
+                <p className="mt-0.5 text-[11px] font-light leading-relaxed text-brand-white/50">
+                  Pour votre propre stock : vous déposez, le partenaire garde et livre.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#2E6FA0] text-[13px] font-bold text-brand-white">
+                P
+              </span>
+              <div>
+                <p className="text-[12.5px] font-semibold text-brand-white">Drop du partenaire</p>
+                <p className="mt-0.5 text-[11px] font-light leading-relaxed text-brand-white/50">
+                  Pour le dropshipping : aucun stock avancé de votre part.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </QuestionShell>
     );
   }
 
-  // ---------- étape 10 : fiche récapitulative (écran 47) ----------
+  if (step === 10) {
+    const slug = slugifier(answers.nomBoutique) || "votre-boutique";
+    return (
+      <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-6 py-10">
+        <h1 className="text-[27px] font-bold leading-[1.22] tracking-tight text-brand-white">
+          Comment s&apos;appelle votre boutique ?
+        </h1>
+        <p className="mt-2 text-[11.5px] font-light text-brand-white/60">
+          C&apos;est le seul renseignement qui concerne la boutique et non vous. Jusqu&apos;ici, tout parlait de
+          l&apos;entrepreneur.
+        </p>
+
+        <div className="mt-6">
+          <label htmlFor="nom-boutique" className="text-[10px] font-bold uppercase tracking-[0.1em] text-brand-white/40">
+            Nom de la boutique
+          </label>
+          <input
+            id="nom-boutique"
+            type="text"
+            autoComplete="organization"
+            value={answers.nomBoutique}
+            onChange={(event) => setAnswers({ ...answers, nomBoutique: event.target.value })}
+            placeholder="Ex : Ma boutique"
+            className="mt-2 w-full rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-5 py-4 text-[17px] font-bold text-brand-white outline-none transition placeholder:font-normal placeholder:text-brand-white/30 focus:border-brand-pink/60"
+          />
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-white/10 bg-[#0e1226] p-1.5">
+          <div className="flex items-center gap-4 px-3.5 py-3.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1B3A6B]/50 text-[#6FAEFF]">
+              <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" aria-hidden>
+                <path
+                  d="M9.5 14.5 14.5 9.5M8 17l-1.5 1.5a3 3 0 0 1-4.24-4.24L4 12.5m12-3L17.5 8a3 3 0 1 0-4.24-4.24L11.5 5.5"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </svg>
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[9.5px] font-bold uppercase tracking-[0.1em] text-brand-white/40">Le lien de votre boutique</p>
+              <p className="truncate text-[15px] font-bold text-brand-white">
+                <span className="font-normal text-brand-white/50">lm.ci/</span>
+                {slug}
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full border border-[#4FE0AE]/45 bg-[#4FE0AE]/10 px-3 py-1 text-[10.5px] font-semibold text-[#4FE0AE]">
+              Disponible
+            </span>
+          </div>
+
+          <div className="border-t border-white/5" />
+
+          <div className="flex items-center gap-4 px-3.5 py-3.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-pink/15 text-brand-pink">
+              <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" aria-hidden>
+                <rect x="3" y="3" width="7" height="7" rx="1.5" fill="currentColor" />
+                <rect x="14" y="3" width="7" height="7" rx="1.5" fill="currentColor" />
+                <rect x="3" y="14" width="7" height="7" rx="1.5" fill="currentColor" />
+                <rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor" />
+              </svg>
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[9.5px] font-bold uppercase tracking-[0.1em] text-brand-white/40">L&apos;identifiant de votre boutique</p>
+              <p className="text-[15px] font-bold text-brand-white">{IDENTIFIANT_BOUTIQUE_MOCK}</p>
+            </div>
+            <span className="shrink-0 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10.5px] font-semibold text-brand-white/70">
+              Définitif
+            </span>
+          </div>
+        </div>
+
+        <p className="mt-5 border-l border-white/15 pl-3.5 text-[11px] font-light leading-relaxed text-brand-white/50">
+          Le lien se fabrique tout seul à partir du nom, pendant que vous l&apos;écrivez. Il peut être modifié une
+          fois, avant la publication de votre premier produit. L&apos;identifiant, lui, ne change jamais : c&apos;est
+          par lui que le partenaire agréé, les livreurs et le centre d&apos;appel reconnaissent votre boutique, même
+          si vous la renommez.
+        </p>
+
+        <div className="mt-auto flex items-center justify-between gap-3 pt-9">
+          <button
+            type="button"
+            onClick={precedent}
+            className="rounded-2xl border border-brand-pink/60 px-11 py-3.5 text-[11px] font-semibold text-brand-white transition hover:bg-brand-pink/10"
+          >
+            Retour
+          </button>
+          <button
+            type="button"
+            onClick={suivant}
+            disabled={answers.nomBoutique.trim().length === 0}
+            className="rounded-2xl bg-brand-white px-9 py-3.5 text-[11px] font-semibold text-brand-bg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Créer ma boutique
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------- étape 11 : fiche récapitulative (écran 47) ----------
   const experienceLabel = EXPERIENCE_OPTIONS.find((o) => o.value === answers.experience);
   const origineLabel = ORIGINE_OPTIONS.find((o) => o.value === answers.origine);
   const modeleLabel = MODELE_OPTIONS.find((o) => o.value === answers.modele);
@@ -673,16 +832,18 @@ export default function CompleterProfilWizard() {
     .map((o) => o.label)
     .join(" et ");
 
-  const lignes: { label: string; valeur: string }[] = [
-    { label: "Pays où elle vend", valeur: answers.paysVente.join(", ") },
+  const lignes: { label: string; valeur: string; pays?: string[]; accent?: boolean }[] = [
+    { label: "Boutique ouverte depuis", valeur: "Aujourd'hui" },
+    { label: "Pays de la boutique", valeur: `${PAYS_ORIGINE} · ${VILLE_ORIGINE}`, pays: [PAYS_ORIGINE] },
+    { label: "Pays où elle vend", valeur: answers.paysVente.join(", "), pays: answers.paysVente, accent: true },
     { label: "Statut", valeur: answers.statut === "enregistree" ? "Entreprise enregistrée" : "Sans structure déclarée" },
-    { label: "Expérience", valeur: experienceLabel ? `${experienceLabel.label} · ${experienceLabel.niveau.toLowerCase()}` : "—" },
-    { label: "Chiffre d'affaires moyen", valeur: answers.chiffreAffaires ?? "—" },
-    { label: "Origine des produits", valeur: origineLabel?.label ?? "—" },
+    { label: "Expérience", valeur: experienceLabel ? `${experienceLabel.label} · ${experienceLabel.niveau.toLowerCase()}` : "—", accent: true },
+    { label: "Chiffre d'affaires moyen", valeur: answers.chiffreAffaires ?? "—", accent: true },
+    { label: "Origine des produits", valeur: origineLabel?.label ?? "—", accent: true },
     { label: "Catégories", valeur: answers.categories.join(" · ") || "—" },
     { label: "Canaux de vente", valeur: answers.canaux.join(", ") || "—" },
     { label: "Modèle", valeur: modeleLabel?.label ?? "—" },
-    { label: "Distribution", valeur: distributionLabel || "—" },
+    { label: "Distribution", valeur: distributionLabel || "—", accent: true },
   ];
 
   const MASQUES = ["Nom et prénoms", "Numéro de téléphone", "Adresse email", "Adresse exacte"];
@@ -724,7 +885,21 @@ export default function CompleterProfilWizard() {
           {lignes.map((ligne) => (
             <div key={ligne.label} className="flex items-center justify-between gap-4 py-2.5 text-[11px]">
               <span className="font-light text-brand-white/50">{ligne.label}</span>
-              <span className="text-right font-semibold text-brand-white">{ligne.valeur}</span>
+              <span
+                className={`flex flex-wrap items-center justify-end gap-x-1.5 gap-y-1 text-right font-semibold ${
+                  ligne.accent ? "text-brand-pink" : "text-brand-white"
+                }`}
+              >
+                {ligne.pays
+                  ? ligne.pays.map((nom, index) => (
+                      <span key={nom} className="flex items-center gap-1.5">
+                        <i className="block h-2.5 w-4 shrink-0 rounded-[1px]" style={{ background: drapeauPays(nom) }} />
+                        {nom}
+                        {index < ligne.pays!.length - 1 && ","}
+                      </span>
+                    ))
+                  : ligne.valeur}
+              </span>
             </div>
           ))}
         </div>
