@@ -212,14 +212,14 @@ export default function Reach() {
         visible ? "is-visible" : ""
       }`}
     >
-      <div className="titre-carte reach-titre">
+      {/* <div className="titre-carte reach-titre">
         <h2 className="text-[clamp(30px,3.6vw,46px)] font-semibold tracking-[-0.02em]">
           Un continent, des millions d&apos;opportunités
         </h2>
         <p className="text-brand-slate mt-3 text-[17px]">
           Nous construisons les connexions
         </p>
-      </div>
+      </div> */}
 
       <div className="carte-zone">
         <svg viewBox="0 0 1000 950" aria-hidden="true">

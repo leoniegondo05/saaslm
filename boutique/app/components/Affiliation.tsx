@@ -97,7 +97,7 @@ export default function Affiliation() {
       data-section
       data-titre="S'affilier, c'est grandir"
       data-sous="Une boutique choisit une entreprise agréée. Une entreprise agréée en accompagne plusieurs."
-      className={`aff-section py-33 px-7 max-w-[1500px] mx-auto ${
+      className={`aff-section py-16 px-4 sm:py-33 sm:px-7 max-w-[1500px] mx-auto ${
         visible ? "is-visible" : ""
       }`}
     >

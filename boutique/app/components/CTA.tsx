@@ -58,7 +58,7 @@ export default function CTA() {
             <span className="cta-bouton-1 rounded-xl bg-[linear-gradient(90deg,var(--color-brand-pink),var(--color-brand-purple))] p-px">
               <Link
                 href="/login"
-                className="flex items-center gap-2 rounded-[11px] bg-[#0a0e1c] px-[18px] py-4 text-sm font-semibold text-brand-white no-underline transition hover:opacity-90"
+                className="flex items-center gap-2 rounded-[11px] bg-[#0a0e1c] px-[18px] py-3 text-sm font-semibold text-brand-white no-underline transition hover:opacity-90"
               >
                 Créer ma boutique gratuitement
                 <span className="flex text-brand-white opacity-85">
@@ -78,7 +78,7 @@ export default function CTA() {
             {/* Bouton secondaire : fond blanc plein */}
             <Link
               href="/partenaire-agree"
-              className="cta-bouton-2 items-center gap-2 rounded-xl bg-white px-[18px] py-4 text-sm font-semibold text-black no-underline transition hover:opacity-90"
+              className="cta-bouton-2 items-center gap-2 rounded-xl bg-white px-[18px] py-3 text-sm font-semibold text-black no-underline transition hover:opacity-90"
             >
               Devenir partenaire agréé
             </Link>
