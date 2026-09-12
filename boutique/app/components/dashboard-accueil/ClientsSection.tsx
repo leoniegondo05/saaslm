@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
-import { HeaderActionBtn, SectionHeader } from "./shared";
+import { HeaderActionBtn, SectionHeader, Nature } from "./shared";
 import { KPIS_CLIENTS, TypeAchat } from "./clients/clientsData";
 import ClientsRfMatrix from "./clients/ClientsRfMatrix";
 import ClientsGrowthChart from "./clients/ClientsGrowthChart";
@@ -29,7 +28,12 @@ import ClientsActionsToday from "./clients/ClientsActionsToday";
 
 export default function ClientsSection({ first = true }: { first?: boolean }) {
   const { t } = useDashboardLangue();
-  const [typeAchat, setTypeAchat] = useState<TypeAchat>("les-deux");
+  // Plus de toggle S/D/B : les autres sections (Commandes, Produits) n'en
+  // ont pas non plus, juste la légende ci-dessous. typeAchat reste passé
+  // aux sous-blocs pour le badge <Nature> et les filtres déjà écrits
+  // (ClientsProductsGateway, ClientsActionsToday, ClientsStockVsDrop), figé
+  // sur "les-deux" tant qu'aucun sélecteur ne le pilote.
+  const typeAchat: TypeAchat = "les-deux";
 
   return (
     <div className="space-y-6">
@@ -55,57 +59,16 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
         }
       />
 
-      {/* ── BARRE DE SÉLECTION DU TYPE D'ACHAT ── */}
-      <div className="flex flex-col justify-between gap-3 rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] px-4 py-2.5 sm:flex-row sm:items-center shadow-sm transition-colors">
-        {/* Pills de filtre */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Stockage Management */}
-          <button
-            type="button"
-            onClick={() => setTypeAchat("stockage")}
-            className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all ${
-              typeAchat === "stockage"
-                ? "bg-[#0284c7]/20 text-[#0284c7] border border-[#0284c7] shadow-[0_0_10px_rgba(2,132,199,0.25)] dark:text-[#38bdf8] dark:border-[#38bdf8]"
-                : "bg-[var(--dashboard-surface-2)] text-[var(--dashboard-text)]/70 border border-transparent hover:border-[var(--dashboard-text)]/20"
-            }`}
-          >
-            {t("ACHATS EN STOCKAGE MANAGEMENT", "STOCKAGE MANAGEMENT ORDERS")}
-          </button>
-
-          {/* Dropshipping */}
-          <button
-            type="button"
-            onClick={() => setTypeAchat("dropshipping")}
-            className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all ${
-              typeAchat === "dropshipping"
-                ? "bg-[#ec0c8c]/20 text-[#ec0c8c] border border-[#ec0c8c] shadow-[0_0_10px_rgba(236,12,140,0.25)]"
-                : "bg-[var(--dashboard-surface-2)] text-[var(--dashboard-text)]/70 border border-transparent hover:border-[var(--dashboard-text)]/20"
-            }`}
-          >
-            {t("ACHATS EN DROPSHIPPING", "DROPSHIPPING ORDERS")}
-          </button>
-
-          {/* Les Deux */}
-          <button
-            type="button"
-            onClick={() => setTypeAchat("les-deux")}
-            className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all ${
-              typeAchat === "les-deux"
-                ? "bg-[var(--dashboard-text)] text-[var(--dashboard-card-bg)] border border-[var(--dashboard-text)] shadow-sm"
-                : "bg-[var(--dashboard-surface-2)] text-[var(--dashboard-text)]/70 border border-transparent hover:border-[var(--dashboard-text)]/20"
-            }`}
-          >
-            {t("Les deux", "Both")}
-          </button>
-        </div>
-
-        {/* Note informative à droite */}
-        <p className="text-[10px] text-[var(--dashboard-text)]/50 sm:text-right">
-          {t(
-            "Un client n'a pas de nature : ses achats en ont une. La couleur suit ce qu'il a acheté.",
-            "Customers have no fixed type: their purchases do. Visuals reflect purchase categories."
-          )}
-        </p>
+      {/* Légende : quelle couleur renvoie à quelle façon de vendre — même
+          bloc que CommandesSection/ProduitsSection, cf. [[dashboard-chart-colors-stockage-drop]].
+          Les badges <Nature> posés à côté de chaque titre de sous-bloc
+          ci-dessous (S/D/B) suivent ce code, sur la sélection du toggle
+          au-dessus. */}
+      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-2xl bg-[var(--dashboard-glass)] px-4 py-3 text-[10px] text-[var(--dashboard-text)]/50">
+        <span className="flex items-center gap-1.5"><Nature code="S" /> {t("Stockage management", "Warehousing")}</span>
+        <span className="flex items-center gap-1.5"><Nature code="D" /> {t("Dropshipping", "Drop-shipping")}</span>
+        <span className="flex items-center gap-1.5"><Nature code="B" /> {t("Les deux", "Both")}</span>
+        <span className="ml-auto">{t("La couleur dit à quelle façon de vendre l'achat se rapporte.", "The color shows which way of selling the purchase relates to.")}</span>
       </div>
 
       {/* ── GRILLE DES 6 KPIS PRINCIPAUX ── */}
@@ -145,40 +108,40 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
       </div>
 
       {/* ── SECTION 1 : VOS CLIENTS RANGÉS PAR SEGMENT (MATRICE RFM) ── */}
-      <ClientsRfMatrix />
+      <ClientsRfMatrix typeAchat={typeAchat} />
 
       {/* ── SECTION 2 : COMMENT VOTRE FICHIER GRANDIT (HISTOGRAMME 12 SEMAINES) ── */}
       <ClientsGrowthChart />
 
       {/* ── SECTION 3 : CE QUE VAUT UN CLIENT / DÉCILES / DONUT CHART ── */}
-      <ClientsValueDonut />
+      <ClientsValueDonut typeAchat={typeAchat} />
 
       {/* ── SECTION 4 : PASSERELLES PRODUITS (PREMIER & SECOND ACHAT) ── */}
-      <ClientsProductsGateway />
+      <ClientsProductsGateway typeAchat={typeAchat} />
 
       {/* ── SECTION 5 : QUAND ILS REVIENNENT & FIABILITÉ CLIENTS ── */}
-      <ClientsReliabilityRetention />
+      <ClientsReliabilityRetention typeAchat={typeAchat} />
 
       {/* ── SECTION 6 : COMMENT ILS PAIENT ET IMPACT SUR LA MARGE ── */}
-      <ClientsPaymentImpact />
+      <ClientsPaymentImpact typeAchat={typeAchat} />
 
       {/* ── SECTION 7 : SCORE DE FIABILITÉ & MATRICE VALEUR / FIABILITÉ ── */}
-      <ClientsReliabilityMatrix />
+      <ClientsReliabilityMatrix typeAchat={typeAchat} />
 
       {/* ── SECTION 8 : EXPÉRIENCE STOCKAGE MANAGEMENT VS DROPSHIPPING ── */}
-      <ClientsStockVsDrop />
+      <ClientsStockVsDrop typeAchat={typeAchat} />
 
       {/* ── SECTION 9 : OÙ SONT VOS CLIENTS (GÉO) & CANAUX D'ACQUISITION ── */}
-      <ClientsGeoAndChannels />
+      <ClientsGeoAndChannels typeAchat={typeAchat} />
 
       {/* ── SECTION 10 : PROFONDEUR DE CATALOGUE & PROJECTION PORTEFEUILLE 12 MOIS ── */}
-      <ClientsProductsCountAndForecast />
+      <ClientsProductsCountAndForecast typeAchat={typeAchat} />
 
       {/* ── SECTION 11 : QUALITÉ DE LA RELATION, SEGMENT PAR SEGMENT ── */}
-      <ClientsSegmentQuality />
+      <ClientsSegmentQuality typeAchat={typeAchat} />
 
       {/* ── SECTION 12 : À FAIRE AUJOURD'HUI (ACTIONS & RELANCES PRÊTES) ── */}
-      <ClientsActionsToday />
+      <ClientsActionsToday typeAchat={typeAchat} />
     </div>
   );
 }

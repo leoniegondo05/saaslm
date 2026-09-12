@@ -309,6 +309,19 @@ export function Tag({
   );
 }
 
+/*
+  Badge par carte reflétant le toggle S/D/B de ClientsSection.tsx
+  (typeAchat) — même convention que le <Nature code="B" /> posé à côté de
+  chaque titre de carte dans CommandesSection/ProduitsSection : juste le
+  carré de couleur, le sens (S/D/B) est expliqué une seule fois par la
+  légende de section (cf. ClientsSection.tsx), pas répété en toutes lettres
+  sur chaque carte.
+*/
+export function TypeAchatTag({ typeAchat }: { typeAchat: "stockage" | "dropshipping" | "les-deux" }) {
+  const code = typeAchat === "stockage" ? "S" : typeAchat === "dropshipping" ? "D" : "B";
+  return <Nature code={code} />;
+}
+
 export function Btn({
   children,
   variant = "outline",

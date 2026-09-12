@@ -277,7 +277,7 @@ export default function DashboardHeader({
                 type="button"
                 aria-label={t("Mois précédent", "Previous month")}
                 onClick={() => shiftMonth(-1)}
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white dark:text-white/50 dark:hover:bg-white/15 sm:h-6 sm:w-6"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white dark:text-[var(--dashboard-text)]/50 dark:hover:bg-white/15 sm:h-6 sm:w-6"
               >
                 <ChevronIcon direction="left" />
               </button>
@@ -299,7 +299,7 @@ export default function DashboardHeader({
                   className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium transition sm:px-2.5 sm:py-1 sm:text-[11px] ${
                     index === 1
                       ? "bg-white text-[#141220] shadow-[0_2px_8px_rgba(20,18,32,0.1)] dark:bg-white/15 dark:text-[var(--dashboard-text)]"
-                      : "hidden text-[#141220]/45 hover:text-[#141220]/70 dark:text-white/40 dark:hover:text-white/70 sm:inline-block"
+                      : "hidden text-[#141220]/45 hover:text-[#141220]/70 dark:text-[var(--dashboard-text)]/40 dark:hover:text-[var(--dashboard-text)]/70 sm:inline-block"
                   }`}
                 >
                   {monthNames[date.getMonth()]}
@@ -309,7 +309,7 @@ export default function DashboardHeader({
                 type="button"
                 aria-label={t("Mois suivant", "Next month")}
                 onClick={() => shiftMonth(1)}
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white dark:text-white/50 dark:hover:bg-white/15 sm:h-6 sm:w-6"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[#141220]/50 transition hover:bg-white dark:text-[var(--dashboard-text)]/50 dark:hover:bg-white/15 sm:h-6 sm:w-6"
               >
                 <ChevronIcon direction="right" />
               </button>
@@ -317,10 +317,10 @@ export default function DashboardHeader({
 
             {showDayPicker && (
               <div className="absolute left-0 top-full z-10 mt-2 w-[220px] rounded-2xl bg-white p-3 shadow-[0_8px_24px_rgba(20,18,32,0.16)] dark:bg-[#1c1830]">
-                <p className="mb-2 px-1 text-xs font-semibold text-[#141220]/50 dark:text-white/40">
+                <p className="mb-2 px-1 text-xs font-semibold text-[#141220]/50 dark:text-[var(--dashboard-text)]/40">
                   {monthNames[activeMonthIndex]} {activeYear}
                 </p>
-                <div className="grid grid-cols-7 gap-y-1 text-center text-[11px] text-[#141220]/40 dark:text-white/40">
+                <div className="grid grid-cols-7 gap-y-1 text-center text-[11px] text-[#141220]/40 dark:text-[var(--dashboard-text)]/40">
                   {weekdayLabels.map((label, i) => (
                     <span key={`${label}-${i}`}>{label}</span>
                   ))}
@@ -335,7 +335,7 @@ export default function DashboardHeader({
                       className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition hover:bg-[#141220]/[0.06] dark:hover:bg-white/10 ${
                         day === activeDay
                           ? "bg-[#141220] text-white dark:bg-brand-pink"
-                          : "text-[#141220]/70 dark:text-white/70"
+                          : "text-[#141220]/70 dark:text-[var(--dashboard-text)]/70"
                       }`}
                     >
                       {day}
@@ -354,7 +354,7 @@ export default function DashboardHeader({
                 setShowYearPicker((open) => !open);
                 setShowDayPicker(false);
               }}
-              className="block rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] font-medium text-[#141220]/70 transition hover:bg-white dark:bg-white/10 dark:text-white/70 dark:hover:bg-white/15 sm:px-2 sm:py-1 sm:text-[11px]"
+              className="block rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] font-medium text-[#141220]/70 transition hover:bg-white dark:bg-white/10 dark:text-[var(--dashboard-text)]/70 dark:hover:bg-white/15 sm:px-2 sm:py-1 sm:text-[11px]"
             >
               {activeYear}
             </button>
@@ -368,7 +368,7 @@ export default function DashboardHeader({
                   type="button"
                   onClick={() => setYear(year)}
                   className={`px-5 py-2 text-left text-sm font-medium transition hover:bg-[#141220]/[0.05] dark:hover:bg-white/5 ${
-                    year === activeYear ? "text-brand-pink" : "text-[#141220]/70 dark:text-white/70"
+                    year === activeYear ? "text-brand-pink" : "text-[#141220]/70 dark:text-[var(--dashboard-text)]/70"
                   }`}
                 >
                   {year}
@@ -487,7 +487,7 @@ export default function DashboardHeader({
             <BuildingIcon />
           </span>
           <span className="hidden leading-tight sm:block">
-            <span className="block text-[10px] text-[#141220]/50 dark:text-white/40">{t("Partenaire agréé", "Approved partner")}</span>
+            <span className="block text-[10px] text-[#141220]/50 dark:text-[var(--dashboard-text)]/40">{t("Partenaire agréé", "Approved partner")}</span>
             <span className="block text-[11px] font-semibold">Groupe Logistique Ivoire</span>
           </span>
         </Link>
@@ -525,7 +525,7 @@ export default function DashboardHeader({
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-xs font-bold">Awa K.</span>
-                  <span className="block text-[10px] text-[#141220]/45 dark:text-white/40">{t("Voir mon profil", "View my profile")}</span>
+                  <span className="block text-[10px] text-[#141220]/45 dark:text-[var(--dashboard-text)]/40">{t("Voir mon profil", "View my profile")}</span>
                 </span>
                 <ChevronIcon direction="right" />
               </Link>
@@ -587,7 +587,7 @@ export default function DashboardHeader({
 
               <div className="px-1.5 py-1.5">
                 <div className="flex items-center gap-2.5 px-1.5 py-2">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#141220]/[0.06] text-[#141220]/60 dark:bg-white/10 dark:text-white/60">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#141220]/[0.06] text-[#141220]/60 dark:bg-white/10 dark:text-[var(--dashboard-text)]/60">
                     <GlobeIcon />
                   </span>
                   <span className="flex-1 text-xs font-medium">{t("Langue", "Language")}</span>
@@ -596,7 +596,7 @@ export default function DashboardHeader({
                       type="button"
                       onClick={() => setLangue("FR")}
                       className={`rounded-full px-2 py-0.5 transition ${
-                        langue === "FR" ? "bg-[#141220] text-white" : "text-[#141220]/40 dark:text-white/40"
+                        langue === "FR" ? "bg-[#141220] text-white" : "text-[#141220]/40 dark:text-[var(--dashboard-text)]/40"
                       }`}
                     >
                       FR
@@ -605,7 +605,7 @@ export default function DashboardHeader({
                       type="button"
                       onClick={() => setLangue("EN")}
                       className={`rounded-full px-2 py-0.5 transition ${
-                        langue === "EN" ? "bg-[#141220] text-white" : "text-[#141220]/40 dark:text-white/40"
+                        langue === "EN" ? "bg-[#141220] text-white" : "text-[#141220]/40 dark:text-[var(--dashboard-text)]/40"
                       }`}
                     >
                       EN

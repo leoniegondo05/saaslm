@@ -1,9 +1,16 @@
 "use client";
 
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
+import { TypeAchat } from "./clientsData";
 
-export default function ClientsStockVsDrop() {
+export default function ClientsStockVsDrop({ typeAchat }: { typeAchat: TypeAchat }) {
   const { t } = useDashboardLangue();
+
+  // Cette carte compare déjà S et D côte à côte : le toggle ne filtre rien
+  // ici (les deux colonnes restent nécessaires à la comparaison), il fait
+  // ressortir la colonne choisie et estompe l'autre. "les-deux" = normal.
+  const dimStockage = typeAchat === "dropshipping";
+  const dimDrop = typeAchat === "stockage";
 
   return (
     <div className="rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-4 shadow-[0_4px_16px_-4px_rgba(20,18,32,0.1)] transition-colors sm:p-5">
@@ -26,7 +33,11 @@ export default function ClientsStockVsDrop() {
       {/* 2 Colonnes comparatives */}
       <div className="mt-4 grid gap-3.5 sm:grid-cols-2">
         {/* Colonne 1 : Stockage management */}
-        <div className="rounded-xl border border-[#0284c7]/25 bg-[#0284c7]/5 p-4">
+        <div
+          className={`rounded-xl border border-[#0284c7]/25 bg-[#0284c7]/5 p-4 transition-opacity ${
+            dimStockage ? "opacity-40" : ""
+          }`}
+        >
           <div className="flex items-center justify-between">
             <h4 className="text-xs sm:text-sm font-bold text-[var(--dashboard-text)]">
               {t("Acheté en stockage management", "Purchased from managed stock")}
@@ -74,7 +85,11 @@ export default function ClientsStockVsDrop() {
         </div>
 
         {/* Colonne 2 : Dropshipping */}
-        <div className="rounded-xl border border-[#ec0c8c]/25 bg-[#ec0c8c]/5 p-4">
+        <div
+          className={`rounded-xl border border-[#ec0c8c]/25 bg-[#ec0c8c]/5 p-4 transition-opacity ${
+            dimDrop ? "opacity-40" : ""
+          }`}
+        >
           <div className="flex items-center justify-between">
             <h4 className="text-xs sm:text-sm font-bold text-[var(--dashboard-text)]">
               {t("Acheté en dropshipping", "Purchased via drop-shipping")}

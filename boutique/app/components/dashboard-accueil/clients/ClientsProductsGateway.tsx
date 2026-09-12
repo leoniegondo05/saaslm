@@ -1,11 +1,18 @@
 "use client";
 
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { Tag } from "../shared";
-import { PRODUITS_ENTREE } from "./clientsData";
+import { TypeAchatTag } from "../shared";
+import { PRODUITS_ENTREE, TypeAchat } from "./clientsData";
 
-export default function ClientsProductsGateway() {
+export default function ClientsProductsGateway({ typeAchat }: { typeAchat: TypeAchat }) {
   const { t } = useDashboardLangue();
+
+  // Filtre réel sur le type de produit d'entrée : S = stockage, D = drop.
+  // "les-deux" garde toutes les lignes, comme avant ce toggle.
+  const produits =
+    typeAchat === "les-deux"
+      ? PRODUITS_ENTREE
+      : PRODUITS_ENTREE.filter((item) => item.type === (typeAchat === "stockage" ? "S" : "D"));
 
   return (
     <div className="rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-4 shadow-[0_4px_16px_-4px_rgba(20,18,32,0.1)] transition-colors sm:p-5">
@@ -25,7 +32,7 @@ export default function ClientsProductsGateway() {
             )}
           </p>
         </div>
-        <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+        <TypeAchatTag typeAchat={typeAchat} />
       </div>
 
       {/* Tableau des parcours produits */}
@@ -40,7 +47,7 @@ export default function ClientsProductsGateway() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--dashboard-text)]/5">
-            {PRODUITS_ENTREE.map((item) => {
+            {produits.map((item) => {
               const colorClass =
                 item.tauxRetour >= 20
                   ? "text-[#10b981]"

@@ -1,10 +1,10 @@
 "use client";
 
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { Tag } from "../shared";
-import { COMMUNES_DATA, CANAUX_ACQUISITION } from "./clientsData";
+import { TypeAchatTag } from "../shared";
+import { COMMUNES_DATA, CANAUX_ACQUISITION, TypeAchat } from "./clientsData";
 
-export default function ClientsGeoAndChannels() {
+export default function ClientsGeoAndChannels({ typeAchat }: { typeAchat: TypeAchat }) {
   const { t } = useDashboardLangue();
 
   return (
@@ -24,7 +24,7 @@ export default function ClientsGeoAndChannels() {
                 )}
               </p>
             </div>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <TypeAchatTag typeAchat={typeAchat} />
           </div>
 
           {/* Tableau des communes */}
@@ -92,7 +92,7 @@ export default function ClientsGeoAndChannels() {
                 {t("Attribué par les pixels. Le reste est rangé en organique.", "Tracked through marketing pixels. Non-pixel sales recorded as organic.")}
               </p>
             </div>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <TypeAchatTag typeAchat={typeAchat} />
           </div>
 
           {/* Tableau d'attribution */}

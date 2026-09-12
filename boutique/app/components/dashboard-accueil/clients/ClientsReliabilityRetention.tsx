@@ -2,10 +2,10 @@
 
 import { useId, useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { Tag } from "../shared";
-import { CLIENTS_SURVEILLANCE } from "./clientsData";
+import { TypeAchatTag } from "../shared";
+import { CLIENTS_SURVEILLANCE, TypeAchat } from "./clientsData";
 
-export default function ClientsReliabilityRetention() {
+export default function ClientsReliabilityRetention({ typeAchat }: { typeAchat: TypeAchat }) {
   const { t } = useDashboardLangue();
 
   return (
@@ -125,7 +125,7 @@ export default function ClientsReliabilityRetention() {
                 )}
               </p>
             </div>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <TypeAchatTag typeAchat={typeAchat} />
           </div>
 
           {/* 3 Blocs de taux empilés */}

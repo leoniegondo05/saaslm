@@ -44,7 +44,7 @@ export default function DashboardPage() {
           <DashboardHeader />
 
           {/* ── Salutation ── */}
-          <h1 className="mt-10 text-4xl font-bold leading-[1.15] tracking-tight sm:text-[44px]">
+          <h1 className="mt-10 text-4xl font-semibold leading-[1.15] tracking-tight sm:text-[44px]">
             {t("Bonjour Awa,", "Hello Awa,")}
             <br />
             {t("voici votre ", "here's your ")}
@@ -56,6 +56,8 @@ export default function DashboardPage() {
             {/* Colonne gauche : météo + recommandation + événements à venir */}
             <div className="flex flex-col gap-3">
               <WeatherCard />
+
+              <LocalConditionsCard />
 
               <div className="flex items-center gap-3 rounded-2xl card-tint p-3 pr-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink">
@@ -188,6 +190,7 @@ const LOCAL_CONDITIONS = [
     fr: "Trafic",
     en: "Traffic",
     badgeClass: "bg-[#f5a623] text-white",
+    dotClass: "bg-[#f5a623]",
     rows: [
       {
         fr: "Statut :",
@@ -201,6 +204,7 @@ const LOCAL_CONDITIONS = [
     fr: "Boulvard",
     en: "Boulevard",
     badgeClass: "bg-[#e0442b] text-white",
+    dotClass: "bg-[#e0442b]",
     rows: [
       {
         fr: "Statut :",
@@ -215,6 +219,7 @@ const LOCAL_CONDITIONS = [
     fr: "Douane",
     en: "Customs",
     badgeClass: "bg-[#16a34a] text-white",
+    dotClass: "bg-[#16a34a]",
     rows: [
       {
         fr: "Statut :",
@@ -225,6 +230,10 @@ const LOCAL_CONDITIONS = [
     ],
   },
 ] as const;
+
+// Cadence de rotation automatique des 3 phases dans la pastille compacte
+// "Conditions locales" (colonne gauche du dashboard).
+const LOCAL_CONDITIONS_ROTATION_MS = 3500;
 
 // Abidjan (Côte d'Ivoire) : position par défaut si la géolocalisation
 // navigateur est refusée/indisponible — cohérent avec les communes
@@ -349,15 +358,15 @@ function useLiveWeather(): WeatherState {
 }
 
 /*
-  Carte "Aujourd'hui" (météo) : deux vues qui se remplacent l'une l'autre
-  au clic sur "Conditions locale" / "Météo", comme sur la maquette Figma
-  (2ème card = "Conditions locales" avec trafic/boulevard/douane + retour).
-  Météo branchée en temps réel sur Open-Meteo (position navigateur, ou
-  Abidjan par défaut) — seules les communes exposées restent statiques.
+  Carte "Aujourd'hui" (météo). L'ancien toggle interne vers une 2ème vue
+  "Conditions locales" (grille trafic/boulevard/douane) a été retiré :
+  cette info vit maintenant dans sa propre pastille compacte, cf.
+  LocalConditionsCard ci-dessous. Météo branchée en temps réel sur
+  Open-Meteo (position navigateur, ou Abidjan par défaut) — seules les
+  communes exposées restent statiques.
 */
 function WeatherCard() {
   const { t } = useDashboardLangue();
-  const [view, setView] = useState<"meteo" | "conditions">("meteo");
   const weather = useLiveWeather();
 
   const today =
@@ -369,136 +378,177 @@ function WeatherCard() {
 
   return (
     <div className="rounded-2xl card-tint p-3 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
-      {view === "meteo" ? (
-        <>
-          <div className="flex items-start justify-between">
-            <h2 className="text-base font-semibold">{t("Aujourd'hui", "Today")}</h2>
-            {today && today.emoji === "☀️" ? (
-              <Image
-                src="/images/Météo.png"
-                alt={today.label}
-                width={36}
-                height={36}
-                className="h-9 w-9 object-contain"
-              />
-            ) : (
-              <span
-                className="flex h-9 w-9 items-center justify-center text-2xl leading-none"
-                role="img"
-                aria-label={today?.label ?? t("Météo en cours de chargement", "Weather loading")}
-              >
-                {today?.emoji ?? "…"}
-              </span>
-            )}
-          </div>
-          <p
-            className={`mt-1 text-sm font-semibold ${
-              today?.colorClass ?? "text-[var(--dashboard-text)]/50"
+      <div className="flex items-start justify-between">
+        <h2 className="text-base font-semibold">{t("Aujourd'hui", "Today")}</h2>
+        {today && today.emoji === "☀️" ? (
+          <Image
+            src="/images/Météo.png"
+            alt={today.label}
+            width={36}
+            height={36}
+            className="h-9 w-9 object-contain"
+          />
+        ) : (
+          <span
+            className="flex h-9 w-9 items-center justify-center text-2xl leading-none"
+            role="img"
+            aria-label={today?.label ?? t("Météo en cours de chargement", "Weather loading")}
+          >
+            {today?.emoji ?? "…"}
+          </span>
+        )}
+      </div>
+      <p
+        className={`mt-1 text-sm font-semibold ${
+          today?.colorClass ?? "text-[var(--dashboard-text)]/50"
+        }`}
+      >
+        {weather.status === "error"
+          ? t("Météo indisponible", "Weather unavailable")
+          : (today?.label ?? t("Chargement de la météo…", "Loading weather…"))}
+      </p>
+      <p className="text-xs text-[var(--dashboard-text)]/50">
+        {weather.status === "ready"
+          ? `${t("Toute la journée", "All day")} · ${weather.todayTempMax}°C`
+          : t("Toute la journée", "All day")}
+      </p>
+
+      <div className="my-2 h-px bg-[var(--dashboard-text)]/10" />
+
+      <h3 className="text-sm font-semibold">{t("Demain", "Tomorrow")}</h3>
+      <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/50">
+        {weather.status === "ready" && tomorrow
+          ? `${tomorrow.label} · ${weather.tomorrowTempMax}°C`
+          : weather.status === "error"
+            ? t("Indisponible.", "Unavailable.")
+            : t("Chargement…", "Loading…")}
+      </p>
+
+      <p className="mt-3 text-xs text-[var(--dashboard-text)]/50">{t("Communes exposées", "Exposed areas")}</p>
+      <div className="mt-1.5 flex flex-wrap gap-1.5">
+        {COMMUNES_EXPOSEES.map((commune) => (
+          <span
+            key={commune.label}
+            className={`rounded-full px-3 py-1 text-[11px] font-medium ${
+              commune.variant === "highlight"
+                ? "bg-[#32BD00B0] text-[var(--dashboard-text)]"
+                : "bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/70"
             }`}
           >
-            {weather.status === "error"
-              ? t("Météo indisponible", "Weather unavailable")
-              : (today?.label ?? t("Chargement de la météo…", "Loading weather…"))}
-          </p>
-          <p className="text-xs text-[var(--dashboard-text)]/50">
-            {weather.status === "ready"
-              ? `${t("Toute la journée", "All day")} · ${weather.todayTempMax}°C`
-              : t("Toute la journée", "All day")}
-          </p>
+            {commune.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-          <div className="my-2 h-px bg-[var(--dashboard-text)]/10" />
+/*
+  Pastille compacte "Conditions locales" — même gabarit que la pastille
+  "Recommandation" (icône ronde + libellé + valeur), mais fait défiler les
+  3 phases (Trafic / Boulevard / Douane) toutes les LOCAL_CONDITIONS_ROTATION_MS
+  comme un mini-carrousel. Clic dessus = ouvre LocalConditionsModal avec le
+  détail complet des 3 phases (remplace l'ancienne grille encastrée dans la
+  carte météo, jugée trop chargée).
+*/
+function LocalConditionsCard() {
+  const { t } = useDashboardLangue();
+  const [phaseIndex, setPhaseIndex] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
 
-          <h3 className="text-sm font-semibold">{t("Demain", "Tomorrow")}</h3>
-          <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/50">
-            {weather.status === "ready" && tomorrow
-              ? `${tomorrow.label} · ${weather.tomorrowTempMax}°C`
-              : weather.status === "error"
-                ? t("Indisponible.", "Unavailable.")
-                : t("Chargement…", "Loading…")}
-          </p>
+  useEffect(() => {
+    const id = setInterval(() => {
+      setPhaseIndex((i) => (i + 1) % LOCAL_CONDITIONS.length);
+    }, LOCAL_CONDITIONS_ROTATION_MS);
+    return () => clearInterval(id);
+  }, []);
 
-          <p className="mt-3 text-xs text-[var(--dashboard-text)]/50">{t("Communes exposées", "Exposed areas")}</p>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {COMMUNES_EXPOSEES.map((commune) => (
-              <span
-                key={commune.label}
-                className={`rounded-full px-3 py-1 text-[11px] font-medium ${
-                  commune.variant === "highlight"
-                    ? "bg-[#32BD00B0] text-[var(--dashboard-text)]"
-                    : "bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/70"
-                }`}
-              >
-                {commune.label}
-              </span>
-            ))}
-          </div>
+  const phase = LOCAL_CONDITIONS[phaseIndex];
+  const headline = phase.rows[0];
 
-          <div className="mt-3 flex items-center justify-between">
-            <PaginationDots activeIndex={0} />
-            <button
-              type="button"
-              onClick={() => setView("conditions")}
-              className="flex items-center gap-2 text-xs font-semibold"
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setModalOpen(true)}
+        className="flex w-full items-center gap-3 rounded-2xl card-tint p-3 pr-4 text-left shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]"
+        aria-haspopup="dialog"
+      >
+        <span
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${phase.badgeClass}`}
+        >
+          {t(phase.fr, phase.en).slice(0, 1)}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center justify-between">
+            <span className="text-xs text-[var(--dashboard-text)]/50">
+              {t("Conditions locales", "Local conditions")}
+            </span>
+            <CarouselDots count={LOCAL_CONDITIONS.length} activeIndex={phaseIndex} />
+          </span>
+          <span className="block truncate text-sm font-semibold">
+            {t(phase.fr, phase.en)} · {t(headline.valueFr, headline.valueEn)}
+          </span>
+        </span>
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--dashboard-text)]/[0.06]">
+          <ChevronIcon direction="right" />
+        </span>
+      </button>
+
+      <LocalConditionsModal open={modalOpen} onClose={() => setModalOpen(false)} />
+    </>
+  );
+}
+
+// Détail complet des 3 phases, ouvert au clic sur LocalConditionsCard.
+function LocalConditionsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useDashboardLangue();
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("Conditions locales", "Local conditions")}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-3xl card-tint p-5 shadow-[0_20px_50px_-15px_rgba(20,18,32,0.35)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold">{t("Conditions locales", "Local conditions")}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("Fermer", "Close")}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--dashboard-text)]/[0.06]"
+          >
+            <CloseIcon />
+          </button>
+        </div>
+
+        <div className="mt-4 flex flex-col gap-2.5">
+          {LOCAL_CONDITIONS.map((condition) => (
+            <div
+              key={condition.fr}
+              className="flex gap-3 rounded-2xl bg-[var(--dashboard-card-bg)] p-3 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.12)]"
             >
-              {t("Conditions locale", "Local conditions")}
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--dashboard-text)]/[0.06]">
-                <ChevronIcon direction="right" />
-              </span>
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          <h2 className="text-center text-base font-bold">{t("Conditions locales", "Local conditions")}</h2>
-
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            {LOCAL_CONDITIONS.map((condition) => (
-              <div
-                key={condition.fr}
-                className="flex flex-col gap-2 rounded-2xl border border-[var(--dashboard-text)]/[0.06] bg-[var(--dashboard-card-bg)] p-2 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]"
-              >
-                <span
-                  className={`inline-block rounded-full px-2.5 py-1 text-center text-[11px] font-semibold ${condition.badgeClass}`}
-                >
-                  {t(condition.fr, condition.en)}
-                </span>
+              <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${condition.dotClass}`} aria-hidden />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">{t(condition.fr, condition.en)}</p>
                 {condition.rows.map((row) => (
-                  <div key={row.fr}>
-                    <p className="text-[11px] font-medium text-[var(--dashboard-text)]/70">
-                      {t(row.fr, row.en)}
-                    </p>
-                    <p className="mt-1 rounded-lg bg-[var(--dashboard-text)]/[0.05] px-2 py-1.5 text-[11px] leading-snug text-[var(--dashboard-text)]/60">
-                      {t(row.valueFr, row.valueEn)}
-                    </p>
-                  </div>
+                  <p key={row.fr} className="mt-1 text-xs leading-snug text-[var(--dashboard-text)]/60">
+                    <span className="text-[var(--dashboard-text)]/40">{t(row.fr, row.en)}</span>{" "}
+                    {t(row.valueFr, row.valueEn)}
+                  </p>
                 ))}
               </div>
-            ))}
-          </div>
-
-          <div className="mt-3 flex justify-center">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--dashboard-card-bg)] shadow-[0_2px_10px_rgba(20,18,32,0.12)]">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#141220] text-white dark:bg-brand-pink">
-                <UserIcon />
-              </span>
-            </span>
-          </div>
-
-          <div className="mt-3 flex items-center justify-between">
-            <PaginationDots activeIndex={1} />
-            <button
-              type="button"
-              onClick={() => setView("meteo")}
-              className="flex items-center gap-2 text-xs font-semibold"
-            >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--dashboard-card-bg)] shadow-[0_2px_10px_rgba(20,18,32,0.1)]">
-                <ChevronIcon direction="left" />
-              </span>
-              {t("Météo", "Weather")}
-            </button>
-          </div>
-        </>
-      )}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -571,19 +621,17 @@ function EventsCard() {
   );
 }
 
-function PaginationDots({ activeIndex }: { activeIndex: 0 | 1 }) {
+function CarouselDots({ count, activeIndex }: { count: number; activeIndex: number }) {
   return (
-    <div className="flex items-center gap-1.5" aria-hidden>
-      <span
-        className={`h-1.5 w-1.5 rounded-full ${
-          activeIndex === 0 ? "bg-[var(--dashboard-text)]" : "bg-[var(--dashboard-text)]/20"
-        }`}
-      />
-      <span
-        className={`h-1.5 w-1.5 rounded-full ${
-          activeIndex === 1 ? "bg-[var(--dashboard-text)]" : "bg-[var(--dashboard-text)]/20"
-        }`}
-      />
+    <div className="flex items-center gap-1" aria-hidden>
+      {Array.from({ length: count }).map((_, i) => (
+        <span
+          key={i}
+          className={`h-1.5 w-1.5 rounded-full transition-colors ${
+            i === activeIndex ? "bg-[var(--dashboard-text)]" : "bg-[var(--dashboard-text)]/20"
+          }`}
+        />
+      ))}
     </div>
   );
 }
@@ -646,14 +694,13 @@ function ClockIcon() {
   );
 }
 
-function UserIcon() {
+function CloseIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
-      <circle cx="12" cy="8.5" r="3.5" stroke="currentColor" strokeWidth="1.6" />
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
       <path
-        d="M5 20c1.2-3.5 4-5.5 7-5.5s5.8 2 7 5.5"
+        d="M6 6l12 12M18 6L6 18"
         stroke="currentColor"
-        strokeWidth="1.6"
+        strokeWidth="1.8"
         strokeLinecap="round"
       />
     </svg>

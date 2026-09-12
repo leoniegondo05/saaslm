@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { Tag } from "../shared";
-import { SEGMENTS_RF } from "./clientsData";
+import { TypeAchatTag } from "../shared";
+import { SEGMENTS_RF, TypeAchat } from "./clientsData";
 
-export default function ClientsRfMatrix() {
+export default function ClientsRfMatrix({ typeAchat }: { typeAchat: TypeAchat }) {
   const { t } = useDashboardLangue();
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(null);
 
@@ -24,7 +24,7 @@ export default function ClientsRfMatrix() {
             )}
           </p>
         </div>
-        <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+        <TypeAchatTag typeAchat={typeAchat} />
       </div>
 
       {/* Matrice à 4 quadrants Récence x Fréquence */}

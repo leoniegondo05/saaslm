@@ -4,17 +4,20 @@ import { setToken, clearToken } from "../token";
 
 /*
   Service d'authentification. Adapte les noms de champs (name, email,
-  phone, shop_name, shop_slug, password, password_confirmation…) sur les
-  vraies validations Laravel dès qu'elles seront connues — le reste
-  (client, hook, composants) n'a pas à bouger.
+  phone, password, password_confirmation…) sur les vraies validations
+  Laravel dès qu'elles seront connues — le reste (client, hook,
+  composants) n'a pas à bouger.
+
+  Plus de shop_name/shop_slug ici (demande utilisateur) : nom et lien de
+  la boutique sont désormais recueillis dans CompleterProfilWizard.tsx
+  (step 10), après l'inscription — voir son commentaire d'en-tête pour le
+  détail du payload à brancher côté API le jour venu.
 */
 
 export interface RegisterPayload {
   name: string;
   email: string;
   phone: string;
-  shop_name: string;
-  shop_slug: string;
   password: string;
   password_confirmation: string;
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { Tag } from "../shared";
+import { TypeAchatTag } from "../shared";
+import { TypeAchat } from "./clientsData";
 
-export default function ClientsPaymentImpact() {
+export default function ClientsPaymentImpact({ typeAchat }: { typeAchat: TypeAchat }) {
   const { t } = useDashboardLangue();
 
   return (
@@ -21,7 +22,7 @@ export default function ClientsPaymentImpact() {
             )}
           </p>
         </div>
-        <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+        <TypeAchatTag typeAchat={typeAchat} />
       </div>
 
       {/* Barres de répartition */}
