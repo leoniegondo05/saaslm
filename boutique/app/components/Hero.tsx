@@ -25,7 +25,7 @@ export default function Hero() {
           <span className="hero-cta inline-block rounded-2xl bg-[linear-gradient(90deg,var(--color-brand-pink),var(--color-brand-purple))] p-px lg:ml-25 ml-15">
             <Link
               href="/login"
-              className="flex items-center gap-2 rounded-[14px] bg-[#0a0e1c] px-[18px] py-4 text-sm font-semibold text-brand-white no-underline transition hover:opacity-90"
+              className="flex items-center gap-2 rounded-[14px] bg-[#0a0e1c] px-[18px] py-3 text-sm font-semibold text-brand-white no-underline transition hover:opacity-90"
             >
               commencer maintenant
               <span className="flex text-brand-white opacity-85">

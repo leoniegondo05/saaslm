@@ -181,12 +181,15 @@ export default function Features() {
             stroke="#4C8B4A"
             strokeWidth="2.4"
           />
-          {/* x/y par défaut = point de départ de la courbe 1 (M170,208,
-              recentré de -13/-7 comme l'offset utilisé par animateMotion) —
-              pas (-13,-7) brut : sinon, tant que le délai de départ (voir
-              begin) n'est pas écoulé, le billet reste visible planté dans
-              le coin en haut à gauche du SVG au lieu d'attendre sur la
-              courbe. */}
+          {/* x="-13" y="-7" (≈ -width/2, -height/2) n'est PAS une position
+              absolue : animateMotion ADDITIONNE la coordonnée courante du
+              chemin à ce x/y — c'est ce qui centre le billet sur le point
+              du tracé (au lieu d'y placer son coin haut-gauche). Y mettre
+              une position absolue casse le centrage une fois l'animation
+              lancée. Le fondu d'apparition (.feat-billet en CSS) applique
+              le même transition-delay à tous les billets ; on le
+              surcharge ici par billet en ligne pour le faire coïncider
+              avec le "begin" propre à chacun. */}
           <g color="rgba(250,247,252,.6)">
             {[0, 1.5, 2.9].map((begin, i) => (
               <use
@@ -195,8 +198,9 @@ export default function Features() {
                 href="#billet"
                 width="26"
                 height="14"
-                x="157"
-                y="201"
+                x="-13"
+                y="-7"
+                style={{ transitionDelay: `${begin + 1.4}s` }}
               >
                 <animateMotion dur="4.4s" repeatCount="indefinite" begin={`${begin + 1.4}s`}>
                   <mpath href="#flux-1" />
@@ -241,8 +245,9 @@ export default function Features() {
             stroke="#4C8B4A"
             strokeWidth="2.4"
           />
-          {/* x/y par défaut = point de départ de la courbe 2 (M170,498,
-              même raisonnement que la courbe 1 ci-dessus). */}
+          {/* Même raisonnement que la courbe 1 : x/y = petit décalage de
+              centrage (-13,-7), et le transition-delay est surchargé en
+              ligne par billet pour coïncider avec son "begin". */}
           <g color="rgba(250,247,252,.6)">
             {[0.7, 2.2, 3.6].map((begin, i) => (
               <use
@@ -251,8 +256,9 @@ export default function Features() {
                 href="#billet"
                 width="26"
                 height="14"
-                x="157"
-                y="491"
+                x="-13"
+                y="-7"
+                style={{ transitionDelay: `${begin + 1.4}s` }}
               >
                 <animateMotion dur="4.4s" repeatCount="indefinite" begin={`${begin + 1.4}s`}>
                   <mpath href="#flux-2" />
@@ -263,7 +269,7 @@ export default function Features() {
         </svg>
 
         {/* ==================== TÉLÉPHONE ==================== */}
-        <div className="telephone feat-phone">
+        <div className="telephone feat-phone" style={{ height: "60%" }}>
           <div className="ecran">
             <div className="encoche" />
 
@@ -294,7 +300,7 @@ export default function Features() {
                 </div>
                 <h4>Votre commande<br />a bien été effectuée</h4>
                 <p>Cliquez sur le lien pour<br />suivre votre commande</p>
-                <div className="lien-suivi">
+                <div className="lien-suivi" style={{ fontSize: 8, fontWeight: 500, color: "#FAF7FC" }}>
                   track.liivremoi.com/CMD-2034-YOP
                   <svg width="10" height="10" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                     <path d="M5 9l4-4M6 3h5v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -323,7 +329,7 @@ export default function Features() {
             </div>
 
             {/* Indicateurs (petits points cliquables) */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {/* <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
               {Array.from({ length: NB_VUES }).map((_, i) => (
                 <button
                   key={i}
@@ -337,7 +343,7 @@ export default function Features() {
                   }`}
                 />
               ))}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

@@ -105,8 +105,12 @@ export default function Navbar() {
         <div className="flex flex-col gap-2.5 lg:hidden">
           {/* Ligne 1 : logo + burger */}
           <div className="flex items-center justify-between gap-2">
-            <div className="navbar-fade shrink-0 w-8 h-8 rounded-[10px] flex items-center justify-center">
-              <img src="/favicon.svg" alt="logo" className="w-10 h-10" />
+            {/* max-w-none : sans ça, le reset Tailwind (img{max-width:100%})
+                écrase la largeur voulue (w-11) par celle, plus petite, du
+                conteneur parent — c'est ce qui rendait le logo plus petit
+                que prévu. */}
+            <div className="navbar-fade shrink-0 w-15 h-15 rounded-[10px] flex items-center justify-center">
+              <img src="/favicon.svg" alt="logo" className="w-15 h-15 max-w-none" />
             </div>
 
             <button
@@ -124,35 +128,50 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* Ligne 2 : pastille centrée */}
-          <div className="flex items-center justify-center gap-2 min-w-0">
+          {/* Ligne 2 : pastille centrée — sur sa propre ligne, indépendante
+              du titre de section (voir ci-dessous), pour qu'elle reste
+              visuellement centrée même quand un titre apparaît : les deux
+              partageaient auparavant un seul justify-content:center, donc
+              c'est le GROUPE (pastille + titre) qui se centrait, pas la
+              pastille elle-même, qui se retrouvait décalée à gauche dès
+              qu'un titre de section s'affichait à côté. */}
+          <div className="flex items-center justify-center">
             <div className={pillClasses("gap-1.5 px-2.5 py-1.5 text-[11px]")}>
               <i className={dotClasses("w-2 h-2")} />
               <span className="nav-pill-text">La solution LM</span>
             </div>
-
-            {actif && (
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="nav-trait w-px h-5 bg-brand-white/45 rotate-20 origin-center shrink-0" />
-                <div className="nav-suite max-w-[140px] min-w-0">
-                  <b className="block text-[11px] font-semibold leading-tight truncate">
-                    {titre}
-                  </b>
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Ligne 3 : titre de section, centré lui aussi, sous la pastille */}
+          {actif && (
+            <div className="flex items-center justify-center gap-2 min-w-0">
+              <div className="nav-trait w-px h-5 bg-brand-white/45 rotate-20 origin-center shrink-0" />
+              <div className="nav-suite max-w-[220px] min-w-0">
+                <b className="block text-[11px] font-semibold leading-tight truncate text-center">
+                  {titre}
+                </b>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ============================================================
             DESKTOP
             ============================================================ */}
-        <div className="hidden lg:flex items-start justify-between">
-          <div className="navbar-fade w-10.5 h-10.5 flex items-center justify-center">
-            <img src="/favicon.svg" alt="logo" className="w-6 h-6" />
+        {/* grid 1fr/auto/1fr plutôt que flex+justify-between : avec
+            justify-between, la pastille (élément du milieu) ne se centre
+            que si le logo et les liens de droite font exactement la même
+            largeur — comme les liens sont bien plus larges que le logo,
+            l'espace se répartissait à parts égales et poussait toute la
+            pastille vers la gauche. Deux colonnes 1fr identiques de chaque
+            côté garantissent que la colonne du milieu reste au centre réel
+            de la barre, quelle que soit la largeur du logo ou des liens. */}
+        <div className="hidden lg:grid grid-cols-[1fr_auto_1fr] items-start">
+          <div className="navbar-fade w-13 h-13 flex items-center justify-center justify-self-start">
+            <img src="/favicon.svg" alt="logo" className="w-10 h-10 max-w-none" />
           </div>
 
-          <div className="flex items-center gap-4 pt-1">
+          <div className="flex items-center gap-4 pt-1 justify-self-center">
             <div className={pillClasses("gap-2.5 px-5 py-2.25 text-sm")}>
               <i className={dotClasses("w-2.5 h-2.5")} />
               <span className="nav-pill-text">La solution LM</span>
@@ -166,7 +185,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          <nav className="navbar-fade pointer-events-auto flex items-center gap-3 text-[14.5px] pt-2.25">
+          <nav className="navbar-fade pointer-events-auto flex items-center gap-3 text-[14.5px] pt-2.25 justify-self-end">
             <a
               href="/vision"
               className="pointer-events-auto text-brand-white no-underline opacity-90 hover:opacity-100 hover:text-brand-pink-light cursor-pointer"

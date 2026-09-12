@@ -28,6 +28,8 @@
 body {
   background: var(--color-brand-bg);
   color: var(--color-brand-white);
+  margin: 0;
+  padding: 0;
 }
 
 /*
@@ -676,11 +678,19 @@ html.dark {
 .titre-carte { text-align: center; margin-bottom: 56px; }
 
 /* Emplacements image dans Hero / CTA */
-.visuel-hero { aspect-ratio: 1/.92; min-height: 380px; }
+.visuel-hero { width: 100%; aspect-ratio: 1/.92; min-height: 380px; }
 .visuel-cta { aspect-ratio: 1/1.05; min-height: 400px; }
 
 @media (max-width: 1080px) {
   .piste-vague { height: 340vh; }
+  /* Sur mobile, le contenu (SVG + texte) est bien plus petit que la scène
+     pinned de 100vh (le SVG suit le ratio large/plat 1440x620, donc très
+     court une fois réduit à la largeur d'un téléphone) : centré avec
+     justify-content:center, ça laissait une bande vide énorme au-dessus
+     (et en dessous), qui donne l'impression que la section est cassée/vide
+     au premier coup d'œil pendant le scroll. On colle le contenu en haut
+     à la place, juste sous la nav, comme le reste des sections. */
+  .cadre-vague { justify-content: flex-start; padding-top: 128px; }
 }
 
 
