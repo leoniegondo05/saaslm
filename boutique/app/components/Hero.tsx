@@ -41,7 +41,7 @@ export default function Hero() {
               </span>
             </Link>
           </span>
-          <small className="hero-mention block mt-3.25 pl-1.5 text-[13.5px] text-brand-white/50 lg:ml-40 ml-15">
+          <small className="hero-mention block mt-3.25 pl-1.5 text-[13.5px] text-brand-white/50 lg:ml-40 ml-25">
             Sans s&apos;engager
           </small>
         </div>

@@ -239,33 +239,36 @@ export default function PartenaireAgreeLanding() {
                 des e-commerçants à servir.
               </p>
 
-              <div className={styles.champ}>
-                <input
-                  type="email"
-                  id="email-heros"
-                  placeholder="Votre adresse email"
-                  aria-label="Votre adresse email"
-                  value={emailHeros}
-                  onChange={(event) => setEmailHeros(event.target.value)}
-                  onKeyDown={handleHerosKeyDown}
-                />
-                <button type="button" onClick={ouvrir}>
-                  Commencer maintenant
-                  <svg width="7" height="11" viewBox="0 0 7 11" fill="none" aria-hidden="true">
-                    <path
-                      d="M1 1l4.5 4.5L1 10"
-                      stroke="currentColor"
-                      strokeWidth="1.7"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
+              <div className="mt-25">
+                <div className={styles.champ}>
+                  <input
+                    type="email"
+                    id="email-heros"
+                    placeholder="Votre adresse email"
+                    aria-label="Votre adresse email"
+                    value={emailHeros}
+                    onChange={(event) => setEmailHeros(event.target.value)}
+                    onKeyDown={handleHerosKeyDown}
+                  />
+                  <button type="button" onClick={ouvrir}>
+                    Commencer maintenant
+                    <svg width="7" height="11" viewBox="0 0 7 11" fill="none" aria-hidden="true">
+                      <path
+                        d="M1 1l4.5 4.5L1 10"
+                        stroke="currentColor"
+                        strokeWidth="1.7"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <p className={styles.sousChamp}>
+                  Sans engagement. Votre dossier est examiné par LM avant l&apos;ouverture de votre
+                  espace.
+                </p>
               </div>
-              <p className={styles.sousChamp}>
-                Sans engagement. Votre dossier est examiné par LM avant l&apos;ouverture de votre
-                espace.
-              </p>
+
             </div>
 
             {/* maquettes : tableau de bord de l'entreprise agréée */}
