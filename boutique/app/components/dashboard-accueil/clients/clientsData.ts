@@ -10,6 +10,9 @@ export interface KpiItem {
   evolutionColor?: string;
   sousLabelFr?: string;
   sousLabelEn?: string;
+  /** Valeur de la période précédente — bouton "Comparer à la période
+   *  précédente" de ClientsSection.tsx. Mock en attendant l'API Laravel. */
+  prevValeur?: string;
 }
 
 export interface RfSegment {
@@ -119,6 +122,7 @@ export const KPIS_CLIENTS: KpiItem[] = [
     evolutionFr: "+99 sur la période",
     evolutionEn: "+99 over the period",
     evolutionColor: "text-[#10b981]",
+    prevValeur: "288",
   },
   {
     id: "actifs",
@@ -128,6 +132,7 @@ export const KPIS_CLIENTS: KpiItem[] = [
     sousLabelFr: "achat de moins de 90 jours",
     sousLabelEn: "purchased within 90 days",
     evolutionColor: "text-[#10b981]",
+    prevValeur: "176",
   },
   {
     id: "valeur-client",
@@ -136,6 +141,7 @@ export const KPIS_CLIENTS: KpiItem[] = [
     valeur: "27 100F",
     sousLabelFr: "sur toute sa vie",
     sousLabelEn: "over their full lifetime",
+    prevValeur: "25 400F",
   },
   {
     id: "cout-acquisition",
@@ -145,6 +151,7 @@ export const KPIS_CLIENTS: KpiItem[] = [
     evolutionFr: "rapport de 7,8 pour 1",
     evolutionEn: "7.8 to 1 ratio",
     evolutionColor: "text-[#10b981]",
+    prevValeur: "3 800F",
   },
   {
     id: "reviennent",
@@ -154,6 +161,7 @@ export const KPIS_CLIENTS: KpiItem[] = [
     sousLabelFr: "réseau : 24 %",
     sousLabelEn: "network benchmark: 24%",
     evolutionColor: "text-[#f59e0b]",
+    prevValeur: "16,5 %",
   },
   {
     id: "a-relancer",
@@ -163,6 +171,7 @@ export const KPIS_CLIENTS: KpiItem[] = [
     sousLabelFr: "dormants récupérables",
     sousLabelEn: "recoverable dormant customers",
     evolutionColor: "text-[#f59e0b]",
+    prevValeur: "118",
   },
 ];
 

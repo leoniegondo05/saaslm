@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import PaymentMethodCard from "../PaymentMethodCard";
-import { AreaChart, Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, LegendRow, MiniStat, Nature, SectionHeader, StatRow, Tag, WaterfallChart } from "./shared";
+import { AreaChart, Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, LegendRow, MiniStat, Nature, openBrandedReport, SectionHeader, StatRow, Tag, WaterfallChart } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -108,6 +109,30 @@ function CompareRow({ label, value, pct, color, strong = false }: { label: strin
 export default function FinancesSection({ first = true }: { first?: boolean }) {
   const { t } = useDashboardLangue();
 
+  // "Comparer à la période précédente" : révèle la valeur de la période
+  // précédente sous les 4 chiffres de trésorerie, mock en attendant l'API
+  // Laravel (cf. [[dashboard-mock-data-pending-laravel-api]]).
+  const [compare, setCompare] = useState(false);
+
+  // Délai de suspension fixé par le vendeur — mock local en attendant l'API
+  // Laravel (pas encore de persistance côté serveur pour ce réglage).
+  const [holdHours, setHoldHours] = useState(72);
+  const [editingHold, setEditingHold] = useState(false);
+  const [draftHold, setDraftHold] = useState(String(holdHours));
+  const draftHoldNum = Number(draftHold);
+  const draftHoldInvalid = !Number.isFinite(draftHoldNum) || draftHoldNum < 24;
+
+  function openHoldEditor() {
+    setDraftHold(String(holdHours));
+    setEditingHold(true);
+  }
+
+  function saveHold() {
+    if (draftHoldInvalid) return;
+    setHoldHours(Math.round(draftHoldNum));
+    setEditingHold(false);
+  }
+
   // 30 jours de solde disponible (cf. graphe "évolution de la trésorerie") :
   // deux paliers de fin de suspension groupée (bonds), comme sur le modèle envoyé.
   const cashDays = [42, 44, 46, 48, 51, 53, 56, 59, 62, 65, 69, 72, 76, 25, 28, 31, 34, 37, 41, 45, 49, 53, 57, 61, 65, 26, 30, 34, 38, 41];
@@ -133,17 +158,51 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         <div className="mt-3 rounded-2xl p-4" style={{ background: "var(--dashboard-surface-2)" }}>
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold">{t("Votre délai de suspension : 72 h", "Your hold period: 72 h")}</p>
+              <p className="text-xs font-semibold">{t(`Votre délai de suspension : ${holdHours} h`, `Your hold period: ${holdHours} h`)}</p>
               <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
                 {t("C'est vous qui le fixez, jamais moins de 24 h. Passé ce délai, votre part devient disponible sans démarche.", "You set it, never under 24 h. Once it's over, your share becomes available with no action needed.")}
               </p>
             </div>
-            <span className="inline-flex shrink-0 rounded-md p-px" style={{ backgroundImage: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 58.35%, #FFFFFF 100%)" }}>
-              <button type="button" className="rounded-[5px] bg-[var(--dashboard-card-bg)] px-2.5 py-1.5 text-[9px] font-semibold">
-                {t("Changer le délai", "Change the hold period")}
-              </button>
-            </span>
+            {!editingHold && (
+              <span className="inline-flex shrink-0 rounded-md p-px" style={{ backgroundImage: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 58.35%, #FFFFFF 100%)" }}>
+                <button type="button" onClick={openHoldEditor} className="rounded-[5px] bg-[var(--dashboard-card-bg)] px-2.5 py-1.5 text-[9px] font-semibold">
+                  {t("Changer le délai", "Change the hold period")}
+                </button>
+              </span>
+            )}
           </div>
+          {editingHold && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[var(--dashboard-text)]/10 pt-3">
+              <label className="flex items-center gap-1.5 text-[10px] text-[var(--dashboard-text)]/60">
+                {t("Nouveau délai (heures)", "New hold period (hours)")}
+                <input
+                  type="number"
+                  min={24}
+                  value={draftHold}
+                  onChange={(e) => setDraftHold(e.target.value)}
+                  className="w-16 rounded-md border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-card-bg)] px-2 py-1 text-xs font-semibold text-[var(--dashboard-text)]"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={saveHold}
+                disabled={draftHoldInvalid}
+                className="rounded-[5px] bg-brand-pink px-2.5 py-1.5 text-[9px] font-semibold text-white disabled:opacity-40"
+              >
+                {t("Enregistrer", "Save")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditingHold(false)}
+                className="rounded-[5px] border border-[var(--dashboard-text)]/15 px-2.5 py-1.5 text-[9px] font-semibold"
+              >
+                {t("Annuler", "Cancel")}
+              </button>
+              {draftHoldInvalid && (
+                <span className="w-full text-[9px] text-[#FF7A80]">{t("Jamais moins de 24 h.", "Never under 24 h.")}</span>
+              )}
+            </div>
+          )}
         </div>
       </Card>
   );
@@ -178,10 +237,10 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         </div>
         <Divider />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <MiniStat label={t("Point le plus bas", "Lowest point")} value="318 000 F" />
-          <MiniStat label={t("Point le plus haut", "Highest point")} value="861 000 F" />
-          <MiniStat label={t("Solde moyen", "Average balance")} value="601 400 F" />
-          <MiniStat label={t("Variation", "Change")} value="+87 %" tone="pink" />
+          <MiniStat label={t("Point le plus bas", "Lowest point")} value="318 000 F" previous={compare ? "275 000 F" : undefined} previousLabel={t("Période précédente", "Previous period")} />
+          <MiniStat label={t("Point le plus haut", "Highest point")} value="861 000 F" previous={compare ? "790 000 F" : undefined} previousLabel={t("Période précédente", "Previous period")} />
+          <MiniStat label={t("Solde moyen", "Average balance")} value="601 400 F" previous={compare ? "545 000 F" : undefined} previousLabel={t("Période précédente", "Previous period")} />
+          <MiniStat label={t("Variation", "Change")} value="+87 %" tone="pink" previous={compare ? "+52 %" : undefined} previousLabel={t("Variation précédente", "Previous change")} />
         </div>
         <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
           {t(
@@ -625,6 +684,49 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
   // 6) produits, 7) argent immobilisé, 8) projection — tout en pleine
   // largeur sauf les deux rangées à deux colonnes explicitement notées
   // "côte à côte" dans le document.
+  // "Exporter" : solde du sous-compte, indicateurs de trésorerie et
+  // compte de résultat de la période (cascade du WaterfallChart ci-dessus).
+  const [exportDone, setExportDone] = useState(false);
+  function handleExport() {
+    openBrandedReport(t("Finances", "Finances"), t("Où va votre argent", "Where your money goes"), [
+      {
+        heading: t("Solde du sous-compte", "Sub-account balance"),
+        rows: [
+          [t("Solde total", "Total balance"), "1 482 300 F"],
+          [t("Disponible tout de suite", "Available right away"), "1 022 800 F"],
+          [t("Suspendu · délai de litige", "On hold · dispute window"), "459 500 F"],
+        ],
+      },
+      {
+        heading: t("Trésorerie", "Cash flow"),
+        rows: [
+          [t("Point le plus bas", "Lowest point"), "318 000 F"],
+          [t("Point le plus haut", "Highest point"), "861 000 F"],
+          [t("Solde moyen", "Average balance"), "601 400 F"],
+          [t("Variation", "Change"), "+87 %"],
+        ],
+      },
+      {
+        heading: t("Compte de résultat de la période", "P&L for the period"),
+        columns: [t("Poste", "Item"), t("Montant", "Amount")],
+        rows: [
+          [t("Encaissé des clients", "Collected from clients"), "2 316 400 F"],
+          [t("Prix produit partenaire", "Partner product price"), "− 1 062 000 F"],
+          [t("Frais logistiques", "Logistics fees"), "− 178 500 F"],
+          [t("Frais de transaction", "Transaction fees"), "− 34 700 F"],
+          [t("Garantie produit", "Product warranty"), "− 12 400 F"],
+          [t("Coût des refus", "Cost of refusals"), "− 31 000 F"],
+          [t("Publicité", "Advertising"), "− 412 000 F"],
+          [t("Commission LM", "LM commission"), "− 57 900 F"],
+          [t("Abonnement", "Subscription"), "− 25 000 F"],
+          [t("Résultat net", "Net result"), "502 900 F"],
+        ],
+      },
+    ]);
+    setExportDone(true);
+    setTimeout(() => setExportDone(false), 2500);
+  }
+
   return (
     <>
       <SectionHeader
@@ -635,8 +737,10 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         layout="inline"
         actions={
           <>
-            <HeaderActionBtn>{t("Exporter", "Export")}</HeaderActionBtn>
-            <HeaderActionBtn>{t("Comparer à la période précédente", "Compare to previous period")}</HeaderActionBtn>
+            <HeaderActionBtn onClick={handleExport}>{exportDone ? t("Exporté", "Exported") : t("Exporter", "Export")}</HeaderActionBtn>
+            <HeaderActionBtn onClick={() => setCompare((c) => !c)}>
+              {compare ? t("Revenir à la période actuelle", "Back to current period") : t("Comparer à la période précédente", "Compare to previous period")}
+            </HeaderActionBtn>
           </>
         }
       />

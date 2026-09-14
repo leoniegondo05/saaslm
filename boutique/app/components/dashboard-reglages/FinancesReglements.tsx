@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card, SectionHeader, Tag } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
+import ChangerCarteModal, { type Carte } from "./ChangerCarteModal";
 
 /*
   Écran 27 "Réglages · finances et règlements" : devise, portefeuilles par
@@ -11,6 +12,12 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
   payer (la carte) n'ont rien à voir, la fiche les sépare nettement,
   comme la fiche de référence. Champs statiques pour l'instant, cf.
   mémoire [[dashboard-mock-data-pending-laravel-api]].
+
+  Un seul emplacement de carte existe dans ce mock (pas de liste multi-
+  cartes) : "Changer" et "Enregistrer une autre carte" ouvrent donc le
+  même ChangerCarteModal et remplacent tous deux la carte active. Le jour
+  où plusieurs cartes coexistent, "Enregistrer une autre" devra en ajouter
+  une à une liste plutôt que remplacer.
 */
 
 type Devise = "cfa" | "eur" | "usd";
@@ -38,6 +45,8 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
   const [emettreRecu, setEmettreRecu] = useState(true);
   const [exportMensuel, setExportMensuel] = useState(true);
   const [enregistre, setEnregistre] = useState(false);
+  const [carte, setCarte] = useState<Carte>({ marque: "Visa", derniers4: "4417" });
+  const [modalCarteOuvert, setModalCarteOuvert] = useState(false);
 
   const enregistrer = () => {
     setEnregistre(true);
@@ -127,7 +136,7 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
               <CardIcon />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-[var(--dashboard-text)]">Visa •••• 4417</p>
+              <p className="text-xs font-bold text-[var(--dashboard-text)]">{carte.marque} •••• {carte.derniers4}</p>
               <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/50">{t("Prélevée le 14 de chaque mois", "Charged on the 14th of each month")}</p>
             </div>
             <Tag tone="ok" className="shrink-0">
@@ -135,6 +144,7 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
             </Tag>
             <button
               type="button"
+              onClick={() => setModalCarteOuvert(true)}
               className="shrink-0 rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[11px] font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
             >
               {t("Changer", "Change")}
@@ -142,6 +152,7 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
           </div>
           <button
             type="button"
+            onClick={() => setModalCarteOuvert(true)}
             className="mt-3 w-full rounded-full border border-[var(--dashboard-text)]/15 px-4 py-2.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
           >
             {t("Enregistrer une autre carte Visa ou Mastercard", "Add another Visa or Mastercard")}
@@ -191,6 +202,17 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
           </div>
         </Card>
       </div>
+
+      {modalCarteOuvert && (
+        <ChangerCarteModal
+          onFermer={() => setModalCarteOuvert(false)}
+          onEnregistrer={(nouvelleCarte) => {
+            setCarte(nouvelleCarte);
+            setModalCarteOuvert(false);
+            enregistrer();
+          }}
+        />
+      )}
     </>
   );
 }

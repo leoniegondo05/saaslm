@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, SectionHeader, StatRow, Tag } from "./shared";
+import { Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, openBrandedReport, SectionHeader, StatRow, Tag } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -68,7 +68,8 @@ function Ring({
   );
 }
 
-function KpiCard({ label, value, valueColor, note, noteColor }: { label: string; value: string; valueColor?: string; note: string; noteColor?: string }) {
+function KpiCard({ label, value, valueColor, note, noteColor, previous }: { label: string; value: string; valueColor?: string; note: string; noteColor?: string; previous?: string }) {
+  const { t } = useDashboardLangue();
   return (
     <Card className="!bg-[var(--dashboard-glass)]">
       <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
@@ -78,6 +79,11 @@ function KpiCard({ label, value, valueColor, note, noteColor }: { label: string;
       <p className="mt-1 text-[10px]" style={noteColor ? { color: noteColor } : undefined}>
         <span className={noteColor ? "" : "text-[var(--dashboard-text)]/40"}>{note}</span>
       </p>
+      {previous && (
+        <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">
+          {t("Période précédente", "Previous period")} : {previous}
+        </p>
+      )}
     </Card>
   );
 }
@@ -292,10 +298,44 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
   // renvoie au catalogue complet, même lien que les autres CTA "Voir" de
   // cet écran (cf. AlertItem plus bas).
   const [sortByMarge, setSortByMarge] = useState(false);
+
+  // "Comparer à la période précédente" : révèle une ligne "Période
+  // précédente" sous chaque KPI, mock en attendant l'API Laravel (cf.
+  // [[dashboard-mock-data-pending-laravel-api]]).
+  const [compare, setCompare] = useState(false);
   const productRows = useMemo(() => {
     if (!sortByMarge) return PRODUCT_TABLE_ROWS;
     return [...PRODUCT_TABLE_ROWS].sort((a, b) => b.margeValue - a.margeValue);
   }, [sortByMarge]);
+
+  // "Exporter" : le tableau complet des références (respecte l'ordre/tri
+  // affiché par "Trier par marge") plus la concentration du catalogue.
+  const [exportDone, setExportDone] = useState(false);
+  function handleExport() {
+    openBrandedReport(t("Produits", "Products"), t("Vos références, placées", "Your products, placed"), [
+      {
+        heading: t("Toutes vos références", "All your items"),
+        columns: [t("Référence", "Item"), t("Unités", "Units"), t("CA", "Revenue"), t("Marge", "Margin"), t("Ventes/jour", "Sales/day"), t("Couverture", "Coverage"), t("Refus", "Refusal"), t("Litiges", "Disputes")],
+        rows: productRows.map((r) => [
+          t(r.nameFr, r.nameEn),
+          r.unites,
+          r.ca,
+          r.margeDisplay,
+          r.parJour,
+          t(r.couvFr, r.couvEn),
+          r.refus,
+          r.litiges,
+        ]),
+      },
+      {
+        heading: t("Concentration du catalogue (CA cumulé par référence, décroissant)", "Catalog concentration (cumulative revenue per item, descending)"),
+        columns: [t("Rang", "Rank"), t("CA", "Revenue")],
+        rows: CONCENTRATION_BARS.map((v, i) => [`#${i + 1}`, v]),
+      },
+    ]);
+    setExportDone(true);
+    setTimeout(() => setExportDone(false), 2500);
+  }
 
   return (
     <>
@@ -313,8 +353,10 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
         layout="inline"
         actions={
           <>
-            <HeaderActionBtn>{t("Exporter", "Export")}</HeaderActionBtn>
-            <HeaderActionBtn>{t("Comparer à la période précédente", "Compare to previous period")}</HeaderActionBtn>
+            <HeaderActionBtn onClick={handleExport}>{exportDone ? t("Exporté", "Exported") : t("Exporter", "Export")}</HeaderActionBtn>
+            <HeaderActionBtn onClick={() => setCompare((c) => !c)}>
+              {compare ? t("Revenir à la période actuelle", "Back to current period") : t("Comparer à la période précédente", "Compare to previous period")}
+            </HeaderActionBtn>
           </>
         }
       />
@@ -334,11 +376,11 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
       <CollapsibleCards visibleCount={3}>
       {/* KPI de la période */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <KpiCard label={t("Références au catalogue", "Catalog items")} value="32" note={t("21 en stock · 11 en drop", "21 warehoused · 11 drop")} />
-        <KpiCard label={t("Qui ont vendu", "That sold")} value="24" valueColor="#178a3f" note={t("75 % du catalogue", "75% of the catalog")} />
-        <KpiCard label={t("Unités vendues", "Units sold")} value="167" note={t("+19 % vs période précédente", "+19% vs previous period")} noteColor="#178a3f" />
-        <KpiCard label={t("Marge moyenne", "Average margin")} value="24,1 %" note={t("−1,4 point", "−1.4 point")} />
-        <KpiCard label={t("Références à traiter", "Items needing action")} value="6" valueColor="#a8690a" note={t("rupture, perte ou fiche bloquée", "stockout, loss, or blocked listing")} />
+        <KpiCard label={t("Références au catalogue", "Catalog items")} value="32" note={t("21 en stock · 11 en drop", "21 warehoused · 11 drop")} previous={compare ? "29" : undefined} />
+        <KpiCard label={t("Qui ont vendu", "That sold")} value="24" valueColor="#178a3f" note={t("75 % du catalogue", "75% of the catalog")} previous={compare ? "21" : undefined} />
+        <KpiCard label={t("Unités vendues", "Units sold")} value="167" note={t("+19 % vs période précédente", "+19% vs previous period")} noteColor="#178a3f" previous={compare ? "140" : undefined} />
+        <KpiCard label={t("Marge moyenne", "Average margin")} value="24,1 %" note={t("−1,4 point", "−1.4 point")} previous={compare ? "25,5 %" : undefined} />
+        <KpiCard label={t("Références à traiter", "Items needing action")} value="6" valueColor="#a8690a" note={t("rupture, perte ou fiche bloquée", "stockout, loss, or blocked listing")} previous={compare ? "9" : undefined} />
       </div>
 
       {/* Quadrant vitesse / marge */}
@@ -424,7 +466,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
               <p className="text-sm font-semibold">{t("La concentration du catalogue", "Catalog concentration")}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Chiffre d'affaires cumulé, référence par référence", "Cumulative revenue, item by item")}</p>
             </div>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <Tag tone="neutral">B</Tag>
           </div>
           <svg viewBox="0 0 300 140" preserveAspectRatio="none" className="mt-3 h-32 w-full overflow-visible" aria-hidden fill="none">
             {CONCENTRATION_BARS.map((v, i) => (
@@ -554,7 +596,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
               <p className="text-sm font-semibold">{t("Les produits qu'on refuse", "The products that get refused")}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Part des commandes refusées, référence par référence", "Share of refused orders, item by item")}</p>
             </div>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <Tag tone="neutral">B</Tag>
           </div>
           <div className="mt-3">
             <RankBar label={t("Sandales tressées", "Woven sandals")} value="34 %" pct={100} color="#c8262d" valueColor="#c8262d" />
@@ -582,33 +624,33 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
               <p className="text-sm font-semibold">{t("Combien de jours de vente il vous reste", "How many days of sales you have left")}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Stock disponible divisé par la vitesse de vente", "Available stock divided by sales speed")}</p>
             </div>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <Tag tone="neutral">B</Tag>
           </div>
 
-          <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(90,169,255,.07)", border: "1px solid rgba(90,169,255,.24)" }}>
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold">{t("Votre stock", "Your stock")}</p>
-              <Tag tone="blue">{t("Stockage management", "Warehousing")}</Tag>
+          <div className="mt-3 max-h-[340px] overflow-y-auto pr-1">
+            <div className="rounded-xl p-3" style={{ background: "rgba(90,169,255,.07)", border: "1px solid rgba(90,169,255,.24)" }}>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold">{t("Votre stock", "Your stock")}</p>
+                <Tag tone="blue">S</Tag>
+              </div>
+              <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Compté au jour près. Le seuil marque vos quatre jours de réapprovisionnement.", "Counted to the day. The threshold marks your four days of replenishment lead time.")}</p>
+              <div className="mt-2.5">
+                <RankBar label={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} value={t("4 j", "4d")} pct={15} color="#c8262d" valueColor="#c8262d" />
+                <RankBar label={t("Crème mains 75 ml", "Hand cream 75 ml")} value={t("7 j", "7d")} pct={26} color="#a8690a" valueColor="#a8690a" />
+                <RankBar label={t("Savon noir 250 g", "Black soap 250 g")} value={t("11 j", "11d")} pct={40} color="#178a3f" valueColor="#178a3f" />
+                <RankBar label={t("Beurre de karité 200 g", "Shea butter 200 g")} value={t("19 j", "19d")} pct={69} color="#178a3f" valueColor="#178a3f" />
+                <RankBar label={t("Sandales tressées", "Woven sandals")} value={t("26 j", "26d")} pct={95} color="#9096AA" />
+                <RankBar label={t("Ensemble lin deux pièces", "Two-piece linen set")} value={t("41 j", "41d")} pct={100} color="#9096AA" />
+              </div>
+              <Divider />
+              <StatRow label={t("Délai de réapprovisionnement", "Replenishment lead time")} value={t("4 jours", "4 days")} />
+              <StatRow label={t("Stock dormant, plus de 30 jours", "Dormant stock, over 30 days")} value={<span style={{ color: "#a8690a" }}>412 000 F</span>} />
             </div>
-            <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Compté au jour près. Le seuil marque vos quatre jours de réapprovisionnement.", "Counted to the day. The threshold marks your four days of replenishment lead time.")}</p>
-            <div className="mt-2.5">
-              <RankBar label={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} value={t("4 j", "4d")} pct={15} color="#c8262d" valueColor="#c8262d" />
-              <RankBar label={t("Crème mains 75 ml", "Hand cream 75 ml")} value={t("7 j", "7d")} pct={26} color="#a8690a" valueColor="#a8690a" />
-              <RankBar label={t("Savon noir 250 g", "Black soap 250 g")} value={t("11 j", "11d")} pct={40} color="#178a3f" valueColor="#178a3f" />
-              <RankBar label={t("Beurre de karité 200 g", "Shea butter 200 g")} value={t("19 j", "19d")} pct={69} color="#178a3f" valueColor="#178a3f" />
-              <RankBar label={t("Sandales tressées", "Woven sandals")} value={t("26 j", "26d")} pct={95} color="#9096AA" />
-              <RankBar label={t("Ensemble lin deux pièces", "Two-piece linen set")} value={t("41 j", "41d")} pct={100} color="#9096AA" />
-            </div>
-            <Divider />
-            <StatRow label={t("Délai de réapprovisionnement", "Replenishment lead time")} value={t("4 jours", "4 days")} />
-            <StatRow label={t("Stock dormant, plus de 30 jours", "Dormant stock, over 30 days")} value={<span style={{ color: "#a8690a" }}>412 000 F</span>} />
-          </div>
 
-          <CollapsibleCards visibleCount={0}>
             <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(236,12,140,.07)", border: "1px solid rgba(236,12,140,.24)" }}>
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs font-semibold">{t("Le stock du partenaire", "The partner's stock")}</p>
-                <Tag tone="pink">{t("Dropshipping", "Drop-shipping")}</Tag>
+                <Tag tone="pink">D</Tag>
               </div>
               <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Lu dans sa base, affiché jusqu'à six jours seulement. Au-delà, rien à surveiller.", "Read from their database, shown only up to six days. Beyond that, nothing to watch.")}</p>
               <div className="mt-2.5">
@@ -639,7 +681,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
                 )}
               </p>
             </div>
-          </CollapsibleCards>
+          </div>
         </Card>
       </div>
 
@@ -650,7 +692,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
             <p className="text-sm font-semibold">{t("Quelles combinaisons se vendent", "Which combinations sell")}</p>
             <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Ensemble en lin deux pièces · taille et couleur, unités vendues", "Two-piece linen set · size and color, units sold")}</p>
           </div>
-          <Tag tone="blue">{t("Stockage management", "Warehousing")}</Tag>
+          <Tag tone="blue">S</Tag>
         </div>
         <div className="mt-4 flex gap-3 overflow-x-auto">
           <div className="flex flex-none flex-col justify-end gap-1.5 pt-6">
@@ -706,7 +748,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
               <p className="text-sm font-semibold">{t("Où en est chaque référence de sa vie", "Where each item stands in its life")}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Ventes hebdomadaires depuis le lancement", "Weekly sales since launch")}</p>
             </div>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <Tag tone="neutral">B</Tag>
           </div>
           <div className="mt-3">
             <LifeItem code="S" name={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} values={[4, 5, 6, 7, 8, 9, 10, 11, 13, 14]} kind="up" age={t("Lancé il y a 10 semaines", "Launched 10 weeks ago")} />
@@ -731,7 +773,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
               <p className="text-sm font-semibold">{t("Vos prix, comparés au réseau", "Your prices, against the network")}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Même catégorie, produits équivalents, boutiques anonymes", "Same category, equivalent products, anonymous shops")}</p>
             </div>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <Tag tone="neutral">B</Tag>
           </div>
           <div className="mt-3 overflow-x-auto">
             <div className="min-w-[420px]">

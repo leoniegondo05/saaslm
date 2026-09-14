@@ -179,6 +179,33 @@ html.dark {
 }
 
 /*
+  Bouton "solution LM" (DashboardHeader.tsx) : petit halo rose qui pulse en
+  boucle sur l'anneau dégradé, pour signaler que le badge est cliquable
+  (retour utilisateur — il passait pour une simple étiquette d'info). On
+  garde le rythme lent et l'amplitude discrète : ce badge reste affiché en
+  permanence en haut du dashboard, pas question qu'il clignote.
+*/
+@keyframes solution-lm-pulse {
+  0%,
+  100% {
+    box-shadow: 0 2px 10px rgba(20, 18, 32, 0.06), 0 0 0 0 rgba(236, 12, 140, 0.35);
+  }
+  50% {
+    box-shadow: 0 2px 10px rgba(20, 18, 32, 0.06), 0 0 0 6px rgba(236, 12, 140, 0);
+  }
+}
+
+.animate-solution-lm {
+  animation: solution-lm-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-solution-lm {
+    animation: none !important;
+  }
+}
+
+/*
   Section "Comment ça marche" (HowItWorks.tsx) : recréation d'une vidéo de
   référence (ligne sinueuse + point rose qui avance + étapes qui se
   révèlent l'une après l'autre + rayons qui convergent + climax final).
@@ -1052,48 +1079,6 @@ html.dark {
   .money-icon-float {
     animation: none !important;
     transform: none !important;
-  }
-}
-
-/*
-  Cerveau du dashboard (DashboardBrain.tsx) : léger flottement vertical en
-  boucle + traits qui pulsent doucement, pour donner vie à l'illustration
-  statique sans distraire.
-*/
-@keyframes dashboard-brain-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-.dashboard-brain-float {
-  animation: dashboard-brain-float 5s ease-in-out infinite;
-}
-
-@keyframes dashboard-brain-line-pulse {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.dashboard-brain-line-pulse {
-  animation: dashboard-brain-line-pulse 2.4s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dashboard-brain-float,
-  .dashboard-brain-line-pulse {
-    animation: none !important;
-    transform: none !important;
-    opacity: 1 !important;
   }
 }
 

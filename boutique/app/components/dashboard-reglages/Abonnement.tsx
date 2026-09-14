@@ -6,9 +6,10 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
   Écran 29 "Réglages · abonnement" : ce que la boutique verse chaque mois
-  à son partenaire agréé, la carte qui le prélève, l'historique, et la
-  résiliation. Résilier arrête la boutique sans rompre le rattachement au
-  partenaire — la fiche le dit avant le bouton. Champs statiques pour
+  à son partenaire agréé, l'historique, et la résiliation. La carte de
+  prélèvement n'a qu'une fiche, celle de "Finances et règlements" — pas
+  de doublon ici. Résilier arrête la boutique sans rompre le rattachement
+  au partenaire — la fiche le dit avant le bouton. Champs statiques pour
   l'instant, cf. mémoire [[dashboard-mock-data-pending-laravel-api]].
 */
 
@@ -35,7 +36,7 @@ export default function Abonnement({ first = false }: { first?: boolean }) {
       <SectionHeader
         eyebrow={t("Abonnement", "Subscription")}
         title={t("Ce que vous versez chaque mois", "What you pay each month")}
-        subtitle={t("La carte qui vous prélève, et l'historique.", "The card that charges you, and the history.")}
+        subtitle={t("Ce que vous devez, et l'historique.", "What you owe, and the history.")}
         first={first}
         layout="inline"
       />
@@ -77,27 +78,6 @@ export default function Abonnement({ first = false }: { first?: boolean }) {
             )}
           </p>
         </div>
-
-        <Card title={t("Moyen de prélèvement", "Payment method")} titleTab className="!bg-[var(--dashboard-card-bg)]">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/60">
-              <CardIcon />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-[var(--dashboard-text)]">Visa •••• 4417</p>
-              <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/50">{t("Prélevée le 14 de chaque mois", "Charged on the 14th of each month")}</p>
-            </div>
-            <Tag tone="ok" className="shrink-0">
-              {t("Actif", "Active")}
-            </Tag>
-            <button
-              type="button"
-              className="shrink-0 rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[11px] font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
-            >
-              {t("Changer", "Change")}
-            </button>
-          </div>
-        </Card>
 
         <Card className="!bg-[var(--dashboard-card-bg)]">
           <div className="flex items-center justify-between gap-3">
@@ -197,15 +177,6 @@ function EtapeRow({ numero, texte }: { numero: number; texte: string }) {
       </span>
       <p className="leading-relaxed">{texte}</p>
     </div>
-  );
-}
-
-function CardIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-4.5 w-4.5" aria-hidden>
-      <rect x="3" y="6.5" width="18" height="11" rx="2.2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.6" />
-    </svg>
   );
 }
 

@@ -1,10 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
 import { ACTIONS_AUJOURDHUI, TypeAchat } from "./clientsData";
 
+// Libellé "fait" par bouton d'origine — même principe que le bouton
+// "Relancer" de PartenaireSection.tsx (disabled + texte changé au clic),
+// pas d'écriture serveur tant que l'API Laravel n'existe pas
+// (cf. [[dashboard-mock-data-pending-laravel-api]]).
+const LABEL_FAIT: Record<string, { fr: string; en: string }> = {
+  Relancer: { fr: "Relancé", en: "Sent" },
+  "Voir la liste": { fr: "Liste vue", en: "List viewed" },
+  Voir: { fr: "Vu", en: "Seen" },
+};
+
 export default function ClientsActionsToday({ typeAchat }: { typeAchat: TypeAchat }) {
   const { t } = useDashboardLangue();
+
+  // Actions déjà traitées (bouton cliqué) — état local uniquement, cf.
+  // ci-dessus.
+  const [actionsTraitees, setActionsTraitees] = useState<string[]>([]);
 
   // Seule l'action "drop-jamais-revenus" est marquée tagD (propre au
   // dropshipping) — aucune action n'est marquée comme propre au stockage,
@@ -85,16 +100,26 @@ export default function ClientsActionsToday({ typeAchat }: { typeAchat: TypeAcha
 
               {/* Bouton d'action */}
               <div className="shrink-0 self-end sm:self-center">
-                <button
-                  type="button"
-                  className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all ${
-                    action.boutonStyle === "primary"
-                      ? "bg-[var(--dashboard-text)] text-[var(--dashboard-card-bg)] hover:opacity-90 shadow-xs"
-                      : "border border-[var(--dashboard-text)]/20 bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)]/80 hover:bg-[var(--dashboard-surface-2)]"
-                  }`}
-                >
-                  {t(action.boutonFr, action.boutonEn)}
-                </button>
+                {(() => {
+                  const traitee = actionsTraitees.includes(action.id);
+                  const fait = LABEL_FAIT[action.boutonFr];
+                  return (
+                    <button
+                      type="button"
+                      disabled={traitee}
+                      onClick={() =>
+                        setActionsTraitees((prev) => (prev.includes(action.id) ? prev : [...prev, action.id]))
+                      }
+                      className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all disabled:cursor-default disabled:opacity-60 ${
+                        action.boutonStyle === "primary"
+                          ? "bg-[var(--dashboard-text)] text-[var(--dashboard-card-bg)] hover:opacity-90 shadow-xs disabled:hover:opacity-60"
+                          : "border border-[var(--dashboard-text)]/20 bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)]/80 hover:bg-[var(--dashboard-surface-2)] disabled:hover:bg-[var(--dashboard-card-bg)]"
+                      }`}
+                    >
+                      {traitee && fait ? t(fait.fr, fait.en) : t(action.boutonFr, action.boutonEn)}
+                    </button>
+                  );
+                })()}
               </div>
             </div>
           );

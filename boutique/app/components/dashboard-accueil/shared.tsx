@@ -12,6 +12,99 @@ import { useFiltrable, useRecherche } from "../DashboardRecherche";
 */
 
 /*
+  Export "Exporter" — utilisé par chaque section (Finances, Commandes,
+  Clients, Litiges, Stock, Produits, Partenaire, Confidentialité) : même
+  recette partout pour ne pas la réécrire à chaque section. Un CSV brut ne
+  porte aucune couleur ; ici on ouvre un document HTML autonome, aux
+  couleurs LIIVRE MOI exactes (cf. mémoire [[charte-graphique-livre-moi]] :
+  bleu nuit #011847, rose fuchsia #EC0C8C, indigo #3A1D8A, blanc cassé
+  #FAF7FC, police Sora), puis on déclenche l'impression : l'utilisateur
+  choisit "Enregistrer en PDF" dans la boîte de dialogue native du
+  navigateur — un vrai PDF propre, sans dépendance ajoutée au projet. Les
+  chiffres exportés sont ceux déjà affichés à l'écran (cf.
+  [[dashboard-mock-data-pending-laravel-api]], mock en attendant l'API
+  Laravel), donc pas d'appel réseau ici.
+*/
+export type ExportSection = {
+  heading: string;
+  columns?: string[];
+  rows: (string | number)[][];
+};
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+export function openBrandedReport(title: string, subtitle: string, sections: ExportSection[]) {
+  const win = window.open("", "_blank");
+  if (!win) return; // bloqueur de popup : on abandonne plutôt que de planter
+
+  const dateStr = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const sectionsHtml = sections
+    .map(
+      (s) => `
+      <h2>${escapeHtml(s.heading)}</h2>
+      <table>
+        ${s.columns ? `<thead><tr>${s.columns.map((c) => `<th>${escapeHtml(c)}</th>`).join("")}</tr></thead>` : ""}
+        <tbody>
+          ${s.rows
+            .map((r) => `<tr>${r.map((c) => `<td>${escapeHtml(String(c))}</td>`).join("")}</tr>`)
+            .join("")}
+        </tbody>
+      </table>`
+    )
+    .join("");
+
+  win.document.write(`<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>${escapeHtml(title)}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Bricolage+Grotesque:wght@600;700&display=swap');
+  :root { --navy: #011847; --pink: #EC0C8C; --indigo: #3A1D8A; --offwhite: #FAF7FC; --slate: #5A6072; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 40px; background: var(--offwhite); color: #000; font-family: Sora, sans-serif; }
+  header { display: flex; align-items: center; gap: 14px; padding-bottom: 20px; border-bottom: 3px solid var(--pink); margin-bottom: 24px; }
+  .logo { width: 44px; height: 44px; flex-shrink: 0; }
+  .wordmark { margin: 0; font-family: "Bricolage Grotesque", Sora, sans-serif; font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: .01em; }
+  .wordmark .o { color: var(--pink); }
+  h1 { margin: 2px 0 0; font-family: "Bricolage Grotesque", Sora, sans-serif; font-size: 19px; font-weight: 700; color: #000; }
+  .subtitle { margin: 3px 0 0; font-size: 11px; color: var(--slate); }
+  h2 { margin: 26px 0 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--indigo); }
+  h2:first-of-type { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid rgba(1,24,71,0.1); }
+  th { font-weight: 600; color: var(--navy); background: rgba(236,12,140,0.06); }
+  tr:last-child td { border-bottom: none; }
+  footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid rgba(1,24,71,0.1); font-size: 9px; color: var(--slate); }
+  @media print { body { padding: 18px; } }
+</style>
+</head>
+<body>
+  <header>
+    <img class="logo" src="${window.location.origin}/images/logo.svg" alt="LIIVRE MOI" />
+    <div>
+      <p class="wordmark">LIIVRE M<span class="o">O</span>I</p>
+      <h1>${escapeHtml(title)}</h1>
+      <p class="subtitle">${escapeHtml(subtitle)}</p>
+    </div>
+  </header>
+  ${sectionsHtml}
+  <footer>Exporté le ${escapeHtml(dateStr)} · données de la période affichée à l'écran</footer>
+</body>
+</html>`);
+  win.document.close();
+  win.focus();
+  win.onload = () => win.print();
+  setTimeout(() => win.print(), 400); // filet si onload ne se déclenche pas (document.write direct)
+}
+
+/*
   Carousel image d'un produit : utilisé sur la fiche "Prochain produit" du
   partenaire agréé (PartenaireAgree.tsx) et sur la fiche produit du
   catalogue drop (FicheProduitDrop.tsx). Flèches restent visibles même sans
@@ -161,15 +254,24 @@ export function SectionHeader({
   Distinct de Btn (qui est toujours pleine largeur, pensé pour les CTA de
   carte) : celui-ci reste à sa largeur de contenu, pour s'aligner en ligne.
 */
-export function HeaderActionBtn({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+export function HeaderActionBtn({
+  children,
+  onClick,
+  disabled = false,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group relative inline-flex shrink-0 rounded-full p-px transition-all shadow-[0_2px_12px_rgba(20,18,32,0.05)] hover:opacity-95"
+      disabled={disabled}
+      className="group relative inline-flex shrink-0 rounded-full p-px transition-all shadow-[0_2px_12px_rgba(20,18,32,0.05)] hover:opacity-95 disabled:cursor-default disabled:opacity-60 disabled:hover:opacity-60"
       style={{ backgroundImage: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 58.35%, #FFFFFF 100%)" }}
     >
-      <span className="inline-flex items-center rounded-full bg-[var(--dashboard-card-bg)]/90 px-3.5 py-1.5 text-xs font-semibold text-[var(--dashboard-text)] backdrop-blur-md transition group-hover:bg-[var(--dashboard-card-bg)]/70">
+      <span className="inline-flex items-center rounded-full bg-[var(--dashboard-card-bg)]/90 px-3.5 py-1.5 text-xs font-semibold text-[var(--dashboard-text)] backdrop-blur-md transition group-hover:bg-[var(--dashboard-card-bg)]/70 group-disabled:group-hover:bg-[var(--dashboard-card-bg)]/90">
         {children}
       </span>
     </button>
@@ -291,16 +393,19 @@ export function CollapsibleCards({
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={effectiveOpen}
-          className="relative -mt-1 flex items-center gap-1.5 rounded-full bg-brand-pink px-4 py-2 text-xs font-semibold text-white shadow-[0_4px_16px_rgba(236,12,140,0.35)] transition hover:bg-brand-pink/90"
+          className="group relative -mt-1 inline-flex shrink-0 rounded-full p-px transition-all shadow-[0_2px_12px_rgba(20,18,32,0.05)] hover:opacity-95"
+          style={{ backgroundImage: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 58.35%, #FFFFFF 100%)" }}
         >
-          {effectiveOpen ? t("Réduire", "Show less") : t(`Voir tout le contenu (+${hidden.length})`, `Show all content (+${hidden.length})`)}
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            className={`h-3 w-3 shrink-0 transition-transform ${effectiveOpen ? "rotate-180" : ""}`}
-          >
-            <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--dashboard-card-bg)]/90 px-4 py-2 text-xs font-semibold text-[var(--dashboard-text)] backdrop-blur-md transition group-hover:bg-[var(--dashboard-card-bg)]/70">
+            {effectiveOpen ? t("Réduire", "Show less") : t(`Voir tout le contenu (+${hidden.length})`, `Show all content (+${hidden.length})`)}
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className={`h-3 w-3 shrink-0 transition-transform ${effectiveOpen ? "rotate-180" : ""}`}
+            >
+              <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
         </button>
       </div>
     </>
@@ -455,15 +560,22 @@ export function MiniStat({
   label,
   value,
   tone,
+  previous,
+  previousLabel,
 }: {
   label: string;
   value: string;
   tone?: "pink";
+  /** Valeur de la période précédente, affichée quand "Comparer à la période
+   *  précédente" est actif (cf. FinancesSection). */
+  previous?: string;
+  previousLabel?: string;
 }) {
   return (
     <div>
       <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
       <p className={`mt-0.5 text-base font-bold ${tone === "pink" ? "text-brand-pink" : ""}`}>{value}</p>
+      {previous && <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/35">{previousLabel} : {previous}</p>}
     </div>
   );
 }

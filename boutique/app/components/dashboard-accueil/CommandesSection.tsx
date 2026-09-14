@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { AreaChart, Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, SectionHeader, StatRow, Table, Tag } from "./shared";
+import { useState } from "react";
+import { AreaChart, Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, openBrandedReport, SectionHeader, StatRow, Table, Tag } from "./shared";
 import RetentionCard from "./RetentionCard";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
@@ -362,6 +363,43 @@ function LiveOrderRow({
 
 export default function CommandesSection({ first = true }: { first?: boolean }) {
   const { t } = useDashboardLangue();
+
+  // "Comparer à la période précédente" : révèle une ligne "Période
+  // précédente" sous chaque KPI, mock en attendant l'API Laravel (cf.
+  // [[dashboard-mock-data-pending-laravel-api]]).
+  const [compare, setCompare] = useState(false);
+
+  // "Exporter" : KPI de la période et parcours de commande étape par étape.
+  const [exportDone, setExportDone] = useState(false);
+  function handleExport() {
+    openBrandedReport(t("Commandes", "Orders"), t("Ce que devient chaque commande", "What happens to each order"), [
+      {
+        heading: t("Indicateurs de la période", "Period metrics"),
+        columns: [t("Indicateur", "Metric"), t("Valeur", "Value"), t("Note", "Note")],
+        rows: [
+          [t("Commandes reçues", "Orders received"), "148", t("+22 % vs période précédente", "+22% vs previous period")],
+          [t("Confirmées à l'appel", "Confirmed by phone"), "134", t("90,5 % des reçues", "90.5% of orders received")],
+          [t("Livrées et payées", "Delivered and paid"), "119", t("80,4 % des reçues", "80.4% of orders received")],
+          [t("Refusées", "Refused"), "23", t("14 à l'appel · 9 à la porte", "14 by phone · 9 at the door")],
+          [t("En cours", "In progress"), "6", t("dont 2 en litige", "incl. 2 in dispute")],
+        ],
+      },
+      {
+        heading: t("Le parcours d'une commande", "The order journey"),
+        columns: [t("Étape", "Step"), t("Valeur", "Value"), t("Taux", "Rate")],
+        rows: [
+          [t("Visites de la page", "Page visits"), "8 420", ""],
+          [t("Commandes passées", "Orders placed"), "148", t("1,76 % de transformation", "1.76% conversion")],
+          [t("Confirmées à l'appel", "Confirmed by phone"), "134", "90,5 %"],
+          [t("Livrées et payées", "Delivered and paid"), "119", "88,8 %"],
+          [t("Sans litige", "Without dispute"), "117", "98,3 %"],
+        ],
+      },
+    ]);
+    setExportDone(true);
+    setTimeout(() => setExportDone(false), 2500);
+  }
+
   return (
     <>
       <SectionHeader
@@ -386,8 +424,10 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
         layout="inline"
         actions={
           <>
-            <HeaderActionBtn>{t("Exporter", "Export")}</HeaderActionBtn>
-            <HeaderActionBtn>{t("Comparer à la période précédente", "Compare to previous period")}</HeaderActionBtn>
+            <HeaderActionBtn onClick={handleExport}>{exportDone ? t("Exporté", "Exported") : t("Exporter", "Export")}</HeaderActionBtn>
+            <HeaderActionBtn onClick={() => setCompare((c) => !c)}>
+              {compare ? t("Revenir à la période actuelle", "Back to current period") : t("Comparer à la période précédente", "Compare to previous period")}
+            </HeaderActionBtn>
           </>
         }
       />
@@ -410,26 +450,31 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Commandes reçues", "Orders received")}</p>
           <p className="mt-1 text-2xl font-bold tracking-tight">148</p>
           <p className="mt-1 text-[10px] font-semibold text-[#178a3f]">{t("+22 % vs période précédente", "+22% vs previous period")}</p>
+          {compare && <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">{t("Période précédente", "Previous period")} : 121</p>}
         </Card>
         <Card className="!bg-[var(--dashboard-glass)]">
           <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Confirmées à l'appel", "Confirmed by phone")}</p>
           <p className="mt-1 text-2xl font-bold tracking-tight">134</p>
           <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("90,5 % des reçues", "90.5% of orders received")}</p>
+          {compare && <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">{t("Période précédente", "Previous period")} : 110</p>}
         </Card>
         <Card className="!bg-[var(--dashboard-glass)]">
           <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Livrées et payées", "Delivered and paid")}</p>
           <p className="mt-1 text-2xl font-bold tracking-tight text-[#178a3f]">119</p>
           <p className="mt-1 text-[10px] font-semibold text-[#178a3f]">{t("80,4 % des reçues", "80.4% of orders received")}</p>
+          {compare && <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">{t("Période précédente", "Previous period")} : 97</p>}
         </Card>
         <Card className="!bg-[var(--dashboard-glass)]">
           <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Refusées", "Refused")}</p>
           <p className="mt-1 text-2xl font-bold tracking-tight text-[#c8262d]">23</p>
           <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("14 à l'appel · 9 à la porte", "14 by phone · 9 at the door")}</p>
+          {compare && <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">{t("Période précédente", "Previous period")} : 27</p>}
         </Card>
         <Card className="!bg-[var(--dashboard-glass)]">
           <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("En cours", "In progress")}</p>
           <p className="mt-1 text-2xl font-bold tracking-tight">6</p>
           <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("dont 2 en litige", "incl. 2 in dispute")}</p>
+          {compare && <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">{t("Période précédente", "Previous period")} : 5</p>}
         </Card>
       </div>
 
