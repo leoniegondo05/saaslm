@@ -39,7 +39,7 @@ import { useState } from "react";
 */
 
 type Statut = "enregistree" | "aucune";
-type Experience = "debutant" | "amateur" | "confirme" | "expert";
+type Experience = "novice" | "amateur" | "amateur_avance" | "intermediaire" | "avance" | "professionnel";
 type Origine = "importes" | "locaux" | "fabrique";
 type Modele = "b2c" | "b2b" | "b2b2c" | "c2b" | "d2c";
 
@@ -84,18 +84,24 @@ function slugifier(nom: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-const EXPERIENCE_OPTIONS: { value: Experience; label: string; niveau: string; desc: string }[] = [
-  { value: "debutant", label: "Moins d'un an", niveau: "Débutant", desc: "Je commence tout juste." },
-  { value: "amateur", label: "Un à trois ans", niveau: "Amateur", desc: "J'ai passé les premiers mois." },
-  { value: "confirme", label: "Trois à cinq ans", niveau: "Confirmé", desc: "L'activité tourne régulièrement." },
-  { value: "expert", label: "Plus de cinq ans", niveau: "Expert", desc: "C'est mon métier depuis longtemps." },
+const EXPERIENCE_OPTIONS: { value: Experience; label: string; niveau: string }[] = [
+  { value: "novice", label: "Moins d'un mois", niveau: "Novice" },
+  { value: "amateur", label: "2 à 6 mois", niveau: "Amateur" },
+  { value: "amateur_avance", label: "6 à 12 mois", niveau: "Amateur avancé" },
+  { value: "intermediaire", label: "1 à 2 ans", niveau: "Intermédiaire" },
+  { value: "avance", label: "2 à 4 ans", niveau: "Avancé" },
+  { value: "professionnel", label: "Plus de 5 ans", niveau: "Professionnel" },
 ];
 
 const CA_OPTIONS = [
-  "Moins de 500 000 F",
-  "500 000 à 2 millions F",
-  "2 à 10 millions F",
-  "Plus de 10 millions F",
+  "0 à 300 000",
+  "300 001 à 600 000",
+  "600 001 à 1 000 000",
+  "1 000 001 à 3 000 000",
+  "3 000 001 à 10 000 000",
+  "10 000 001 à 20 000 000",
+  "20 000 001 à 30 000 000",
+  "Plus de 30 000 000",
 ];
 
 const ORIGINE_OPTIONS: { value: Origine; label: string; desc: string }[] = [
@@ -201,6 +207,7 @@ function OptionCard({
   label,
   desc,
   badge,
+  compactLabel,
 }: {
   selected: boolean;
   multi?: boolean;
@@ -208,6 +215,7 @@ function OptionCard({
   label: string;
   desc?: string;
   badge?: string;
+  compactLabel?: boolean;
 }) {
   return (
     <button
@@ -232,7 +240,13 @@ function OptionCard({
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-2">
-          <span className="text-[16px] font-semibold tracking-tight text-brand-white">{label}</span>
+          <span
+            className={`font-semibold text-brand-white ${
+              compactLabel ? "text-[13.5px] tracking-normal" : "text-[16px] tracking-tight"
+            }`}
+          >
+            {label}
+          </span>
           {badge && (
             <span
               className={`rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
@@ -423,8 +437,8 @@ export default function CompleterProfilWizard() {
     return (
       <QuestionShell
         step={2}
-        question="Combien d'années d'expérience avez-vous dans la vente ?"
-        sub="Une seule réponse. Le niveau se déduit tout seul."
+        question="Parcours professionnel / niveau"
+        sub="Une seule réponse."
         canContinue={answers.experience !== null}
         onBack={precedent}
         onNext={suivant}
@@ -436,7 +450,6 @@ export default function CompleterProfilWizard() {
               selected={answers.experience === option.value}
               onClick={() => setAnswers({ ...answers, experience: option.value })}
               label={option.label}
-              desc={option.desc}
               badge={option.niveau}
             />
           ))}
@@ -449,7 +462,7 @@ export default function CompleterProfilWizard() {
     return (
       <QuestionShell
         step={3}
-        question="Quel est votre chiffre d'affaires moyen par mois ?"
+        question="Chiffre d'affaires moyen en FCFA"
         sub="Une seule réponse. Elle n'est montrée à personne d'autre."
         canContinue={answers.chiffreAffaires !== null}
         onBack={precedent}
@@ -462,6 +475,7 @@ export default function CompleterProfilWizard() {
               selected={answers.chiffreAffaires === option}
               onClick={() => setAnswers({ ...answers, chiffreAffaires: option })}
               label={option}
+              compactLabel
             />
           ))}
         </div>
@@ -837,7 +851,7 @@ export default function CompleterProfilWizard() {
     { label: "Pays de la boutique", valeur: `${PAYS_ORIGINE} · ${VILLE_ORIGINE}`, pays: [PAYS_ORIGINE] },
     { label: "Pays où elle vend", valeur: answers.paysVente.join(", "), pays: answers.paysVente, accent: true },
     { label: "Statut", valeur: answers.statut === "enregistree" ? "Entreprise enregistrée" : "Sans structure déclarée" },
-    { label: "Expérience", valeur: experienceLabel ? `${experienceLabel.label} · ${experienceLabel.niveau.toLowerCase()}` : "—", accent: true },
+    { label: "Expérience", valeur: experienceLabel ? `${experienceLabel.niveau} · ${experienceLabel.label}` : "—", accent: true },
     { label: "Chiffre d'affaires moyen", valeur: answers.chiffreAffaires ?? "—", accent: true },
     { label: "Origine des produits", valeur: origineLabel?.label ?? "—", accent: true },
     { label: "Catégories", valeur: answers.categories.join(" · ") || "—" },

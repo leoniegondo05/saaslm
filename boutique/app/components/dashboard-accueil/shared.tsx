@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { Children, useEffect, useId, useState } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
-import { useFiltrable } from "../DashboardRecherche";
+import { useFiltrable, useRecherche } from "../DashboardRecherche";
 
 /*
   Petits composants d'appui partagés par toutes les sections de l'onglet
-  "Accueil" (Finances, Commandes, Clients, Acquisition, Stock, Produits,
-  Alertes) — extraits de app/dashboard/accueil/page.tsx pour que chaque
+  "Accueil" (Finances, Commandes, Clients, Litiges, Stock, Produits,
+  Partenaire) — extraits de app/dashboard/accueil/page.tsx pour que chaque
   section vive dans son propre fichier sans dupliquer Card/StatRow/Tag/etc.
 */
 
@@ -115,7 +115,15 @@ export function SectionHeader({
     <div className={first ? "mt-8" : "mt-12"}>
       <div className={`flex flex-wrap items-start justify-between gap-3 ${layout === "inline" ? "mb-12" : "mb-4"}`}>
       {layout === "inline" ? (
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+        // basis-full (en dessous de sm) : sans ça, ce groupe (flex-1 +
+        // min-w-0) se laissait écraser à une largeur quasi nulle par les
+        // boutons `actions` à droite (eux "shrink-0") au lieu de passer à
+        // la ligne — le flex-wrap du parent ne se déclenchait jamais
+        // puisque min-w-0 rendait "tout tenir sur une ligne" toujours
+        // possible, juste illisible (titre/sous-titre en un mot par
+        // ligne). basis-full force ce groupe à occuper toute la largeur
+        // sur mobile, ce qui pousse `actions` sur sa propre ligne.
+        <div className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-auto">
           {badge}
           <span className="text-lg font-light text-[var(--dashboard-text)]/20">/</span>
           <div className="min-w-0">
@@ -222,6 +230,80 @@ export function Card({
       )}
       {children}
     </div>
+  );
+}
+
+/*
+  Réduit une longue pile de cards à `visibleCount` (les premières restent
+  toujours visibles), le reste passant sous un fondu + bouton "Voir tout le
+  contenu" — pour qu'une section (Finances, Commandes...) ne noie pas
+  l'écran au premier chargement. Chaque enfant = un bloc déjà assemblé par
+  la section (une Card seule, ou une rangée à deux colonnes) : la logique
+  ignore leur contenu, elle ne fait que couper la liste. Ne rend rien de
+  spécial si la section a peu de blocs (<= visibleCount) : pas de bouton
+  inutile pour 2-3 cards.
+*/
+export function CollapsibleCards({
+  children,
+  visibleCount = 3,
+}: {
+  children: React.ReactNode;
+  visibleCount?: number;
+}) {
+  const { t } = useDashboardLangue();
+  const [open, setOpen] = useState(false);
+
+  // Une recherche active (DashboardSearchBar) force l'ouverture : une Card
+  // qui matche le terme mais qui tombe après `visibleCount` se cache "seule"
+  // en display:block (cf. useFiltrable) mais restait piégée sous max-h-28 —
+  // invisible malgré le match, ce qui donnait l'impression que la recherche
+  // ne trouvait rien. `open` manuel toujours respecté par-dessus (`||`).
+  const recherche = useRecherche();
+  const effectiveOpen = open || recherche !== "";
+  const blocks = Children.toArray(children);
+
+  if (blocks.length <= visibleCount) return <>{blocks}</>;
+
+  const shown = blocks.slice(0, visibleCount);
+  const hidden = blocks.slice(visibleCount);
+
+  return (
+    <>
+      {shown}
+      <div className="relative">
+        <div
+          className={`grid gap-3 overflow-hidden transition-[max-height] duration-500 ease-in-out ${
+            effectiveOpen ? "max-h-[20000px]" : "max-h-28"
+          }`}
+        >
+          {hidden}
+        </div>
+        {!effectiveOpen && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-20"
+            style={{ background: "linear-gradient(to bottom, transparent, var(--dashboard-bg) 80%)" }}
+          />
+        )}
+      </div>
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={effectiveOpen}
+          className="relative -mt-1 flex items-center gap-1.5 rounded-full bg-brand-pink px-4 py-2 text-xs font-semibold text-white shadow-[0_4px_16px_rgba(236,12,140,0.35)] transition hover:bg-brand-pink/90"
+        >
+          {effectiveOpen ? t("Réduire", "Show less") : t(`Voir tout le contenu (+${hidden.length})`, `Show all content (+${hidden.length})`)}
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className={`h-3 w-3 shrink-0 transition-transform ${effectiveOpen ? "rotate-180" : ""}`}
+          >
+            <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -571,35 +653,6 @@ export function NatureRow({
   );
 }
 
-export function AlertRow({
-  code,
-  name,
-  tag,
-  tone,
-  last = false,
-  tagClassName = "",
-}: {
-  code: "S" | "P" | "L" | "O";
-  name: string;
-  tag: string;
-  tone: "warn" | "ko";
-  last?: boolean;
-  tagClassName?: string;
-}) {
-  return (
-    <>
-      <div className="mt-3 flex items-center justify-between gap-2 text-xs">
-        <span className="flex items-center gap-2">
-          <Nature code={code} />
-          {name}
-        </span>
-        <Tag tone={tone} className={tagClassName}>{tag}</Tag>
-      </div>
-      {!last && <Divider />}
-    </>
-  );
-}
-
 export function ProductSelector({
   name,
   position,
@@ -766,6 +819,8 @@ export function AreaChart({
   compareValues,
   compareColor,
   gapColor,
+  glow = false,
+  grid = false,
 }: {
   values: number[];
   color?: string;
@@ -776,6 +831,10 @@ export function AreaChart({
   compareColor?: string;
   /** Couleur de la zone entre les deux courbes (ex. rouge = vente perdue sur rupture). */
   gapColor?: string;
+  /** Halo lumineux sur les courbes + anneau qui pulse autour du dernier point (rendu bourse/trading, cf. [[dashboard-chart-colors-stockage-drop]]). Optionnel : ne change rien aux graphes existants tant que non activé. */
+  glow?: boolean;
+  /** Trois lignes de quadrillage horizontales, très discrètes, derrière l'aire. */
+  grid?: boolean;
 }) {
   const data = values;
   const w = 300;
@@ -852,16 +911,45 @@ export function AreaChart({
             <stop offset="0%" stopColor={color} stopOpacity={0.28} />
             <stop offset="100%" stopColor={color} stopOpacity={0} />
           </linearGradient>
+          {glow && compare && (
+            <linearGradient id={`gap-fill-${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={gapColor ?? color} stopOpacity={0.4} />
+              <stop offset="100%" stopColor={gapColor ?? color} stopOpacity={0.12} />
+            </linearGradient>
+          )}
+          {glow && (
+            // Flou large sous le trait plein : le trait garde des bords nets,
+            // le flou seul porte le halo (2 passes SourceGraphic empilées).
+            <filter id={`glow-${uid}`} x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2.4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          )}
         </defs>
+        {grid &&
+          [0.25, 0.5, 0.75].map((f) => (
+            <line key={f} x1={0} y1={h * f} x2={w} y2={h * f} stroke="var(--dashboard-text)" strokeOpacity={0.06} strokeWidth={1} vectorEffect="non-scaling-stroke" />
+          ))}
         {compare && gapPath ? (
-          <path d={gapPath} fill={gapColor ?? color} fillOpacity={0.35} stroke="none" />
+          <path d={gapPath} fill={glow ? `url(#gap-fill-${uid})` : (gapColor ?? color)} fillOpacity={glow ? 1 : 0.35} stroke="none" />
         ) : (
           // fallback "none" après l'IRI : si la réf gradient ne résout jamais,
           // on obtient un remplissage transparent plutôt qu'un aplat noir/blanc
           // par défaut du moteur de rendu.
           <path d={area} fill={`url(#area-fill-${uid}) none`} stroke="none" />
         )}
-        <path d={d} stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <path
+          d={d}
+          stroke={color}
+          strokeWidth={1.6}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+          filter={glow ? `url(#glow-${uid})` : undefined}
+        />
         {compare && compareD && (
           <path d={compareD} stroke={compareColor ?? "#5AA9FF"} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
         )}
@@ -884,9 +972,31 @@ export function AreaChart({
           />
         );
       })}
+      {glow && (
+        <span
+          className="absolute animate-ping rounded-full"
+          style={{
+            left: `${(last.x / w) * 100}%`,
+            top: `${(last.y / h) * 100}%`,
+            width: 10,
+            height: 10,
+            background: color,
+            opacity: 0.5,
+            transform: "translate(-50%,-50%)",
+          }}
+        />
+      )}
       <span
         className="absolute rounded-full"
-        style={{ left: `${(last.x / w) * 100}%`, top: `${(last.y / h) * 100}%`, width: 5, height: 5, background: color, transform: "translate(-50%,-50%)" }}
+        style={{
+          left: `${(last.x / w) * 100}%`,
+          top: `${(last.y / h) * 100}%`,
+          width: 5,
+          height: 5,
+          background: color,
+          boxShadow: glow ? `0 0 6px 1px ${color}` : undefined,
+          transform: "translate(-50%,-50%)",
+        }}
       />
       {compare && compare.points.length > 0 && (
         <span

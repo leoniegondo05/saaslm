@@ -11,7 +11,7 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
   const [hoveredTier, setHoveredTier] = useState<string | null>(null);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
       {/* ── CARTE GAUCHE : Le score de fiabilité ── */}
       <div className="flex flex-col justify-between rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-4 shadow-[0_4px_16px_-4px_rgba(20,18,32,0.1)] transition-colors sm:p-5">
         <div>

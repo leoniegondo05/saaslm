@@ -123,7 +123,7 @@ export default function ClientsRfMatrix({ typeAchat }: { typeAchat: TypeAchat })
       </div>
 
       {/* Grille des 6 fiches par segment */}
-      <div className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
         {SEGMENTS_RF.map((segment) => {
           const isHighlighted = hoveredSegment === segment.id;
           return (

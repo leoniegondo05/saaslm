@@ -32,7 +32,6 @@ import {
 
 export default function CommandesListe({ first = false, recherche = "" }: { first?: boolean; recherche?: string }) {
   const { t } = useDashboardLangue();
-  const [aidePourquoi, setAidePourquoi] = useState(false);
   const [litigeOuvert, setLitigeOuvert] = useState<string | null>(null);
 
   const joursFiltres = useMemo(() => {
@@ -66,27 +65,6 @@ export default function CommandesListe({ first = false, recherche = "" }: { firs
         first={first}
         layout="inline"
       />
-
-      <div className="flex flex-wrap items-center justify-end gap-2.5">
-        <button
-          type="button"
-          onClick={() => setAidePourquoi((v) => !v)}
-          aria-pressed={aidePourquoi}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-pink/25 bg-brand-pink/5 px-3.5 py-2.5 text-xs font-semibold text-brand-pink transition hover:bg-brand-pink/10"
-        >
-          <SparkleIcon />
-          {t("Pourquoi mon argent est-il suspendu ?", "Why is my money suspended?")}
-        </button>
-      </div>
-
-      {aidePourquoi && (
-        <div className="mt-2.5 rounded-xl border border-brand-pink/15 bg-brand-pink/5 px-4 py-3 text-xs leading-relaxed text-[var(--dashboard-text)]/70">
-          {t(
-            "Un montant est suspendu dès qu'un litige est ouvert sur la commande. Il redevient net s'il est tranché en votre faveur, reste barré en cas de retour de fonds, ou repart au statut « Préparation » en cas de changement de colis. Une commande livrée sans litige reste 72 h en compte à rebours avant que son net soit disponible. Le détail complet est dans « Lire une ligne ».",
-            "An amount is suspended as soon as a dispute is open on the order. It becomes net again if settled in your favor, stays struck through if funds are returned, or goes back to \"Preparing\" if the parcel is exchanged. A delivered order with no dispute counts down 72 h before its net becomes available. Full detail is in \"Reading a row\"."
-          )}
-        </div>
-      )}
 
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         <Card title={t("Commandes", "Orders")} titleTab className="!bg-[var(--dashboard-card-bg)]">
@@ -333,13 +311,5 @@ function NombreEtMot({ nombre, mot, couleur }: { nombre: number; mot: string; co
       </span>
       <span className="text-[10px] text-[var(--dashboard-text)]/45">{mot}</span>
     </span>
-  );
-}
-
-function SparkleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5" aria-hidden>
-      <path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z" />
-    </svg>
   );
 }
