@@ -156,14 +156,10 @@ export default function AjouterProduitModal({
   // en a une, sinon les prix globaux) — dupliqué ici volontairement en un
   // simple booléen plutôt que de faire remonter la marge depuis un enfant :
   // plus simple à lire que de partager un state pour une seule comparaison.
-  // Frais/commission estimés — même formule que MargeCard.tsx (voir ses
-  // constantes ESTIMATION_*), dupliquée ici pour la seule comparaison
-  // "vente à perte" plutôt que de partager un state pour ça.
   const combinaisonMiseEnAvant = combinaisons.find((c) => c.misEnAvant) ?? null;
   const achatCalcul = combinaisonMiseEnAvant ? combinaisonMiseEnAvant.prixAchat : prixAchat;
   const venteCalcul = combinaisonMiseEnAvant ? combinaisonMiseEnAvant.prixVente : prixVente;
-  const fraisEstimes = (poidsGrammes ?? 0) * 2.5 + venteCalcul * 0.04;
-  const venteAPerte = achatCalcul !== null && venteCalcul > 0 && venteCalcul - achatCalcul - fraisEstimes < 0;
+  const venteAPerte = achatCalcul !== null && venteCalcul > 0 && venteCalcul - achatCalcul < 0;
 
   const construireCharge = (): NouveauProduit => ({
     nom: nom.trim(),
@@ -251,7 +247,7 @@ export default function AjouterProduitModal({
           poidsGrammes={poidsGrammes}
           onPoidsChange={setPoidsGrammes}
         />
-        <MargeCard prixAchat={prixAchat} prixVente={prixVente} poidsGrammes={poidsGrammes} combinaisons={combinaisons} attributs={attributs} />
+        <MargeCard prixAchat={prixAchat} prixVente={prixVente} combinaisons={combinaisons} attributs={attributs} />
       </div>
 
       <div className="mt-6">
@@ -282,8 +278,8 @@ export default function AjouterProduitModal({
             <p className="text-xs text-[var(--dashboard-text)]/70">
               <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[#a8690a] align-middle" />
               {t(
-                "Le prix de revente ne couvre pas son prix d'achat et les frais : la ligne « Il vous reste » passe au rouge et la publication est retenue le temps d'une confirmation.",
-                "The resale price doesn't cover its cost price and fees: the “What you keep” line turns red and publishing is held pending confirmation."
+                "Le prix de revente ne couvre pas son prix d'achat : la ligne « Il vous reste » passe au rouge et la publication est retenue le temps d'une confirmation.",
+                "The resale price doesn't cover its cost price: the “What you keep” line turns red and publishing is held pending confirmation."
               )}
             </p>
             <span className="shrink-0 rounded-full bg-[#fff1d6] px-2.5 py-1 text-[10px] font-semibold text-[#a8690a]">{t("Vente à perte", "Selling at a loss")}</span>

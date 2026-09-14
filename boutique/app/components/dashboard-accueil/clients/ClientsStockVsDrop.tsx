@@ -31,7 +31,7 @@ export default function ClientsStockVsDrop({ typeAchat }: { typeAchat: TypeAchat
       </div>
 
       {/* 2 Colonnes comparatives */}
-      <div className="mt-4 grid gap-3.5 sm:grid-cols-2">
+      <div className="mt-4 grid gap-3.5 sm:grid-cols-2 [&>*]:min-w-0">
         {/* Colonne 1 : Stockage management */}
         <div
           className={`rounded-xl border border-[#0284c7]/25 bg-[#0284c7]/5 p-4 transition-opacity ${

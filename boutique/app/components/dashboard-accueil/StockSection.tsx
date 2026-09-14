@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AreaChart, Bar, Btn, Card, Divider, HeaderActionBtn, MovementBars, Nature, SectionHeader, StatRow, Tag } from "./shared";
+import { AreaChart, Bar, Btn, Card, CollapsibleCards, Divider, HeaderActionBtn, MovementBars, Nature, SectionHeader, StatRow, Tag } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -336,6 +336,10 @@ export default function StockSection({ first = true }: { first?: boolean }) {
         <span className="ml-auto">{t("Bleu : votre marchandise. Rose : celle du partenaire. Neutre : ce qui vaut des deux côtés.", "Blue: your goods. Pink: the partner's. Neutral: what applies to both.")}</span>
       </div>
 
+      {/* 3 premiers blocs (KPI, vendable/immobilisé, mouvement du stock)
+          toujours visibles ; le reste passe sous le bouton "Voir tout le
+          contenu" de CollapsibleCards — cf. shared.tsx. */}
+      <CollapsibleCards visibleCount={3}>
       {/* KPI de la période */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <KpiCard label={t("Valeur du stock", "Stock value")} value="1 842 000 F" note={t("prix d'achat · 168 unités", "cost price · 168 units")} />
@@ -473,7 +477,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
           </div>
           <Tag tone="blue">{t("Stockage management", "Warehousing")}</Tag>
         </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-[auto_1fr] sm:gap-x-48">
+        <div className="mt-4 grid gap-4 sm:grid-cols-[auto_1fr] sm:gap-x-48 [&>*]:min-w-0">
           <div className="flex flex-col items-center gap-3">
             <Ring
               segments={[
@@ -930,6 +934,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
           href="/dashboard/produits/catalogue"
         />
       </Card>
+      </CollapsibleCards>
     </>
   );
 }

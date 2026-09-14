@@ -1,7 +1,7 @@
 "use client";
 
 import PaymentMethodCard from "../PaymentMethodCard";
-import { AreaChart, Bar, Card, Divider, HeaderActionBtn, LegendRow, MiniStat, SectionHeader, StatRow, Tag, WaterfallChart } from "./shared";
+import { AreaChart, Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, LegendRow, MiniStat, Nature, SectionHeader, StatRow, Tag, WaterfallChart } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -119,7 +119,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
       <Card className="!bg-[var(--dashboard-glass)]">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <h3 className="text-sm font-bold tracking-tight sm:text-base">{t("Solde de votre sous-compte", "Your sub-account balance")}</h3>
-          <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+          <Nature code="B" />
         </div>
         <p className="mt-2 text-2xl font-bold tracking-tight">1 482 300 F</p>
         <div className="mt-3 flex h-2.5 w-full overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]">
@@ -168,7 +168,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
               <span className="w-3 border-t border-dashed" style={{ borderColor: "var(--dashboard-text)", opacity: 0.4 }} />
               {t("Fin de suspension", "End of hold")}
             </span>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <Nature code="B" />
           </div>
         </div>
         <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">{t("Solde disponible, jour par jour, sur la période choisie", "Available balance, day by day, over the chosen period")}</p>
@@ -217,7 +217,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
               <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge nette", "Net margin")}</p>
               <p className="mt-0.5 text-sm font-bold" style={{ color: "#0E9F6E" }}>21,7 %</p>
             </div>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <Nature code="B" />
           </div>
         </div>
 
@@ -236,7 +236,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
           ]}
         />
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 [&>*]:min-w-0">
           <div className="rounded-2xl p-3" style={{ background: "rgba(56,189,248,.08)" }}>
             <div className="flex items-start gap-2">
               <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white" style={{ background: "#38BDF8" }}>1</span>
@@ -309,7 +309,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
           </Ring>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 [&>*]:min-w-0">
           {/* Colonne Stockage management */}
           <div className="rounded-2xl border p-3" style={{ borderColor: `${STOCKAGE_COLOR}40`, background: `${STOCKAGE_COLOR}0d` }}>
             <div className="flex items-start justify-between gap-2">
@@ -390,7 +390,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
       <Card className="!bg-[var(--dashboard-glass)]">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <h3 className="text-sm font-bold tracking-tight sm:text-base">{t("D'où viennent vos commandes", "Where your orders come from")}</h3>
-          <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+          <Nature code="B" />
         </div>
         <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">{t("Attribué par les pixels installés sur votre boutique", "Attributed by the pixels installed on your shop")}</p>
         <div className="mt-3 space-y-2">
@@ -441,7 +441,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
       <Card className="!bg-[var(--dashboard-glass)]">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <h3 className="text-sm font-bold tracking-tight sm:text-base">{t("Le coût de ce qui n'arrive pas", "The cost of what doesn't arrive")}</h3>
-          <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+          <Nature code="B" />
         </div>
         <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">{t("Un refus coûte selon le moment où il tombe", "A refusal costs depending on when it lands")}</p>
         <div className="mt-3 flex items-center gap-4">
@@ -595,10 +595,10 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
           <h3 className="text-sm font-bold tracking-tight sm:text-base">{t("Trésorerie attendue", "Expected cash")}</h3>
           <div className="flex items-center gap-1.5">
             <Tag tone="blue">{t("Projection", "Forecast")}</Tag>
-            <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
+            <Nature code="B" />
           </div>
         </div>
-        <div className="mt-3 grid items-start gap-5 sm:grid-cols-[1.1fr_1fr]">
+        <div className="mt-3 grid items-start gap-5 sm:grid-cols-[1.1fr_1fr] [&>*]:min-w-0">
           <div>
             <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("30 prochains jours, au rythme actuel", "Next 30 days, at the current pace")}</p>
             <AreaChart values={forecastDays} color="#38BDF8" />
@@ -641,24 +641,39 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         }
       />
 
-      <div className="grid gap-3">
-        <div className="grid items-start gap-3 lg:grid-cols-[minmax(300px,380px)_1fr]">
-          <PaymentMethodCard />
-          {soldeCard}
-        </div>
+      {/* Légende : quelle couleur renvoie à quelle façon de vendre */}
+      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-2xl bg-[var(--dashboard-glass)] px-4 py-3 text-[10px] text-[var(--dashboard-text)]/50">
+        <span className="flex items-center gap-1.5"><Nature code="S" /> {t("Stockage management", "Warehousing")}</span>
+        <span className="flex items-center gap-1.5"><Nature code="D" /> {t("Dropshipping", "Drop-shipping")}</span>
+        <span className="flex items-center gap-1.5"><Nature code="B" /> {t("Les deux", "Both")}</span>
+        <span className="ml-auto">{t("La couleur dit à quelle façon de vendre le montant se rapporte.", "The color shows which way of selling the amount relates to.")}</span>
+      </div>
 
-        {evolutionCard}
-        {compteResultatCard}
-        {comparaisonCard}
+      {/* 3 premiers blocs (portefeuille+solde, trésorerie, compte de
+          résultat) toujours visibles ; le reste (comparaison stockage/drop,
+          acquisition+refus, produits, argent immobilisé, projection) passe
+          sous le bouton "Voir tout le contenu" de CollapsibleCards — cf.
+          shared.tsx. */}
+      <div className="grid gap-3 [&>*]:min-w-0">
+        <CollapsibleCards visibleCount={3}>
+          <div className="grid items-start gap-3 lg:grid-cols-[minmax(300px,380px)_1fr] [&>*]:min-w-0">
+            <PaymentMethodCard />
+            {soldeCard}
+          </div>
 
-        <div className="grid items-start gap-3 sm:grid-cols-2">
-          {acquisitionCard}
-          {refusCard}
-        </div>
+          {evolutionCard}
+          {compteResultatCard}
+          {comparaisonCard}
 
-        {produitsCard}
-        {immobiliseCard}
-        {projectionCard}
+          <div className="grid items-start gap-3 sm:grid-cols-2 [&>*]:min-w-0">
+            {acquisitionCard}
+            {refusCard}
+          </div>
+
+          {produitsCard}
+          {immobiliseCard}
+          {projectionCard}
+        </CollapsibleCards>
       </div>
     </>
   );

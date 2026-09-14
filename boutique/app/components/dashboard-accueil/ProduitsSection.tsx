@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Bar, Card, Divider, HeaderActionBtn, Nature, SectionHeader, StatRow, Tag } from "./shared";
+import { useMemo, useState } from "react";
+import { Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, SectionHeader, StatRow, Tag } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -255,8 +256,46 @@ function AlertItem({ tone, code, title, desc, cta, href }: { tone: "r" | "w" | "
   );
 }
 
+// Tableau "Toutes vos références qui vendent" — données à plat pour que le
+// bouton "Trier par marge" (tri décroissant sur margeValue) et l'ordre par
+// défaut (celui de la maquette) restent tous les deux disponibles côté
+// client, sans dupliquer les JSX de ProductRow.
+const PRODUCT_TABLE_ROWS: {
+  code: "S" | "D";
+  nameFr: string;
+  nameEn: string;
+  unites: string;
+  ca: string;
+  margeDisplay: string;
+  margeValue: number;
+  parJour: string;
+  couvFr: string;
+  couvEn: string;
+  refus: string;
+  litiges: string;
+}[] = [
+  { code: "S", nameFr: "Sérum éclat 30 ml", nameEn: "Radiance serum 30 ml", unites: "41", ca: "492 000 F", margeDisplay: "31,4 %", margeValue: 31.4, parJour: "1,37", couvFr: "4 j", couvEn: "4d", refus: "12 %", litiges: "0" },
+  { code: "S", nameFr: "Beurre de karité 200 g", nameEn: "Shea butter 200 g", unites: "33", ca: "462 000 F", margeDisplay: "26,1 %", margeValue: 26.1, parJour: "1,10", couvFr: "19 j", couvEn: "19d", refus: "15 %", litiges: "2" },
+  { code: "D", nameFr: "Sac cabas en raphia", nameEn: "Raffia tote bag", unites: "24", ca: "477 600 F", margeDisplay: "18,8 %", margeValue: 18.8, parJour: "0,80", couvFr: "+6 j", couvEn: "+6d", refus: "21 %", litiges: "1" },
+  { code: "D", nameFr: "Huile de ricin 100 ml", nameEn: "Castor oil 100 ml", unites: "29", ca: "359 600 F", margeDisplay: "8,4 %", margeValue: 8.4, parJour: "0,97", couvFr: "3 j", couvEn: "3d", refus: "18 %", litiges: "0" },
+  { code: "S", nameFr: "Sandales tressées", nameEn: "Woven sandals", unites: "21", ca: "297 500 F", margeDisplay: "−1,8 %", margeValue: -1.8, parJour: "0,70", couvFr: "26 j", couvEn: "26d", refus: "34 %", litiges: "1" },
+  { code: "S", nameFr: "Ensemble lin deux pièces", nameEn: "Two-piece linen set", unites: "12", ca: "238 800 F", margeDisplay: "22,5 %", margeValue: 22.5, parJour: "0,40", couvFr: "41 j", couvEn: "41d", refus: "28 %", litiges: "0" },
+  { code: "S", nameFr: "Savon noir 250 g", nameEn: "Black soap 250 g", unites: "16", ca: "128 000 F", margeDisplay: "17,5 %", margeValue: 17.5, parJour: "0,55", couvFr: "11 j", couvEn: "11d", refus: "14 %", litiges: "0" },
+  { code: "D", nameFr: "Foulard en soie", nameEn: "Silk scarf", unites: "7", ca: "58 100 F", margeDisplay: "14,2 %", margeValue: 14.2, parJour: "0,23", couvFr: "+6 j", couvEn: "+6d", refus: "9 %", litiges: "0" },
+];
+
 export default function ProduitsSection({ first = true }: { first?: boolean }) {
   const { t } = useDashboardLangue();
+  // "Trier par marge" : tri décroissant sur la marge, toggle vers l'ordre
+  // par défaut de la maquette (celui du tableau ci-dessus). "Tout voir"
+  // n'a rien à replier ici (les 8 lignes sont déjà toutes affichées) : il
+  // renvoie au catalogue complet, même lien que les autres CTA "Voir" de
+  // cet écran (cf. AlertItem plus bas).
+  const [sortByMarge, setSortByMarge] = useState(false);
+  const productRows = useMemo(() => {
+    if (!sortByMarge) return PRODUCT_TABLE_ROWS;
+    return [...PRODUCT_TABLE_ROWS].sort((a, b) => b.margeValue - a.margeValue);
+  }, [sortByMarge]);
 
   return (
     <>
@@ -288,6 +327,11 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
         <span className="ml-auto">{t("La couleur dit à quelle façon de vendre la référence appartient.", "The color says which way of selling the item belongs to.")}</span>
       </div>
 
+      {/* 3 premiers blocs (KPI, quadrant vitesse/marge, concentration du
+          catalogue + état des fiches) toujours visibles ; le reste passe
+          sous le bouton "Voir tout le contenu" de CollapsibleCards — cf.
+          shared.tsx. */}
+      <CollapsibleCards visibleCount={3}>
       {/* KPI de la période */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <KpiCard label={t("Références au catalogue", "Catalog items")} value="32" note={t("21 en stock · 11 en drop", "21 warehoused · 11 drop")} />
@@ -310,7 +354,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
           </span>
         </div>
 
-        <div className="relative mt-4 h-[260px] sm:h-[300px]">
+        <div className="relative mt-4 h-[220px] sm:h-[240px]">
           <div className="absolute left-3 top-1 z-10 text-[10px] font-bold uppercase tracking-wide text-[var(--dashboard-text)]/30">
             {t("Pépites", "Gems")}
             <span className="mt-0.5 block text-[9px] font-normal normal-case tracking-normal text-[var(--dashboard-text)]/40">{t("Marge forte, vente lente", "High margin, slow sales")}</span>
@@ -327,15 +371,30 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
             {t("Volume pur", "Pure volume")}
             <span className="mt-0.5 block text-[9px] font-normal normal-case tracking-normal text-[var(--dashboard-text)]/40">{t("Marge faible, vente rapide", "Low margin, fast sales")}</span>
           </div>
-          <svg viewBox="0 0 560 300" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden fill="none">
-            <line x1={259} y1={10} x2={259} y2={275} stroke="var(--dashboard-text)" strokeOpacity={0.14} strokeWidth={1} strokeDasharray="4 4" />
-            <line x1={35} y1={139} x2={545} y2={139} stroke="var(--dashboard-text)" strokeOpacity={0.14} strokeWidth={1} strokeDasharray="4 4" />
-            <line x1={35} y1={234} x2={545} y2={234} stroke="#c8262d" strokeOpacity={0.5} strokeWidth={1.4} strokeDasharray="5 4" />
+          <div className="absolute inset-y-0 left-1/2 w-full max-w-[520px] -translate-x-1/2">
+            <svg viewBox="0 0 560 300" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden fill="none">
+              <line x1={259} y1={10} x2={259} y2={275} stroke="var(--dashboard-text)" strokeOpacity={0.14} strokeWidth={1} strokeDasharray="4 4" />
+              <line x1={35} y1={139} x2={545} y2={139} stroke="var(--dashboard-text)" strokeOpacity={0.14} strokeWidth={1} strokeDasharray="4 4" />
+              <line x1={35} y1={234} x2={545} y2={234} stroke="#c8262d" strokeOpacity={0.5} strokeWidth={1.4} strokeDasharray="5 4" />
+            </svg>
             {QUAD_DOTS.map((d, i) => (
-              <circle key={i} cx={d.cx} cy={d.cy} r={d.r} fill={d.nature === "S" ? STOCK_COLOR : "#EC0C8C"} fillOpacity={0.72} stroke={d.nature === "S" ? STOCK_COLOR : "#EC0C8C"} strokeWidth={1.4} />
+              <div
+                key={i}
+                className="absolute rounded-full"
+                style={{
+                  left: `${(d.cx / 560) * 100}%`,
+                  top: `${(d.cy / 300) * 100}%`,
+                  width: d.r * 1.8,
+                  height: d.r * 1.8,
+                  transform: "translate(-50%, -50%)",
+                  background: d.nature === "S" ? STOCK_COLOR : "#EC0C8C",
+                  opacity: 0.72,
+                  border: `1.4px solid ${d.nature === "S" ? STOCK_COLOR : "#EC0C8C"}`,
+                }}
+              />
             ))}
-          </svg>
-          <p className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[9px] text-[var(--dashboard-text)]/35">{t("Unités vendues par jour →", "Units sold per day →")}</p>
+            <p className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[9px] text-[var(--dashboard-text)]/35">{t("Unités vendues par jour →", "Units sold per day →")}</p>
+          </div>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -440,8 +499,18 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
             <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Huit colonnes, la même ligne pour tout le monde", "Eight columns, the same line for everyone")}</p>
           </div>
           <div className="flex gap-2">
-            <HeaderActionBtn>{t("Trier par marge", "Sort by margin")}</HeaderActionBtn>
-            <HeaderActionBtn>{t("Tout voir", "See all")}</HeaderActionBtn>
+            <HeaderActionBtn onClick={() => setSortByMarge((v) => !v)}>
+              {sortByMarge ? t("Ordre par défaut", "Default order") : t("Trier par marge", "Sort by margin")}
+            </HeaderActionBtn>
+            <Link
+              href="/dashboard/produits"
+              className="group relative inline-flex shrink-0 rounded-full p-px transition-all shadow-[0_2px_12px_rgba(20,18,32,0.05)] hover:opacity-95"
+              style={{ backgroundImage: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 58.35%, #FFFFFF 100%)" }}
+            >
+              <span className="inline-flex items-center rounded-full bg-[var(--dashboard-card-bg)]/90 px-3.5 py-1.5 text-xs font-semibold text-[var(--dashboard-text)] backdrop-blur-md transition group-hover:bg-[var(--dashboard-card-bg)]/70">
+                {t("Tout voir", "See all")}
+              </span>
+            </Link>
           </div>
         </div>
         <div className="mt-3 overflow-x-auto">
@@ -450,14 +519,22 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
               <span>{t("Référence", "Item")}</span><span>{t("Unités", "Units")}</span><span>{t("Chiffre d'affaires", "Revenue")}</span><span>{t("Marge", "Margin")}</span><span>{t("Ventes/j", "Sales/day")}</span><span>{t("Couverture", "Coverage")}</span><span>{t("Refus", "Refusals")}</span><span className="text-right">{t("Litiges", "Disputes")}</span>
             </div>
             <div className="divide-y divide-[var(--dashboard-text)]/[0.05]">
-              <ProductRow code="S" name={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} unites="41" ca="492 000 F" marge="31,4 %" parJour="1,37" couverture={t("4 j", "4d")} refus="12 %" litiges="0" />
-              <ProductRow code="S" name={t("Beurre de karité 200 g", "Shea butter 200 g")} unites="33" ca="462 000 F" marge="26,1 %" parJour="1,10" couverture={t("19 j", "19d")} refus="15 %" litiges="2" />
-              <ProductRow code="D" name={t("Sac cabas en raphia", "Raffia tote bag")} unites="24" ca="477 600 F" marge="18,8 %" parJour="0,80" couverture={t("+6 j", "+6d")} refus="21 %" litiges="1" />
-              <ProductRow code="D" name={t("Huile de ricin 100 ml", "Castor oil 100 ml")} unites="29" ca="359 600 F" marge="8,4 %" parJour="0,97" couverture={t("3 j", "3d")} refus="18 %" litiges="0" />
-              <ProductRow code="S" name={t("Sandales tressées", "Woven sandals")} unites="21" ca="297 500 F" marge="−1,8 %" margeNeg parJour="0,70" couverture={t("26 j", "26d")} refus="34 %" litiges="1" neg />
-              <ProductRow code="S" name={t("Ensemble lin deux pièces", "Two-piece linen set")} unites="12" ca="238 800 F" marge="22,5 %" parJour="0,40" couverture={t("41 j", "41d")} refus="28 %" litiges="0" />
-              <ProductRow code="S" name={t("Savon noir 250 g", "Black soap 250 g")} unites="16" ca="128 000 F" marge="17,5 %" parJour="0,55" couverture={t("11 j", "11d")} refus="14 %" litiges="0" />
-              <ProductRow code="D" name={t("Foulard en soie", "Silk scarf")} unites="7" ca="58 100 F" marge="14,2 %" parJour="0,23" couverture={t("+6 j", "+6d")} refus="9 %" litiges="0" />
+              {productRows.map((r) => (
+                <ProductRow
+                  key={r.nameFr}
+                  code={r.code}
+                  name={t(r.nameFr, r.nameEn)}
+                  unites={r.unites}
+                  ca={r.ca}
+                  marge={r.margeDisplay}
+                  margeNeg={r.margeValue < 0}
+                  parJour={r.parJour}
+                  couverture={t(r.couvFr, r.couvEn)}
+                  refus={r.refus}
+                  litiges={r.litiges}
+                  neg={r.margeValue < 0}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -470,7 +547,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
       </Card>
 
       {/* Produits qu'on refuse + jours de vente restants */}
-      <div className="mt-3 grid gap-3 lg:grid-cols-2 [&>*]:min-w-0">
+      <div className="mt-3 grid items-start gap-3 lg:grid-cols-2 [&>*]:min-w-0">
         <Card className="!bg-[var(--dashboard-glass)]">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
@@ -527,40 +604,42 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
             <StatRow label={t("Stock dormant, plus de 30 jours", "Dormant stock, over 30 days")} value={<span style={{ color: "#a8690a" }}>412 000 F</span>} />
           </div>
 
-          <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(236,12,140,.07)", border: "1px solid rgba(236,12,140,.24)" }}>
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold">{t("Le stock du partenaire", "The partner's stock")}</p>
-              <Tag tone="pink">{t("Dropshipping", "Drop-shipping")}</Tag>
+          <CollapsibleCards visibleCount={0}>
+            <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(236,12,140,.07)", border: "1px solid rgba(236,12,140,.24)" }}>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold">{t("Le stock du partenaire", "The partner's stock")}</p>
+                <Tag tone="pink">{t("Dropshipping", "Drop-shipping")}</Tag>
+              </div>
+              <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Lu dans sa base, affiché jusqu'à six jours seulement. Au-delà, rien à surveiller.", "Read from their database, shown only up to six days. Beyond that, nothing to watch.")}</p>
+              <div className="mt-2.5">
+                <RankBar label={t("Huile de ricin 100 ml", "Castor oil 100 ml")} value={t("3 j", "3d")} pct={50} color="#c8262d" valueColor="#c8262d" />
+                <RankBar label={t("Masque argile 100 g", "Clay mask 100 g")} value={t("5 j", "5d")} pct={83} color="#a8690a" valueColor="#a8690a" />
+                <RankBar label={t("Sac cabas en raphia", "Raffia tote bag")} value={t("Plus de 6 j", "Over 6d")} pct={100} color="#178a3f" valueColor="#178a3f" />
+                <RankBar label={t("Foulard en soie", "Silk scarf")} value={t("Plus de 6 j", "Over 6d")} pct={100} color="#178a3f" valueColor="#178a3f" />
+              </div>
+              <div className="mt-3 rounded-lg bg-[var(--dashboard-surface-2)] p-2.5">
+                <p className="text-[10px] font-semibold">{t("Pourquoi six jours et pas plus", "Why six days and no more")}</p>
+                <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
+                  {t(
+                    "Ce stock ne vous appartient pas et vous ne le réapprovisionnez pas : le compter au jour près ne vous servirait à rien. En revanche, savoir qu'il descend sous six jours vous permet de couper la publicité avant de vendre un produit que le partenaire ne pourra plus expédier.",
+                    "This stock isn't yours and you don't replenish it: counting it to the day would be useless. Knowing it drops under six days, though, lets you cut ads before selling a product the partner won't be able to ship anymore."
+                  )}
+                </p>
+              </div>
+              <Divider />
+              <StatRow label={t("Sous six jours en ce moment", "Under six days right now")} value={<span style={{ color: "#c8262d" }}>{t("2 références · alerte", "2 items · alert")}</span>} />
             </div>
-            <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Lu dans sa base, affiché jusqu'à six jours seulement. Au-delà, rien à surveiller.", "Read from their database, shown only up to six days. Beyond that, nothing to watch.")}</p>
-            <div className="mt-2.5">
-              <RankBar label={t("Huile de ricin 100 ml", "Castor oil 100 ml")} value={t("3 j", "3d")} pct={50} color="#c8262d" valueColor="#c8262d" />
-              <RankBar label={t("Masque argile 100 g", "Clay mask 100 g")} value={t("5 j", "5d")} pct={83} color="#a8690a" valueColor="#a8690a" />
-              <RankBar label={t("Sac cabas en raphia", "Raffia tote bag")} value={t("Plus de 6 j", "Over 6d")} pct={100} color="#178a3f" valueColor="#178a3f" />
-              <RankBar label={t("Foulard en soie", "Silk scarf")} value={t("Plus de 6 j", "Over 6d")} pct={100} color="#178a3f" valueColor="#178a3f" />
-            </div>
-            <div className="mt-3 rounded-lg bg-[var(--dashboard-surface-2)] p-2.5">
-              <p className="text-[10px] font-semibold">{t("Pourquoi six jours et pas plus", "Why six days and no more")}</p>
+
+            <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
+              <p className="text-xs font-semibold">{t("Deux stocks, deux façons de les lire", "Two stocks, two ways of reading them")}</p>
               <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
                 {t(
-                  "Ce stock ne vous appartient pas et vous ne le réapprovisionnez pas : le compter au jour près ne vous servirait à rien. En revanche, savoir qu'il descend sous six jours vous permet de couper la publicité avant de vendre un produit que le partenaire ne pourra plus expédier.",
-                  "This stock isn't yours and you don't replenish it: counting it to the day would be useless. Knowing it drops under six days, though, lets you cut ads before selling a product the partner won't be able to ship anymore."
+                  "D'un côté votre marchandise, payée d'avance, qu'il faut réapprovisionner à temps : quatre jours de couverture sur votre première locomotive, c'est un signal rouge. De l'autre celle du partenaire, que vous ne commandez pas : la seule chose utile est de savoir quand elle s'épuise, pour arrêter de la pousser en publicité. La plateforme s'arrête donc à six jours, et déclenche une alerte en dessous.",
+                  "On one side your goods, paid up front, that need replenishing on time: four days of coverage on your top flagship is a red signal. On the other the partner's, which you don't order: the only useful thing is knowing when it runs low, to stop pushing ads on it. The platform stops at six days, and raises an alert below that."
                 )}
               </p>
             </div>
-            <Divider />
-            <StatRow label={t("Sous six jours en ce moment", "Under six days right now")} value={<span style={{ color: "#c8262d" }}>{t("2 références · alerte", "2 items · alert")}</span>} />
-          </div>
-
-          <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
-            <p className="text-xs font-semibold">{t("Deux stocks, deux façons de les lire", "Two stocks, two ways of reading them")}</p>
-            <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
-              {t(
-                "D'un côté votre marchandise, payée d'avance, qu'il faut réapprovisionner à temps : quatre jours de couverture sur votre première locomotive, c'est un signal rouge. De l'autre celle du partenaire, que vous ne commandez pas : la seule chose utile est de savoir quand elle s'épuise, pour arrêter de la pousser en publicité. La plateforme s'arrête donc à six jours, et déclenche une alerte en dessous.",
-                "On one side your goods, paid up front, that need replenishing on time: four days of coverage on your top flagship is a red signal. On the other the partner's, which you don't order: the only useful thing is knowing when it runs low, to stop pushing ads on it. The platform stops at six days, and raises an alert below that."
-              )}
-            </p>
-          </div>
+          </CollapsibleCards>
         </Card>
       </div>
 
@@ -745,6 +824,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
           href="/dashboard/produits"
         />
       </Card>
+      </CollapsibleCards>
     </>
   );
 }

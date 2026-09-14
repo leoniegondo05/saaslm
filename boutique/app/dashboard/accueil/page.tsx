@@ -11,14 +11,14 @@ import { useDashboardLangue } from "../../components/DashboardLanguageProvider";
 import FinancesSection from "../../components/dashboard-accueil/FinancesSection";
 import CommandesSection from "../../components/dashboard-accueil/CommandesSection";
 import ClientsSection from "../../components/dashboard-accueil/ClientsSection";
-import AcquisitionSection from "../../components/dashboard-accueil/AcquisitionSection";
+import LitigesSection from "../../components/dashboard-accueil/LitigesSection";
 import StockSection from "../../components/dashboard-accueil/StockSection";
 import ProduitsSection from "../../components/dashboard-accueil/ProduitsSection";
-import AlertesSection from "../../components/dashboard-accueil/AlertesSection";
+import PartenaireSection from "../../components/dashboard-accueil/PartenaireSection";
 
 /*
   Onglet "Accueil" du dashboard boutique : le tableau de données complet
-  (finances, commandes, clients, acquisition, stock, produits, alertes),
+  (finances, commandes, clients, litiges, stock, produits, partenaire),
   atteint depuis l'icône "Accueil" du rail (voir DashboardSidebar).
 
   Chaque thématique était auparavant empilée sur une seule page géante —
@@ -41,10 +41,10 @@ const SECTIONS: Record<AccueilTab, React.ComponentType<{ first?: boolean }>> = {
   Finances: FinancesSection,
   Commandes: CommandesSection,
   Clients: ClientsSection,
-  Acquisition: AcquisitionSection,
+  Litiges: LitigesSection,
   Stock: StockSection,
   Produits: ProduitsSection,
-  Alertes: AlertesSection,
+  Partenaire: PartenaireSection,
 };
 
 export default function AccueilPage() {

@@ -36,7 +36,7 @@ export default function ClientsPaymentImpact({ typeAchat }: { typeAchat: TypeAch
       </div>
 
       {/* Grille comparative */}
-      <div className="mt-4 grid gap-3.5 sm:grid-cols-2">
+      <div className="mt-4 grid gap-3.5 sm:grid-cols-2 [&>*]:min-w-0">
         {/* CARTE 1 : Achat direct */}
         <div className="rounded-xl border border-[#10b981]/25 bg-[#10b981]/5 p-4">
           <div className="flex items-center justify-between">

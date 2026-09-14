@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AreaChart, Bar, Card, Divider, HeaderActionBtn, Nature, SectionHeader, StatRow, Table, Tag } from "./shared";
+import { AreaChart, Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, SectionHeader, StatRow, Table, Tag } from "./shared";
 import RetentionCard from "./RetentionCard";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
@@ -122,35 +122,37 @@ function SegmentBar({ segments }: { segments: { pct: number; color: string }[] }
   );
 }
 
-// Boîte + chiffre d'une étape du parcours, carte "Le parcours d'une
-// commande" — reproduction de la maquette : la 1re étape est un pavé au
-// contour marqué (pas encore de couleur, c'est la visite brute) SANS ligne
-// de taux dessous, donc sa boîte est plus haute que les 4 suivantes (value
-// + label + taux, 3 lignes). Le slot (div flex items-end) a une hauteur
-// fixe commune à toutes les étapes : la boîte grise s'y étire pleine
-// hauteur, les boîtes colorées s'y calent en BAS — donc value/label/taux
-// restent tous à la même ligne malgré la différence de hauteur des boîtes.
+// Couleurs des 5 étapes, dans l'ordre — réutilisées par le nœud (FunnelStep)
+// et par la ligne dégradée qui les relie (FunnelTrack).
+const FUNNEL_COLORS = ["#9096AA", "#8B5CF6", "#5AA9FF", "#4FE0AE", "#3DA88C"];
+
+// Étape du parcours, carte "Le parcours d'une commande" — pas de pavé
+// rectangulaire : un nœud numéroté (pastille pleine) posé sur une ligne
+// dégradée commune (FunnelTrack, dessinée par le parent), value/label/taux
+// empilés dessous. Style pipeline/timeline plutôt que case pleine.
 function FunnelStep({
+  step,
   value,
   label,
   rate,
   rateColor,
-  box,
+  color,
 }: {
+  step: number;
   value: string;
   label: string;
   rate?: string;
   rateColor?: string;
-  box: { variant: "outline" | "solid"; color?: string };
+  color: string;
 }) {
   return (
-    <div className="text-center">
-      <div className="flex h-32 items-end sm:h-36">
-        <div
-          className={`w-full rounded-2xl ${rate ? "h-24 sm:h-28" : "h-full"} ${box.variant === "outline" ? "border-2 border-[var(--dashboard-text)]/30 bg-[var(--dashboard-text)]/[0.06]" : "border-2 border-white/20"}`}
-          style={box.variant === "solid" ? { background: box.color } : undefined}
-        />
-      </div>
+    <div className="flex flex-col items-center text-center">
+      <span
+        className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ring-4 ring-[var(--dashboard-glass)]"
+        style={{ background: color }}
+      >
+        {step}
+      </span>
       <p className="mt-3 text-xl font-bold tracking-tight sm:text-2xl">{value}</p>
       <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{label}</p>
       {rate && (
@@ -158,6 +160,20 @@ function FunnelStep({
           {rate}
         </p>
       )}
+    </div>
+  );
+}
+
+// Ligne derrière les 5 nœuds, un dégradé par intervalle (couleur de l'étape
+// de départ → couleur de l'étape d'arrivée) — passe au travers des centres
+// des pastilles (top-4 = moitié de h-8), 10 %/90 % ~ centre du 1er/dernier
+// nœud dans une grille à 5 colonnes égales.
+function FunnelTrack() {
+  return (
+    <div className="absolute left-[10%] right-[10%] top-4 flex h-[3px] overflow-hidden rounded-full">
+      {FUNNEL_COLORS.slice(0, -1).map((c, i) => (
+        <span key={i} className="h-full flex-1" style={{ background: `linear-gradient(90deg, ${c} 0%, ${FUNNEL_COLORS[i + 1]} 100%)` }} />
+      ))}
     </div>
   );
 }
@@ -351,10 +367,21 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
       <SectionHeader
         eyebrow={t("Commandes", "Orders")}
         title={t("Ce que devient chaque commande", "What happens to each order")}
-        subtitle={t(
-          "De la visite de votre page jusqu'à la fin du délai de litige — et où, méthodiquement, elle se perd.",
-          "From the visit to your page through to the end of the dispute window — and where, methodically, it gets lost."
-        )}
+        subtitle={
+          t("fr", "en") !== "en" ? (
+            <>
+              De la visite de votre page jusqu'à la fin du délai de litige
+              <br />
+              — et où, méthodiquement, elle se perd.
+            </>
+          ) : (
+            <>
+              From the visit to your page through to the end of the dispute window
+              <br />
+              — and where, methodically, it gets lost.
+            </>
+          )
+        }
         first={first}
         layout="inline"
         actions={
@@ -373,6 +400,10 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
         <span className="ml-auto">{t("La couleur dit à quelle façon de vendre la commande se rapporte.", "The color shows which way of selling the order relates to.")}</span>
       </div>
 
+      {/* 3 premiers blocs (KPI, parcours de commande, jour par jour + cycle
+          du mois) toujours visibles ; le reste passe sous le bouton
+          "Voir tout le contenu" de CollapsibleCards — cf. shared.tsx. */}
+      <CollapsibleCards visibleCount={3}>
       {/* KPI de la période */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Card className="!bg-[var(--dashboard-glass)]">
@@ -413,18 +444,22 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           </div>
           <Nature code="B" />
         </div>
-        <div className="mt-4 grid grid-cols-5 gap-2 sm:gap-3">
-          <FunnelStep value="8 420" label={t("Visites de la page", "Page visits")} box={{ variant: "outline" }} />
-          <FunnelStep
-            value="148"
-            label={t("Commandes passées", "Orders placed")}
-            rate={t("1,76 % de transformation", "1.76% conversion")}
-            rateColor="#EC0C8C"
-            box={{ variant: "solid", color: "#8B5CF6" }}
-          />
-          <FunnelStep value="134" label={t("Confirmées à l'appel", "Confirmed by phone")} rate="90,5 %" rateColor="#178a3f" box={{ variant: "solid", color: "#5AA9FF" }} />
-          <FunnelStep value="119" label={t("Livrées et payées", "Delivered and paid")} rate="88,8 %" rateColor="#a8690a" box={{ variant: "solid", color: "#4FE0AE" }} />
-          <FunnelStep value="117" label={t("Sans litige", "Without dispute")} rate="98,3 %" rateColor="#178a3f" box={{ variant: "solid", color: "#3DA88C" }} />
+        <div className="relative mt-6">
+          <FunnelTrack />
+          <div className="relative grid grid-cols-5 gap-2">
+            <FunnelStep step={1} value="8 420" label={t("Visites de la page", "Page visits")} color={FUNNEL_COLORS[0]} />
+            <FunnelStep
+              step={2}
+              value="148"
+              label={t("Commandes passées", "Orders placed")}
+              rate={t("1,76 % de transformation", "1.76% conversion")}
+              rateColor="#EC0C8C"
+              color={FUNNEL_COLORS[1]}
+            />
+            <FunnelStep step={3} value="134" label={t("Confirmées à l'appel", "Confirmed by phone")} rate="90,5 %" rateColor="#178a3f" color={FUNNEL_COLORS[2]} />
+            <FunnelStep step={4} value="119" label={t("Livrées et payées", "Delivered and paid")} rate="88,8 %" rateColor="#a8690a" color={FUNNEL_COLORS[3]} />
+            <FunnelStep step={5} value="117" label={t("Sans litige", "Without dispute")} rate="98,3 %" rateColor="#178a3f" color={FUNNEL_COLORS[4]} />
+          </div>
         </div>
         <Divider />
         <p className="text-xs font-semibold">{t("Où vous perdez le plus", "Where you lose the most")}</p>
@@ -573,7 +608,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
             <Nature code="B" />
           </div>
         </div>
-        <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_1.4fr]">
+        <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_1.4fr] [&>*]:min-w-0">
           <div>
             {/* Combo aire (commandes, échelle propre à la série) + ligne
                 pointillée (taux de livraison, échelle 0-100 directe) —
@@ -1080,6 +1115,7 @@ export default function CommandesSection({ first = true }: { first?: boolean }) 
           </div>
         </Card>
       </div>
+      </CollapsibleCards>
     </>
   );
 }

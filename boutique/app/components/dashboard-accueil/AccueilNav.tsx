@@ -5,11 +5,11 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
 export const ACCUEIL_TABS = [
   "Finances",
   "Commandes",
-  "Clients",
-  "Acquisition",
-  "Stock",
   "Produits",
-  "Alertes",
+  "Stock",
+  "Clients",
+  "Litiges",
+  "Partenaire",
 ] as const;
 
 export type AccueilTab = (typeof ACCUEIL_TABS)[number];
@@ -21,10 +21,10 @@ export const TAB_LABELS_EN: Record<AccueilTab, string> = {
   Finances: "Finances",
   Commandes: "Orders",
   Clients: "Customers",
-  Acquisition: "Acquisition",
+  Litiges: "Disputes",
   Stock: "Stock",
   Produits: "Products",
-  Alertes: "Alerts",
+  Partenaire: "Partner",
 };
 
 /*

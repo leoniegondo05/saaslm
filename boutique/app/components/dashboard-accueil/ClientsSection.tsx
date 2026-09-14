@@ -1,7 +1,7 @@
 "use client";
 
 import { useDashboardLangue } from "../DashboardLanguageProvider";
-import { HeaderActionBtn, SectionHeader, Nature } from "./shared";
+import { CollapsibleCards, HeaderActionBtn, SectionHeader, Nature } from "./shared";
 import { KPIS_CLIENTS, TypeAchat } from "./clients/clientsData";
 import ClientsRfMatrix from "./clients/ClientsRfMatrix";
 import ClientsGrowthChart from "./clients/ClientsGrowthChart";
@@ -107,41 +107,46 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
         ))}
       </div>
 
-      {/* ── SECTION 1 : VOS CLIENTS RANGÉS PAR SEGMENT (MATRICE RFM) ── */}
-      <ClientsRfMatrix typeAchat={typeAchat} />
+      {/* 3 premières sous-sections (RFM, croissance du fichier, valeur
+          client) toujours visibles ; le reste passe sous le bouton "Voir
+          tout le contenu" de CollapsibleCards — cf. shared.tsx. */}
+      <CollapsibleCards visibleCount={3}>
+        {/* ── SECTION 1 : VOS CLIENTS RANGÉS PAR SEGMENT (MATRICE RFM) ── */}
+        <ClientsRfMatrix typeAchat={typeAchat} />
 
-      {/* ── SECTION 2 : COMMENT VOTRE FICHIER GRANDIT (HISTOGRAMME 12 SEMAINES) ── */}
-      <ClientsGrowthChart />
+        {/* ── SECTION 2 : COMMENT VOTRE FICHIER GRANDIT (HISTOGRAMME 12 SEMAINES) ── */}
+        <ClientsGrowthChart />
 
-      {/* ── SECTION 3 : CE QUE VAUT UN CLIENT / DÉCILES / DONUT CHART ── */}
-      <ClientsValueDonut typeAchat={typeAchat} />
+        {/* ── SECTION 3 : CE QUE VAUT UN CLIENT / DÉCILES / DONUT CHART ── */}
+        <ClientsValueDonut typeAchat={typeAchat} />
 
-      {/* ── SECTION 4 : PASSERELLES PRODUITS (PREMIER & SECOND ACHAT) ── */}
-      <ClientsProductsGateway typeAchat={typeAchat} />
+        {/* ── SECTION 4 : PASSERELLES PRODUITS (PREMIER & SECOND ACHAT) ── */}
+        <ClientsProductsGateway typeAchat={typeAchat} />
 
-      {/* ── SECTION 5 : QUAND ILS REVIENNENT & FIABILITÉ CLIENTS ── */}
-      <ClientsReliabilityRetention typeAchat={typeAchat} />
+        {/* ── SECTION 5 : QUAND ILS REVIENNENT & FIABILITÉ CLIENTS ── */}
+        <ClientsReliabilityRetention typeAchat={typeAchat} />
 
-      {/* ── SECTION 6 : COMMENT ILS PAIENT ET IMPACT SUR LA MARGE ── */}
-      <ClientsPaymentImpact typeAchat={typeAchat} />
+        {/* ── SECTION 6 : COMMENT ILS PAIENT ET IMPACT SUR LA MARGE ── */}
+        <ClientsPaymentImpact typeAchat={typeAchat} />
 
-      {/* ── SECTION 7 : SCORE DE FIABILITÉ & MATRICE VALEUR / FIABILITÉ ── */}
-      <ClientsReliabilityMatrix typeAchat={typeAchat} />
+        {/* ── SECTION 7 : SCORE DE FIABILITÉ & MATRICE VALEUR / FIABILITÉ ── */}
+        <ClientsReliabilityMatrix typeAchat={typeAchat} />
 
-      {/* ── SECTION 8 : EXPÉRIENCE STOCKAGE MANAGEMENT VS DROPSHIPPING ── */}
-      <ClientsStockVsDrop typeAchat={typeAchat} />
+        {/* ── SECTION 8 : EXPÉRIENCE STOCKAGE MANAGEMENT VS DROPSHIPPING ── */}
+        <ClientsStockVsDrop typeAchat={typeAchat} />
 
-      {/* ── SECTION 9 : OÙ SONT VOS CLIENTS (GÉO) & CANAUX D'ACQUISITION ── */}
-      <ClientsGeoAndChannels typeAchat={typeAchat} />
+        {/* ── SECTION 9 : OÙ SONT VOS CLIENTS (GÉO) & CANAUX D'ACQUISITION ── */}
+        <ClientsGeoAndChannels typeAchat={typeAchat} />
 
-      {/* ── SECTION 10 : PROFONDEUR DE CATALOGUE & PROJECTION PORTEFEUILLE 12 MOIS ── */}
-      <ClientsProductsCountAndForecast typeAchat={typeAchat} />
+        {/* ── SECTION 10 : PROFONDEUR DE CATALOGUE & PROJECTION PORTEFEUILLE 12 MOIS ── */}
+        <ClientsProductsCountAndForecast typeAchat={typeAchat} />
 
-      {/* ── SECTION 11 : QUALITÉ DE LA RELATION, SEGMENT PAR SEGMENT ── */}
-      <ClientsSegmentQuality typeAchat={typeAchat} />
+        {/* ── SECTION 11 : QUALITÉ DE LA RELATION, SEGMENT PAR SEGMENT ── */}
+        <ClientsSegmentQuality typeAchat={typeAchat} />
 
-      {/* ── SECTION 12 : À FAIRE AUJOURD'HUI (ACTIONS & RELANCES PRÊTES) ── */}
-      <ClientsActionsToday typeAchat={typeAchat} />
+        {/* ── SECTION 12 : À FAIRE AUJOURD'HUI (ACTIONS & RELANCES PRÊTES) ── */}
+        <ClientsActionsToday typeAchat={typeAchat} />
+      </CollapsibleCards>
     </div>
   );
 }
