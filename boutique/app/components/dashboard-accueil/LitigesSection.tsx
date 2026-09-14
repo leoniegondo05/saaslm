@@ -1,8 +1,8 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import Link from "next/link";
-import { AreaChart, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, SectionHeader, StatRow, Tag } from "./shared";
+import { AreaChart, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, openBrandedReport, SectionHeader, StatRow, Tag } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -465,6 +465,35 @@ export default function LitigesSection({ first = true }: { first?: boolean }) {
     { fr: "Le fournisseur", en: "The supplier", value: 2, pct: "8 %", color: AMBER_CHART },
   ];
 
+  // "Exporter" : KPI de la période, issues des litiges et responsable réel.
+  const [exportDone, setExportDone] = useState(false);
+  function handleExport() {
+    openBrandedReport(t("Litiges", "Disputes"), t("Un litige n'est pas un incident, c'est une information", "A dispute isn't an incident, it's information"), [
+      {
+        heading: t("Indicateurs de la période", "Period metrics"),
+        columns: [t("Indicateur", "Metric"), t("Valeur", "Value"), t("Note", "Note")],
+        rows: [
+          [t("Taux de litige", "Dispute rate"), "1,7 %", t("réseau : 3,1 %", "network: 3.1%")],
+          [t("Ouverts en ce moment", "Open right now"), "2", t("47 480 F suspendus", "47 480 F on hold")],
+          [t("Prise en main moyenne", "Average handling time"), "2 h 40", t("maximum contractuel : 9 h", "contractual max: 9h")],
+          [t("Résolution moyenne", "Average resolution"), "14 h", t("73 % sous 24 h", "73% under 24h")],
+          [t("Coût moyen", "Average cost"), "3 400 F", t("course de reprise comprise", "return trip included")],
+          [t("Votre délai de litige", "Your dispute window"), "72 h", t("minimum autorisé : 24 h", "minimum allowed: 24h")],
+        ],
+      },
+      {
+        heading: t("Comment ils se terminent (26 litiges)", "How they end (26 disputes)"),
+        rows: OUTCOMES.map((o) => [t(o.fr, o.en), o.count]),
+      },
+      {
+        heading: t("Responsable réel", "Actual party at fault"),
+        rows: flowResp.map((r) => [t(r.fr, r.en), r.value, r.pct]),
+      },
+    ]);
+    setExportDone(true);
+    setTimeout(() => setExportDone(false), 2500);
+  }
+
   return (
     <>
       <SectionHeader
@@ -478,7 +507,7 @@ export default function LitigesSection({ first = true }: { first?: boolean }) {
         layout="inline"
         actions={
           <>
-            <HeaderActionBtn>{t("Exporter", "Export")}</HeaderActionBtn>
+            <HeaderActionBtn onClick={handleExport}>{exportDone ? t("Exporté", "Exported") : t("Exporter", "Export")}</HeaderActionBtn>
             <HeaderActionBtn>{t("Changer mon délai de litige", "Change my dispute window")}</HeaderActionBtn>
           </>
         }

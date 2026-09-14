@@ -255,9 +255,10 @@ export default function DashboardHeader({
       {/* Ligne 1 mobile : logo+date d'un côté, icônes (notif/partenaire/user)
           de l'autre, jamais coupée entre elles (retour utilisateur : tout
           info importante, doit tenir sur 1 ligne en mobile). À partir de sm,
-          "contents" efface ce wrapper : logo+date, badge et icônes
-          redeviennent 3 enfants directs du header (layout desktop inchangé,
-          badge au milieu via l'ordre ci-dessous). */}
+          "contents" efface ce wrapper : logo+date et icônes redeviennent 2
+          enfants directs du header (layout desktop inchangé). Le badge
+          "solution LM" ne fait plus partie de cette ligne : il est `fixed`,
+          hors flux, cf. commentaire plus bas. */}
       <div className="flex w-full items-center justify-between gap-3 sm:contents">
         <div className="flex items-center gap-2.5 sm:order-1">
         <Image
@@ -660,23 +661,43 @@ export default function DashboardHeader({
       </div>
       </div>
 
-      {/* Bouton "solution LM" : order-3 + w-full en mobile → passe sur sa
-          propre ligne sous logo/date+icônes (flex-wrap du header), centré.
-          À partir de sm, sm:order-2 le replace au milieu, sur la même
-          ligne que logo/date et icônes (layout desktop inchangé). Ouvre
-          AssistanceLMModal : questions de l'onglet Accueil actif, ou
-          briefing des 7 sections si aucun (cf. commentaire sur le prop
-          activeAccueilTab plus haut). */}
-      <span className="order-3 flex w-full justify-center rounded-full bg-[linear-gradient(90deg,var(--color-brand-pink),rgba(20,18,32,0.08))] p-px shadow-[0_2px_10px_rgba(20,18,32,0.06)] sm:order-2 sm:w-auto sm:inline-flex sm:justify-start">
-        <button
-          type="button"
-          onClick={() => setShowAssistance(true)}
-          className="inline-flex items-center gap-1.5 rounded-full bg-white/90 pl-2 pr-3 py-1 text-[11px] font-medium text-[#141220] transition hover:bg-white dark:bg-[#1c1830]/90 dark:text-[var(--dashboard-text)] dark:hover:bg-[#1c1830]"
-        >
-          <SparkleIcon />
-          {t("solution LM", "LM solution")}
-        </button>
-      </span>
+      {/* Bouton "solution LM" : `fixed` (jamais `sticky`) pour rester
+          visible EN PERMANENCE quel que soit le défilement, y compris tout
+          en bas de page — même piège déjà rencontré et documenté sur le
+          rail de nav (voir DashboardSidebar.tsx) : un `sticky` posé dans
+          cette colonne de contenu, souvent plus haute que l'écran, finit
+          par décrocher et remonter avec le contenu en fin de scroll.
+
+          Repositionné "au milieu, là où il était" (retour utilisateur, la
+           1ère version en haut-à-droite ne convenait pas) : le wrapper ci-
+          dessous reprend toute la largeur de l'écran juste pour centrer le
+          badge (flex + justify-center), `lg:pl-[90px]` compensant la
+          largeur du rail desktop (DashboardSidebar) pour centrer dans la
+          colonne de contenu et non tout l'écran — ce wrapper est
+          `pointer-events-none` (il ne doit rien bloquer sous lui) et seul
+          le badge repasse en `pointer-events-auto`. Décalage vertical plus
+          grand en mobile (top-[4.75rem]) qu'à partir de sm (sm:top-6,
+          lg:top-8) : en mobile le badge occupait sa PROPRE ligne sous
+          logo/icônes (2 lignes dans le header non-fixe), alors qu'à partir
+          de sm il partageait leur ligne — sans ce décalage il se
+          superposerait à cette 1ère ligne, toujours visible puisqu'elle
+          n'est pas fixed. Ouvre AssistanceLMModal : questions de l'onglet
+          Accueil actif, ou briefing des 7 sections si aucun (cf. commentaire
+          sur le prop activeAccueilTab plus haut). animate-solution-lm
+          (globals.css) : halo rose qui pulse doucement pour signaler que le
+          badge est cliquable (retour utilisateur). */}
+      <div className="pointer-events-none fixed inset-x-0 top-[4.75rem] z-40 flex justify-center px-4 sm:top-6 sm:px-6 md:px-10 lg:top-8 lg:pl-[90px] lg:pr-6">
+        <span className="animate-solution-lm pointer-events-auto inline-flex rounded-full bg-[linear-gradient(90deg,var(--color-brand-pink),rgba(20,18,32,0.08))] p-px">
+          <button
+            type="button"
+            onClick={() => setShowAssistance(true)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-white/90 pl-2 pr-3 py-1 text-[11px] font-medium text-[#141220] shadow-[0_2px_10px_rgba(20,18,32,0.12)] transition hover:bg-white dark:bg-[#1c1830]/90 dark:text-[var(--dashboard-text)] dark:hover:bg-[#1c1830]"
+          >
+            <SparkleIcon />
+            {t("solution LM", "LM solution")}
+          </button>
+        </span>
+      </div>
 
       {showAssistance && <AssistanceLMModal activeTab={activeAccueilTab} onFermer={() => setShowAssistance(false)} />}
     </header>

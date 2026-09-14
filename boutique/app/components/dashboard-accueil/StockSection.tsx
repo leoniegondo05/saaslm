@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { AreaChart, Bar, Btn, Card, CollapsibleCards, Divider, HeaderActionBtn, MovementBars, Nature, SectionHeader, StatRow, Tag } from "./shared";
+import { useState } from "react";
+import { AreaChart, Bar, Btn, Card, CollapsibleCards, Divider, HeaderActionBtn, MovementBars, Nature, openBrandedReport, SectionHeader, StatRow, Tag } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -64,7 +65,8 @@ function StackedBar({ segments }: { segments: { pct: number; color: string }[] }
   );
 }
 
-function KpiCard({ label, value, valueColor, note, noteColor }: { label: string; value: string; valueColor?: string; note: string; noteColor?: string }) {
+function KpiCard({ label, value, valueColor, note, noteColor, previous }: { label: string; value: string; valueColor?: string; note: string; noteColor?: string; previous?: string }) {
+  const { t } = useDashboardLangue();
   return (
     <Card className="!bg-[var(--dashboard-glass)]">
       <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
@@ -74,6 +76,11 @@ function KpiCard({ label, value, valueColor, note, noteColor }: { label: string;
       <p className="mt-1 text-[10px]" style={noteColor ? { color: noteColor } : undefined}>
         <span className={noteColor ? "" : "text-[var(--dashboard-text)]/40"}>{note}</span>
       </p>
+      {previous && (
+        <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">
+          {t("Période précédente", "Previous period")} : {previous}
+        </p>
+      )}
     </Card>
   );
 }
@@ -301,6 +308,63 @@ const VENDU_STOCK = [3, 4, 3, 4, 4, 5, 4, 5, 4, 5, 4, 5, 4, 4, 3, 4, 4, 4, 5, 3,
 export default function StockSection({ first = true }: { first?: boolean }) {
   const { t } = useDashboardLangue();
 
+  // "Comparer à la période précédente" : révèle une ligne "Période
+  // précédente" sous chaque KPI. Pas de vraie période antérieure tant que
+  // l'API Laravel n'existe pas (cf. [[dashboard-mock-data-pending-laravel-api]]),
+  // donc valeurs mock cohérentes avec les écarts déjà affichés (ex: 8,9× −
+  // 1,2 = 7,7× pour la rotation annuelle, dont l'écart est connu).
+  const [compare, setCompare] = useState(false);
+
+  // "Exporter" : KPI de la période, répartition vendable/immobilisé,
+  // sites du partenaire et lots à date limite — les tableaux chiffrés
+  // déjà affichés en haut de section.
+  const [exportDone, setExportDone] = useState(false);
+  function handleExport() {
+    openBrandedReport(t("Stock", "Stock"), t("Ce qui est vendable, et ce qui ne l'est pas", "What's sellable, and what isn't"), [
+      {
+        heading: t("Indicateurs de la période", "Period metrics"),
+        columns: [t("Indicateur", "Metric"), t("Valeur", "Value"), t("Note", "Note")],
+        rows: [
+          [t("Valeur du stock", "Stock value"), "1 842 000 F", t("prix d'achat · 168 unités", "cost price · 168 units")],
+          [t("Valeur de revente", "Resale value"), "3 210 000 F", t("si tout se vend au prix affiché", "if everything sells at listed price")],
+          [t("Rotation annuelle", "Annual turnover"), "8,9×", t("+1,2 vs période précédente", "+1.2 vs previous period")],
+          [t("Couverture moyenne", "Average coverage"), "41 j", t("au rythme de vente actuel", "at the current sales pace")],
+          [t("Taux de service", "Service rate"), "94 %", t("12 ventes perdues sur rupture", "12 sales lost to stockouts")],
+        ],
+      },
+      {
+        heading: t("Vendable vs immobilisé", "Sellable vs tied up"),
+        rows: [
+          [t("Disponibles à la vente", "Available for sale"), "118"],
+          [t("Réservées par des commandes en cours", "Reserved for orders in progress"), "26"],
+          [t("Bloquées par un litige", "Blocked by a dispute"), "5"],
+          [t("En retour après un refus", "Returned after a refusal"), "19"],
+        ],
+      },
+      {
+        heading: t("Sites du partenaire", "Partner sites"),
+        columns: [t("Site", "Site"), t("Unités", "Units"), t("Cmd. servies", "Orders served"), t("Délai moyen", "Avg. time")],
+        rows: [
+          ["Cocody", "104", "71", "3 h 40"],
+          ["Yopougon", "49", "34", "4 h 45"],
+          ["Bouaké", "15", "18", "11 h 30"],
+        ],
+      },
+      {
+        heading: t("Lots et dates limites", "Batches and deadlines"),
+        columns: [t("Référence et lot", "Item and batch"), t("Unités", "Units"), t("Date limite", "Deadline"), t("Valeur", "Value"), t("Reste", "Remaining")],
+        rows: [
+          [t("Crème mains 75 ml · lot C-2408", "Hand cream 75 ml · batch C-2408"), "2", t("5 octobre 2026", "Oct. 5, 2026"), "8 800 F", t("27 jours", "27 days")],
+          [t("Beurre de karité 200 g · lot K-2409", "Shea butter 200 g · batch K-2409"), "21", t("12 novembre 2026", "Nov. 12, 2026"), "59 200 F", t("2 mois", "2 months")],
+          [t("Sérum éclat 30 ml · lot A-2411", "Radiance serum 30 ml · batch A-2411"), "6", t("18 janvier 2027", "Jan. 18, 2027"), "31 200 F", t("4 mois", "4 months")],
+          [t("Savon noir 250 g · lot S-2412", "Black soap 250 g · batch S-2412"), "6", t("Juin 2027", "June 2027"), "24 000 F", t("9 mois", "9 months")],
+        ],
+      },
+    ]);
+    setExportDone(true);
+    setTimeout(() => setExportDone(false), 2500);
+  }
+
   return (
     <>
       <SectionHeader
@@ -322,8 +386,10 @@ export default function StockSection({ first = true }: { first?: boolean }) {
         layout="inline"
         actions={
           <>
-            <HeaderActionBtn>{t("Exporter", "Export")}</HeaderActionBtn>
-            <HeaderActionBtn>{t("Comparer à la période précédente", "Compare to previous period")}</HeaderActionBtn>
+            <HeaderActionBtn onClick={handleExport}>{exportDone ? t("Exporté", "Exported") : t("Exporter", "Export")}</HeaderActionBtn>
+            <HeaderActionBtn onClick={() => setCompare((c) => !c)}>
+              {compare ? t("Revenir à la période actuelle", "Back to current period") : t("Comparer à la période précédente", "Compare to previous period")}
+            </HeaderActionBtn>
           </>
         }
       />
@@ -342,11 +408,11 @@ export default function StockSection({ first = true }: { first?: boolean }) {
       <CollapsibleCards visibleCount={3}>
       {/* KPI de la période */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <KpiCard label={t("Valeur du stock", "Stock value")} value="1 842 000 F" note={t("prix d'achat · 168 unités", "cost price · 168 units")} />
-        <KpiCard label={t("Valeur de revente", "Resale value")} value="3 210 000 F" valueColor="#178a3f" note={t("si tout se vend au prix affiché", "if everything sells at listed price")} />
-        <KpiCard label={t("Rotation annuelle", "Annual turnover")} value="8,9×" note={t("+1,2 vs période précédente", "+1.2 vs previous period")} noteColor="#178a3f" />
-        <KpiCard label={t("Couverture moyenne", "Average coverage")} value="41 j" note={t("au rythme de vente actuel", "at the current sales pace")} />
-        <KpiCard label={t("Taux de service", "Service rate")} value="94 %" valueColor="#a8690a" note={t("12 ventes perdues sur rupture", "12 sales lost to stockouts")} noteColor="#c8262d" />
+        <KpiCard label={t("Valeur du stock", "Stock value")} value="1 842 000 F" note={t("prix d'achat · 168 unités", "cost price · 168 units")} previous={compare ? "1 758 000 F" : undefined} />
+        <KpiCard label={t("Valeur de revente", "Resale value")} value="3 210 000 F" valueColor="#178a3f" note={t("si tout se vend au prix affiché", "if everything sells at listed price")} previous={compare ? "3 050 000 F" : undefined} />
+        <KpiCard label={t("Rotation annuelle", "Annual turnover")} value="8,9×" note={t("+1,2 vs période précédente", "+1.2 vs previous period")} noteColor="#178a3f" previous={compare ? "7,7×" : undefined} />
+        <KpiCard label={t("Couverture moyenne", "Average coverage")} value="41 j" note={t("au rythme de vente actuel", "at the current sales pace")} previous={compare ? "46 j" : undefined} />
+        <KpiCard label={t("Taux de service", "Service rate")} value="94 %" valueColor="#a8690a" note={t("12 ventes perdues sur rupture", "12 sales lost to stockouts")} noteColor="#c8262d" previous={compare ? "91 %" : undefined} />
       </div>
 
       {/* Vendable vs immobilisé */}
@@ -356,7 +422,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             <p className="text-sm font-semibold">{t("Ce qu'il y a dans l'entrepôt, et ce qui est vraiment vendable", "What's in the warehouse, and what's really sellable")}</p>
             <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("168 unités déposées, toutes ne sont pas disponibles", "168 units deposited, not all are available")}</p>
           </div>
-          <Tag tone="blue">{t("Stockage management", "Warehousing")}</Tag>
+          <Tag tone="blue">S</Tag>
         </div>
         <StackedBar segments={[{ pct: 70.2, color: "#4FE0AE" }, { pct: 15.5, color: "#38BDF8" }, { pct: 3, color: "#FFB020" }, { pct: 11.3, color: "#FF5A62" }]} />
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -418,7 +484,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
               <p className="text-sm font-semibold">{t("Depuis quand votre marchandise est là", "How long your goods have been sitting")}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Valeur d'achat, par tranche d'ancienneté", "Cost value, by age bracket")}</p>
             </div>
-            <Tag tone="blue">{t("Stockage management", "Warehousing")}</Tag>
+            <Tag tone="blue">S</Tag>
           </div>
           <div className="mt-4 flex items-end gap-3">
             <AgeBlock pct={46} maxPct={46} color="#4FE0AE" label={t("< 30 j", "<30d")} />
@@ -449,7 +515,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
               <p className="text-sm font-semibold">{t("Combien de fois par an chaque référence tourne", "How many times a year each item turns over")}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("En dessous de 4 fois, le stock coûte plus qu'il ne rapporte", "Under 4 times, stock costs more than it earns")}</p>
             </div>
-            <Tag tone="blue">{t("Stockage management", "Warehousing")}</Tag>
+            <Tag tone="blue">S</Tag>
           </div>
           <div className="mt-3">
             <RankRow label={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} value={t("9,4 fois", "9.4 times")} pct={100} color="#178a3f" valueColor="#178a3f" />
@@ -475,7 +541,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             <p className="text-sm font-semibold">{t("Où se trouve votre marchandise", "Where your goods are")}</p>
             <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Répartition entre les trois sites de votre partenaire", "Spread across your partner's three sites")}</p>
           </div>
-          <Tag tone="blue">{t("Stockage management", "Warehousing")}</Tag>
+          <Tag tone="blue">S</Tag>
         </div>
         <div className="mt-4 grid gap-4 sm:grid-cols-[auto_1fr] sm:gap-x-48 [&>*]:min-w-0">
           <div className="flex flex-col items-center gap-3">
@@ -526,7 +592,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             <p className="text-sm font-semibold">{t("Vos lots et leurs dates limites", "Your batches and their deadlines")}</p>
             <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Au-delà de deux mois, une marchandise devient difficile à écouler", "Past two months, goods become hard to move")}</p>
           </div>
-          <div className="flex items-center gap-2"><Tag tone="warn">{t("68 000 F à risque", "68 000 F at risk")}</Tag><Tag tone="blue">{t("Stockage management", "Warehousing")}</Tag></div>
+          <div className="flex items-center gap-2"><Tag tone="warn">{t("68 000 F à risque", "68 000 F at risk")}</Tag><Tag tone="blue">S</Tag></div>
         </div>
         <LotProgress
           items={[
@@ -611,7 +677,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
               <p className="text-sm font-semibold">{t("Ce que valent vos retours", "What your returns are worth")}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Dix-neuf unités revenues, toutes ne se revendent pas", "Nineteen units back, not all resellable")}</p>
             </div>
-            <Tag tone="blue">{t("Stockage management", "Warehousing")}</Tag>
+            <Tag tone="blue">S</Tag>
           </div>
           <div className="mt-3 space-y-2">
             <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: "rgba(79,224,174,.08)" }}>
@@ -780,7 +846,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             <p className="text-sm font-semibold">{t("Ce qu'il faut déposer jeudi", "What to deposit Thursday")}</p>
             <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Quantités calculées sur trente jours de couverture, délai de réapprovisionnement déduit", "Quantities calculated on thirty days of coverage, replenishment lead time deducted")}</p>
           </div>
-          <div className="flex items-center gap-2"><Tag tone="pink">{t("Budget 486 000 F", "Budget 486 000 F")}</Tag><Tag tone="blue">{t("Stockage management", "Warehousing")}</Tag></div>
+          <div className="flex items-center gap-2"><Tag tone="pink">{t("Budget 486 000 F", "Budget 486 000 F")}</Tag><Tag tone="blue">S</Tag></div>
         </div>
         <div className="mt-3 grid grid-cols-[1.4fr_0.6fr_0.8fr_0.6fr_1fr_1fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
           <span>{t("Référence", "Item")}</span><span>{t("En stock", "In stock")}</span><span>{t("Couverture", "Coverage")}</span><span>{t("À déposer", "To deposit")}</span><span>{t("Coût", "Cost")}</span><span className="text-right">{t("État", "Status")}</span>
@@ -818,7 +884,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             <p className="text-sm font-semibold">{t("Votre point de commande, référence par référence", "Your reorder point, item by item")}</p>
             <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Le niveau à partir duquel il faut redéposer, calculé sur vos ventes et vos délais", "The level below which you must restock, based on your sales and lead times")}</p>
           </div>
-          <Tag tone="blue">{t("Stockage management", "Warehousing")}</Tag>
+          <Tag tone="blue">S</Tag>
         </div>
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
           <div className="rounded-xl bg-[var(--dashboard-surface-2)] p-3">

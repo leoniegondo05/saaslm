@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useRef, useState } from "react";
 import {
   AreaChart,
   Bar,
@@ -9,6 +9,7 @@ import {
   Divider,
   HeaderActionBtn,
   Nature,
+  openBrandedReport,
   SectionHeader,
   StatRow,
   Tag,
@@ -356,13 +357,221 @@ function ActionItem({
   );
 }
 
+type EchangeItem = {
+  id: string;
+  wait: string;
+  title: string;
+  nature: "B" | "S" | "D";
+  detail: string;
+  tone: "bad" | "warn" | "neutral";
+};
+
+// Une note à un décimal, virgule française — "8,0" et pas juste "8" : c'est
+// la convention déjà utilisée par les libellés du radar de comparaison.
+function formatDecimal(n: number) {
+  return (Math.round(n * 10) / 10).toFixed(1).replace(".", ",");
+}
+
+// Note globale ("Votre note", "Votre dernière évaluation") : pas de
+// décimale inutile quand la moyenne tombe rond (9 plutôt que 9,0), comme
+// dans la maquette d'origine.
+function formatNote(n: number) {
+  const rounded = Math.round(n * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1).replace(".", ",");
+}
+
+/* Petite modale locale — même recette que AssistanceLMModal (fond assombri,
+   panneau qui stoppe la propagation du clic, croix de fermeture) mais sans
+   le fil de conversation : ici juste un titre et le contenu du formulaire.
+   Sert à "Écrire" et "Évaluer ce mois", les deux seules actions du header
+   qui ont besoin de collecter une saisie avant d'agir. */
+function PartenaireModal({
+  title,
+  subtitle,
+  closeLabel = "Fermer",
+  onClose,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  closeLabel?: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/45 p-4 pt-16 sm:pt-24" onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="flex w-full max-w-md flex-col rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 text-[var(--dashboard-text)] shadow-[0_30px_80px_rgba(0,0,0,0.35)]"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold tracking-tight sm:text-base">{title}</h2>
+            {subtitle && <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{subtitle}</p>}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={closeLabel}
+            className="shrink-0 rounded-full p-1.5 text-[var(--dashboard-text)]/40 transition hover:bg-[var(--dashboard-text)]/[0.06] hover:text-[var(--dashboard-text)]"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div className="my-3.5 h-px bg-[var(--dashboard-text)]/10" />
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function PartenaireSection({ first = true }: { first?: boolean }) {
   const { t } = useDashboardLangue();
 
+  // Titres des échanges déjà relancés (bouton "Relancer" cliqué). Pas
+  // d'écriture serveur tant que l'API Laravel n'existe pas
+  // (cf. [[dashboard-mock-data-pending-laravel-api]]) : on retient l'état
+  // localement pour que le bouton réagisse quand même au clic.
+  const [echangesRelances, setEchangesRelances] = useState<string[]>([]);
+
+  // État du bouton "Composer le relevé" : pas d'envoi serveur tant que
+  // l'API Laravel n'existe pas (cf. [[dashboard-mock-data-pending-laravel-api]]),
+  // donc le clic compose le relevé (points 1 à 4, ceux à porter au
+  // partenaire — le point 5 est pour l'évaluation mensuelle, pas ce canal)
+  // et le copie dans le presse-papiers.
+  const [releveCopie, setReleveCopie] = useState(false);
+
+  // Les 4 points chiffrés/datés à porter au partenaire (bloc "À porter à
+  // votre partenaire"). Source commune à l'affichage (ActionItem) et au
+  // texte copié par "Composer le relevé".
+  const pointsPourPartenaire: { tone: "ko" | "warn" | "blue"; title: string; detail: string }[] = [
+    {
+      tone: "ko",
+      title: t("Le dépôt direct à Bouaké", "Direct deposit at Bouaké"),
+      detail: t(
+        "Une demande, trois effets : le délai passerait de 11 h 30 à environ 5 h, la casse de 3,2 % à moins de 1,5 %, et le taux de livraison de la zone remonterait. Demande envoyée le 6 septembre, toujours sans réponse.",
+        "One request, three effects: delay would drop from 11 h 30 to about 5 h, breakage from 3.2% to under 1.5%, and the area's delivery rate would climb. Request sent September 6, still no reply."
+      ),
+    },
+    {
+      tone: "ko",
+      title: t("L'emballage, engagement non tenu", "Packaging, a commitment not kept"),
+      detail: t(
+        "1,6 % de casse pour 1 % engagé, et sept litiges pour emballage insuffisant. L'emballage est compris dans les frais logistiques qu'elle a elle-même fixés : une prestation payée n'a pas été rendue. 18 400 F sur la période.",
+        "1.6% breakage against 1% committed, and seven disputes over inadequate packaging. Packaging is included in the logistics fee the partner itself set: a paid-for service was not delivered. 18,400 F over the period."
+      ),
+    },
+    {
+      tone: "warn",
+      title: t("La fiche du sac cabas", "The tote bag listing"),
+      detail: t(
+        "Quatre litiges sur vingt-quatre ventes, tous pour une couleur qui ne correspond pas. La fiche est dans son catalogue : elle seule peut la corriger. Demande en attente depuis un jour.",
+        "Four disputes out of twenty-four sales, all over a mismatched color. The listing is in its catalog: only the partner can fix it. Request pending for a day."
+      ),
+    },
+    {
+      tone: "warn",
+      title: t("Le délai de réponse", "The response delay"),
+      detail: t(
+        "14 h contre 9 h engagées, et quatre demandes sans réponse au-delà de deux jours. Cela ne coûte rien directement, mais bloque les trois points ci-dessus.",
+        "14 h against 9 h committed, and four requests unanswered past two days. It costs nothing directly, but blocks the three points above."
+      ),
+    },
+  ];
+
   // Historique du taux de livraison depuis la signature (avril → septembre).
   const performanceHistory = [71, 74, 76.5, 78.3, 79.1, 80.4];
-  const yourRatings = [7, 7.6, 8.1, 8.6, 8.9, 9];
   const collectiveRatings = [6.9, 7.2, 7.5, 7.8, 8.1, 8.4];
+
+  // ── "Voir le contrat" : scroll vers la card "Le contrat et ses échéances",
+  // déjà présente plus bas dans cette même section. Pas besoin de modale,
+  // l'info existe déjà à l'écran.
+  const contratRef = useRef<HTMLDivElement>(null);
+
+  // ── "Évaluer ce mois" : les six critères notés par vous, modifiables via
+  // la modale. "networkRatings" (ses autres boutiques) ne bouge pas ici —
+  // seule votre propre boutique note depuis cet écran.
+  const radarAxesCourts = [t("Délai", "Delay"), t("Fiabilité", "Reliability"), t("Qualité colis", "Parcel quality"), t("Litiges", "Disputes"), t("Réactivité", "Responsiveness"), t("Qualité-prix", "Value")];
+  const radarAxesLongs = [
+    t("Délai de livraison", "Delivery delay"),
+    t("Fiabilité des livraisons", "Delivery reliability"),
+    t("Qualité du colis", "Parcel quality"),
+    t("Traitement des litiges", "Dispute handling"),
+    t("Réactivité", "Responsiveness"),
+    t("Rapport qualité-prix", "Value for money"),
+  ];
+  const networkRatings = [8.2, 8.4, 7.6, 8.8, 7.4, 8.0];
+  const [radarYou, setRadarYou] = useState([8.8, 8.0, 6.2, 9.4, 5.5, 8.2]);
+  const [votreNote, setVotreNote] = useState(9);
+  const [yourRatings, setYourRatings] = useState([7, 7.6, 8.1, 8.6, 8.9, 9]);
+  const [showEvalModal, setShowEvalModal] = useState(false);
+  const [evalDraft, setEvalDraft] = useState(radarYou);
+  const radarRows = radarAxesLongs.map((label, i) => ({
+    label,
+    you: radarYou[i],
+    net: networkRatings[i],
+    bad: radarYou[i] < networkRatings[i],
+  }));
+
+  // ── "Écrire" : la modale prépend le message envoyé à "Vos échanges en
+  // cours" (les trois demandes historiques restent traduites en direct par
+  // t(), donc hors état ; seuls les messages ajoutés ici, déjà figés au
+  // moment de l'envoi, vivent dans un state).
+  const defaultEchanges: EchangeItem[] = [
+    { id: "bouake-depot", wait: t("2 j", "2 d"), title: t("Demande de dépôt direct à Bouaké", "Request for direct deposit at Bouaké"), nature: "S" as const, detail: t("Envoyée le 6 septembre. Sans réponse. C'est la demande qui règlerait à la fois le délai, la casse et le taux de refus de cette zone.", "Sent September 6. No reply. This request would fix the delay, the breakage and the refusal rate in this area, all at once."), tone: "bad" as const },
+    { id: "fiche-sac", wait: t("1 j", "1 d"), title: t("Correction de la fiche « Sac cabas en raphia »", "Fix to the “Raffia tote bag” listing"), nature: "D" as const, detail: t("La couleur annoncée ne correspond pas. Quatre litiges déjà. Fiche de son catalogue, donc elle seule peut la modifier.", "The listed color doesn't match. Four disputes already. It's from its catalog, so only the partner can edit it."), tone: "warn" as const },
+    { id: "litige-4816", wait: t("6 h", "6 h"), title: t("Litige C-4816, avis sur la conformité", "Dispute C-4816, conformity opinion needed"), nature: "D" as const, detail: t("Elle doit dire si le produit expédié correspond à sa fiche. Le client attend depuis un jour.", "It must say whether the shipped product matches its listing. The customer has been waiting a day."), tone: "neutral" as const },
+  ];
+  const [extraEchanges, setExtraEchanges] = useState<EchangeItem[]>([]);
+  const echanges = [...extraEchanges, ...defaultEchanges];
+  const [showEcrireModal, setShowEcrireModal] = useState(false);
+  const [ecrireText, setEcrireText] = useState("");
+
+  // ── "Exporter" : CSV de la grille tarifaire, des six engagements et de la
+  // répartition du coût réel — les trois tableaux chiffrés de cette section.
+  const exportRateCard = [
+    { name: t("Frais logistiques par colis livré", "Logistics fee per delivered parcel"), rate: "1 500 F", qty: t("119 colis", "119 parcels"), amount: "178 500 F" },
+    { name: t("Garantie contre la perte", "Loss guarantee"), rate: "500 F", qty: "24,8", amount: "12 400 F" },
+    { name: t("Livraison express", "Express delivery"), rate: "2 000 F", qty: t("8 colis", "8 parcels"), amount: "16 000 F" },
+    { name: t("Récupération d'un colis refusé", "Retrieving a refused parcel"), rate: "1 000 F", qty: t("9 colis", "9 parcels"), amount: "9 000 F" },
+    { name: t("Abonnement mensuel", "Monthly subscription"), rate: "25 000 F", qty: t("1 mois", "1 month"), amount: "25 000 F" },
+  ];
+  const exportEngagements = [
+    { title: t("Enlèvement sous 24 h après confirmation", "Pickup within 24 h of confirmation"), realized: t("18 h", "18 h"), target: t("24 h", "24 h"), ok: true },
+    { title: t("Livraison sous 48 h après enlèvement", "Delivery within 48 h of pickup"), realized: t("26 h", "26 h"), target: t("48 h", "48 h"), ok: true },
+    { title: t("Prise en main d'un litige sous 9 h", "Taking a dispute in hand within 9 h"), realized: t("2 h 40", "2 h 40"), target: t("9 h", "9 h"), ok: true },
+    { title: t("Au moins 85 % de livraison au premier passage", "At least 85% delivered on first attempt"), realized: "86 %", target: "85 %", ok: true },
+    { title: t("Pas plus de 1 % de casse sur votre stock", "No more than 1% breakage on your stock"), realized: "1,6 %", target: "1 %", ok: false },
+    { title: t("Réponse à vos messages sous 9 h", "Reply to your messages within 9 h"), realized: t("14 h", "14 h"), target: t("9 h", "9 h"), ok: false },
+  ];
+  const [exportDone, setExportDone] = useState(false);
+
+  function handleExport() {
+    openBrandedReport(t("Partenaire agréé", "Approved partner"), "Groupe Logistique Ivoire", [
+      {
+        heading: t("Grille tarifaire", "Rate card"),
+        columns: [t("Désignation", "Item"), t("Tarif", "Rate"), t("Quantité", "Qty"), t("Montant", "Amount")],
+        rows: [
+          ...exportRateCard.map((r) => [r.name, r.rate, r.qty, r.amount]),
+          [t("Total sur la période", "Total for the period"), "", "", "240 900 F"],
+        ],
+      },
+      {
+        heading: t("Ses six engagements", "Its six commitments"),
+        columns: [t("Engagement", "Commitment"), t("Réalisé", "Achieved"), t("Cible", "Target"), t("Tenu", "Kept")],
+        rows: exportEngagements.map((e) => [e.title, e.realized, e.target, e.ok ? t("Oui", "Yes") : t("Non", "No")]),
+      },
+      {
+        heading: t("Répartition du coût réel", "Real cost breakdown"),
+        columns: [t("Poste", "Item"), "%"],
+        rows: costBreakdown.map((c) => [c.label, c.pct]),
+      },
+    ]);
+    setExportDone(true);
+    setTimeout(() => setExportDone(false), 2500);
+  }
 
   // Répartition des 240 900 F versés — mêmes libellés/couleurs que la
   // légende de l'anneau, réutilisés pour le donut et la liste en dessous.
@@ -388,8 +597,17 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
         layout="inline"
         actions={
           <>
-            <HeaderActionBtn>{t("Exporter", "Export")}</HeaderActionBtn>
-            <HeaderActionBtn>{t("Évaluer ce mois", "Rate this month")}</HeaderActionBtn>
+            <HeaderActionBtn onClick={handleExport}>
+              {exportDone ? t("Exporté", "Exported") : t("Exporter", "Export")}
+            </HeaderActionBtn>
+            <HeaderActionBtn
+              onClick={() => {
+                setEvalDraft(radarYou);
+                setShowEvalModal(true);
+              }}
+            >
+              {t("Évaluer ce mois", "Rate this month")}
+            </HeaderActionBtn>
           </>
         }
       />
@@ -416,8 +634,10 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
-                <HeaderActionBtn>{t("Écrire", "Message")}</HeaderActionBtn>
-                <HeaderActionBtn>{t("Voir le contrat", "View contract")}</HeaderActionBtn>
+                <HeaderActionBtn onClick={() => setShowEcrireModal(true)}>{t("Écrire", "Message")}</HeaderActionBtn>
+                <HeaderActionBtn onClick={() => contratRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+                  {t("Voir le contrat", "View contract")}
+                </HeaderActionBtn>
               </div>
             </div>
 
@@ -436,7 +656,7 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                   {t("Votre dernière évaluation", "Your last rating")}
                 </p>
                 <p className="mt-1 text-base font-bold text-[#178a3f]">
-                  9<span className="text-[var(--dashboard-text)]/40">/10</span>
+                  {formatNote(votreNote)}<span className="text-[var(--dashboard-text)]/40">/10</span>
                 </p>
                 <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t("donnée le 1er septembre", "given September 1st")}</p>
               </div>
@@ -689,35 +909,17 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
             </div>
 
             <div className="mt-3 grid items-center gap-4 lg:grid-cols-[220px_1fr]">
-              <RadarChart
-                axes={[
-                  t("Délai", "Delay"),
-                  t("Fiabilité", "Reliability"),
-                  t("Qualité colis", "Parcel quality"),
-                  t("Litiges", "Disputes"),
-                  t("Réactivité", "Responsiveness"),
-                  t("Qualité-prix", "Value"),
-                ]}
-                you={[8.8, 8.0, 6.2, 9.4, 5.5, 8.2]}
-                network={[8.2, 8.4, 7.6, 8.8, 7.4, 8.0]}
-              />
+              <RadarChart axes={radarAxesCourts} you={radarYou} network={networkRatings} />
               <div className="space-y-2">
-                {[
-                  { label: t("Délai de livraison", "Delivery delay"), you: "8,8", net: "8,2", bad: false },
-                  { label: t("Fiabilité des livraisons", "Delivery reliability"), you: "8,0", net: "8,4", bad: false },
-                  { label: t("Qualité du colis", "Parcel quality"), you: "6,2", net: "7,6", bad: true },
-                  { label: t("Traitement des litiges", "Dispute handling"), you: "9,4", net: "8,8", bad: false },
-                  { label: t("Réactivité", "Responsiveness"), you: "5,5", net: "7,4", bad: true },
-                  { label: t("Rapport qualité-prix", "Value for money"), you: "8,2", net: "8,0", bad: false },
-                ].map((row) => (
+                {radarRows.map((row) => (
                   <div
                     key={row.label}
                     className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-[11px] ${row.bad ? "bg-[#ffe1e2]/60" : ""}`}
                   >
                     <span className="text-[var(--dashboard-text)]/60">{row.label}</span>
                     <span className="flex shrink-0 items-center gap-3">
-                      <span className="font-semibold">{row.you}</span>
-                      <span className="text-[var(--dashboard-text)]/35">{row.net}</span>
+                      <span className="font-semibold">{formatDecimal(row.you)}</span>
+                      <span className="text-[var(--dashboard-text)]/35">{formatDecimal(row.net)}</span>
                     </span>
                   </div>
                 ))}
@@ -750,7 +952,7 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                 </p>
               </div>
               <span className="shrink-0 rounded-full bg-[var(--dashboard-text)]/[0.06] px-2.5 py-1 text-right text-[9px] font-semibold uppercase leading-tight tracking-[0.1em] text-[var(--dashboard-text)]/50">
-                {t("Les deux", "Both")}
+                {t("B", "B")}
               </span>
             </div>
 
@@ -945,7 +1147,7 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
               </div>
               <Divider />
               <StatRow label={t("Boutiques ayant répondu ce mois", "Shops that answered this month")} value={t("29 sur 34", "29 of 34")} />
-              <StatRow label={t("Votre note", "Your rating")} value={<span className="text-[#178a3f]">9 / 10</span>} />
+              <StatRow label={t("Votre note", "Your rating")} value={<span className="text-[#178a3f]">{formatNote(votreNote)} / 10</span>} />
               <StatRow label={t("Note collective du mois", "This month's collective rating")} value="8,4 / 10" />
               <StatRow label={t("Votre première évaluation", "Your first rating")} value={t("Avril · 7 / 10", "April · 7 / 10")} />
             </Card>
@@ -985,13 +1187,9 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                 <Tag tone="warn">{t("Réponse moyenne : 14 h", "Average reply: 14 h")}</Tag>
               </div>
               <div className="mt-3 space-y-2">
-                {[
-                  { wait: t("2 j", "2 d"), title: t("Demande de dépôt direct à Bouaké", "Request for direct deposit at Bouaké"), nature: "S" as const, detail: t("Envoyée le 6 septembre. Sans réponse. C'est la demande qui règlerait à la fois le délai, la casse et le taux de refus de cette zone.", "Sent September 6. No reply. This request would fix the delay, the breakage and the refusal rate in this area, all at once."), tone: "bad" as const },
-                  { wait: t("1 j", "1 d"), title: t("Correction de la fiche « Sac cabas en raphia »", "Fix to the “Raffia tote bag” listing"), nature: "D" as const, detail: t("La couleur annoncée ne correspond pas. Quatre litiges déjà. Fiche de son catalogue, donc elle seule peut la modifier.", "The listed color doesn't match. Four disputes already. It's from its catalog, so only the partner can edit it."), tone: "warn" as const },
-                  { wait: t("6 h", "6 h"), title: t("Litige C-4816, avis sur la conformité", "Dispute C-4816, conformity opinion needed"), nature: "D" as const, detail: t("Elle doit dire si le produit expédié correspond à sa fiche. Le client attend depuis un jour.", "It must say whether the shipped product matches its listing. The customer has been waiting a day."), tone: "neutral" as const },
-                ].map((row) => (
+                {echanges.map((row) => (
                   <div
-                    key={row.title}
+                    key={row.id}
                     className={`flex items-start gap-3 rounded-2xl p-3 ${row.tone === "bad" ? "bg-[#ffe1e2]/50" : row.tone === "warn" ? "bg-[#fff1d6]/60" : ""}`}
                     style={row.tone === "neutral" ? { background: "var(--dashboard-surface-2)" } : undefined}
                   >
@@ -1002,7 +1200,14 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                       </p>
                       <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">{row.detail}</p>
                     </div>
-                    <HeaderActionBtn>{t("Relancer", "Follow up")}</HeaderActionBtn>
+                    <HeaderActionBtn
+                      disabled={echangesRelances.includes(row.id)}
+                      onClick={() =>
+                        setEchangesRelances((prev) => (prev.includes(row.id) ? prev : [...prev, row.id]))
+                      }
+                    >
+                      {echangesRelances.includes(row.id) ? t("Relancé", "Sent") : t("Relancer", "Follow up")}
+                    </HeaderActionBtn>
                   </div>
                 ))}
               </div>
@@ -1019,7 +1224,7 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
             </Card>
 
             <Card className="!bg-[var(--dashboard-glass)]">
-              <div>
+              <div ref={contratRef} className="scroll-mt-24">
                 <h3 className="text-sm font-bold tracking-tight sm:text-base">{t("Le contrat et ses échéances", "The contract and its deadlines")}</h3>
                 <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("Ce qui est dû de part et d'autre, et quand cela se revoit", "What's due on each side, and when it gets revisited")}</p>
               </div>
@@ -1070,45 +1275,24 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                   {t("Chaque ligne est chiffrée, datée et vérifiable. C'est ce qui distingue une demande d'une plainte.", "Each line is costed, dated and verifiable. That's what tells a request apart from a complaint.")}
                 </p>
               </div>
-              <HeaderActionBtn>{t("Composer le relevé", "Draft the statement")}</HeaderActionBtn>
+              <HeaderActionBtn
+                onClick={() => {
+                  const releve = pointsPourPartenaire
+                    .map((item, i) => `${i + 1}. ${item.title}\n${item.detail}`)
+                    .join("\n\n");
+                  navigator.clipboard?.writeText(releve).then(() => {
+                    setReleveCopie(true);
+                    setTimeout(() => setReleveCopie(false), 2500);
+                  });
+                }}
+              >
+                {releveCopie ? t("Relevé copié", "Statement copied") : t("Composer le relevé", "Draft the statement")}
+              </HeaderActionBtn>
             </div>
             <div className="mt-3 space-y-2">
-              <ActionItem
-                n={1}
-                tone="ko"
-                title={t("Le dépôt direct à Bouaké", "Direct deposit at Bouaké")}
-                detail={t(
-                  "Une demande, trois effets : le délai passerait de 11 h 30 à environ 5 h, la casse de 3,2 % à moins de 1,5 %, et le taux de livraison de la zone remonterait. Demande envoyée le 6 septembre, toujours sans réponse.",
-                  "One request, three effects: delay would drop from 11 h 30 to about 5 h, breakage from 3.2% to under 1.5%, and the area's delivery rate would climb. Request sent September 6, still no reply."
-                )}
-              />
-              <ActionItem
-                n={2}
-                tone="ko"
-                title={t("L'emballage, engagement non tenu", "Packaging, a commitment not kept")}
-                detail={t(
-                  "1,6 % de casse pour 1 % engagé, et sept litiges pour emballage insuffisant. L'emballage est compris dans les frais logistiques qu'elle a elle-même fixés : une prestation payée n'a pas été rendue. 18 400 F sur la période.",
-                  "1.6% breakage against 1% committed, and seven disputes over inadequate packaging. Packaging is included in the logistics fee the partner itself set: a paid-for service was not delivered. 18,400 F over the period."
-                )}
-              />
-              <ActionItem
-                n={3}
-                tone="warn"
-                title={t("La fiche du sac cabas", "The tote bag listing")}
-                detail={t(
-                  "Quatre litiges sur vingt-quatre ventes, tous pour une couleur qui ne correspond pas. La fiche est dans son catalogue : elle seule peut la corriger. Demande en attente depuis un jour.",
-                  "Four disputes out of twenty-four sales, all over a mismatched color. The listing is in its catalog: only the partner can fix it. Request pending for a day."
-                )}
-              />
-              <ActionItem
-                n={4}
-                tone="warn"
-                title={t("Le délai de réponse", "The response delay")}
-                detail={t(
-                  "14 h contre 9 h engagées, et quatre demandes sans réponse au-delà de deux jours. Cela ne coûte rien directement, mais bloque les trois points ci-dessus.",
-                  "14 h against 9 h committed, and four requests unanswered past two days. It costs nothing directly, but blocks the three points above."
-                )}
-              />
+              {pointsPourPartenaire.map((item, i) => (
+                <ActionItem key={item.title} n={i + 1} tone={item.tone} title={item.title} detail={item.detail} />
+              ))}
               <ActionItem
                 n={5}
                 tone="blue"
@@ -1123,6 +1307,98 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
         </CollapsibleCards>
       </div>
 
+      {showEcrireModal && (
+        <PartenaireModal
+          title={t("Écrire au partenaire", "Message the partner")}
+          subtitle={t(
+            "Envoyé à Groupe Logistique Ivoire. Réponse habituelle sous 14 h.",
+            "Sent to Groupe Logistique Ivoire. Usual reply within 14 h."
+          )}
+          closeLabel={t("Fermer", "Close")}
+          onClose={() => setShowEcrireModal(false)}
+        >
+          <textarea
+            value={ecrireText}
+            onChange={(e) => setEcrireText(e.target.value)}
+            rows={4}
+            placeholder={t("Votre message…", "Your message…")}
+            className="w-full resize-none rounded-2xl p-3 text-xs text-[var(--dashboard-text)] outline-none"
+            style={{ background: "var(--dashboard-surface-2)" }}
+          />
+          <button
+            type="button"
+            disabled={!ecrireText.trim()}
+            onClick={() => {
+              const texte = ecrireText.trim();
+              if (!texte) return;
+              setExtraEchanges((prev) => [
+                {
+                  id: `msg-${Date.now()}`,
+                  wait: t("À l'instant", "Just now"),
+                  title: t("Votre message", "Your message"),
+                  nature: "S" as const,
+                  detail: texte,
+                  tone: "neutral" as const,
+                },
+                ...prev,
+              ]);
+              setEcrireText("");
+              setShowEcrireModal(false);
+            }}
+            className="mt-3 w-full rounded-full py-2 text-xs font-semibold text-white transition disabled:opacity-40"
+            style={{ background: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 100%)" }}
+          >
+            {t("Envoyer", "Send")}
+          </button>
+        </PartenaireModal>
+      )}
+
+      {showEvalModal && (
+        <PartenaireModal
+          title={t("Évaluer ce mois", "Rate this month")}
+          subtitle={t(
+            "Six critères sur dix. La moyenne devient votre note.",
+            "Six criteria out of ten. The average becomes your rating."
+          )}
+          closeLabel={t("Fermer", "Close")}
+          onClose={() => setShowEvalModal(false)}
+        >
+          <div className="space-y-3">
+            {radarAxesLongs.map((label, i) => (
+              <div key={label} className="flex items-center justify-between gap-3">
+                <span className="text-xs text-[var(--dashboard-text)]/70">{label}</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={10}
+                  step={0.1}
+                  value={evalDraft[i]}
+                  onChange={(e) => {
+                    const v = Math.min(10, Math.max(0, Number(e.target.value)));
+                    setEvalDraft((prev) => prev.map((x, idx) => (idx === i ? v : x)));
+                  }}
+                  className="w-16 rounded-full px-2 py-1 text-right text-xs font-semibold text-[var(--dashboard-text)] outline-none"
+                  style={{ background: "var(--dashboard-surface-2)" }}
+                />
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const moyenne = Math.round((evalDraft.reduce((a, b) => a + b, 0) / evalDraft.length) * 10) / 10;
+              setRadarYou(evalDraft);
+              setVotreNote(moyenne);
+              setYourRatings((prev) => [...prev.slice(0, -1), moyenne]);
+              setShowEvalModal(false);
+            }}
+            className="mt-4 w-full rounded-full py-2 text-xs font-semibold text-white transition"
+            style={{ background: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 100%)" }}
+          >
+            {t("Enregistrer la note", "Save rating")}
+          </button>
+        </PartenaireModal>
+      )}
     </>
   );
 }

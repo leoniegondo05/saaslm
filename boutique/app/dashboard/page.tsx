@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import DashboardBrain from "../components/DashboardBrain";
+import DashboardDayWelcome from "../components/DashboardDayWelcome";
 import DashboardHeader, { ChevronIcon } from "../components/DashboardHeader";
 import DashboardSidebar from "../components/DashboardSidebar";
 import QrCode from "../components/QrCode";
@@ -76,11 +76,11 @@ export default function DashboardPage() {
               <EventsCard />
             </div>
 
-            {/* Colonne centrale : cerveau */}
-            <div className="relative order-3 flex items-center justify-center py-10 sm:col-span-2 lg:order-none lg:col-span-1 lg:py-0">
-              <div className="w-full max-w-[420px]">
-                <DashboardBrain />
-              </div>
+            {/* Colonne centrale : entre la carte "Aujourd'hui" (gauche) et la
+                carte ventes "Hier · aujourd'hui · demain" (droite) —
+                DashboardDayWelcome vit ici, pas sous le titre. */}
+            <div className="relative order-3 sm:col-span-2 lg:order-none lg:col-span-1">
+              <DashboardDayWelcome />
             </div>
 
             {/* Colonne droite : ventes + identité — une seule carte, les deux

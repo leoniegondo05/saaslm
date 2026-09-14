@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, Tag, SectionHeader } from "../dashboard-accueil/shared";
+import { useState } from "react";
+import { Card, openBrandedReport, SectionHeader, Tag } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -40,6 +41,56 @@ const INFOS_TOUJOURS_AFFICHEES = [
 
 export default function Confidentialite({ first = false }: { first?: boolean }) {
   const { t } = useDashboardLangue();
+
+  // "Exporter tout ce que je possède" : produits, commandes, clients,
+  // règlements — un fichier par bloc plutôt qu'un CSV unique, plus lisible
+  // une fois ouvert dans un tableur. Chiffres mock en attendant l'API
+  // Laravel, cf. [[dashboard-mock-data-pending-laravel-api]] — les mêmes
+  // que les sections Produits/Commandes/Clients/Finances de l'Accueil.
+  const [exportDone, setExportDone] = useState(false);
+  function handleExport() {
+    openBrandedReport(t("Vos données", "Your data"), "Groupe Logistique Ivoire", [
+      {
+        heading: t("Produits", "Products"),
+        rows: [
+          [t("Références au catalogue", "Items in catalog"), "8"],
+          [t("Valeur du stock", "Stock value"), "1 842 000 F"],
+        ],
+      },
+      {
+        heading: t("Commandes", "Orders"),
+        rows: [
+          [t("Commandes reçues sur la période", "Orders received this period"), "148"],
+          [t("Livrées et payées", "Delivered and paid"), "119"],
+        ],
+      },
+      {
+        heading: t("Clients", "Customers"),
+        rows: [[t("Clients au fichier", "Customers on file"), "387"]],
+      },
+      {
+        heading: t("Règlements", "Payouts"),
+        rows: [
+          [t("Solde du sous-compte", "Sub-account balance"), "1 482 300 F"],
+          [t("Disponible tout de suite", "Available right away"), "1 022 800 F"],
+        ],
+      },
+      {
+        heading: t("À savoir", "Note"),
+        rows: [
+          [
+            t(
+              "Export résumé — le détail ligne par ligne (chaque commande, chaque client) arrivera avec l'API Laravel.",
+              "Summary export — line-by-line detail (each order, each customer) will arrive with the Laravel API."
+            ),
+          ],
+        ],
+      },
+    ]);
+    setExportDone(true);
+    setTimeout(() => setExportDone(false), 2500);
+  }
+
   return (
     <>
       <SectionHeader
@@ -141,9 +192,10 @@ export default function Confidentialite({ first = false }: { first?: boolean }) 
             </div>
             <button
               type="button"
+              onClick={handleExport}
               className="shrink-0 rounded-full border border-[var(--dashboard-text)]/15 px-5 py-2.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
             >
-              {t("Exporter", "Export")}
+              {exportDone ? t("Exporté", "Exported") : t("Exporter", "Export")}
             </button>
           </div>
 

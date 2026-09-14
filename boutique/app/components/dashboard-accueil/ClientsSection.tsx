@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
-import { CollapsibleCards, HeaderActionBtn, SectionHeader, Nature } from "./shared";
+import { CollapsibleCards, HeaderActionBtn, Nature, openBrandedReport, SectionHeader } from "./shared";
 import { KPIS_CLIENTS, TypeAchat } from "./clients/clientsData";
 import ClientsRfMatrix from "./clients/ClientsRfMatrix";
 import ClientsGrowthChart from "./clients/ClientsGrowthChart";
@@ -35,6 +36,29 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
   // sur "les-deux" tant qu'aucun sélecteur ne le pilote.
   const typeAchat: TypeAchat = "les-deux";
 
+  // "Comparer à la période précédente" : révèle prevValeur sous chaque KPI,
+  // mock en attendant l'API Laravel (cf. [[dashboard-mock-data-pending-laravel-api]]).
+  const [compare, setCompare] = useState(false);
+
+  // "Exporter" : les 6 KPI clients affichés en haut de section.
+  const [exportDone, setExportDone] = useState(false);
+  function handleExport() {
+    openBrandedReport(t("Clients", "Customers"), t("Qui achète, et qui revient", "Who buys, and who comes back"), [
+      {
+        heading: t("Indicateurs clients", "Customer metrics"),
+        columns: [t("Indicateur", "Metric"), t("Valeur", "Value"), t("Évolution", "Change"), t("Note", "Note")],
+        rows: KPIS_CLIENTS.map((kpi) => [
+          t(kpi.labelFr, kpi.labelEn),
+          kpi.valeur,
+          kpi.evolutionFr ? t(kpi.evolutionFr, kpi.evolutionEn ?? "") : "",
+          kpi.sousLabelFr ? t(kpi.sousLabelFr, kpi.sousLabelEn ?? "") : "",
+        ]),
+      },
+    ]);
+    setExportDone(true);
+    setTimeout(() => setExportDone(false), 2500);
+  }
+
   return (
     <div className="space-y-6">
       {/* ── EN-TÊTE OFFICIEL DU DASHBOARD ── */}
@@ -49,11 +73,11 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
         layout="inline"
         actions={
           <>
-            <HeaderActionBtn>
-              {t("Exporter", "Export")}
+            <HeaderActionBtn onClick={handleExport}>
+              {exportDone ? t("Exporté", "Exported") : t("Exporter", "Export")}
             </HeaderActionBtn>
-            <HeaderActionBtn>
-              {t("Comparer à la période précédente", "Compare to previous period")}
+            <HeaderActionBtn onClick={() => setCompare((c) => !c)}>
+              {compare ? t("Revenir à la période actuelle", "Back to current period") : t("Comparer à la période précédente", "Compare to previous period")}
             </HeaderActionBtn>
           </>
         }
@@ -103,6 +127,11 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
                 </span>
               )}
             </div>
+            {compare && kpi.prevValeur && (
+              <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">
+                {t("Période précédente", "Previous period")} : {kpi.prevValeur}
+              </p>
+            )}
           </div>
         ))}
       </div>
