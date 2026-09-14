@@ -11,11 +11,21 @@ export default function Features() {
   const [index, setIndex] = useState(0);
   const [autoActif, setAutoActif] = useState(true);
   const [visible, setVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
 
-  // ---- IntersectionObserver : déclenche l'entrée en cascade ----
+  // ---- Détection breakpoint ----
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const maj = () => setIsMobile(mq.matches);
+    maj();
+    mq.addEventListener("change", maj);
+    return () => mq.removeEventListener("change", maj);
+  }, []);
+
+  // ---- IntersectionObserver ----
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -34,7 +44,7 @@ export default function Features() {
     return () => oeil.disconnect();
   }, []);
 
-  // ---- Une fois visible : on calcule la longueur de chaque courbe ----
+  // ---- Calcul longueur des courbes (re-run si on bascule de layout) ----
   useEffect(() => {
     if (!visible) return;
     requestAnimationFrame(() => {
@@ -46,7 +56,7 @@ export default function Features() {
           } catch {}
         });
     });
-  }, [visible]);
+  }, [visible, isMobile]);
 
   // ---- Rotation automatique ----
   useEffect(() => {
@@ -116,13 +126,17 @@ export default function Features() {
       data-section
       data-titre="Vos flux financiers se simplifient"
       data-sous="Encaissé automatiquement, par les moyens de paiement locaux."
-      className={`feat-section py-33 px-7 max-w-[1500px] mx-auto ${
+      className={`feat-section py-16 px-4 sm:py-33 sm:px-7 max-w-[1500px] mx-auto ${
         visible ? "is-visible" : ""
       }`}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 lg:gap-10 items-center">
         {/* ==================== SVG ==================== */}
-        <svg viewBox="0 0 900 620" aria-hidden="true">
+        <svg
+          viewBox={isMobile ? "0 0 400 530" : "0 0 900 620"}
+          aria-hidden="true"
+          className="w-full h-auto"
+        >
           <defs>
             <symbol id="billet" viewBox="0 0 26 14">
               <rect x="1" y="1" width="24" height="12" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
@@ -145,131 +159,254 @@ export default function Features() {
             </symbol>
           </defs>
 
-          {/* ---------- Ligne 1 (haut) ---------- */}
-          <text className="feat-icon feat-d-1" x="20" y="46" fill="#FAF7FC" fontSize="17" letterSpacing="1.4">
-            AUTRE PAYS
-          </text>
-          <g className="feat-icon feat-d-1" color="#EC0C8C">
-            <rect x="42" y="76" width="56" height="56" rx="12" fill="rgba(236,12,140,.08)" stroke="rgba(236,12,140,.45)" />
-            <use href="#boutique-feat" x="55" y="90" width="30" height="27" />
-          </g>
-          <g className="feat-icon feat-d-2" color="#FAF7FC">
-            <use href="#globe" x="53" y="152" width="34" height="34" />
-          </g>
+          {isMobile ? (
+            /* ============================================================
+               VERSION MOBILE — deux flux EMPILÉS verticalement
+               Flux A (haut) : AUTRE PAYS → CÔTE D'IVOIRE → Cash
+               Flux B (bas)  : CÔTE D'IVOIRE → AUTRE PAYS → Cash
+               Le téléphone est rendu SOUS le SVG (grid 1 col).
+               viewBox 400×530 = hauteur exacte du contenu, zéro vide.
+               ============================================================ */
+            <>
+              {/* ---------- Flux A : de AUTRE PAYS vers CÔTE D'IVOIRE ---------- */}
+              <text className="feat-icon feat-d-1" x="20" y="40" fill="#FAF7FC" fontSize="12" letterSpacing="1.2">
+                AUTRE PAYS
+              </text>
+              <g className="feat-icon feat-d-1" color="#EC0C8C">
+                <rect x="20" y="60" width="48" height="48" rx="10" fill="rgba(236,12,140,.08)" stroke="rgba(236,12,140,.45)" />
+                <use href="#boutique-feat" x="31" y="71" width="26" height="23" />
+              </g>
+              <g className="feat-icon feat-d-2" color="#FAF7FC">
+                <use href="#globe" x="27" y="126" width="34" height="34" />
+              </g>
 
-          <text className="feat-icon feat-d-3" x="490" y="46" fill="#FAF7FC" fontSize="17" letterSpacing="1.4">
-            CÔTE D&apos;IVOIRE
-          </text>
-          <g className="feat-icon feat-d-3" color="#8B6BE8">
-            <rect x="540" y="76" width="56" height="56" rx="12" fill="rgba(109,63,214,.10)" stroke="rgba(109,63,214,.5)" />
-            <use href="#immeuble-feat" x="554" y="90" width="28" height="28" />
-          </g>
-          <g className="feat-icon feat-d-4" color="#FAF7FC">
-            <use href="#globe" x="551" y="152" width="34" height="34" />
-          </g>
+              <text className="feat-icon feat-d-3" x="220" y="40" fill="#FAF7FC" fontSize="12" letterSpacing="1.2">
+                CÔTE D&apos;IVOIRE
+              </text>
+              <g className="feat-icon feat-d-3" color="#8B6BE8">
+                <rect x="220" y="60" width="48" height="48" rx="10" fill="rgba(109,63,214,.10)" stroke="rgba(109,63,214,.5)" />
+                <use href="#immeuble-feat" x="232" y="72" width="24" height="24" />
+              </g>
+              <g className="feat-icon feat-d-4" color="#FAF7FC">
+                <use href="#globe" x="227" y="126" width="34" height="34" />
+              </g>
 
-          <text className="feat-icon feat-d-2" x="250" y="126" fill="rgba(250,247,252,.34)" fontSize="30">
-            Cash
-          </text>
+              <text className="feat-icon feat-d-2" x="140" y="106" fill="rgba(250,247,252,.34)" fontSize="22">
+                Cash
+              </text>
 
-          {/* Courbe 1 : se dessine de gauche à droite */}
-          <path
-            id="flux-1"
-            className="flow-path feat-curve delay-1"
-            d="M170,208 C244,208 266,132 340,128 C414,124 428,166 502,162"
-            fill="none"
-            stroke="#4C8B4A"
-            strokeWidth="2.4"
-          />
-          {/* x="-13" y="-7" (≈ -width/2, -height/2) n'est PAS une position
-              absolue : animateMotion ADDITIONNE la coordonnée courante du
-              chemin à ce x/y — c'est ce qui centre le billet sur le point
-              du tracé (au lieu d'y placer son coin haut-gauche). Y mettre
-              une position absolue casse le centrage une fois l'animation
-              lancée. Le fondu d'apparition (.feat-billet en CSS) applique
-              le même transition-delay à tous les billets ; on le
-              surcharge ici par billet en ligne pour le faire coïncider
-              avec le "begin" propre à chacun. */}
-          <g color="rgba(250,247,252,.6)">
-            {[0, 1.5, 2.9].map((begin, i) => (
-              <use
-                key={i}
-                className="feat-billet"
-                href="#billet"
-                width="26"
-                height="14"
-                x="-13"
-                y="-7"
-                style={{ transitionDelay: `${begin + 1.4}s` }}
-              >
-                <animateMotion dur="4.4s" repeatCount="indefinite" begin={`${begin + 1.4}s`}>
-                  <mpath href="#flux-1" />
-                </animateMotion>
-              </use>
-            ))}
-          </g>
+              {/* Courbe A : part de gauche (boutique) → monte légèrement →
+                  arrive à droite (immeuble). */}
+              <path
+                id="flux-1"
+                className="flow-path feat-curve delay-1"
+                d="M68,178 C130,178 150,120 220,118 C270,116 290,150 330,148"
+                fill="none"
+                stroke="#4C8B4A"
+                strokeWidth="2.2"
+              />
+              <g color="rgba(250,247,252,.6)">
+                {[0, 1.5, 2.9].map((begin, i) => (
+                  <use
+                    key={i}
+                    className="feat-billet"
+                    href="#billet"
+                    width="26"
+                    height="14"
+                    x="-13"
+                    y="-7"
+                    style={{ transitionDelay: `${begin + 1.4}s` }}
+                  >
+                    <animateMotion dur="4.4s" repeatCount="indefinite" begin={`${begin + 1.4}s`}>
+                      <mpath href="#flux-1" />
+                    </animateMotion>
+                  </use>
+                ))}
+              </g>
 
-          {/* ---------- Ligne 2 (bas) ---------- */}
-          <text className="feat-icon feat-d-5" x="20" y="336" fill="#FAF7FC" fontSize="17" letterSpacing="1.4">
-            CÔTE D&apos;IVOIRE
-          </text>
-          <g className="feat-icon feat-d-5" color="#8B6BE8">
-            <rect x="42" y="366" width="56" height="56" rx="12" fill="rgba(109,63,214,.10)" stroke="rgba(109,63,214,.5)" />
-            <use href="#immeuble-feat" x="56" y="380" width="28" height="28" />
-          </g>
-          <g className="feat-icon feat-d-6" color="#FAF7FC">
-            <use href="#globe" x="53" y="442" width="34" height="34" />
-          </g>
+              {/* ---------- Séparateur visuel entre les deux flux ---------- */}
+              <line x1="30" y1="230" x2="370" y2="230" stroke="rgba(250,247,252,.06)" strokeWidth="1" />
 
-          <text className="feat-icon feat-d-7" x="490" y="336" fill="#FAF7FC" fontSize="17" letterSpacing="1.4">
-            AUTRE PAYS
-          </text>
-          <g className="feat-icon feat-d-7" color="#EC0C8C">
-            <rect x="540" y="366" width="56" height="56" rx="12" fill="rgba(236,12,140,.08)" stroke="rgba(236,12,140,.45)" />
-            <use href="#boutique-feat" x="553" y="380" width="30" height="27" />
-          </g>
-          <g className="feat-icon feat-d-8" color="#FAF7FC">
-            <use href="#globe" x="551" y="442" width="34" height="34" />
-          </g>
+              {/* ---------- Flux B : de CÔTE D'IVOIRE vers AUTRE PAYS ---------- */}
+              <text className="feat-icon feat-d-5" x="20" y="270" fill="#FAF7FC" fontSize="12" letterSpacing="1.2">
+                CÔTE D&apos;IVOIRE
+              </text>
+              <g className="feat-icon feat-d-5" color="#8B6BE8">
+                <rect x="20" y="290" width="48" height="48" rx="10" fill="rgba(109,63,214,.10)" stroke="rgba(109,63,214,.5)" />
+                <use href="#immeuble-feat" x="32" y="302" width="24" height="24" />
+              </g>
+              <g className="feat-icon feat-d-6" color="#FAF7FC">
+                <use href="#globe" x="27" y="356" width="34" height="34" />
+              </g>
 
-          <text className="feat-icon feat-d-6" x="250" y="416" fill="rgba(250,247,252,.34)" fontSize="30">
-            Cash
-          </text>
+              <text className="feat-icon feat-d-7" x="220" y="270" fill="#FAF7FC" fontSize="12" letterSpacing="1.2">
+                AUTRE PAYS
+              </text>
+              <g className="feat-icon feat-d-7" color="#EC0C8C">
+                <rect x="220" y="290" width="48" height="48" rx="10" fill="rgba(236,12,140,.08)" stroke="rgba(236,12,140,.45)" />
+                <use href="#boutique-feat" x="231" y="301" width="26" height="23" />
+              </g>
+              <g className="feat-icon feat-d-8" color="#FAF7FC">
+                <use href="#globe" x="227" y="356" width="34" height="34" />
+              </g>
 
-          {/* Courbe 2 */}
-          <path
-            id="flux-2"
-            className="flow-path feat-curve delay-2"
-            d="M170,498 C244,498 266,422 340,418 C414,414 428,456 502,452"
-            fill="none"
-            stroke="#4C8B4A"
-            strokeWidth="2.4"
-          />
-          {/* Même raisonnement que la courbe 1 : x/y = petit décalage de
-              centrage (-13,-7), et le transition-delay est surchargé en
-              ligne par billet pour coïncider avec son "begin". */}
-          <g color="rgba(250,247,252,.6)">
-            {[0.7, 2.2, 3.6].map((begin, i) => (
-              <use
-                key={i}
-                className="feat-billet"
-                href="#billet"
-                width="26"
-                height="14"
-                x="-13"
-                y="-7"
-                style={{ transitionDelay: `${begin + 1.4}s` }}
-              >
-                <animateMotion dur="4.4s" repeatCount="indefinite" begin={`${begin + 1.4}s`}>
-                  <mpath href="#flux-2" />
-                </animateMotion>
-              </use>
-            ))}
-          </g>
+              <text className="feat-icon feat-d-6" x="140" y="336" fill="rgba(250,247,252,.34)" fontSize="22">
+                Cash
+              </text>
+
+              {/* Courbe B : de gauche (immeuble) → descend → arrive à
+                  droite (boutique). */}
+              <path
+                id="flux-2"
+                className="flow-path feat-curve delay-2"
+                d="M68,408 C130,408 150,470 220,472 C270,474 290,440 330,442"
+                fill="none"
+                stroke="#4C8B4A"
+                strokeWidth="2.2"
+              />
+              <g color="rgba(250,247,252,.6)">
+                {[0.7, 2.2, 3.6].map((begin, i) => (
+                  <use
+                    key={i}
+                    className="feat-billet"
+                    href="#billet"
+                    width="26"
+                    height="14"
+                    x="-13"
+                    y="-7"
+                    style={{ transitionDelay: `${begin + 1.4}s` }}
+                  >
+                    <animateMotion dur="4.4s" repeatCount="indefinite" begin={`${begin + 1.4}s`}>
+                      <mpath href="#flux-2" />
+                    </animateMotion>
+                  </use>
+                ))}
+              </g>
+
+              {/* ---------- Légende "L'argent circule" ---------- */}
+              <text x="200" y="505" fill="rgba(250,247,252,.42)" fontSize="13"
+                    textAnchor="middle" letterSpacing="0.6">
+                L&apos;argent circule, sans friction.
+              </text>
+            </>
+          ) : (
+            /* ============================================================
+               VERSION DESKTOP — inchangée (SVG horizontal 900×620)
+               ============================================================ */
+            <>
+              {/* ---------- Ligne 1 (haut) ---------- */}
+              <text className="feat-icon feat-d-1" x="20" y="46" fill="#FAF7FC" fontSize="17" letterSpacing="1.4">
+                AUTRE PAYS
+              </text>
+              <g className="feat-icon feat-d-1" color="#EC0C8C">
+                <rect x="42" y="76" width="56" height="56" rx="12" fill="rgba(236,12,140,.08)" stroke="rgba(236,12,140,.45)" />
+                <use href="#boutique-feat" x="55" y="90" width="30" height="27" />
+              </g>
+              <g className="feat-icon feat-d-2" color="#FAF7FC">
+                <use href="#globe" x="53" y="152" width="34" height="34" />
+              </g>
+
+              <text className="feat-icon feat-d-3" x="490" y="46" fill="#FAF7FC" fontSize="17" letterSpacing="1.4">
+                CÔTE D&apos;IVOIRE
+              </text>
+              <g className="feat-icon feat-d-3" color="#8B6BE8">
+                <rect x="540" y="76" width="56" height="56" rx="12" fill="rgba(109,63,214,.10)" stroke="rgba(109,63,214,.5)" />
+                <use href="#immeuble-feat" x="554" y="90" width="28" height="28" />
+              </g>
+              <g className="feat-icon feat-d-4" color="#FAF7FC">
+                <use href="#globe" x="551" y="152" width="34" height="34" />
+              </g>
+
+              <text className="feat-icon feat-d-2" x="250" y="126" fill="rgba(250,247,252,.34)" fontSize="30">
+                Cash
+              </text>
+
+              <path
+                id="flux-1"
+                className="flow-path feat-curve delay-1"
+                d="M170,208 C244,208 266,132 340,128 C414,124 428,166 502,162"
+                fill="none"
+                stroke="#4C8B4A"
+                strokeWidth="2.4"
+              />
+              <g color="rgba(250,247,252,.6)">
+                {[0, 1.5, 2.9].map((begin, i) => (
+                  <use
+                    key={i}
+                    className="feat-billet"
+                    href="#billet"
+                    width="26"
+                    height="14"
+                    x="-13"
+                    y="-7"
+                    style={{ transitionDelay: `${begin + 1.4}s` }}
+                  >
+                    <animateMotion dur="4.4s" repeatCount="indefinite" begin={`${begin + 1.4}s`}>
+                      <mpath href="#flux-1" />
+                    </animateMotion>
+                  </use>
+                ))}
+              </g>
+
+              {/* ---------- Ligne 2 (bas) ---------- */}
+              <text className="feat-icon feat-d-5" x="20" y="336" fill="#FAF7FC" fontSize="17" letterSpacing="1.4">
+                CÔTE D&apos;IVOIRE
+              </text>
+              <g className="feat-icon feat-d-5" color="#8B6BE8">
+                <rect x="42" y="366" width="56" height="56" rx="12" fill="rgba(109,63,214,.10)" stroke="rgba(109,63,214,.5)" />
+                <use href="#immeuble-feat" x="56" y="380" width="28" height="28" />
+              </g>
+              <g className="feat-icon feat-d-6" color="#FAF7FC">
+                <use href="#globe" x="53" y="442" width="34" height="34" />
+              </g>
+
+              <text className="feat-icon feat-d-7" x="490" y="336" fill="#FAF7FC" fontSize="17" letterSpacing="1.4">
+                AUTRE PAYS
+              </text>
+              <g className="feat-icon feat-d-7" color="#EC0C8C">
+                <rect x="540" y="366" width="56" height="56" rx="12" fill="rgba(236,12,140,.08)" stroke="rgba(236,12,140,.45)" />
+                <use href="#boutique-feat" x="553" y="380" width="30" height="27" />
+              </g>
+              <g className="feat-icon feat-d-8" color="#FAF7FC">
+                <use href="#globe" x="551" y="442" width="34" height="34" />
+              </g>
+
+              <text className="feat-icon feat-d-6" x="250" y="416" fill="rgba(250,247,252,.34)" fontSize="30">
+                Cash
+              </text>
+
+              <path
+                id="flux-2"
+                className="flow-path feat-curve delay-2"
+                d="M170,498 C244,498 266,422 340,418 C414,414 428,456 502,452"
+                fill="none"
+                stroke="#4C8B4A"
+                strokeWidth="2.4"
+              />
+              <g color="rgba(250,247,252,.6)">
+                {[0.7, 2.2, 3.6].map((begin, i) => (
+                  <use
+                    key={i}
+                    className="feat-billet"
+                    href="#billet"
+                    width="26"
+                    height="14"
+                    x="-13"
+                    y="-7"
+                    style={{ transitionDelay: `${begin + 1.4}s` }}
+                  >
+                    <animateMotion dur="4.4s" repeatCount="indefinite" begin={`${begin + 1.4}s`}>
+                      <mpath href="#flux-2" />
+                    </animateMotion>
+                  </use>
+                ))}
+              </g>
+            </>
+          )}
         </svg>
 
         {/* ==================== TÉLÉPHONE ==================== */}
-        <div className="telephone feat-phone" style={{ height: "60%" }}>
+        <div className="telephone feat-phone">
           <div className="ecran">
             <div className="encoche" />
 
@@ -327,23 +464,6 @@ export default function Features() {
                 <p style={{ marginTop: 10 }}>Le vendeur est crédité<br />automatiquement.</p>
               </div>
             </div>
-
-            {/* Indicateurs (petits points cliquables) */}
-            {/* <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-              {Array.from({ length: NB_VUES }).map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  aria-label={`Aller à l'écran ${i + 1}`}
-                  onClick={() => allerA(i)}
-                  className={`h-1.5 rounded-full transition-all ${
-                    i === index
-                      ? "w-4 bg-brand-pink"
-                      : "w-1.5 bg-brand-white/30 hover:bg-brand-white/50"
-                  }`}
-                />
-              ))}
-            </div> */}
           </div>
         </div>
       </div>

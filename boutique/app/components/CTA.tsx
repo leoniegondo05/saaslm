@@ -35,7 +35,7 @@ export default function CTA() {
         visible ? "is-visible" : ""
       }`}
     >
-      <div className="cta-gradient grid grid-cols-1 lg:grid-cols-2 gap-16 items-center px-16 pt-33 pb-40 max-w-[1500px] mx-auto">
+      <div className="cta-gradient grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center px-5 sm:px-10 lg:px-16 pt-20 sm:pt-28 lg:pt-33 pb-24 sm:pb-32 lg:pb-40 max-w-[1500px] mx-auto">
         {/* ---------- Colonne gauche : texte + boutons ---------- */}
         <div>
           <h2 className="cta-ligne-1 text-[clamp(26px,2.9vw,40px)] font-normal leading-[1.28] tracking-[-0.015em]">
@@ -43,7 +43,7 @@ export default function CTA() {
             Entreprise de logistique<b>:</b>
           </h2>
 
-          <h2 className="cta-ligne-2 text-[clamp(26px,2.9vw,40px)] leading-[1.28] tracking-[-0.015em] mt-8.5">
+          <h2 className="cta-ligne-2 text-[clamp(26px,2.9vw,40px)] leading-[1.28] tracking-[-0.015em] mt-6 sm:mt-8.5">
             <b>
               votre voyage commence{" "}
               <em className="cta-ici text-brand-pink not-italic font-bold">
@@ -53,15 +53,20 @@ export default function CTA() {
             </b>
           </h2>
 
-          <div className="flex gap-4.5 flex-wrap mt-13">
+          {/* ---- Boutons : 2 colonnes égales sur mobile, flex sur desktop ---- */}
+          <div className="grid grid-cols-2 gap-3 mt-8 sm:flex sm:gap-4.5 sm:flex-wrap sm:mt-13">
             {/* Bouton principal : coque dégradée + fond noir + lien */}
-            <span className="cta-bouton-1 rounded-xl bg-[linear-gradient(90deg,var(--color-brand-pink),var(--color-brand-purple))] p-px">
+            <span className="cta-bouton-1 rounded-xl bg-[linear-gradient(90deg,var(--color-brand-pink),var(--color-brand-purple))] p-px flex">
               <Link
                 href="/login"
-                className="flex items-center gap-2 rounded-[11px] bg-[#0a0e1c] px-[18px] py-3 text-sm font-semibold text-brand-white no-underline transition hover:opacity-90"
+                className="flex w-full items-center justify-center gap-1.5 rounded-[11px] bg-[#0a0e1c] px-3 py-2.5 text-[12px] font-semibold text-brand-white no-underline transition hover:opacity-90 sm:gap-2 sm:px-[18px] sm:py-3 sm:text-sm"
               >
-                Créer ma boutique gratuitement
-                <span className="flex text-brand-white opacity-85">
+                <span className="text-center leading-tight">
+                  Créer ma boutique
+                  <br className="sm:hidden" />
+                  <span className="hidden sm:inline"> gratuitement</span>
+                </span>
+                <span className="hidden sm:flex text-brand-white opacity-85">
                   <svg width="30" height="12" viewBox="0 0 30 12" fill="none" aria-hidden="true">
                     <path
                       d="M2 1l5 5-5 5M11 1l5 5-5 5M20 1l5 5-5 5"
@@ -78,9 +83,13 @@ export default function CTA() {
             {/* Bouton secondaire : fond blanc plein */}
             <Link
               href="/partenaire-agree"
-              className="cta-bouton-2 items-center gap-2 rounded-xl bg-white px-[18px] py-3 text-sm font-semibold text-black no-underline transition hover:opacity-90"
+              className="cta-bouton-2 flex items-center justify-center rounded-xl bg-white px-3 py-2.5 text-[12px] font-semibold text-black no-underline transition hover:opacity-90 sm:px-[18px] sm:py-3 sm:text-sm"
             >
-              Devenir partenaire agréé
+              <span className="text-center leading-tight">
+                Devenir partenaire
+                <br className="sm:hidden" />
+                <span className="hidden sm:inline"> agréé</span>
+              </span>
             </Link>
           </div>
         </div>

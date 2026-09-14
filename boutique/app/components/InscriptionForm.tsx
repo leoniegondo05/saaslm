@@ -69,9 +69,6 @@ const CGU_ARTICLES = [
   },
 ];
 
-const inputBox =
-  "mt-2 w-full rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-5 py-3 text-sm text-brand-white placeholder-brand-white/30 outline-none transition focus:border-brand-pink/60 sm:mt-3 sm:py-4";
-
 // Indicatifs proposés au champ téléphone (drapeau + code pays) — zone
 // francophone d'Afrique de l'Ouest/Centrale où LM opère, plus la France.
 // +225 (Côte d'Ivoire) reste la valeur par défaut, déjà utilisée comme
@@ -415,21 +412,51 @@ function BoutonOeil({ visible, onClick }: { visible: boolean; onClick: () => voi
       onClick={onClick}
       aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
       tabIndex={-1}
-      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-white/40 transition hover:text-brand-white/80"
+      className="login-password-toggle"
     >
-      <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" aria-hidden>
-        <path
-          d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        <circle cx="12" cy="12" r="2.6" stroke="currentColor" strokeWidth="1.6" fill="none" />
-        {visible && <path d="M3.5 3.5l17 17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+        <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+        <circle cx="12" cy="12" r="2.5" />
+        {visible && <path d="M3.5 3.5l17 17" strokeLinecap="round" />}
       </svg>
     </button>
+  );
+}
+
+// Icônes préfixe des champs — même langage visuel que LoginForm.tsx
+// (.login-input-icon), adaptées aux champs propres à l'inscription.
+function IconePersonne() {
+  return (
+    <svg className="login-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M4.5 20c1.4-3.8 4.6-5.8 7.5-5.8s6.1 2 7.5 5.8" />
+    </svg>
+  );
+}
+
+function IconeTelephone() {
+  return (
+    <svg className="login-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <path d="M4.5 5c0-.8.6-1.4 1.4-1.4h2.3c.6 0 1.1.4 1.3 1l1 2.7c.2.5 0 1.1-.4 1.4L8.6 9.9c1 2.3 2.9 4.2 5.2 5.2l1.2-1.5c.3-.4.9-.6 1.4-.4l2.7 1c.6.2 1 .7 1 1.3v2.3c0 .8-.6 1.4-1.4 1.4C11.4 19.2 4.8 12.6 4.5 5Z" />
+    </svg>
+  );
+}
+
+function IconeEnveloppe() {
+  return (
+    <svg className="login-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  );
+}
+
+function IconeCadenas() {
+  return (
+    <svg className="login-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <rect x="5" y="10" width="14" height="10" rx="2" />
+      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+    </svg>
   );
 }
 
@@ -674,13 +701,11 @@ export default function InscriptionForm() {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => router.push("/login")}
-          className="mt-7 w-full rounded-2xl bg-brand-white px-6 py-3.5 text-sm font-semibold text-brand-bg transition hover:opacity-90"
-        >
-          Me connecter
-        </button>
+        <div className="mt-7">
+          <button type="button" onClick={() => router.push("/login")} className="login-submit">
+            Me connecter <span>→</span>
+          </button>
+        </div>
         <p className="mt-4 text-xs font-light text-brand-white/40">
           À la première connexion, neuf questions sur votre activité. Une par page, deux minutes en tout.
         </p>
@@ -691,7 +716,7 @@ export default function InscriptionForm() {
   if (vue === "conditions") {
     return (
       <div className="mt-6 sm:mt-8">
-        <div className="rounded-2xl border border-brand-pink/35 bg-[linear-gradient(180deg,rgba(24,14,32,0.9),rgba(14,10,22,0.9))] shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
+        <div className="login-glass-panel shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
           <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
             <div>
               <p className="text-[14px] font-semibold text-brand-white">Conditions d&apos;utilisation</p>
@@ -736,17 +761,19 @@ export default function InscriptionForm() {
               type="button"
               onClick={handleAccepterConditions}
               disabled={!cguAccepte || loading}
-              className="w-full rounded-xl bg-brand-white px-6 py-3 text-sm font-semibold text-brand-bg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+              className="login-submit"
             >
               {loading ? "Création…" : "Accepter et créer ma boutique"}
             </button>
-            <button
-              type="button"
-              onClick={() => setVue("formulaire")}
-              className="mt-2.5 w-full rounded-xl border border-white/15 px-6 py-3 text-sm font-medium text-brand-white/70 transition hover:border-white/30"
-            >
-              Retour au formulaire
-            </button>
+            <div className="mt-2.5">
+              <button
+                type="button"
+                onClick={() => setVue("formulaire")}
+                className="login-btn-secondary"
+              >
+                Retour au formulaire
+              </button>
+            </div>
           </div>
         </div>
 
@@ -764,48 +791,47 @@ export default function InscriptionForm() {
           drapeau), puis e-mail (+ son code de confirmation), puis mot de
           passe + confirmation. Boutique (nom + lien) tout en bas, masquée
           tant que ces champs-là ne sont pas remplis (voir plus loin). */}
-      <div>
-        <label htmlFor="name" className="text-sm font-semibold text-brand-white">
-          Nom &amp; prénom
-        </label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          autoComplete="name"
-          required
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Ex : Jean DUPONT"
-          className={inputBox}
-        />
+      <div className="login-field">
+        <label htmlFor="name">Nom &amp; prénom</label>
+        <div className="login-input-shell">
+          <IconePersonne />
+          <input
+            id="name"
+            name="name"
+            type="text"
+            autoComplete="name"
+            required
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Ex : Jean DUPONT"
+          />
+        </div>
         {error?.fieldError("name") && (
           <p className="mt-1.5 text-xs text-red-400">{error.fieldError("name")}</p>
         )}
       </div>
 
-      <div>
-        <label htmlFor="phone" className="text-xs font-semibold uppercase tracking-wider text-brand-white/50">
-          Numéro de téléphone
-        </label>
+      <div className="login-field">
+        <label htmlFor="phone">Numéro de téléphone</label>
         {/* Deux blocs séparés (pas un bandeau unique) : bouton indicatif
             (drapeau + nom du pays + code + chevron) à gauche, champ
             numéro à droite — reprend la maquette utilisateur. */}
-        <div className="mt-2 flex gap-3 sm:mt-3">
+        <div className="flex gap-3">
           <div className="relative shrink-0" ref={indicatifRef}>
             <button
               type="button"
               onClick={() => setIndicatifOuvert((ouvert) => !ouvert)}
               aria-haspopup="listbox"
               aria-expanded={indicatifOuvert}
-              className="flex h-full items-center gap-2 rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-4 py-3 text-sm text-brand-white outline-none transition focus:border-brand-pink/60 sm:py-4"
+              className="login-select-btn"
             >
               <DrapeauChip iso={paysSelectionne.iso} />
               <span className="font-medium">{paysSelectionne.pays}</span>
-              <span className="text-brand-white/50">{paysSelectionne.code}</span>
+              <span style={{ opacity: 0.55 }}>{paysSelectionne.code}</span>
               <svg
                 viewBox="0 0 12 8"
-                className={`h-2.5 w-2.5 shrink-0 text-brand-white/40 transition ${indicatifOuvert ? "rotate-180" : ""}`}
+                className={`h-2.5 w-2.5 shrink-0 transition ${indicatifOuvert ? "rotate-180" : ""}`}
+                style={{ opacity: 0.55 }}
                 aria-hidden
               >
                 <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -815,7 +841,7 @@ export default function InscriptionForm() {
             {indicatifOuvert && (
               <ul
                 role="listbox"
-                className="absolute left-0 top-full z-10 mt-2 max-h-56 w-60 overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0e1c] py-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+                className="login-select-panel absolute left-0 top-full z-10 mt-2 max-h-56 w-60 overflow-y-auto py-2"
               >
                 {INDICATIFS.map((pays) => (
                   <li key={pays.iso} role="option" aria-selected={pays.iso === indicatif}>
@@ -825,11 +851,11 @@ export default function InscriptionForm() {
                         setIndicatif(pays.iso);
                         setIndicatifOuvert(false);
                       }}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-brand-white transition hover:bg-white/5"
+                      className="login-select-option flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-brand-white transition"
                     >
                       <DrapeauChip iso={pays.iso} />
                       <span className="flex-1">{pays.pays}</span>
-                      <span className="text-brand-white/50">{pays.code}</span>
+                      <span style={{ opacity: 0.55 }}>{pays.code}</span>
                     </button>
                   </li>
                 ))}
@@ -837,36 +863,36 @@ export default function InscriptionForm() {
             )}
           </div>
 
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            required
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
-            placeholder="▮ ▮ ▮ ▮ ▮ ▮ ▮ ▮ ▮ ▮"
-            className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-5 py-3 text-sm tracking-[0.3em] text-brand-white caret-brand-pink placeholder-brand-white/25 outline-none transition focus:border-brand-pink/60 sm:py-4"
-          />
+          <div className="login-input-shell" style={{ flex: 1, minWidth: 0 }}>
+            <IconeTelephone />
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              autoComplete="tel"
+              required
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              placeholder="▮ ▮ ▮ ▮ ▮ ▮ ▮ ▮ ▮ ▮"
+              style={{ letterSpacing: "0.3em" }}
+            />
+          </div>
         </div>
         {error?.fieldError("phone") && (
           <p className="mt-1.5 text-xs text-red-400">{error.fieldError("phone")}</p>
         )}
       </div>
 
-      <div>
-        <label htmlFor="email" className="text-sm font-semibold text-brand-white">
-          Adresse e-mail
-        </label>
-        {/* Bouton "Valider" dans le champ, à droite (pr-24 sur l'input
-            pour que le texte saisi ne passe pas dessous) : grisé tant
-            que l'adresse ne respecte pas le format e-mail. Marge du haut
-            (mt-2/sm:mt-3) portée par CE div, pas par l'input : sinon elle
-            ne se "collapse" pas hors du div (position: relative
-            n'empêche pas la collapse en théorie, mais Tailwind/le
-            navigateur la garde ici dans la boîte du div), ce qui
-            agrandissait le div et décentrait le bouton vers le haut. */}
-        <div className="relative mt-2 sm:mt-3">
+      <div className="login-field">
+        <label htmlFor="email">Adresse e-mail</label>
+        {/* Bouton "Valider" dans le champ, à droite : grisé tant que
+            l'adresse ne respecte pas le format e-mail. .login-input-shell
+            étant un simple flex row, le bouton est un enfant de plus (pas
+            besoin de le positionner en absolute) ; l'input reçoit flex:1
+            pour partager la place avec lui (sinon width:100% de la règle
+            partagée le ferait déborder par-dessus). */}
+        <div className="login-input-shell">
+          <IconeEnveloppe />
           <input
             id="email"
             name="email"
@@ -876,13 +902,13 @@ export default function InscriptionForm() {
             value={email}
             onChange={(event) => handleEmailChange(event.target.value)}
             placeholder="info@example.com"
-            className="w-full rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-5 py-3 pr-24 text-sm text-brand-white placeholder-brand-white/30 outline-none transition focus:border-brand-pink/60 sm:py-4 sm:pr-28"
+            style={{ width: "auto", flex: 1, minWidth: 0 }}
           />
           <button
             type="button"
             onClick={handleValiderEmail}
             disabled={!emailValide}
-            className="absolute inset-y-0 right-2 my-auto flex h-8 items-center justify-center rounded-xl bg-brand-pink px-3.5 text-xs font-semibold leading-none text-brand-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:opacity-30"
+            className="login-btn-compact"
           >
             Valider
           </button>
@@ -893,11 +919,9 @@ export default function InscriptionForm() {
       </div>
 
       {codeEnvoye && (
-        <div>
-          <label htmlFor="confirmation-code" className="text-sm font-semibold text-brand-white">
-            Code de confirmation
-          </label>
-          <div className="mt-2 flex gap-2 sm:mt-3 sm:gap-3">
+        <div className="login-field">
+          <label htmlFor="confirmation-code">Code de confirmation</label>
+          <div className="flex gap-2 sm:gap-3">
             {codeDigits.map((digit, index) => (
               <input
                 key={index}
@@ -915,7 +939,7 @@ export default function InscriptionForm() {
                 onChange={(event) => handleCodeDigitChange(index, event.target.value)}
                 onKeyDown={(event) => handleCodeDigitKeyDown(index, event)}
                 onPaste={handleCodePaste}
-                className="h-12 w-10 rounded-xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] text-center text-lg font-semibold text-brand-white outline-none transition focus:border-brand-pink/60 sm:h-14 sm:w-12"
+                className="login-otp-box"
               />
             ))}
           </div>
@@ -924,15 +948,10 @@ export default function InscriptionForm() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
-        <div>
-          <label htmlFor="password" className="text-sm font-semibold text-brand-white">
-            Mot de passe
-          </label>
-          {/* mt-2/sm:mt-3 porté par le div, pas par l'input — voir
-              commentaire équivalent au champ e-mail plus haut : sinon le
-              div s'agrandit de cette marge et le bouton oeil (centré via
-              inset-y-0/my-auto) se retrouve décalé vers le haut. */}
-          <div className="relative mt-2 sm:mt-3">
+        <div className="login-field">
+          <label htmlFor="password">Mot de passe</label>
+          <div className="login-input-shell">
+            <IconeCadenas />
             <input
               id="password"
               name="password"
@@ -943,7 +962,7 @@ export default function InscriptionForm() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="********"
-              className="w-full rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-5 py-3 pr-11 text-sm text-brand-white placeholder-brand-white/30 outline-none transition focus:border-brand-pink/60 disabled:cursor-not-allowed disabled:opacity-40 sm:py-4"
+              style={{ width: "auto", flex: 1, minWidth: 0 }}
             />
             <BoutonOeil visible={passwordVisible} onClick={() => setPasswordVisible((v) => !v)} />
           </div>
@@ -952,11 +971,10 @@ export default function InscriptionForm() {
           )}
         </div>
 
-        <div>
-          <label htmlFor="password-confirmation" className="text-sm font-semibold text-brand-white">
-            Confirmation
-          </label>
-          <div className="relative mt-2 sm:mt-3">
+        <div className="login-field">
+          <label htmlFor="password-confirmation">Confirmation</label>
+          <div className="login-input-shell">
+            <IconeCadenas />
             <input
               id="password-confirmation"
               name="password-confirmation"
@@ -967,7 +985,7 @@ export default function InscriptionForm() {
               value={passwordConfirmation}
               onChange={(event) => setPasswordConfirmation(event.target.value)}
               placeholder="********"
-              className="w-full rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-5 py-3 pr-11 text-sm text-brand-white placeholder-brand-white/30 outline-none transition focus:border-brand-pink/60 disabled:cursor-not-allowed disabled:opacity-40 sm:py-4"
+              style={{ width: "auto", flex: 1, minWidth: 0 }}
             />
             <BoutonOeil
               visible={passwordConfirmationVisible}
@@ -983,7 +1001,7 @@ export default function InscriptionForm() {
           juste si c'est faible/peu solide/solide/très solide ; la liste
           en dessous détaille pourquoi, sans jamais bloquer la suite. */}
       {password.length > 0 && (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5">
+        <div className="login-glass-panel px-4 py-3.5">
           <div className="flex items-center justify-between text-xs font-light">
             <span className="text-brand-white/50">Solidité du mot de passe</span>
             <span style={{ color: force.couleur }} className="font-semibold">
@@ -1041,11 +1059,8 @@ export default function InscriptionForm() {
         Vous avez déjà un compte ?
       </Link>
 
-      <button
-        type="submit"
-        className="w-full rounded-xl bg-brand-white px-6 py-3 text-sm font-semibold text-brand-bg transition hover:opacity-90 sm:py-4"
-      >
-        Suivant
+      <button type="submit" className="login-submit">
+        Suivant <span>→</span>
       </button>
     </form>
   );

@@ -1,86 +1,79 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type ReactNode } from "react";
-import AuthOverlayText from "./AuthOverlayText";
-import NetworkBackground from "./vision/NetworkBackground";
+import { useEffect, useState, type ReactNode } from "react";
 
 /*
-  Sur mobile (< lg), la colonne visuel de app/login/page.tsx est masquée
-  (voir "hidden ... lg:block" dessus) et le formulaire s'affichait donc
-  directement — sans passer par l'écran "Bienvenue sur votre boutique" +
-  bouton "Continuer" de la maquette Figma. Ce composant réintroduit cette
-  étape : un écran plein écran (image + texte + "Continuer") au-dessus du
-  formulaire, qui ne se démonte qu'au clic sur "Continuer". Le desktop, qui
-  affiche déjà les deux colonnes côte à côte, ignore cette étape (lg:hidden /
-  lg:flex) et voit le formulaire tout de suite.
+  Sur mobile (< 981px), la colonne visuel de app/login/page.tsx
+  (.login-left) est masquée (voir globals.css) et le formulaire
+  s'affichait donc directement — sans passer par l'écran "Bienvenue sur
+  votre boutique" + bouton "Continuer". Ce composant réintroduit cette
+  étape : un écran plein cadre (logo + accroche + halos "aurore" +
+  "Continuer") au-dessus du formulaire, qui ne se démonte qu'au clic sur
+  "Continuer". Le desktop, qui affiche déjà les deux colonnes côte à
+  côte, ignore cette étape et voit le formulaire tout de suite (voir
+  règles @media dans globals.css).
+
+  Même mécanique que l'ancienne version (avant l'habillage "verre
+  dépoli") — seul le visuel change (halos + carte en verre au lieu du
+  maillage de points).
 */
 export default function LoginMobileFlow({ children }: { children: ReactNode }) {
   const [step, setStep] = useState<"intro" | "form">("intro");
 
+  // Bloque le scroll de la page tant que l'écran d'intro (logo + accroche
+  // + "Continuer") est affiché sur mobile : son contenu est toujours
+  // court et centré, il ne doit jamais pouvoir défiler pour révéler du
+  // vide en dessous — seul le formulaire (étape "form") peut, lui, avoir
+  // besoin de défiler s'il est long. Sans effet sur desktop, où l'intro
+  // ne s'affiche de toute façon jamais (voir globals.css) : on ignore le
+  // verrou si le viewport est déjà en largeur desktop.
+  useEffect(() => {
+    if (step !== "intro") return;
+    if (window.matchMedia("(min-width: 981px)").matches) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [step]);
+
   return (
     <>
       {step === "intro" && (
-        // Même maillage de points que la colonne visuel desktop (voir
-        // app/login/page.tsx) plutôt que Rectangle.png : identité "réseau"
-        // du site au lieu d'un dégradé flou figé, et un cadre (bordure +
-        // coins arrondis, fond transparent) posé en retrait par-dessus
-        // (marge ~20px sur les côtés, ~80px en haut/bas).
-        <div className="absolute inset-0 z-10 bg-brand-bg lg:hidden">
-          <NetworkBackground />
+        <div className="login-mobile-intro">
+          <div className="login-ambient a" aria-hidden="true" />
+          <div className="login-ambient c" aria-hidden="true" />
+          <div className="login-orb two" aria-hidden="true" />
 
-          <div className="absolute inset-x-5 inset-y-20 rounded-3xl border border-white/25 sm:inset-x-6 sm:inset-y-24">
-            {/* Badge haut-gauche (logo dans un carré arrondi), repris de la
-                maquette Figma — c'est le logo LIIVRE MOI, pas un simple point.
-                Le SVG a une bonne marge interne intégrée à son viewBox : même
-                agrandi, le tracé reste petit dedans. Le liseré blanc + le
-                scale-150 (recadré par overflow-hidden) compensent : ça
-                marque bien le badge et ça fait "déborder" le logo pour
-                combler l'espace. */}
-            <span className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-white/40 bg-black/30 backdrop-blur">
-              <Image
-                src="/images/logo.svg"
-                alt="Logo LIIVRE MOI"
-                width={40}
-                height={40}
-                className="h-full w-full scale-150 object-contain"
-              />
-            </span>
+          <Image
+            src="/images/logo.svg"
+            alt="Logo LIIVRE MOI"
+            width={48}
+            height={48}
+            className="login-logo"
+          />
 
-            <AuthOverlayText
-              label="Bienvenue sur votre boutique"
-              heading={
-                <>
-                  Connectez-vous pour accéder à
-                  <br />
-                  votre tableau de bord d'administration sécurisé.
-                </>
-              }
-              cta={
-                <button
-                  type="button"
-                  onClick={() => setStep("form")}
-                  className="mt-6 rounded-xl bg-brand-white px-8 py-3 text-sm font-semibold text-brand-bg transition hover:opacity-90"
-                >
-                  Continuer
-                </button>
-              }
-            />
-
-            {/* Initiales "LM" bas-gauche, comme sur l'image de référence. */}
-            <span className="absolute bottom-5 left-5 text-sm font-semibold text-brand-white/60">
-              LM
-            </span>
+          <div className="login-left-copy">
+            <h3 className="login-h1">
+              Ici commence votre <span>indépendance commerciale</span>.
+            </h3>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setStep("form")}
+            className="login-submit login-mobile-continue"
+          >
+            Continuer <span>→</span>
+          </button>
+
+          <div className="login-shape one" aria-hidden="true" />
         </div>
       )}
 
-      <div
-        className={`w-full flex-1 flex-col gap-4 overflow-y-auto px-6 py-6 sm:gap-6 md:px-16 md:py-10 lg:flex lg:overflow-visible ${
-          step === "form" ? "flex" : "hidden lg:flex"
-        }`}
-      >
-        {children}
+      <div className={`login-right ${step === "form" ? "" : "is-hidden-mobile"}`}>
+        <div className="login-form-wrap">{children}</div>
       </div>
     </>
   );

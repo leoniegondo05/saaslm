@@ -12,10 +12,32 @@ import { API_BASE_URL } from "../../lib/api/config";
   un composant client (état + appel API) tout en gardant la page en
   composant serveur (export const metadata).
 
+  Habillage "verre dépoli" repris de test.html (voir globals.css
+  ".login-*") : mêmes champs, même ordre, même logique qu'avant — seules
+  les classes CSS changent.
+
   Prêt à accueillir l'API : dès que POST {NEXT_PUBLIC_API_URL}/api/login
   répond, il suffit de vérifier le format retourné dans
   lib/api/services/auth.ts (AuthResponse) — rien ici à changer.
 */
+
+function IconeEnveloppe() {
+  return (
+    <svg className="login-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  );
+}
+
+function IconeCadenas() {
+  return (
+    <svg className="login-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <rect x="5" y="10" width="14" height="10" rx="2" />
+      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
 
 // Bouton "oeil" pour basculer le champ mot de passe en clair — icône
 // barrée quand le mot de passe est déjà visible (clic = repasser en
@@ -28,19 +50,12 @@ function BoutonOeil({ visible, onClick }: { visible: boolean; onClick: () => voi
       onClick={onClick}
       aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
       tabIndex={-1}
-      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-white/40 transition hover:text-brand-white/80"
+      className="login-password-toggle"
     >
-      <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" aria-hidden>
-        <path
-          d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        <circle cx="12" cy="12" r="2.6" stroke="currentColor" strokeWidth="1.6" fill="none" />
-        {visible && <path d="M3.5 3.5l17 17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+        <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+        <circle cx="12" cy="12" r="2.5" />
+        {visible && <path d="M3.5 3.5l17 17" strokeLinecap="round" />}
       </svg>
     </button>
   );
@@ -81,42 +96,31 @@ export default function LoginForm() {
   }
 
   return (
-    <form className="mt-6 space-y-4 sm:mt-8 sm:space-y-5" onSubmit={handleSubmit}>
-      {error && (
-        <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-          {error.message}
-        </p>
-      )}
-
-      <div>
-        <label htmlFor="email" className="text-sm font-semibold text-brand-white">
-          Addresse Email
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="Ex : info@example.com"
-          className="mt-2 w-full rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-5 py-3 text-sm text-brand-white placeholder-brand-white/30 outline-none transition focus:border-brand-pink/60 sm:mt-3 sm:py-4"
-        />
+    <form className="login-form" onSubmit={handleSubmit}>
+      <div className="login-field">
+        <label htmlFor="email">Addresse Email</label>
+        <div className="login-input-shell">
+          <IconeEnveloppe />
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="Ex : info@example.com"
+          />
+        </div>
         {error?.fieldError("email") && (
           <p className="mt-1.5 text-xs text-red-400">{error.fieldError("email")}</p>
         )}
       </div>
 
-      <div>
-        <label htmlFor="password" className="text-sm font-semibold text-brand-white">
-          Mot de passe
-        </label>
-        {/* mt-2/sm:mt-3 porté par le div, pas par l'input : sinon le
-            div s'agrandit de cette marge et le bouton oeil (centré via
-            inset-y-0/my-auto) se retrouve décalé vers le haut — voir
-            InscriptionForm.tsx pour le détail de la mesure du bug. */}
-        <div className="relative mt-2 sm:mt-3">
+      <div className="login-field">
+        <label htmlFor="password">Mot de passe</label>
+        <div className="login-input-shell">
+          <IconeCadenas />
           <input
             id="password"
             name="password"
@@ -127,7 +131,6 @@ export default function LoginForm() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="********"
-            className="w-full rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] px-5 py-3 pr-11 text-sm text-brand-white placeholder-brand-white/30 outline-none transition focus:border-brand-pink/60 sm:py-4"
           />
           <BoutonOeil visible={passwordVisible} onClick={() => setPasswordVisible((v) => !v)} />
         </div>
@@ -136,100 +139,60 @@ export default function LoginForm() {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
-        <label className="inline-flex cursor-pointer items-center gap-3">
-          <span className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-white">
-            <input
-              type="checkbox"
-              name="remember"
-              checked={remember}
-              onChange={(event) => setRemember(event.target.checked)}
-              className="peer absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-xl"
-            />
-            <svg
-              viewBox="0 0 16 16"
-              fill="none"
-              className="hidden h-4 w-4 text-brand-bg peer-checked:block"
-              aria-hidden
-            >
-              <path
-                d="M13 4L6 11L3 8"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-          <span className="text-sm text-brand-white">Se rapeller de moi</span>
+      <div className="login-options">
+        <label className="login-remember">
+          <input
+            type="checkbox"
+            name="remember"
+            checked={remember}
+            onChange={(event) => setRemember(event.target.checked)}
+          />
+          <span>Se rapeller de moi</span>
         </label>
 
-        <a href="#" className="text-sm font-medium text-brand-pink hover:opacity-80">
+        <a href="#" className="login-forgot">
           Mot de passe oublié ?
         </a>
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-2xl bg-white px-6 py-3.5 text-sm font-semibold text-brand-bg transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60 sm:py-4"
-      >
-        {loading ? "Connexion…" : "Connexion"}
+      <button type="submit" disabled={loading} className="login-submit">
+        {loading ? "Connexion…" : "Connexion"} <span>→</span>
       </button>
 
-      <div className="flex items-center gap-4 pt-3 pb-1">
-        <span className="h-px flex-1 bg-white/10" aria-hidden />
-        <span className="text-sm text-brand-white/70">Ou continuer avec</span>
-        <span className="h-px flex-1 bg-white/10" aria-hidden />
-      </div>
+      {error && <p className="login-error">{error.message}</p>}
 
-      <div className="mx-auto max-w-sm space-y-3">
-        <button
-          type="button"
-          className="flex w-full items-center gap-3.5 rounded-full border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] pl-9 pr-6 py-3 text-sm font-medium text-brand-white transition hover:border-white/20 hover:brightness-110 sm:pl-11 sm:pr-7 sm:py-3.5"
-        >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center">
-            <svg viewBox="0 0 48 48" className="h-6 w-6" aria-hidden>
-              <path fill="#4caf50" d="M45,16.2l-5,2.75l-5,4.75L35,40h7c1.657,0,3-1.343,3-3V16.2z" />
-              <path fill="#1e88e5" d="M3,16.2l3.614,1.71L13,23.7V40H6c-1.657,0-3-1.343-3-3V16.2z" />
-              <polygon fill="#e53935" points="35,11.2 24,19.45 13,11.2 12,17 13,23.7 24,31.95 35,23.7 36,17" />
-              <path fill="#c62828" d="M3,12.298V16.2l10,7.5V11.2L9.876,8.859C9.132,8.301,8.228,8,7.298,8h0C4.924,8,3,9.924,3,12.298z" />
-              <path fill="#fbc02d" d="M45,12.298V16.2l-10,7.5V11.2l3.124-2.341C38.868,8.301,39.772,8,40.702,8h0 C43.076,8,45,9.924,45,12.298z" />
-            </svg>
-          </span>
+      <div className="login-divider">Ou continuer avec</div>
+
+      <div className="login-socials">
+        <button type="button" className="login-social">
+          <svg viewBox="0 0 24 24" aria-hidden>
+            <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.56-.2-2.27H12v4.3h6.45a5.51 5.51 0 0 1-2.39 3.61v3h3.87c2.27-2.09 3.56-5.17 3.56-8.64Z" />
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.07 7.93-2.91l-3.87-3c-1.07.72-2.44 1.14-4.06 1.14-3.12 0-5.76-2.11-6.71-4.95H1.29v3.1A12 12 0 0 0 12 24Z" />
+            <path fill="#FBBC05" d="M5.29 14.28A7.21 7.21 0 0 1 4.91 12c0-.79.14-1.56.38-2.28v-3.1H1.29A12 12 0 0 0 0 12c0 1.93.46 3.75 1.29 5.38l4-3.1Z" />
+            <path fill="#EA4335" d="M12 4.77c1.77 0 3.36.61 4.61 1.81l3.46-3.46C17.95 1.12 15.24 0 12 0A12 12 0 0 0 1.29 6.62l4 3.1C6.24 6.88 8.88 4.77 12 4.77Z" />
+          </svg>
           <span>Se connecter avec Google</span>
         </button>
 
-        <button
-          type="button"
-          className="flex w-full items-center gap-3.5 rounded-full border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] pl-9 pr-6 py-3 text-sm font-medium text-brand-white transition hover:border-white/20 hover:brightness-110 sm:pl-11 sm:pr-7 sm:py-3.5"
-        >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center">
-            <svg viewBox="0 0 384 512" className="h-6 w-6 fill-white" aria-hidden>
-              <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zM262.1 104.5c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
-            </svg>
-          </span>
+        <button type="button" className="login-social">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <path d="M17.05 12.54c-.02-2.23 1.82-3.3 1.9-3.35a4.1 4.1 0 0 0-3.23-1.75c-1.36-.14-2.67.8-3.36.8-.7 0-1.78-.78-2.92-.76a4.3 4.3 0 0 0-3.62 2.2c-1.56 2.7-.4 6.68 1.1 8.87.74 1.07 1.61 2.26 2.75 2.22 1.1-.04 1.52-.7 2.86-.7 1.33 0 1.71.7 2.87.67 1.2-.02 1.96-1.08 2.7-2.15.85-1.23 1.2-2.42 1.22-2.48-.03-.01-2.25-.86-2.27-3.37ZM14.85 6c.61-.74 1.02-1.77.9-2.8-.88.04-1.95.59-2.58 1.33-.56.65-1.05 1.7-.92 2.7.98.08 1.98-.5 2.6-1.23Z" />
+          </svg>
           <span>Se connecter avec Apple</span>
         </button>
 
-        <button
-          type="button"
-          className="flex w-full items-center gap-3.5 rounded-full border border-white/10 bg-[linear-gradient(135deg,#141a30_0%,#0a0e1c_100%)] pl-9 pr-6 py-3 text-sm font-medium text-brand-white transition hover:border-white/20 hover:brightness-110 sm:pl-11 sm:pr-7 sm:py-3.5"
-        >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#1877F2]">
-            <svg viewBox="0 0 320 512" className="h-4 w-4 fill-black" aria-hidden>
-              <path d="M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z" />
-            </svg>
-          </span>
+        <button type="button" className="login-social">
+          <svg viewBox="0 0 24 24" aria-hidden>
+            <circle cx="12" cy="12" r="12" fill="#1877F2" />
+            <path fill="#fff" d="M13.5 20v-7h2.35l.35-2.72H13.5V8.54c0-.79.22-1.33 1.36-1.33h1.45V4.78c-.25-.03-1.1-.1-2.1-.1-2.08 0-3.5 1.27-3.5 3.6v2H8.36V13h2.35v7h2.79Z" />
+          </svg>
           <span>Se connecter avec Facebook</span>
         </button>
       </div>
 
-      <p className="pt-2 text-center text-sm text-brand-white">
-        Vous avez déjà un compte ?{" "}
-        <Link href="/inscription" className="font-medium text-brand-pink hover:opacity-80">
-          Créer un compte
-        </Link>
+      <p className="login-signup">
+        Vous avez déjà un compte ?
+        <Link href="/inscription">Créer un compte</Link>
       </p>
     </form>
   );

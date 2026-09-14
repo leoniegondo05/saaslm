@@ -87,7 +87,7 @@ export default function Navbar() {
   // Liste des liens (réutilisée pour le menu mobile)
   const liens = [
     { href: "/vision", label: "Ce que nous construisons" },
-    { href: "/partenaire-agree-lm.html", label: "Partenaire agréé LM" },
+    { href: "/partenaire-agree", label: "Partenaire agréé LM" },
   ];
 
   return (
@@ -109,7 +109,7 @@ export default function Navbar() {
                 écrase la largeur voulue (w-11) par celle, plus petite, du
                 conteneur parent — c'est ce qui rendait le logo plus petit
                 que prévu. */}
-            <div className="navbar-fade shrink-0 w-15 h-15 rounded-[10px] flex items-center justify-center">
+            <div className="navbar-fade shrink-0 w-15 h-15 rounded-[10px] flex items-center justify-center cursor-pointer pointer-events-auto" >
               <img src="/favicon.svg" alt="logo" className="w-15 h-15 max-w-none" />
             </div>
 
@@ -194,7 +194,7 @@ export default function Navbar() {
             </a>
             <em className="text-brand-pink not-italic">·</em>
             <a
-              href="/partenaire-agree-lm.html"
+              href="/partenaire-agree"
               className="pointer-events-auto text-brand-white no-underline opacity-90 hover:opacity-100 hover:text-brand-pink-light cursor-pointer"
             >
               Partenaire agréé LM
@@ -219,7 +219,7 @@ export default function Navbar() {
         aria-hidden={!menuOuvert}
       >
 
-        <nav className="nav-menu-list" onMouseLeave={() => setLienSurvole(null)}>
+        <nav className="nav-menu-list  mt-15" onMouseLeave={() => setLienSurvole(null)}>
           {/* Le point rose qui se déplace verticalement */}
           <span
             className={`nav-menu-dot ${
