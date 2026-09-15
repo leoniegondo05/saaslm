@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, openBrandedReport, SectionHeader, StatRow, Tag } from "./shared";
+import { Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, openBrandedReport, periodSeed, scaleForPeriod, SectionHeader, StatRow, Tag } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -35,6 +35,27 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
 */
 
 const STOCK_COLOR = "#5AA9FF";
+
+/* Mise à l'échelle des mock chiffrés selon la période choisie (cf.
+   periodSeed/scaleForPeriod dans shared.tsx et mémoire
+   [[dashboard-mock-data-pending-laravel-api]]). scaleForPeriod arrondit à
+   l'entier : scaledDecimal multiplie/divise par 10^decimals pour garder le
+   nombre de décimales des mock actuels (marge à 1 décimale, ventes/jour à
+   2) sans changer la formule déterministe. fmtAmount/fmtFr reformatent le
+   résultat comme les chaînes mock existantes ("492 000 F", "31,4 %"). */
+function scaledDecimal(base: number, seed: number, key: number, decimals = 1): number {
+  const factor = 10 ** decimals;
+  return scaleForPeriod(Math.round(base * factor), seed, key) / factor;
+}
+function fmtAmount(n: number): string {
+  const rounded = Math.round(n);
+  const digits = Math.abs(rounded).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return `${rounded < 0 ? "−" : ""}${digits} F`;
+}
+function fmtFr(n: number, decimals = 0): string {
+  const s = Math.abs(n).toFixed(decimals).replace(".", ",");
+  return n < 0 ? `−${s}` : s;
+}
 
 /* Anneau de proportion — même recette que StockSection/FinancesSection
    (dupliquée ici : convention du dossier, chaque section garde ses petits
@@ -146,7 +167,6 @@ const COMBO_ROWS: { color: string; values: number[] }[] = [
   { color: "Vert", values: [0, 2, 3, 1] },
   { color: "Rouge", values: [0, 1, 1, 0] },
 ];
-const COMBO_MAX = 14;
 
 function LifeSpark({ values, color }: { values: number[]; color: string }) {
   const w = 100;
@@ -290,8 +310,116 @@ const PRODUCT_TABLE_ROWS: {
   { code: "D", nameFr: "Foulard en soie", nameEn: "Silk scarf", unites: "7", ca: "58 100 F", margeDisplay: "14,2 %", margeValue: 14.2, parJour: "0,23", couvFr: "+6 j", couvEn: "+6d", refus: "9 %", litiges: "0" },
 ];
 
-export default function ProduitsSection({ first = true }: { first?: boolean }) {
+export default function ProduitsSection({ first = true, activeDate }: { first?: boolean; activeDate?: Date }) {
   const { t } = useDashboardLangue();
+  // Graine déterministe dérivée de la période sélectionnée dans le
+  // DashboardHeader : 2026-08-01 reprend la date par défaut déjà utilisée
+  // ailleurs dans le dashboard, donc le rendu ne change pas quand
+  // activeDate n'est pas fourni (cf. [[dashboard-mock-data-pending-laravel-api]]).
+  const seed = periodSeed(activeDate ?? new Date(2026, 7, 1));
+
+  /* Mock chiffrés mis à l'échelle par période (cf. shared.tsx et mémoire
+     [[dashboard-mock-data-pending-laravel-api]]) : chaque statistique
+     indépendante reçoit sa propre clé pour ne pas bouger à l'identique des
+     autres. Les valeurs dérivées (totaux, écarts) sont recalculées à
+     partir des nombres mis à l'échelle plutôt que rescalées séparément. */
+
+  // KPI de la période — l'état du catalogue (En vente/rupture/dormantes/
+  // brouillon) alimente à la fois le total "Références au catalogue" (KPI
+  // + centre de l'anneau) et le détail de l'anneau plus bas.
+  const enVente = scaleForPeriod(26, seed, 0);
+  const rupture = scaleForPeriod(3, seed, 1);
+  const dormantes = scaleForPeriod(2, seed, 2);
+  const brouillon = scaleForPeriod(1, seed, 3);
+  const totalRefs = enVente + rupture + dormantes + brouillon;
+  const totalRefsPrev = scaleForPeriod(29, seed, 4);
+  const soldRefs = scaleForPeriod(24, seed, 5);
+  const soldRefsPrev = scaleForPeriod(21, seed, 6);
+  const unitsSold = scaleForPeriod(167, seed, 7);
+  const unitsSoldPrev = scaleForPeriod(140, seed, 8);
+  const avgMargin = scaledDecimal(24.1, seed, 9, 1);
+  const avgMarginPrev = scaledDecimal(25.5, seed, 10, 1);
+  const itemsToHandle = scaleForPeriod(6, seed, 11);
+  const itemsToHandlePrev = scaleForPeriod(9, seed, 12);
+  const noVideo = scaleForPeriod(2, seed, 13);
+  const under3Photos = scaleForPeriod(4, seed, 14);
+  const convComplete = scaledDecimal(2.3, seed, 15, 1);
+  const convIncomplete = scaledDecimal(1.1, seed, 16, 1);
+
+  // Concentration du catalogue : 20 barres + courbe cumulée, plus les 3
+  // statistiques associées.
+  const concentrationBars = useMemo(
+    () => CONCENTRATION_BARS.map((v, i) => scaledDecimal(v, seed, 100 + i, 1)),
+    [seed]
+  );
+  const concentrationCum = useMemo(
+    () => CONCENTRATION_CUM.map((v, i) => scaledDecimal(v, seed, 130 + i, 1)),
+    [seed]
+  );
+  const share4Items = scaleForPeriod(68, seed, 160);
+  const under1pct = scaleForPeriod(14, seed, 161);
+  const zeroSales = scaleForPeriod(8, seed, 162);
+
+  // Les produits qu'on refuse : les 7 parts de refus mises à l'échelle
+  // indépendamment, la longueur des barres dérivée de leur maximum commun
+  // (même relation qu'avant la mise à l'échelle : maquette d'origine).
+  const REFUS_BASE = [34, 28, 21, 18, 15, 12, 9];
+  const refusScaled = useMemo(() => REFUS_BASE.map((v, i) => scaleForPeriod(v, seed, 500 + i)), [seed]);
+  const refusMax = Math.max(...refusScaled, 1);
+  const refusPct = (v: number) => Math.round((v / refusMax) * 100);
+
+  // Combien de jours de vente il vous reste — stock à vous (S) et stock
+  // partenaire (D, plafonné à "+6 j" pour les deux références qui ne
+  // descendent jamais sous le seuil affiché).
+  const daysS = useMemo(() => [4, 7, 11, 19, 26, 41].map((v, i) => scaleForPeriod(v, seed, 600 + i)), [seed]);
+  const dormantStock = scaleForPeriod(412000, seed, 606);
+  const daysD = useMemo(() => [3, 5].map((v, i) => scaleForPeriod(v, seed, 700 + i)), [seed]);
+  const under6Count = scaleForPeriod(2, seed, 702);
+
+  // Combinaisons qui se vendent : la matrice 5×4 (couleur × taille), son
+  // maximum (dérivé, pour l'opacité des cases) et les 4 statistiques du bas.
+  const comboRows = useMemo(
+    () => COMBO_ROWS.map((r, ri) => ({ ...r, values: r.values.map((v, ci) => scaleForPeriod(v, seed, 800 + ri * 4 + ci)) })),
+    [seed]
+  );
+  const comboMax = Math.max(...comboRows.flatMap((r) => r.values), 1);
+  const bestSizeUnits = scaleForPeriod(35, seed, 820);
+  const bestSizeTotal = scaleForPeriod(73, seed, 821);
+  const bestColorUnits = scaleForPeriod(32, seed, 822);
+  const zeroComboCount = scaleForPeriod(6, seed, 823);
+  const comboStockTied = scaleForPeriod(87000, seed, 824);
+
+  // Où en est chaque référence de sa vie : les 3 courbes hebdomadaires +
+  // les statistiques associées.
+  const lifeSerum = useMemo(() => [4, 5, 6, 7, 8, 9, 10, 11, 13, 14].map((v, i) => scaleForPeriod(v, seed, 900 + i)), [seed]);
+  const lifeKarite = useMemo(() => [8, 7, 8, 7, 8, 7, 8, 7, 8, 7].map((v, i) => scaleForPeriod(v, seed, 910 + i)), [seed]);
+  const lifeSandales = useMemo(() => [9, 8, 7, 6, 5, 4, 4, 3, 3, 2].map((v, i) => scaleForPeriod(v, seed, 920 + i)), [seed]);
+  const newItems = scaleForPeriod(3, seed, 930);
+  const newItemsAboveAvg = scaleForPeriod(1, seed, 931);
+  const avgAge = scaledDecimal(4.2, seed, 932, 1);
+
+  // Vos prix, comparés au réseau : prix et prix réseau mis à l'échelle
+  // indépendamment, l'écart affiché recalculé à partir des deux (même
+  // formule que dans la maquette d'origine, où l'écart correspondait déjà
+  // exactement à (prix − réseau) / réseau).
+  const PRICE_BASE: { prix: number; reseau: number; refus: number }[] = [
+    { prix: 12000, reseau: 13400, refus: 12 },
+    { prix: 14000, reseau: 13100, refus: 15 },
+    { prix: 12400, reseau: 10900, refus: 18 },
+    { prix: 14170, reseau: 11800, refus: 34 },
+  ];
+  const priceRows = useMemo(
+    () =>
+      PRICE_BASE.map((r, i) => {
+        const prix = scaleForPeriod(r.prix, seed, 1000 + i * 3);
+        const reseau = scaleForPeriod(r.reseau, seed, 1000 + i * 3 + 1);
+        const refus = scaleForPeriod(r.refus, seed, 1000 + i * 3 + 2);
+        const ecartPct = Math.round(((prix - reseau) / reseau) * 100);
+        return { prix, reseau, refus, ecartPct };
+      }),
+    [seed]
+  );
+
   // "Trier par marge" : tri décroissant sur la marge, toggle vers l'ordre
   // par défaut de la maquette (celui du tableau ci-dessus). "Tout voir"
   // n'a rien à replier ici (les 8 lignes sont déjà toutes affichées) : il
@@ -303,10 +431,42 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
   // précédente" sous chaque KPI, mock en attendant l'API Laravel (cf.
   // [[dashboard-mock-data-pending-laravel-api]]).
   const [compare, setCompare] = useState(false);
+
+  // Toutes vos références qui vendent : chaque colonne numérique de
+  // PRODUCT_TABLE_ROWS mise à l'échelle indépendamment (sauf la marge
+  // affichée, dérivée de margeValue une fois celle-ci mise à l'échelle, et
+  // la couverture "+6 j" du partenaire, plafonnée donc non chiffrée).
+  const scaledProductRows = useMemo(
+    () =>
+      PRODUCT_TABLE_ROWS.map((r, i) => {
+        const base = 400 + i * 10;
+        const unites = scaleForPeriod(Number(r.unites), seed, base);
+        const caNum = scaleForPeriod(Number(r.ca.replace(/[^\d]/g, "")), seed, base + 1);
+        const margeValue = scaledDecimal(r.margeValue, seed, base + 2, 1);
+        const parJourNum = scaledDecimal(Number(r.parJour.replace(",", ".")), seed, base + 3, 2);
+        const capped = r.couvFr.startsWith("+");
+        const couvDays = capped ? null : scaleForPeriod(parseInt(r.couvFr, 10), seed, base + 4);
+        const refusNum = scaleForPeriod(parseInt(r.refus, 10), seed, base + 5);
+        const litigesNum = scaleForPeriod(Number(r.litiges), seed, base + 6);
+        return {
+          ...r,
+          unites: String(unites),
+          ca: fmtAmount(caNum),
+          margeValue,
+          margeDisplay: `${fmtFr(margeValue, 1)} %`,
+          parJour: fmtFr(parJourNum, 2),
+          couvFr: capped ? r.couvFr : `${couvDays} j`,
+          couvEn: capped ? r.couvEn : `${couvDays}d`,
+          refus: `${refusNum} %`,
+          litiges: String(litigesNum),
+        };
+      }),
+    [seed]
+  );
   const productRows = useMemo(() => {
-    if (!sortByMarge) return PRODUCT_TABLE_ROWS;
-    return [...PRODUCT_TABLE_ROWS].sort((a, b) => b.margeValue - a.margeValue);
-  }, [sortByMarge]);
+    if (!sortByMarge) return scaledProductRows;
+    return [...scaledProductRows].sort((a, b) => b.margeValue - a.margeValue);
+  }, [sortByMarge, scaledProductRows]);
 
   // "Exporter" : le tableau complet des références (respecte l'ordre/tri
   // affiché par "Trier par marge") plus la concentration du catalogue.
@@ -330,7 +490,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
       {
         heading: t("Concentration du catalogue (CA cumulé par référence, décroissant)", "Catalog concentration (cumulative revenue per item, descending)"),
         columns: [t("Rang", "Rank"), t("CA", "Revenue")],
-        rows: CONCENTRATION_BARS.map((v, i) => [`#${i + 1}`, v]),
+        rows: concentrationBars.map((v, i) => [`#${i + 1}`, v]),
       },
     ]);
     setExportDone(true);
@@ -376,11 +536,11 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
       <CollapsibleCards visibleCount={3}>
       {/* KPI de la période */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <KpiCard label={t("Références au catalogue", "Catalog items")} value="32" note={t("21 en stock · 11 en drop", "21 warehoused · 11 drop")} previous={compare ? "29" : undefined} />
-        <KpiCard label={t("Qui ont vendu", "That sold")} value="24" valueColor="#178a3f" note={t("75 % du catalogue", "75% of the catalog")} previous={compare ? "21" : undefined} />
-        <KpiCard label={t("Unités vendues", "Units sold")} value="167" note={t("+19 % vs période précédente", "+19% vs previous period")} noteColor="#178a3f" previous={compare ? "140" : undefined} />
-        <KpiCard label={t("Marge moyenne", "Average margin")} value="24,1 %" note={t("−1,4 point", "−1.4 point")} previous={compare ? "25,5 %" : undefined} />
-        <KpiCard label={t("Références à traiter", "Items needing action")} value="6" valueColor="#a8690a" note={t("rupture, perte ou fiche bloquée", "stockout, loss, or blocked listing")} previous={compare ? "9" : undefined} />
+        <KpiCard label={t("Références au catalogue", "Catalog items")} value={String(totalRefs)} note={t("21 en stock · 11 en drop", "21 warehoused · 11 drop")} previous={compare ? String(totalRefsPrev) : undefined} />
+        <KpiCard label={t("Qui ont vendu", "That sold")} value={String(soldRefs)} valueColor="#178a3f" note={t("75 % du catalogue", "75% of the catalog")} previous={compare ? String(soldRefsPrev) : undefined} />
+        <KpiCard label={t("Unités vendues", "Units sold")} value={String(unitsSold)} note={t("+19 % vs période précédente", "+19% vs previous period")} noteColor="#178a3f" previous={compare ? String(unitsSoldPrev) : undefined} />
+        <KpiCard label={t("Marge moyenne", "Average margin")} value={`${fmtFr(avgMargin, 1)} %`} note={t("−1,4 point", "−1.4 point")} previous={compare ? `${fmtFr(avgMarginPrev, 1)} %` : undefined} />
+        <KpiCard label={t("Références à traiter", "Items needing action")} value={String(itemsToHandle)} valueColor="#a8690a" note={t("rupture, perte ou fiche bloquée", "stockout, loss, or blocked listing")} previous={compare ? String(itemsToHandlePrev) : undefined} />
       </div>
 
       {/* Quadrant vitesse / marge */}
@@ -469,11 +629,11 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
             <Tag tone="neutral">B</Tag>
           </div>
           <svg viewBox="0 0 300 140" preserveAspectRatio="none" className="mt-3 h-32 w-full overflow-visible" aria-hidden fill="none">
-            {CONCENTRATION_BARS.map((v, i) => (
+            {concentrationBars.map((v, i) => (
               <rect key={i} x={i * 15.1} y={140 - v} width={13.1} height={v} rx={1.5} fill="var(--dashboard-text)" opacity={0.16} />
             ))}
             <path
-              d={CONCENTRATION_CUM.map((v, i) => `${i === 0 ? "M" : "L"} ${i * 15.1 + 6},${140 - v * 3.6}`).join(" ")}
+              d={concentrationCum.map((v, i) => `${i === 0 ? "M" : "L"} ${i * 15.1 + 6},${140 - v * 3.6}`).join(" ")}
               stroke="#178a3f"
               strokeWidth={1.8}
               strokeLinecap="round"
@@ -485,9 +645,9 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
             <span>{t("1re", "1st")}</span><span>{t("5e", "5th")}</span><span>{t("10e", "10th")}</span><span>{t("15e", "15th")}</span><span>{t("20e", "20th")}</span>
           </div>
           <Divider />
-          <StatRow label={t("Part du chiffre d'affaires faite par 4 références", "Revenue share made by 4 items")} value={<span style={{ color: "#a8690a" }}>68 %</span>} />
-          <StatRow label={t("Références sous 1 % du chiffre d'affaires", "Items under 1% of revenue")} value="14" />
-          <StatRow label={t("Références sans une seule vente", "Items with zero sales")} value={<span style={{ color: "#c8262d" }}>8</span>} />
+          <StatRow label={t("Part du chiffre d'affaires faite par 4 références", "Revenue share made by 4 items")} value={<span style={{ color: "#a8690a" }}>{share4Items} %</span>} />
+          <StatRow label={t("Références sous 1 % du chiffre d'affaires", "Items under 1% of revenue")} value={String(under1pct)} />
+          <StatRow label={t("Références sans une seule vente", "Items with zero sales")} value={<span style={{ color: "#c8262d" }}>{zeroSales}</span>} />
           <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
             {t(
               "Quatre références sur trente-deux font les deux tiers du chiffre. C'est efficace et fragile à la fois : une rupture sur l'une d'elles coûte un tiers du mois. Les quatorze références sous un pour cent encombrent la page de commande sans rien rapporter.",
@@ -502,28 +662,28 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
           <div className="mt-3 flex flex-col items-center gap-3">
             <Ring
               segments={[
-                { pct: (26 / 32) * 100, color: "#4FE0AE" },
-                { pct: (3 / 32) * 100, color: "#FF5A62" },
-                { pct: (2 / 32) * 100, color: "#FFB020" },
-                { pct: (1 / 32) * 100, color: "#9096AA" },
+                { pct: (enVente / totalRefs) * 100, color: "#4FE0AE" },
+                { pct: (rupture / totalRefs) * 100, color: "#FF5A62" },
+                { pct: (dormantes / totalRefs) * 100, color: "#FFB020" },
+                { pct: (brouillon / totalRefs) * 100, color: "#9096AA" },
               ]}
               size={100}
             >
-              <span className="text-lg font-bold">32</span>
+              <span className="text-lg font-bold">{totalRefs}</span>
               <span className="text-[8px] text-[var(--dashboard-text)]/40">{t("références", "items")}</span>
             </Ring>
             <div className="w-full space-y-1.5 text-[10px]">
-              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#4FE0AE" }} />{t("En vente", "Live")} <b className="ml-auto">26</b></span>
-              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FF5A62" }} />{t("En rupture", "Out of stock")} <b className="ml-auto">3</b></span>
-              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FFB020" }} />{t("Dormantes, 30 jours sans vente", "Dormant, 30 days no sale")} <b className="ml-auto">2</b></span>
-              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--dashboard-text)]/25" />{t("Brouillon, fiche incomplète", "Draft, incomplete listing")} <b className="ml-auto">1</b></span>
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#4FE0AE" }} />{t("En vente", "Live")} <b className="ml-auto">{enVente}</b></span>
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FF5A62" }} />{t("En rupture", "Out of stock")} <b className="ml-auto">{rupture}</b></span>
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FFB020" }} />{t("Dormantes, 30 jours sans vente", "Dormant, 30 days no sale")} <b className="ml-auto">{dormantes}</b></span>
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--dashboard-text)]/25" />{t("Brouillon, fiche incomplète", "Draft, incomplete listing")} <b className="ml-auto">{brouillon}</b></span>
             </div>
           </div>
           <Divider />
-          <StatRow label={t("Fiches sans vidéo", "Listings without video")} value={<span style={{ color: "#c8262d" }}>{t("2 · 1 publication bloquée", "2 · 1 listing blocked")}</span>} />
-          <StatRow label={t("Fiches à moins de trois photos", "Listings under three photos")} value="4" />
-          <StatRow label={t("Transformation, fiche complète", "Conversion, complete listing")} value={<span style={{ color: "#178a3f" }}>2,3 %</span>} />
-          <StatRow label={t("Transformation, fiche incomplète", "Conversion, incomplete listing")} value="1,1 %" />
+          <StatRow label={t("Fiches sans vidéo", "Listings without video")} value={<span style={{ color: "#c8262d" }}>{t(`${noVideo} · 1 publication bloquée`, `${noVideo} · 1 listing blocked`)}</span>} />
+          <StatRow label={t("Fiches à moins de trois photos", "Listings under three photos")} value={String(under3Photos)} />
+          <StatRow label={t("Transformation, fiche complète", "Conversion, complete listing")} value={<span style={{ color: "#178a3f" }}>{fmtFr(convComplete, 1)} %</span>} />
+          <StatRow label={t("Transformation, fiche incomplète", "Conversion, incomplete listing")} value={`${fmtFr(convIncomplete, 1)} %`} />
           <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
             {t(
               "Une fiche complète transforme deux fois mieux. C'est le rendement le plus élevé de cet écran, et il ne coûte que du temps.",
@@ -598,14 +758,14 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
             </div>
             <Tag tone="neutral">B</Tag>
           </div>
-          <div className="mt-3">
-            <RankBar label={t("Sandales tressées", "Woven sandals")} value="34 %" pct={100} color="#c8262d" valueColor="#c8262d" />
-            <RankBar label={t("Ensemble lin deux pièces", "Two-piece linen set")} value="28 %" pct={82} color="#c8262d" valueColor="#c8262d" />
-            <RankBar label={t("Sac cabas en raphia", "Raffia tote bag")} value="21 %" pct={62} color="#a8690a" valueColor="#a8690a" />
-            <RankBar label={t("Huile de ricin 100 ml", "Castor oil 100 ml")} value="18 %" pct={53} color="#a8690a" valueColor="#a8690a" />
-            <RankBar label={t("Beurre de karité 200 g", "Shea butter 200 g")} value="15 %" pct={44} color="#9096AA" />
-            <RankBar label={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} value="12 %" pct={35} color="#178a3f" valueColor="#178a3f" />
-            <RankBar label={t("Foulard en soie", "Silk scarf")} value="9 %" pct={26} color="#178a3f" valueColor="#178a3f" />
+          <div className="mt-3 max-h-[340px] overflow-y-auto pr-1">
+            <RankBar label={t("Sandales tressées", "Woven sandals")} value={`${refusScaled[0]} %`} pct={refusPct(refusScaled[0])} color="#c8262d" valueColor="#c8262d" />
+            <RankBar label={t("Ensemble lin deux pièces", "Two-piece linen set")} value={`${refusScaled[1]} %`} pct={refusPct(refusScaled[1])} color="#c8262d" valueColor="#c8262d" />
+            <RankBar label={t("Sac cabas en raphia", "Raffia tote bag")} value={`${refusScaled[2]} %`} pct={refusPct(refusScaled[2])} color="#a8690a" valueColor="#a8690a" />
+            <RankBar label={t("Huile de ricin 100 ml", "Castor oil 100 ml")} value={`${refusScaled[3]} %`} pct={refusPct(refusScaled[3])} color="#a8690a" valueColor="#a8690a" />
+            <RankBar label={t("Beurre de karité 200 g", "Shea butter 200 g")} value={`${refusScaled[4]} %`} pct={refusPct(refusScaled[4])} color="#9096AA" />
+            <RankBar label={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} value={`${refusScaled[5]} %`} pct={refusPct(refusScaled[5])} color="#178a3f" valueColor="#178a3f" />
+            <RankBar label={t("Foulard en soie", "Silk scarf")} value={`${refusScaled[6]} %`} pct={refusPct(refusScaled[6])} color="#178a3f" valueColor="#178a3f" />
           </div>
           <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
             <p className="text-xs font-semibold">{t("Les deux produits les plus refusés sont les deux plus chers", "The two most refused products are the two most expensive")}</p>
@@ -635,16 +795,16 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
               </div>
               <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Compté au jour près. Le seuil marque vos quatre jours de réapprovisionnement.", "Counted to the day. The threshold marks your four days of replenishment lead time.")}</p>
               <div className="mt-2.5">
-                <RankBar label={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} value={t("4 j", "4d")} pct={15} color="#c8262d" valueColor="#c8262d" />
-                <RankBar label={t("Crème mains 75 ml", "Hand cream 75 ml")} value={t("7 j", "7d")} pct={26} color="#a8690a" valueColor="#a8690a" />
-                <RankBar label={t("Savon noir 250 g", "Black soap 250 g")} value={t("11 j", "11d")} pct={40} color="#178a3f" valueColor="#178a3f" />
-                <RankBar label={t("Beurre de karité 200 g", "Shea butter 200 g")} value={t("19 j", "19d")} pct={69} color="#178a3f" valueColor="#178a3f" />
-                <RankBar label={t("Sandales tressées", "Woven sandals")} value={t("26 j", "26d")} pct={95} color="#9096AA" />
-                <RankBar label={t("Ensemble lin deux pièces", "Two-piece linen set")} value={t("41 j", "41d")} pct={100} color="#9096AA" />
+                <RankBar label={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} value={t(`${daysS[0]} j`, `${daysS[0]}d`)} pct={15} color="#c8262d" valueColor="#c8262d" />
+                <RankBar label={t("Crème mains 75 ml", "Hand cream 75 ml")} value={t(`${daysS[1]} j`, `${daysS[1]}d`)} pct={26} color="#a8690a" valueColor="#a8690a" />
+                <RankBar label={t("Savon noir 250 g", "Black soap 250 g")} value={t(`${daysS[2]} j`, `${daysS[2]}d`)} pct={40} color="#178a3f" valueColor="#178a3f" />
+                <RankBar label={t("Beurre de karité 200 g", "Shea butter 200 g")} value={t(`${daysS[3]} j`, `${daysS[3]}d`)} pct={69} color="#178a3f" valueColor="#178a3f" />
+                <RankBar label={t("Sandales tressées", "Woven sandals")} value={t(`${daysS[4]} j`, `${daysS[4]}d`)} pct={95} color="#9096AA" />
+                <RankBar label={t("Ensemble lin deux pièces", "Two-piece linen set")} value={t(`${daysS[5]} j`, `${daysS[5]}d`)} pct={100} color="#9096AA" />
               </div>
               <Divider />
               <StatRow label={t("Délai de réapprovisionnement", "Replenishment lead time")} value={t("4 jours", "4 days")} />
-              <StatRow label={t("Stock dormant, plus de 30 jours", "Dormant stock, over 30 days")} value={<span style={{ color: "#a8690a" }}>412 000 F</span>} />
+              <StatRow label={t("Stock dormant, plus de 30 jours", "Dormant stock, over 30 days")} value={<span style={{ color: "#a8690a" }}>{fmtAmount(dormantStock)}</span>} />
             </div>
 
             <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(236,12,140,.07)", border: "1px solid rgba(236,12,140,.24)" }}>
@@ -654,8 +814,8 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
               </div>
               <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Lu dans sa base, affiché jusqu'à six jours seulement. Au-delà, rien à surveiller.", "Read from their database, shown only up to six days. Beyond that, nothing to watch.")}</p>
               <div className="mt-2.5">
-                <RankBar label={t("Huile de ricin 100 ml", "Castor oil 100 ml")} value={t("3 j", "3d")} pct={50} color="#c8262d" valueColor="#c8262d" />
-                <RankBar label={t("Masque argile 100 g", "Clay mask 100 g")} value={t("5 j", "5d")} pct={83} color="#a8690a" valueColor="#a8690a" />
+                <RankBar label={t("Huile de ricin 100 ml", "Castor oil 100 ml")} value={t(`${daysD[0]} j`, `${daysD[0]}d`)} pct={50} color="#c8262d" valueColor="#c8262d" />
+                <RankBar label={t("Masque argile 100 g", "Clay mask 100 g")} value={t(`${daysD[1]} j`, `${daysD[1]}d`)} pct={83} color="#a8690a" valueColor="#a8690a" />
                 <RankBar label={t("Sac cabas en raphia", "Raffia tote bag")} value={t("Plus de 6 j", "Over 6d")} pct={100} color="#178a3f" valueColor="#178a3f" />
                 <RankBar label={t("Foulard en soie", "Silk scarf")} value={t("Plus de 6 j", "Over 6d")} pct={100} color="#178a3f" valueColor="#178a3f" />
               </div>
@@ -669,7 +829,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
                 </p>
               </div>
               <Divider />
-              <StatRow label={t("Sous six jours en ce moment", "Under six days right now")} value={<span style={{ color: "#c8262d" }}>{t("2 références · alerte", "2 items · alert")}</span>} />
+              <StatRow label={t("Sous six jours en ce moment", "Under six days right now")} value={<span style={{ color: "#c8262d" }}>{t(`${under6Count} références · alerte`, `${under6Count} items · alert`)}</span>} />
             </div>
 
             <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
@@ -696,7 +856,7 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
         </div>
         <div className="mt-4 flex gap-3 overflow-x-auto">
           <div className="flex flex-none flex-col justify-end gap-1.5 pt-6">
-            {COMBO_ROWS.map((r) => (
+            {comboRows.map((r) => (
               <span key={r.color} className="flex h-9 items-center text-[10px] text-[var(--dashboard-text)]/50">{t(r.color, r.color)}</span>
             ))}
           </div>
@@ -707,13 +867,13 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
               ))}
             </div>
             <div className="mt-1.5 space-y-1.5">
-              {COMBO_ROWS.map((r) => (
+              {comboRows.map((r) => (
                 <div key={r.color} className="flex gap-1.5">
                   {r.values.map((v, i) => (
                     <div
                       key={i}
                       className="flex h-9 flex-1 items-center justify-center rounded-lg text-[11px] font-bold"
-                      style={{ background: `rgba(139,92,246,${0.08 + (v / COMBO_MAX) * 0.75})`, color: v / COMBO_MAX > 0.5 ? "#fff" : "var(--dashboard-text)" }}
+                      style={{ background: `rgba(139,92,246,${0.08 + (v / comboMax) * 0.75})`, color: v / comboMax > 0.5 ? "#fff" : "var(--dashboard-text)" }}
                     >
                       {v > 0 ? v : ""}
                     </div>
@@ -724,10 +884,10 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Taille la plus vendue", "Best-selling size")}</p><p className="mt-0.5 text-base font-bold">L</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t("35 unités sur 73", "35 units out of 73")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Couleur la plus vendue", "Best-selling color")}</p><p className="mt-0.5 text-base font-bold">{t("Noir", "Black")}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t("32 unités", "32 units")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Combinaisons qui n'ont rien vendu", "Combinations with zero sales")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#a8690a" }}>{t("6 sur 20", "6 of 20")}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t("dont tout le rouge", "including all of the red")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Stock immobilisé dessus", "Stock tied up in them")}</p><p className="mt-0.5 text-base font-bold">87 000 F</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t("jamais commandé", "never ordered")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Taille la plus vendue", "Best-selling size")}</p><p className="mt-0.5 text-base font-bold">L</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t(`${bestSizeUnits} unités sur ${bestSizeTotal}`, `${bestSizeUnits} units out of ${bestSizeTotal}`)}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Couleur la plus vendue", "Best-selling color")}</p><p className="mt-0.5 text-base font-bold">{t("Noir", "Black")}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t(`${bestColorUnits} unités`, `${bestColorUnits} units`)}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Combinaisons qui n'ont rien vendu", "Combinations with zero sales")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#a8690a" }}>{t(`${zeroComboCount} sur 20`, `${zeroComboCount} of 20`)}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t("dont tout le rouge", "including all of the red")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Stock immobilisé dessus", "Stock tied up in them")}</p><p className="mt-0.5 text-base font-bold">{fmtAmount(comboStockTied)}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t("jamais commandé", "never ordered")}</p></div>
         </div>
         <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
           <p className="text-xs font-semibold">{t("Le rouge et le XL ne partent pas", "Red and XL don't move")}</p>
@@ -751,14 +911,14 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
             <Tag tone="neutral">B</Tag>
           </div>
           <div className="mt-3">
-            <LifeItem code="S" name={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} values={[4, 5, 6, 7, 8, 9, 10, 11, 13, 14]} kind="up" age={t("Lancé il y a 10 semaines", "Launched 10 weeks ago")} />
-            <LifeItem code="S" name={t("Beurre de karité 200 g", "Shea butter 200 g")} values={[8, 7, 8, 7, 8, 7, 8, 7, 8, 7]} kind="flat" age={t("Lancé il y a 7 mois", "Launched 7 months ago")} />
-            <LifeItem code="S" name={t("Sandales tressées", "Woven sandals")} values={[9, 8, 7, 6, 5, 4, 4, 3, 3, 2]} kind="down" age={t("Lancé il y a 5 mois", "Launched 5 months ago")} />
+            <LifeItem code="S" name={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} values={lifeSerum} kind="up" age={t("Lancé il y a 10 semaines", "Launched 10 weeks ago")} />
+            <LifeItem code="S" name={t("Beurre de karité 200 g", "Shea butter 200 g")} values={lifeKarite} kind="flat" age={t("Lancé il y a 7 mois", "Launched 7 months ago")} />
+            <LifeItem code="S" name={t("Sandales tressées", "Woven sandals")} values={lifeSandales} kind="down" age={t("Lancé il y a 5 mois", "Launched 5 months ago")} />
           </div>
           <Divider />
-          <StatRow label={t("Nouveautés lancées sur la période", "New items launched this period")} value="3" />
-          <StatRow label={t("Dont une au-dessus de la moyenne du catalogue", "Of which one above the catalog average")} value={<span style={{ color: "#178a3f" }}>1</span>} />
-          <StatRow label={t("Âge moyen d'une référence", "Average item age")} value={t("4,2 mois", "4.2 months")} />
+          <StatRow label={t("Nouveautés lancées sur la période", "New items launched this period")} value={String(newItems)} />
+          <StatRow label={t("Dont une au-dessus de la moyenne du catalogue", "Of which one above the catalog average")} value={<span style={{ color: "#178a3f" }}>{newItemsAboveAvg}</span>} />
+          <StatRow label={t("Âge moyen d'une référence", "Average item age")} value={t(`${fmtFr(avgAge, 1)} mois`, `${fmtFr(avgAge, 1)} months`)} />
           <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
             {t(
               "Une référence en fin de course se reconnaît trois semaines avant la rupture d'envie : les ventes baissent alors que le refus monte. C'est le moment de l'écouler, pas d'en recommander.",
@@ -781,10 +941,10 @@ export default function ProduitsSection({ first = true }: { first?: boolean }) {
                 <span>{t("Référence", "Item")}</span><span>{t("Votre prix", "Your price")}</span><span>{t("Réseau", "Network")}</span><span>{t("Écart", "Gap")}</span><span className="text-right">{t("Refus", "Refusals")}</span>
               </div>
               <div className="divide-y divide-[var(--dashboard-text)]/[0.05]">
-                <PriceRow name={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} prix="12 000 F" reseau="13 400 F" ecart="−10 %" ecartUp={false} refus="12 %" refusTone="ok" />
-                <PriceRow name={t("Beurre de karité 200 g", "Shea butter 200 g")} prix="14 000 F" reseau="13 100 F" ecart="+7 %" ecartUp refus="15 %" refusTone="mid" />
-                <PriceRow name={t("Huile de ricin 100 ml", "Castor oil 100 ml")} prix="12 400 F" reseau="10 900 F" ecart="+14 %" ecartUp refus="18 %" refusTone="mid" />
-                <PriceRow name={t("Sandales tressées", "Woven sandals")} prix="14 170 F" reseau="11 800 F" ecart="+20 %" ecartUp refus="34 %" refusTone="bad" />
+                <PriceRow name={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} prix={fmtAmount(priceRows[0].prix)} reseau={fmtAmount(priceRows[0].reseau)} ecart={`${priceRows[0].ecartPct >= 0 ? "+" : "−"}${Math.abs(priceRows[0].ecartPct)} %`} ecartUp={priceRows[0].ecartPct >= 0} refus={`${priceRows[0].refus} %`} refusTone="ok" />
+                <PriceRow name={t("Beurre de karité 200 g", "Shea butter 200 g")} prix={fmtAmount(priceRows[1].prix)} reseau={fmtAmount(priceRows[1].reseau)} ecart={`${priceRows[1].ecartPct >= 0 ? "+" : "−"}${Math.abs(priceRows[1].ecartPct)} %`} ecartUp={priceRows[1].ecartPct >= 0} refus={`${priceRows[1].refus} %`} refusTone="mid" />
+                <PriceRow name={t("Huile de ricin 100 ml", "Castor oil 100 ml")} prix={fmtAmount(priceRows[2].prix)} reseau={fmtAmount(priceRows[2].reseau)} ecart={`${priceRows[2].ecartPct >= 0 ? "+" : "−"}${Math.abs(priceRows[2].ecartPct)} %`} ecartUp={priceRows[2].ecartPct >= 0} refus={`${priceRows[2].refus} %`} refusTone="mid" />
+                <PriceRow name={t("Sandales tressées", "Woven sandals")} prix={fmtAmount(priceRows[3].prix)} reseau={fmtAmount(priceRows[3].reseau)} ecart={`${priceRows[3].ecartPct >= 0 ? "+" : "−"}${Math.abs(priceRows[3].ecartPct)} %`} ecartUp={priceRows[3].ecartPct >= 0} refus={`${priceRows[3].refus} %`} refusTone="bad" />
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, SectionHeader, Tag } from "../dashboard-accueil/shared";
+import { Card, SectionHeader, Tag, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -32,14 +32,9 @@ export default function ReglesDeVente({ first = false }: { first?: boolean }) {
   const [troisPhotos, setTroisPhotos] = useState(true);
   const [margeMinimale, setMargeMinimale] = useState(true);
   const [delaiHeures, setDelaiHeures] = useState(72);
-  const [enregistre, setEnregistre] = useState(false);
+  const { saving, done, trigger } = useMockSave();
 
   const pctDelai = ((delaiHeures - DELAI_MIN) / (DELAI_MAX - DELAI_MIN)) * 100;
-
-  const enregistrer = () => {
-    setEnregistre(true);
-    setTimeout(() => setEnregistre(false), 1800);
-  };
 
   return (
     <>
@@ -57,10 +52,11 @@ export default function ReglesDeVente({ first = false }: { first?: boolean }) {
       <div className="mb-3 flex items-center justify-end">
         <button
           type="button"
-          onClick={enregistrer}
-          className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
+          onClick={() => trigger()}
+          disabled={saving}
+          className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
         >
-          {enregistre ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
+          {saving ? t("Enregistrement…", "Saving…") : done ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
         </button>
       </div>
 

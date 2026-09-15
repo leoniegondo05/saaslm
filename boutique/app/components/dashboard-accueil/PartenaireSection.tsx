@@ -10,6 +10,8 @@ import {
   HeaderActionBtn,
   Nature,
   openBrandedReport,
+  periodSeed,
+  scaleForPeriod,
   SectionHeader,
   StatRow,
   Tag,
@@ -427,8 +429,111 @@ function PartenaireModal({
   );
 }
 
-export default function PartenaireSection({ first = true }: { first?: boolean }) {
+export default function PartenaireSection({ first = true, activeDate }: { first?: boolean; activeDate?: Date }) {
   const { t } = useDashboardLangue();
+
+  // Graine déterministe issue de la période sélectionnée dans le header
+  // (année/mois/jour) : fait varier les chiffres mock ci-dessous plutôt que
+  // de les laisser figés quel que soit le picker (cf.
+  // [[dashboard-mock-data-pending-laravel-api]]). 1er août 2026 reprend la
+  // date par défaut déjà utilisée ailleurs dans le dashboard, donc aucun
+  // changement de comportement tant qu'aucune période n'est sélectionnée.
+  const seed = periodSeed(activeDate ?? new Date(2026, 7, 1));
+
+  // Regroupement des milliers façon "178 500" (espace simple), même style
+  // que les montants déjà écrits en dur dans cette section.
+  function groupFr(n: number) {
+    return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  }
+  // "Xh YY" à partir d'un nombre d'heures décimal (ex. 3,667 → "3 h 40").
+  function formatHM(hours: number) {
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    return `${h} h ${String(m).padStart(2, "0")}`;
+  }
+  // Un même facteur pour toute une série (historique/courbe) plutôt qu'un
+  // bruit indépendant point par point, pour ne pas casser une progression.
+  function scaleSeries(values: number[], key: number, variance = 0.12) {
+    return values.map((v) => scaleForPeriod(v * 10, seed, key, variance) / 10);
+  }
+
+  // ── Chiffres racine qui varient avec la période sélectionnée. Le reste de
+  // la section (totaux, pourcentages, textes) en découle par l'arithmétique
+  // déjà en place plutôt que d'être re-scalé indépendamment (cf. consigne
+  // "ne pas doubler le scaling").
+  const noteEntreprise = scaleForPeriod(84, seed, 0, 0.05) / 10;
+  const boutiquesAffiliees = scaleForPeriod(34, seed, 1, 0.15);
+  const boutiquesZone = Math.min(boutiquesAffiliees, scaleForPeriod(11, seed, 2, 0.2));
+  const boutiquesRepondu = Math.min(boutiquesAffiliees, scaleForPeriod(29, seed, 36, 0.15));
+
+  // Grille tarifaire : les tarifs (rate) restent ceux fixés par le
+  // partenaire (contractuels, cf. commentaire plus bas) ; seules les
+  // quantités varient avec le volume du mois, et les montants/le total en
+  // découlent par simple multiplication.
+  const rate1 = 1500;
+  const rate2 = 500;
+  const rate3 = 2000;
+  const rate4 = 1000;
+  const rate5 = 25000;
+  const qty1 = scaleForPeriod(119, seed, 8, 0.25); // colis livrés (frais logistiques)
+  const qty2 = scaleForPeriod(248, seed, 9, 0.2) / 10; // garantie contre la perte
+  const qty3 = scaleForPeriod(8, seed, 10, 0.3); // livraison express
+  const qty4 = scaleForPeriod(9, seed, 11, 0.3); // récupération colis refusé
+  const amount1 = rate1 * qty1;
+  const amount2 = Math.round(rate2 * qty2);
+  const amount3 = rate3 * qty3;
+  const amount4 = rate4 * qty4;
+  const amount5 = rate5; // abonnement mensuel, 1 mois
+  const totalGrille = amount1 + amount2 + amount3 + amount4 + amount5;
+  const coutParCommande = Math.round(totalGrille / qty1);
+  const partCA = scaleForPeriod(104, seed, 12, 0.1) / 10;
+
+  // Coût réel : manquements (litiges + casse à sa charge) ajoutés au
+  // versé ci-dessus.
+  const litigesCost = scaleForPeriod(11300, seed, 19, 0.25);
+  const casseCost = scaleForPeriod(18400, seed, 20, 0.25);
+  const manquements = litigesCost + casseCost;
+  const coutReel = totalGrille + manquements;
+  const coutParCommandeReel = Math.round(coutReel / qty1);
+
+  // Six engagements : la cible (target) est contractuelle, donc fixe ; seul
+  // le réalisé varie avec la période. "ok" reste tel quel (narratif figé,
+  // cf. bloc "Quatre sur six" plus bas).
+  const realizedH1 = scaleForPeriod(18, seed, 13, 0.25);
+  const pct1 = Math.min(Math.round((realizedH1 / 24) * 100), 100);
+  const realizedH2 = scaleForPeriod(26, seed, 14, 0.2);
+  const pct2 = Math.min(Math.round((realizedH2 / 48) * 100), 100);
+  const realizedMin3 = scaleForPeriod(160, seed, 15, 0.2);
+  const realizedH3 = Math.floor(realizedMin3 / 60);
+  const realizedM3 = realizedMin3 % 60;
+  const pct3 = Math.min(Math.round((realizedMin3 / 60 / 9) * 100), 100);
+  const realizedPct4 = scaleForPeriod(860, seed, 16, 0.05) / 10;
+  const pct4 = Math.min(Math.round((realizedPct4 / 85) * 100), 100);
+  const realizedCasse5 = scaleForPeriod(16, seed, 17, 0.08) / 10;
+  const pct5 = Math.min(Math.round((realizedCasse5 / 1) * 100), 100);
+  const realizedReponse6 = scaleForPeriod(14, seed, 18, 0.08);
+  const pct6 = Math.min(Math.round((realizedReponse6 / 9) * 100), 100);
+
+  const demandesTotal = scaleForPeriod(31, seed, 21, 0.2);
+  const demandesTraitees = Math.min(demandesTotal, scaleForPeriod(24, seed, 22, 0.2));
+  const demandesTraiteesPct = Math.round((demandesTraitees / demandesTotal) * 100);
+  const demandesSansReponse = scaleForPeriod(4, seed, 23, 0.3);
+
+  // Ses trois sites : unités/commandes servies, puis délai (h) et casse (%)
+  // utilisés à la fois par SiteBars (tailles) et par les SiteCard sous les
+  // carrés.
+  const siteCocodyUnits = scaleForPeriod(104, seed, 24, 0.2);
+  const siteCocodyOrders = scaleForPeriod(71, seed, 25, 0.2);
+  const siteYopougonUnits = scaleForPeriod(49, seed, 26, 0.2);
+  const siteYopougonOrders = scaleForPeriod(34, seed, 27, 0.2);
+  const siteBouakeUnits = scaleForPeriod(15, seed, 28, 0.2);
+  const siteBouakeOrders = scaleForPeriod(18, seed, 29, 0.2);
+  const siteCocodyDelay = scaleForPeriod((3 + 40 / 60) * 10, seed, 30, 0.15) / 10;
+  const siteCocodyCasse = scaleForPeriod(8, seed, 31, 0.15) / 10;
+  const siteYopougonDelay = scaleForPeriod((4 + 45 / 60) * 10, seed, 32, 0.15) / 10;
+  const siteYopougonCasse = scaleForPeriod(14, seed, 33, 0.15) / 10;
+  const siteBouakeDelay = scaleForPeriod((11 + 30 / 60) * 10, seed, 34, 0.15) / 10;
+  const siteBouakeCasse = scaleForPeriod(32, seed, 35, 0.15) / 10;
 
   // Titres des échanges déjà relancés (bouton "Relancer" cliqué). Pas
   // d'écriture serveur tant que l'API Laravel n'existe pas
@@ -482,8 +587,12 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
   ];
 
   // Historique du taux de livraison depuis la signature (avril → septembre).
-  const performanceHistory = [71, 74, 76.5, 78.3, 79.1, 80.4];
-  const collectiveRatings = [6.9, 7.2, 7.5, 7.8, 8.1, 8.4];
+  const performanceHistory = scaleSeries([71, 74, 76.5, 78.3, 79.1, 80.4], 3, 0.12);
+  const collectiveRatings = scaleSeries([6.9, 7.2, 7.5, 7.8, 8.1, 8.4], 4, 0.08);
+  const perfStart = performanceHistory[0];
+  const perfToday = performanceHistory[performanceHistory.length - 1];
+  const perfProgress = Math.round((perfToday - perfStart) * 10) / 10;
+  const perfLast3 = Math.round((perfToday - performanceHistory[3]) * 10) / 10;
 
   // ── "Voir le contrat" : scroll vers la card "Le contrat et ses échéances",
   // déjà présente plus bas dans cette même section. Pas besoin de modale,
@@ -502,10 +611,11 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
     t("Réactivité", "Responsiveness"),
     t("Rapport qualité-prix", "Value for money"),
   ];
-  const networkRatings = [8.2, 8.4, 7.6, 8.8, 7.4, 8.0];
-  const [radarYou, setRadarYou] = useState([8.8, 8.0, 6.2, 9.4, 5.5, 8.2]);
-  const [votreNote, setVotreNote] = useState(9);
-  const [yourRatings, setYourRatings] = useState([7, 7.6, 8.1, 8.6, 8.9, 9]);
+  const networkRatings = scaleSeries([8.2, 8.4, 7.6, 8.8, 7.4, 8.0], 5, 0.08);
+  const [radarYou, setRadarYou] = useState(() => scaleSeries([8.8, 8.0, 6.2, 9.4, 5.5, 8.2], 6, 0.1));
+  const yourRatingsInit = scaleSeries([7, 7.6, 8.1, 8.6, 8.9, 9], 7, 0.1);
+  const [votreNote, setVotreNote] = useState(yourRatingsInit[yourRatingsInit.length - 1]);
+  const [yourRatings, setYourRatings] = useState(yourRatingsInit);
   const [showEvalModal, setShowEvalModal] = useState(false);
   const [evalDraft, setEvalDraft] = useState(radarYou);
   const radarRows = radarAxesLongs.map((label, i) => ({
@@ -532,19 +642,19 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
   // ── "Exporter" : CSV de la grille tarifaire, des six engagements et de la
   // répartition du coût réel — les trois tableaux chiffrés de cette section.
   const exportRateCard = [
-    { name: t("Frais logistiques par colis livré", "Logistics fee per delivered parcel"), rate: "1 500 F", qty: t("119 colis", "119 parcels"), amount: "178 500 F" },
-    { name: t("Garantie contre la perte", "Loss guarantee"), rate: "500 F", qty: "24,8", amount: "12 400 F" },
-    { name: t("Livraison express", "Express delivery"), rate: "2 000 F", qty: t("8 colis", "8 parcels"), amount: "16 000 F" },
-    { name: t("Récupération d'un colis refusé", "Retrieving a refused parcel"), rate: "1 000 F", qty: t("9 colis", "9 parcels"), amount: "9 000 F" },
-    { name: t("Abonnement mensuel", "Monthly subscription"), rate: "25 000 F", qty: t("1 mois", "1 month"), amount: "25 000 F" },
+    { name: t("Frais logistiques par colis livré", "Logistics fee per delivered parcel"), rate: `${groupFr(rate1)} F`, qty: t(`${qty1} colis`, `${qty1} parcels`), amount: `${groupFr(amount1)} F` },
+    { name: t("Garantie contre la perte", "Loss guarantee"), rate: `${groupFr(rate2)} F`, qty: formatDecimal(qty2), amount: `${groupFr(amount2)} F` },
+    { name: t("Livraison express", "Express delivery"), rate: `${groupFr(rate3)} F`, qty: t(`${qty3} colis`, `${qty3} parcels`), amount: `${groupFr(amount3)} F` },
+    { name: t("Récupération d'un colis refusé", "Retrieving a refused parcel"), rate: `${groupFr(rate4)} F`, qty: t(`${qty4} colis`, `${qty4} parcels`), amount: `${groupFr(amount4)} F` },
+    { name: t("Abonnement mensuel", "Monthly subscription"), rate: `${groupFr(rate5)} F`, qty: t("1 mois", "1 month"), amount: `${groupFr(amount5)} F` },
   ];
   const exportEngagements = [
-    { title: t("Enlèvement sous 24 h après confirmation", "Pickup within 24 h of confirmation"), realized: t("18 h", "18 h"), target: t("24 h", "24 h"), ok: true },
-    { title: t("Livraison sous 48 h après enlèvement", "Delivery within 48 h of pickup"), realized: t("26 h", "26 h"), target: t("48 h", "48 h"), ok: true },
-    { title: t("Prise en main d'un litige sous 9 h", "Taking a dispute in hand within 9 h"), realized: t("2 h 40", "2 h 40"), target: t("9 h", "9 h"), ok: true },
-    { title: t("Au moins 85 % de livraison au premier passage", "At least 85% delivered on first attempt"), realized: "86 %", target: "85 %", ok: true },
-    { title: t("Pas plus de 1 % de casse sur votre stock", "No more than 1% breakage on your stock"), realized: "1,6 %", target: "1 %", ok: false },
-    { title: t("Réponse à vos messages sous 9 h", "Reply to your messages within 9 h"), realized: t("14 h", "14 h"), target: t("9 h", "9 h"), ok: false },
+    { title: t("Enlèvement sous 24 h après confirmation", "Pickup within 24 h of confirmation"), realized: `${realizedH1} h`, target: t("24 h", "24 h"), ok: true },
+    { title: t("Livraison sous 48 h après enlèvement", "Delivery within 48 h of pickup"), realized: `${realizedH2} h`, target: t("48 h", "48 h"), ok: true },
+    { title: t("Prise en main d'un litige sous 9 h", "Taking a dispute in hand within 9 h"), realized: `${realizedH3} h ${String(realizedM3).padStart(2, "0")}`, target: t("9 h", "9 h"), ok: true },
+    { title: t("Au moins 85 % de livraison au premier passage", "At least 85% delivered on first attempt"), realized: `${formatDecimal(realizedPct4)} %`, target: "85 %", ok: true },
+    { title: t("Pas plus de 1 % de casse sur votre stock", "No more than 1% breakage on your stock"), realized: `${formatDecimal(realizedCasse5)} %`, target: "1 %", ok: false },
+    { title: t("Réponse à vos messages sous 9 h", "Reply to your messages within 9 h"), realized: `${realizedReponse6} h`, target: t("9 h", "9 h"), ok: false },
   ];
   const [exportDone, setExportDone] = useState(false);
 
@@ -555,7 +665,7 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
         columns: [t("Désignation", "Item"), t("Tarif", "Rate"), t("Quantité", "Qty"), t("Montant", "Amount")],
         rows: [
           ...exportRateCard.map((r) => [r.name, r.rate, r.qty, r.amount]),
-          [t("Total sur la période", "Total for the period"), "", "", "240 900 F"],
+          [t("Total sur la période", "Total for the period"), "", "", `${groupFr(totalGrille)} F`],
         ],
       },
       {
@@ -573,14 +683,17 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
     setTimeout(() => setExportDone(false), 2500);
   }
 
-  // Répartition des 240 900 F versés — mêmes libellés/couleurs que la
-  // légende de l'anneau, réutilisés pour le donut et la liste en dessous.
+  // Répartition du total versé (totalGrille) — mêmes libellés/couleurs que
+  // la légende de l'anneau, réutilisés pour le donut et la liste en
+  // dessous. Pourcentages dérivés des montants ci-dessus plutôt que
+  // re-scalés indépendamment (somme proche de 100, comme sur un vrai
+  // relevé arrondi poste par poste).
   const costBreakdown = [
-    { label: t("Frais logistiques", "Logistics fees"), pct: 74, color: "#EC0C8C" },
-    { label: t("Abonnement", "Subscription"), pct: 10, color: "#8B5CF6" },
-    { label: t("Express", "Express"), pct: 7, color: "#38BDF8" },
-    { label: t("Garantie", "Guarantee"), pct: 5, color: "#4FE0AE" },
-    { label: t("Récupération des refus", "Refusal retrieval"), pct: 4, color: "#FFB84D" },
+    { label: t("Frais logistiques", "Logistics fees"), pct: Math.round((amount1 / totalGrille) * 100), color: "#EC0C8C" },
+    { label: t("Abonnement", "Subscription"), pct: Math.round((amount5 / totalGrille) * 100), color: "#8B5CF6" },
+    { label: t("Express", "Express"), pct: Math.round((amount3 / totalGrille) * 100), color: "#38BDF8" },
+    { label: t("Garantie", "Guarantee"), pct: Math.round((amount2 / totalGrille) * 100), color: "#4FE0AE" },
+    { label: t("Récupération des refus", "Refusal retrieval"), pct: Math.round((amount4 / totalGrille) * 100), color: "#FFB84D" },
   ];
 
   return (
@@ -647,9 +760,9 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                   {t("Note de l'entreprise agréée", "Approved partner rating")}
                 </p>
                 <p className="mt-1 text-base font-bold">
-                  8,4<span className="text-[var(--dashboard-text)]/40">/10</span>
+                  {formatDecimal(noteEntreprise)}<span className="text-[var(--dashboard-text)]/40">/10</span>
                 </p>
-                <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t("moyenne de ses 34 boutiques", "average of its 34 shops")}</p>
+                <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t(`moyenne de ses ${boutiquesAffiliees} boutiques`, `average of its ${boutiquesAffiliees} shops`)}</p>
               </div>
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
@@ -664,8 +777,8 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Boutiques affiliées", "Affiliated shops")}
                 </p>
-                <p className="mt-1 text-base font-bold">34</p>
-                <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t("dont 11 dans votre zone", "11 of them in your area")}</p>
+                <p className="mt-1 text-base font-bold">{boutiquesAffiliees}</p>
+                <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t(`dont ${boutiquesZone} dans votre zone`, `${boutiquesZone} of them in your area`)}</p>
               </div>
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
@@ -712,41 +825,41 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                   nature: "B" as const,
                   name: t("Frais logistiques par colis livré", "Logistics fee per delivered parcel"),
                   detail: t("Enlèvement, emballage, transport, remise au client", "Pickup, packaging, transport, hand-off to customer"),
-                  rate: "1 500 F",
-                  qty: t("119 colis", "119 parcels"),
-                  amount: "178 500 F",
+                  rate: `${groupFr(rate1)} F`,
+                  qty: t(`${qty1} colis`, `${qty1} parcels`),
+                  amount: `${groupFr(amount1)} F`,
                 },
                 {
                   nature: "S" as const,
                   name: t("Garantie contre la perte", "Loss guarantee"),
                   detail: t("Couvre ce qui disparaît ou casse chez elle", "Covers what goes missing or breaks on its site"),
-                  rate: "500 F",
-                  qty: "24,8",
-                  amount: "12 400 F",
+                  rate: `${groupFr(rate2)} F`,
+                  qty: formatDecimal(qty2),
+                  amount: `${groupFr(amount2)} F`,
                 },
                 {
                   nature: "B" as const,
                   name: t("Livraison express", "Express delivery"),
                   detail: t("Course prioritaire, 1 h 48 en moyenne", "Priority run, 1 h 48 on average"),
-                  rate: "2 000 F",
-                  qty: t("8 colis", "8 parcels"),
-                  amount: "16 000 F",
+                  rate: `${groupFr(rate3)} F`,
+                  qty: t(`${qty3} colis`, `${qty3} parcels`),
+                  amount: `${groupFr(amount3)} F`,
                 },
                 {
                   nature: "S" as const,
                   name: t("Récupération d'un colis refusé", "Retrieving a refused parcel"),
                   detail: t("Retour de la marchandise au site", "Goods returned to the site"),
-                  rate: "1 000 F",
-                  qty: t("9 colis", "9 parcels"),
-                  amount: "9 000 F",
+                  rate: `${groupFr(rate4)} F`,
+                  qty: t(`${qty4} colis`, `${qty4} parcels`),
+                  amount: `${groupFr(amount4)} F`,
                 },
                 {
                   nature: "B" as const,
                   name: t("Abonnement mensuel", "Monthly subscription"),
                   detail: t("Versé à elle, pas à LM", "Paid to the partner, not to LM"),
-                  rate: "25 000 F",
+                  rate: `${groupFr(rate5)} F`,
                   qty: t("1 mois", "1 month"),
-                  amount: "25 000 F",
+                  amount: `${groupFr(amount5)} F`,
                 },
               ].map((row) => (
                 <div key={row.name} className="flex items-center gap-3 text-xs">
@@ -764,20 +877,20 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
             <Divider />
             <div className="flex items-center justify-between text-sm">
               <span className="font-semibold">{t("Total sur la période", "Total for the period")}</span>
-              <span className="text-base font-bold">240 900 F</span>
+              <span className="text-base font-bold">{groupFr(totalGrille)} F</span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Coût par commande livrée", "Cost per delivered order")}
                 </p>
-                <p className="mt-0.5 text-sm font-bold">2 024 F</p>
+                <p className="mt-0.5 text-sm font-bold">{groupFr(coutParCommande)} F</p>
               </div>
               <div>
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Part de votre chiffre d'affaires", "Share of your revenue")}
                 </p>
-                <p className="mt-0.5 text-sm font-bold">10,4 %</p>
+                <p className="mt-0.5 text-sm font-bold">{formatDecimal(partCA)} %</p>
               </div>
               <div>
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
@@ -815,59 +928,59 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
             <div className="mt-3">
               <EngagementRow
                 title={t("Enlèvement sous 24 h après confirmation", "Pickup within 24 h of confirmation")}
-                detail={t("Réalisé en 18 h en moyenne", "Achieved in 18 h on average")}
-                realized={t("18 h", "18 h")}
+                detail={t(`Réalisé en ${realizedH1} h en moyenne`, `Achieved in ${realizedH1} h on average`)}
+                realized={`${realizedH1} h`}
                 target={t("24 h", "24 h")}
-                pct={75}
+                pct={pct1}
                 ok
               />
               <EngagementRow
                 title={t("Livraison sous 48 h après enlèvement", "Delivery within 48 h of pickup")}
-                detail={t("Réalisé en 26 h en moyenne, nuits comprises", "Achieved in 26 h on average, nights included")}
-                realized={t("26 h", "26 h")}
+                detail={t(`Réalisé en ${realizedH2} h en moyenne, nuits comprises`, `Achieved in ${realizedH2} h on average, nights included`)}
+                realized={`${realizedH2} h`}
                 target={t("48 h", "48 h")}
-                pct={54}
+                pct={pct2}
                 ok
               />
               <EngagementRow
                 title={t("Prise en main d'un litige sous 9 h", "Taking a dispute in hand within 9 h")}
                 detail={t(
-                  "Réalisé en 2 h 40. C'est un maximum imposé par LM, pas par elle.",
-                  "Achieved in 2 h 40. This maximum is set by LM, not by the partner."
+                  `Réalisé en ${realizedH3} h ${String(realizedM3).padStart(2, "0")}. C'est un maximum imposé par LM, pas par elle.`,
+                  `Achieved in ${realizedH3} h ${String(realizedM3).padStart(2, "0")}. This maximum is set by LM, not by the partner.`
                 )}
-                realized={t("2 h 40", "2 h 40")}
+                realized={`${realizedH3} h ${String(realizedM3).padStart(2, "0")}`}
                 target={t("9 h", "9 h")}
-                pct={30}
+                pct={pct3}
                 ok
               />
               <EngagementRow
                 title={t("Au moins 85 % de livraison au premier passage", "At least 85% delivered on first attempt")}
-                detail={t("Réalisé 86 %", "Achieved 86%")}
-                realized="86 %"
+                detail={t(`Réalisé ${formatDecimal(realizedPct4)} %`, `Achieved ${formatDecimal(realizedPct4)}%`)}
+                realized={`${formatDecimal(realizedPct4)} %`}
                 target="85 %"
-                pct={101}
+                pct={pct4}
                 ok
               />
               <EngagementRow
                 title={t("Pas plus de 1 % de casse sur votre stock", "No more than 1% breakage on your stock")}
                 detail={t(
-                  "Réalisé 1,6 %. Le dépassement vient presque entièrement du site de Bouaké.",
-                  "Achieved 1.6%. The overrun comes almost entirely from the Bouaké site."
+                  `Réalisé ${formatDecimal(realizedCasse5)} %. Le dépassement vient presque entièrement du site de Bouaké.`,
+                  `Achieved ${formatDecimal(realizedCasse5)}%. The overrun comes almost entirely from the Bouaké site.`
                 )}
-                realized="1,6 %"
+                realized={`${formatDecimal(realizedCasse5)} %`}
                 target="1 %"
-                pct={100}
+                pct={pct5}
                 ok={false}
               />
               <EngagementRow
                 title={t("Réponse à vos messages sous 9 h", "Reply to your messages within 9 h")}
                 detail={t(
-                  "Réalisé en 14 h. Trois de vos demandes attendent depuis plus d'un jour.",
-                  "Achieved in 14 h. Three of your requests have been waiting over a day."
+                  `Réalisé en ${realizedReponse6} h. Trois de vos demandes attendent depuis plus d'un jour.`,
+                  `Achieved in ${realizedReponse6} h. Three of your requests have been waiting over a day.`
                 )}
-                realized={t("14 h", "14 h")}
+                realized={`${realizedReponse6} h`}
                 target={t("9 h", "9 h")}
-                pct={100}
+                pct={pct6}
                 ok={false}
               />
             </div>
@@ -959,7 +1072,7 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
             <div className="mt-4 grid gap-4 lg:grid-cols-[136px_1fr]">
               {/* Anneau + légende */}
               <div className="flex flex-col items-center gap-4 lg:items-stretch">
-                <DonutChart segments={costBreakdown} centerValue="240 900" centerLabel={t("F versés", "F paid")} />
+                <DonutChart segments={costBreakdown} centerValue={groupFr(totalGrille)} centerLabel={t("F versés", "F paid")} />
                 <div className="space-y-1.5">
                   {costBreakdown.map((r) => (
                     <div key={r.label} className="flex items-center justify-between gap-2 text-[10px]">
@@ -978,20 +1091,20 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                 <div className="grid items-center gap-2 sm:grid-cols-[1fr_auto_1fr_auto_1fr]">
                   <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
                     <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Ce que vous lui versez", "What you pay it")}</p>
-                    <p className="mt-2 text-xl font-bold">240 900F</p>
+                    <p className="mt-2 text-xl font-bold">{groupFr(totalGrille)}F</p>
                     <p className="mt-1 text-[10px] leading-snug text-[var(--dashboard-text)]/40">{t("Sa grille, appliquée à votre volume du mois.", "Its rate card, applied to your volume this month.")}</p>
                   </div>
                   <div className="hidden text-center text-lg text-[var(--dashboard-text)]/25 sm:block">+</div>
                   <div className="rounded-2xl border p-3" style={{ background: "linear-gradient(135deg, rgba(200,38,45,.12), rgba(236,12,140,.06))", borderColor: "rgba(255,122,128,.35)" }}>
                     <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#c8262d]/70">{t("Ce que ses manquements vous coûtent", "What its shortfalls cost you")}</p>
-                    <p className="mt-2 text-xl font-bold text-[#c8262d]">29 700F</p>
+                    <p className="mt-2 text-xl font-bold text-[#c8262d]">{groupFr(manquements)}F</p>
                     <p className="mt-1 text-[10px] leading-snug text-[var(--dashboard-text)]/40">{t("Litiges à sa charge, casse au-delà du seuil, marchandise non couverte.", "Its share of disputes, breakage beyond the threshold, uncovered goods.")}</p>
                   </div>
                   <div className="hidden text-center text-lg text-[var(--dashboard-text)]/25 sm:block">=</div>
                   <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
                     <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Coût réel de la relation", "Real cost of the relationship")}</p>
-                    <p className="mt-2 text-xl font-bold">270 600F</p>
-                    <p className="mt-1 text-[10px] leading-snug text-[var(--dashboard-text)]/40">{t("Soit 2 274 F par commande livrée, et non 2 024 F.", "That's 2,274 F per delivered order, not 2,024 F.")}</p>
+                    <p className="mt-2 text-xl font-bold">{groupFr(coutReel)}F</p>
+                    <p className="mt-1 text-[10px] leading-snug text-[var(--dashboard-text)]/40">{t(`Soit ${groupFr(coutParCommandeReel)} F par commande livrée, et non ${groupFr(coutParCommande)} F.`, `That's ${groupFr(coutParCommandeReel)} F per delivered order, not ${groupFr(coutParCommande)} F.`)}</p>
                   </div>
                 </div>
 
@@ -999,7 +1112,7 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
                     <p className="text-[11px] font-semibold">{t("Litiges dont elle est responsable", "Disputes it's responsible for")}</p>
-                    <p className="mt-1 text-base font-bold" style={{ color: "#c8262d" }}>11 300F</p>
+                    <p className="mt-1 text-base font-bold" style={{ color: "#c8262d" }}>{groupFr(litigesCost)}F</p>
                     <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("20 litiges sur 26 depuis l'ouverture, ramenés au mois", "20 of 26 disputes since opening, brought back to a month")}</p>
                   </div>
                   <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
@@ -1009,8 +1122,8 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                         S
                       </span>
                     </p>
-                    <p className="mt-1 text-base font-bold" style={{ color: "#c8262d" }}>18 400F</p>
-                    <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("1,6 % constaté pour 1 % engagé", "1.6% observed against 1% committed")}</p>
+                    <p className="mt-1 text-base font-bold" style={{ color: "#c8262d" }}>{groupFr(casseCost)}F</p>
+                    <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t(`${formatDecimal(realizedCasse5)} % constaté pour 1 % engagé`, `${formatDecimal(realizedCasse5)}% observed against 1% committed`)}</p>
                   </div>
                 </div>
               </div>
@@ -1043,32 +1156,32 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
             <div className="mt-6">
               <SiteBars
                 sites={[
-                  { name: "Cocody", delayH: 3 + 40 / 60, cassePct: 0.8 },
-                  { name: "Yopougon", delayH: 4 + 45 / 60, cassePct: 1.4 },
-                  { name: "Bouaké", delayH: 11 + 30 / 60, cassePct: 3.2 },
+                  { name: "Cocody", delayH: siteCocodyDelay, cassePct: siteCocodyCasse },
+                  { name: "Yopougon", delayH: siteYopougonDelay, cassePct: siteYopougonCasse },
+                  { name: "Bouaké", delayH: siteBouakeDelay, cassePct: siteBouakeCasse },
                 ]}
               />
             </div>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               <SiteCard
                 name="Cocody"
-                delay={t("3 h 40", "3 h 40")}
-                casse={t("0,8 % de casse", "0.8% breakage")}
-                detail={t("104 de vos unités · 71 commandes servies", "104 of your units · 71 orders served")}
+                delay={formatHM(siteCocodyDelay)}
+                casse={t(`${formatDecimal(siteCocodyCasse)} % de casse`, `${formatDecimal(siteCocodyCasse)}% breakage`)}
+                detail={t(`${siteCocodyUnits} de vos unités · ${siteCocodyOrders} commandes servies`, `${siteCocodyUnits} of your units · ${siteCocodyOrders} orders served`)}
                 tone="ok"
               />
               <SiteCard
                 name="Yopougon"
-                delay={t("4 h 45", "4 h 45")}
-                casse={t("1,4 % de casse", "1.4% breakage")}
-                detail={t("49 unités · 34 commandes", "49 units · 34 orders")}
+                delay={formatHM(siteYopougonDelay)}
+                casse={t(`${formatDecimal(siteYopougonCasse)} % de casse`, `${formatDecimal(siteYopougonCasse)}% breakage`)}
+                detail={t(`${siteYopougonUnits} unités · ${siteYopougonOrders} commandes`, `${siteYopougonUnits} units · ${siteYopougonOrders} orders`)}
                 tone="neutral"
               />
               <SiteCard
                 name="Bouaké"
-                delay={t("11 h 30", "11 h 30")}
-                casse={t("3,2 % de casse", "3.2% breakage")}
-                detail={t("15 unités · 18 commandes servies", "15 units · 18 orders served")}
+                delay={formatHM(siteBouakeDelay)}
+                casse={t(`${formatDecimal(siteBouakeCasse)} % de casse`, `${formatDecimal(siteBouakeCasse)}% breakage`)}
+                detail={t(`${siteBouakeUnits} unités · ${siteBouakeOrders} commandes servies`, `${siteBouakeUnits} units · ${siteBouakeOrders} orders served`)}
                 tone="bad"
               />
             </div>
@@ -1099,10 +1212,10 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
             </div>
             <Divider />
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatRow compact label={t("Au démarrage", "At the start")} value="71 %" />
-              <StatRow compact label={t("Aujourd'hui", "Today")} value={<span className="text-[#178a3f]">80,4 %</span>} />
-              <StatRow compact label={t("Progression", "Progress")} value={<span className="text-[#178a3f]">+9,4 pts</span>} />
-              <StatRow compact label={t("Trois derniers mois", "Last three months")} value={<span className="text-[#a8690a]">+1,4 pt</span>} />
+              <StatRow compact label={t("Au démarrage", "At the start")} value={`${formatDecimal(perfStart)} %`} />
+              <StatRow compact label={t("Aujourd'hui", "Today")} value={<span className="text-[#178a3f]">{formatDecimal(perfToday)} %</span>} />
+              <StatRow compact label={t("Progression", "Progress")} value={<span className="text-[#178a3f]">{perfProgress >= 0 ? "+" : ""}{formatDecimal(perfProgress)} pts</span>} />
+              <StatRow compact label={t("Trois derniers mois", "Last three months")} value={<span className="text-[#a8690a]">{perfLast3 >= 0 ? "+" : ""}{formatDecimal(perfLast3)} pt</span>} />
             </div>
             <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
               {t(
@@ -1146,10 +1259,10 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                 </div>
               </div>
               <Divider />
-              <StatRow label={t("Boutiques ayant répondu ce mois", "Shops that answered this month")} value={t("29 sur 34", "29 of 34")} />
+              <StatRow label={t("Boutiques ayant répondu ce mois", "Shops that answered this month")} value={t(`${boutiquesRepondu} sur ${boutiquesAffiliees}`, `${boutiquesRepondu} of ${boutiquesAffiliees}`)} />
               <StatRow label={t("Votre note", "Your rating")} value={<span className="text-[#178a3f]">{formatNote(votreNote)} / 10</span>} />
-              <StatRow label={t("Note collective du mois", "This month's collective rating")} value="8,4 / 10" />
-              <StatRow label={t("Votre première évaluation", "Your first rating")} value={t("Avril · 7 / 10", "April · 7 / 10")} />
+              <StatRow label={t("Note collective du mois", "This month's collective rating")} value={`${formatDecimal(collectiveRatings[collectiveRatings.length - 1])} / 10`} />
+              <StatRow label={t("Votre première évaluation", "Your first rating")} value={t(`Avril · ${formatNote(yourRatingsInit[0])} / 10`, `April · ${formatNote(yourRatingsInit[0])} / 10`)} />
             </Card>
 
             <Card className="!bg-[var(--dashboard-glass)]">
@@ -1184,7 +1297,7 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                   <h3 className="text-sm font-bold tracking-tight sm:text-base">{t("Vos échanges en cours", "Your ongoing exchanges")}</h3>
                   <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("Trois demandes attendent une réponse", "Three requests are waiting for a reply")}</p>
                 </div>
-                <Tag tone="warn">{t("Réponse moyenne : 14 h", "Average reply: 14 h")}</Tag>
+                <Tag tone="warn">{t(`Réponse moyenne : ${realizedReponse6} h`, `Average reply: ${realizedReponse6} h`)}</Tag>
               </div>
               <div className="mt-3 space-y-2">
                 {echanges.map((row) => (
@@ -1212,9 +1325,9 @@ export default function PartenaireSection({ first = true }: { first?: boolean })
                 ))}
               </div>
               <Divider />
-              <StatRow label={t("Demandes envoyées depuis l'affiliation", "Requests sent since affiliation")} value="31" />
-              <StatRow label={t("Traitées favorablement", "Handled favorably")} value={<span className="text-[#178a3f]">24 · 77 %</span>} />
-              <StatRow label={t("Sans réponse au-delà de 48 h", "No reply after 48 h")} value={<span className="text-[#c8262d]">4</span>} />
+              <StatRow label={t("Demandes envoyées depuis l'affiliation", "Requests sent since affiliation")} value={String(demandesTotal)} />
+              <StatRow label={t("Traitées favorablement", "Handled favorably")} value={<span className="text-[#178a3f]">{demandesTraitees} · {demandesTraiteesPct} %</span>} />
+              <StatRow label={t("Sans réponse au-delà de 48 h", "No reply after 48 h")} value={<span className="text-[#c8262d]">{demandesSansReponse}</span>} />
               <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">
                 {t(
                   "Trois demandes sur quatre aboutissent : la relation fonctionne quand elle répond. Le problème n'est pas le refus, c'est le silence.",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, SectionHeader, Tag } from "../dashboard-accueil/shared";
+import { Card, SectionHeader, Tag, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -37,26 +37,21 @@ export default function PageDeCommande({ first = false }: { first?: boolean }) {
   const [format, setFormat] = useState<FormatLien>("nom");
   const [moyens, setMoyens] = useState(MOYENS_PAIEMENT_INIT);
   const [copie, setCopie] = useState(false);
-  const [enregistre, setEnregistre] = useState(false);
+  const { saving, done, trigger } = useMockSave();
 
   const basculerMoyen = (key: string) =>
     setMoyens((liste) => liste.map((m) => (m.key === key ? { ...m, actif: !m.actif } : m)));
 
-  const lienComplet = `lm.ci/awa-beaute/${EXEMPLES_LIEN[format]}`;
+  const lienComplet = `awa-beaute.liivremoi.com/${EXEMPLES_LIEN[format]}`;
 
   const copier = async () => {
     try {
-      await navigator.clipboard.writeText(`https://${lienComplet}`);
+      await navigator.clipboard.writeText(`https://www.${lienComplet}`);
     } catch {
       // presse-papier indisponible (permissions navigateur) — pas bloquant
     }
     setCopie(true);
     setTimeout(() => setCopie(false), 1800);
-  };
-
-  const enregistrer = () => {
-    setEnregistre(true);
-    setTimeout(() => setEnregistre(false), 1800);
   };
 
   return (
@@ -75,17 +70,18 @@ export default function PageDeCommande({ first = false }: { first?: boolean }) {
       <div className="mb-3 flex items-center justify-end">
         <button
           type="button"
-          onClick={enregistrer}
-          className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
+          onClick={() => trigger()}
+          disabled={saving}
+          className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
         >
-          {enregistre ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
+          {saving ? t("Enregistrement…", "Saving…") : done ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
         </button>
       </div>
 
       <div className="grid gap-3">
         <Card title={t("Le lien de commande", "The order link")} titleTab className="!bg-[var(--dashboard-card-bg)]">
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-xs">
-            <span className="text-[var(--dashboard-text)]/40">lm.ci/awa-beaute/</span>
+            <span className="text-[var(--dashboard-text)]/40">awa-beaute.liivremoi.com/</span>
             <span className="font-bold text-[var(--dashboard-text)]">{EXEMPLES_LIEN[format]}</span>
             <button
               type="button"

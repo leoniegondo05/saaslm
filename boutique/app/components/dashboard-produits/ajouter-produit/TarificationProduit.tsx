@@ -75,26 +75,6 @@ export default function TarificationProduit({
           />
         </Champ>
       </div>
-
-      <div className="my-3.5 h-px bg-[var(--dashboard-text)]/10" />
-
-      <Champ
-        label={t("Poids emballé (g)", "Packed weight (g)")}
-        aide={t(
-          "Sans le poids, votre partenaire ne peut pas chiffrer la livraison. Il s'ajuste combinaison par combinaison quand les tailles pèsent vraiment différemment.",
-          "Without the weight, your partner can't price delivery. It's adjustable combination by combination when sizes really weigh differently."
-        )}
-      >
-        <input
-          type="number"
-          min={0}
-          inputMode="numeric"
-          value={poidsGrammes ?? ""}
-          onChange={(e) => onPoidsChange(e.target.value === "" ? null : parseMontant(e.target.value))}
-          placeholder="420"
-          className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2.5 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04]"
-        />
-      </Champ>
     </div>
   );
 }

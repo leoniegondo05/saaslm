@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Btn, Card, Divider, Nature, ProductSelector, SectionHeader, StatRow, Tag, Trend } from "./shared";
+import { Btn, Card, Divider, HeaderActionBtn, Nature, ProductSelector, SectionHeader, StatRow, Tag, Trend } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import CreerCategorieModal from "../dashboard-produits/CreerCategorieModal";
 import { CATEGORIES_DEFAUT } from "../dashboard-produits/ajouter-produit/categoriesDefaut";
@@ -193,46 +193,48 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
         eyebrow={t("Produits", "Products")}
         title={t("Tous vos produits", "All your products")}
         subtitle={t("Toutes natures confondues, dans un seul tableau.", "All types combined, in a single table.")}
-        count={t(`${produits.length} produits`, `${produits.length} products`)}
         first={first}
         layout="inline"
+        actions={
+          <>
+            <HeaderActionBtn onClick={() => setCategorieModalOuverte(true)}>
+              {t("Ajouter une catégorie", "Add a category")}
+            </HeaderActionBtn>
+            <HeaderActionBtn>{t("Déposer un stock", "Deposit stock")}</HeaderActionBtn>
+            <Link
+              href="/dashboard/produits/ajouter"
+              className="shrink-0 rounded-full bg-brand-pink px-4 py-2 text-xs font-semibold text-white shadow-[0_4px_16px_rgba(236,12,140,0.35)] transition hover:bg-brand-pink/90"
+            >
+              {t("Ajouter un produit", "Add a product")}
+            </Link>
+          </>
+        }
       />
 
-      {/* Un seul cadre, séparé par des traits (divide-x/y) — pas cinq cartes
-          côte à côte : chaque étiquette reste en onglet (même trait que
-          Card titleTab) mais posée sur le même fond continu. */}
-      <div className="grid grid-cols-2 divide-x divide-y divide-[var(--dashboard-text)]/10 overflow-hidden rounded-2xl bg-[var(--dashboard-card-bg)] shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] sm:grid-cols-3 lg:grid-cols-5 lg:divide-y-0">
-        <StatCell label={t("Produits publiés", "Published products")} value={publies} />
-        <StatCell label={t("En stockage", "Warehoused")} value={enStockage} note={t(`${stockTotal} unités`, `${stockTotal} units`)} />
-        <StatCell label={t("En drop", "In drop")} value={enDrop} note={t(`${dropPartenaire} partenaire · ${dropLm} LM`, `${dropPartenaire} partner · ${dropLm} LM`)} />
-        <StatCell label={t("Jamais vendus", "Never sold")} value={jamaisVendus} />
-        <StatCell label={t("Marge moyenne", "Average margin")} value={`${margeMoyenne} %`} />
+      {/* Cinq tuiles distinctes, badge circulaire coloré en coin (repris de
+          la référence envoyée : label discret + gros chiffre + accent
+          couleur en médaillon) — code couleur nature déjà en place ailleurs
+          dans le dashboard (cf. [[dashboard-chart-colors-stockage-drop]] —
+          stockage bleu, drop rose). Une seule tuile porte l'élément
+          signature (vague de marge par produit) : le reste reste sobre. */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <StatCell label={t("Produits publiés", "Published products")} value={publies} dot="#141220" />
+        <StatCell label={t("En stockage", "Warehoused")} value={enStockage} note={t(`${stockTotal} unités`, `${stockTotal} units`)} dot="#5AA9FF" />
+        <StatCell label={t("En drop", "In drop")} value={enDrop} note={t(`${dropPartenaire} partenaire · ${dropLm} LM`, `${dropPartenaire} partner · ${dropLm} LM`)} dot="#EC0C8C" />
+        <StatCell label={t("Jamais vendus", "Never sold")} value={jamaisVendus} dot="#DC9A3A" />
+        <StatCell
+          label={t("Marge moyenne", "Average margin")}
+          value={`${margeMoyenne} %`}
+          dot="#EC0C8C"
+          accent
+          wave={produits.map((p) => p.margePct)}
+          note={t(`Réparti sur ${produits.length} produits`, `Across ${produits.length} products`)}
+        />
       </div>
 
       <div className="mt-3 mb-8 grid gap-3 lg:grid-cols-[1.75fr_1fr] [&>*]:min-w-0">
         <Card className="!bg-[var(--dashboard-glass)]">
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setCategorieModalOuverte(true)}
-                className="rounded-full border border-[var(--dashboard-text)]/15 bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white dark:bg-brand-pink"
-              >
-                {t("Ajouter une catégorie", "Add a category")}
-              </button>
-              <button type="button" className="rounded-full bg-[#141220] px-3.5 py-2 text-xs font-semibold text-white dark:bg-brand-pink">
-                {t("Déposer un stock", "Deposit stock")}
-              </button>
-              <Link
-                href="/dashboard/produits/ajouter"
-                className="rounded-full bg-[var(--dashboard-card-bg)] px-4 py-2 text-xs font-semibold shadow-[0_2px_10px_rgba(20,18,32,0.08)]"
-              >
-                {t("Ajouter un produit", "Add a product")}
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-3 overflow-x-auto">
+          <div className="overflow-x-auto pt-1">
             <table className="w-full min-w-[640px] border-collapse text-left text-xs">
               <thead>
                 <tr className="border-b border-[var(--dashboard-text)]/10">
@@ -247,13 +249,9 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
                     t("Avis", "Rating"),
                     t("État", "Status"),
                     t("Tendance", "Trend"),
-                  ].map((h, i) => (
+                  ].map((h) => (
                     <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
-                      {i === 0 ? (
-                        <span className="inline-block rounded-full bg-[#141220] px-3 py-2 text-white dark:bg-brand-pink">{h}</span>
-                      ) : (
-                        h
-                      )}
+                      {h}
                     </th>
                   ))}
                 </tr>
@@ -270,22 +268,28 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
                     <tr
                       key={`${p.nom}-${i}`}
                       onClick={() => setSelected(i)}
-                      className={`cursor-pointer border-b border-[var(--dashboard-text)]/[0.05] last:border-0 hover:bg-[var(--dashboard-text)]/[0.03] ${
+                      className={`cursor-pointer border-b border-[var(--dashboard-text)]/[0.05] last:border-0 hover:bg-[var(--dashboard-text)]/[0.04] ${
                         i === selected ? "bg-brand-pink/5" : ""
                       }`}
                     >
-                      <td className="py-2 pr-3 font-semibold">{t(p.nom, p.nomEn)}</td>
-                      <td className="py-2 pr-3"><Nature code={sourceBadge(p.nature)} /></td>
-                      <td className="py-2 pr-3">{p.achat !== null ? F(p.achat) : "—"}</td>
-                      <td className="py-2 pr-3">{F(p.vente)}</td>
-                      <td className="py-2 pr-3">{p.stock}</td>
-                      <td className="py-2 pr-3">{p.vendu}</td>
-                      <td className="py-2 pr-3">{p.margePct} %</td>
-                      <td className="py-2 pr-3">{p.avis !== null ? p.avis.toLocaleString(numberLocale) : "—"}</td>
-                      <td className="py-2 pr-3">
+                      <td
+                        className={`border-l-[3px] py-2.5 pl-2 pr-3 text-[13px] font-semibold ${
+                          i === selected ? "border-brand-pink" : "border-transparent"
+                        }`}
+                      >
+                        {t(p.nom, p.nomEn)}
+                      </td>
+                      <td className="py-2.5 pr-3"><Nature code={sourceBadge(p.nature)} /></td>
+                      <td className="py-2.5 pr-3 text-[var(--dashboard-text)]/70">{p.achat !== null ? F(p.achat) : "—"}</td>
+                      <td className="py-2.5 pr-3">{F(p.vente)}</td>
+                      <td className="py-2.5 pr-3 text-[var(--dashboard-text)]/70">{p.stock}</td>
+                      <td className="py-2.5 pr-3 text-[var(--dashboard-text)]/70">{p.vendu}</td>
+                      <td className="py-2.5 pr-3">{p.margePct} %</td>
+                      <td className="py-2.5 pr-3 text-[var(--dashboard-text)]/70">{p.avis !== null ? p.avis.toLocaleString(numberLocale) : "—"}</td>
+                      <td className="py-2.5 pr-3">
                         <Tag tone={p.etat.tone}>{t(p.etat.label, p.etat.labelEn)}</Tag>
                       </td>
-                      <td className="py-2 pr-3">
+                      <td className="py-2.5 pr-3">
                         <Trend values={p.tendance} />
                       </td>
                     </tr>
@@ -351,10 +355,15 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
           </div>
 
           <Divider />
-          <StatRow label={t("Prix de vente", "Sale price")} value={F(produit.vente)} />
-          {produit.achat !== null && <StatRow label={t("Coût de revient", "Cost price")} value={F(produit.achat)} />}
-          {produit.fraisPreleves !== undefined && <StatRow label={t("Frais prélevés", "Fees deducted")} value={F(produit.fraisPreleves)} />}
-          <StatRow label={t("Bénéfice par vente", "Profit per sale")} value={<span className="text-brand-pink">{F(benefice)}</span>} />
+          {/* Panneau surélevé pour le groupe "argent" : le distingue du
+              groupe stock/avis/litiges en dessous, plutôt que quatre lignes
+              de même poids visuel noyées dans la carte. */}
+          <div className="rounded-xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
+            <StatRow label={t("Prix de vente", "Sale price")} value={F(produit.vente)} compact />
+            {produit.achat !== null && <StatRow label={t("Coût de revient", "Cost price")} value={F(produit.achat)} compact />}
+            {produit.fraisPreleves !== undefined && <StatRow label={t("Frais prélevés", "Fees deducted")} value={F(produit.fraisPreleves)} compact />}
+            <StatRow label={t("Bénéfice par vente", "Profit per sale")} value={<span className="text-sm text-brand-pink">{F(benefice)}</span>} compact />
+          </div>
           <Divider />
           <StatRow label={t("Stock restant", "Remaining stock")} value={`${produit.stock} · ${(produit.couverture ? t(produit.couverture, produit.couvertureEn ?? produit.couverture) : "—")}`} />
           <StatRow label={t("Vendu sur la période", "Sold this period")} value={String(produit.vendu)} />
@@ -383,19 +392,67 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
   );
 }
 
-function StatCell({ label, value, note }: { label: string; value: string | number; note?: string }) {
+function StatCell({
+  label,
+  value,
+  note,
+  dot,
+  accent = false,
+  wave,
+}: {
+  label: string;
+  value: string | number;
+  note?: string;
+  /** Couleur du médaillon en coin — code couleur nature du dashboard. */
+  dot: string;
+  /** Chiffre affiché en rose (métrique la plus regardée de la rangée). */
+  accent?: boolean;
+  /** Série de valeurs (une par produit, pas dans le temps) pour la vague
+   *  qui déborde en bas de la tuile — élément signature réservé à UNE
+   *  seule tuile (Marge moyenne), pas répété partout. */
+  wave?: number[];
+}) {
   return (
-    <div className="px-4 pb-4 pt-4">
-      <div className="relative -mt-4 flex justify-center">
-        <p
-          className="rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B8095]"
-          style={{ background: "var(--dashboard-surface-2)" }}
+    <div className="relative overflow-hidden rounded-2xl bg-[var(--dashboard-card-bg)] p-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{label}</p>
+        <span
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+          style={{ background: `${dot}1F` }}
         >
-          {label}
-        </p>
+          <span className="h-2 w-2 rounded-full" style={{ background: dot }} />
+        </span>
       </div>
-      <p className="mt-2 text-center text-xl font-bold tracking-tight">{value}</p>
-      {note && <p className="mt-0.5 text-center text-[9px] text-[var(--dashboard-text)]/35">{note}</p>}
+      <p className={`mt-3 text-2xl font-bold tracking-tight ${accent ? "text-brand-pink" : ""}`}>{value}</p>
+      {note && <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{note}</p>}
+      {wave && wave.length > 1 && <MarginWave values={wave} color={dot} />}
     </div>
+  );
+}
+
+/*
+  Vague qui déborde en bas de la tuile "Marge moyenne" (inspirée de la
+  référence envoyée) : contrairement au sparkline d'une ligne du tableau
+  (Trend, dans shared.tsx), l'axe X ici n'est PAS le temps — chaque point
+  est la marge d'un produit, dans l'ordre du catalogue. Un seul stat porte
+  cet élément, pour rester "signature" et ne pas alourdir les 4 autres.
+*/
+function MarginWave({ values, color }: { values: number[]; color: string }) {
+  const w = 200;
+  const h = 40;
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const range = max - min || 1;
+  const points = values.map((v, i) => ({
+    x: (i / (values.length - 1 || 1)) * w,
+    y: h - ((v - min) / range) * (h - 6) - 3,
+  }));
+  const d = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x},${p.y}`).join(" ");
+  const area = `${d} L ${w},${h} L 0,${h} Z`;
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="absolute inset-x-0 bottom-0 h-9 w-full" aria-hidden fill="none">
+      <path d={area} fill={color} fillOpacity={0.12} stroke="none" />
+      <path d={d} stroke={color} strokeOpacity={0.5} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }

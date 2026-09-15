@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Card, SectionHeader } from "../dashboard-accueil/shared";
+import { Card, SectionHeader, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import { EnvoyeeCard, Field, RetourPastille } from "./shared";
 
@@ -53,6 +53,7 @@ export default function SignalerProbleme({ first = true }: { first?: boolean }) 
   const [captures, setCaptures] = useState<Capture[]>([]);
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoye, setEnvoye] = useState(false);
+  const { saving, trigger } = useMockSave();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const ajouterCaptures = (files: FileList | null) => {
@@ -67,7 +68,7 @@ export default function SignalerProbleme({ first = true }: { first?: boolean }) 
       return;
     }
     setErreur(null);
-    setEnvoye(true);
+    trigger(() => setEnvoye(true));
   };
 
   const recommencer = () => {
@@ -278,16 +279,18 @@ export default function SignalerProbleme({ first = true }: { first?: boolean }) 
               <button
                 type="button"
                 onClick={recommencer}
-                className="w-full rounded-full border border-brand-pink/50 bg-transparent px-5 py-2.5 text-center text-xs font-semibold text-brand-pink transition hover:bg-brand-pink/5"
+                disabled={saving}
+                className="w-full rounded-full border border-brand-pink/50 bg-transparent px-5 py-2.5 text-center text-xs font-semibold text-brand-pink transition hover:bg-brand-pink/5 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {t("Annuler", "Cancel")}
               </button>
               <button
                 type="button"
                 onClick={envoyer}
-                className="mt-2 w-full rounded-full bg-[#141220] px-5 py-2.5 text-center text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
+                disabled={saving}
+                className="mt-2 w-full rounded-full bg-[#141220] px-5 py-2.5 text-center text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
               >
-                {t("Envoyer à LM", "Send to LM")}
+                {saving ? t("Envoi…", "Sending…") : t("Envoyer à LM", "Send to LM")}
               </button>
             </Card>
           </div>

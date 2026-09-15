@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import AssistanceLMModal from "../dashboard-accueil/AssistanceLMModal";
-import { Card, SectionHeader, Tag } from "../dashboard-accueil/shared";
+import { Card, SectionHeader, Tag, useMockSave } from "../dashboard-accueil/shared";
 import { SparkleIcon } from "../DashboardHeader";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import { EnvoyeeCard, Field, RetourPastille } from "./shared";
@@ -46,6 +46,7 @@ export default function PoserQuestion({ first = true }: { first?: boolean }) {
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoyee, setEnvoyee] = useState(false);
   const [showAssistance, setShowAssistance] = useState(false);
+  const { saving, trigger } = useMockSave();
 
   const commande = COMMANDES_RATTACHABLES.find((c) => c.id === commandeId) ?? null;
 
@@ -60,7 +61,7 @@ export default function PoserQuestion({ first = true }: { first?: boolean }) {
       return;
     }
     setErreur(null);
-    setEnvoyee(true);
+    trigger(() => setEnvoyee(true));
   };
 
   const recommencer = () => {
@@ -216,9 +217,10 @@ export default function PoserQuestion({ first = true }: { first?: boolean }) {
               <button
                 type="button"
                 onClick={envoyer}
-                className="rounded-full bg-[#141220] px-5 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
+                disabled={saving}
+                className="rounded-full bg-[#141220] px-5 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
               >
-                {t("Envoyer la question", "Send question")}
+                {saving ? t("Envoi…", "Sending…") : t("Envoyer la question", "Send question")}
               </button>
             </div>
           </Card>
@@ -267,16 +269,18 @@ export default function PoserQuestion({ first = true }: { first?: boolean }) {
             <Card className="!bg-[var(--dashboard-card-bg)]">
               <Link
                 href="/dashboard/demandes"
-                className="block w-full rounded-full border border-[var(--dashboard-text)]/15 px-4 py-2.5 text-center text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
+                aria-disabled={saving}
+                className={`block w-full rounded-full border border-[var(--dashboard-text)]/15 px-4 py-2.5 text-center text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05] ${saving ? "pointer-events-none opacity-40" : ""}`}
               >
                 {t("Annuler", "Cancel")}
               </Link>
               <button
                 type="button"
                 onClick={envoyer}
-                className="mt-2 block w-full rounded-full bg-[#141220] px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
+                disabled={saving}
+                className="mt-2 block w-full rounded-full bg-[#141220] px-4 py-2.5 text-center text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
               >
-                {t("Envoyer la question", "Send question")}
+                {saving ? t("Envoi…", "Sending…") : t("Envoyer la question", "Send question")}
               </button>
             </Card>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SectionHeader, Tag } from "../dashboard-accueil/shared";
+import { SectionHeader, Tag, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -31,6 +31,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
   const [mdpConfirmation, setMdpConfirmation] = useState("");
   const [mdpErreur, setMdpErreur] = useState<string | null>(null);
   const [mdpConfirme, setMdpConfirme] = useState(false);
+  const { saving: mdpEnCours, trigger: lancerEnregistrementMdp } = useMockSave(500, 4000);
 
   const [doubleVerification, setDoubleVerification] = useState(true);
   const [methodeVerification, setMethodeVerification] = useState<"message" | "application">("message");
@@ -64,9 +65,11 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
     if (mdpNouveau !== mdpConfirmation) return setMdpErreur(t("La confirmation ne correspond pas.", "Confirmation doesn't match."));
 
     setMdpErreur(null);
-    setChangerMdp(false);
-    setMdpConfirme(true);
-    setTimeout(() => setMdpConfirme(false), 4000);
+    lancerEnregistrementMdp(() => {
+      setChangerMdp(false);
+      setMdpConfirme(true);
+      setTimeout(() => setMdpConfirme(false), 4000);
+    });
   };
 
   const genererHuitCodes = () => {
@@ -168,16 +171,18 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
                 <button
                   type="button"
                   onClick={annulerChangementMdp}
-                  className="rounded-full border border-[var(--dashboard-text)]/15 px-4 py-2.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
+                  disabled={mdpEnCours}
+                  className="rounded-full border border-[var(--dashboard-text)]/15 px-4 py-2.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {t("Annuler", "Cancel")}
                 </button>
                 <button
                   type="button"
                   onClick={enregistrerMdp}
-                  className="rounded-full bg-[#141220] px-4 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
+                  disabled={mdpEnCours}
+                  className="rounded-full bg-[#141220] px-4 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
                 >
-                  {t("Enregistrer", "Save")}
+                  {mdpEnCours ? t("Enregistrement…", "Saving…") : t("Enregistrer", "Save")}
                 </button>
               </div>
             </div>

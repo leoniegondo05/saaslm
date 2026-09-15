@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Card, Tag } from "../dashboard-accueil/shared";
+import { Card, Tag, useMockSave } from "../dashboard-accueil/shared";
 import { DELAI_DISPONIBILITE, formatCfa } from "../dashboard-commandes/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import { EnvoyeeCard, Field, RetourPastille } from "./shared";
@@ -102,6 +102,7 @@ export default function OuvrirLitige({ first = true }: { first?: boolean }) {
   );
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoye, setEnvoye] = useState(false);
+  const { saving, trigger } = useMockSave();
 
   // Preuves ajoutées par le partenaire — les PREUVES_COUNT vignettes grises
   // ne sont que le décor mock déjà présent, celles-ci sont de vraies images
@@ -132,7 +133,7 @@ export default function OuvrirLitige({ first = true }: { first?: boolean }) {
     if (!solution) return setErreur(t("Choisissez la solution demandée.", "Choose the outcome you're asking for."));
     if (!description.trim()) return setErreur(t("Décrivez ce qui s'est passé.", "Describe what happened."));
     setErreur(null);
-    setEnvoye(true);
+    trigger(() => setEnvoye(true));
   };
 
   const recommencer = () => {
@@ -332,16 +333,18 @@ export default function OuvrirLitige({ first = true }: { first?: boolean }) {
             <button
               type="button"
               onClick={recommencer}
-              className="rounded-full border border-brand-pink/50 bg-transparent px-5 py-3 text-center text-xs font-semibold text-brand-pink transition hover:bg-brand-pink/5"
+              disabled={saving}
+              className="rounded-full border border-brand-pink/50 bg-transparent px-5 py-3 text-center text-xs font-semibold text-brand-pink transition hover:bg-brand-pink/5 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t("Annuler", "Cancel")}
             </button>
             <button
               type="button"
               onClick={envoyer}
-              className="rounded-full bg-white px-5 py-3 text-center text-xs font-semibold text-[#141220] shadow-[0_2px_10px_rgba(20,18,32,0.08)] transition hover:brightness-95 dark:bg-brand-pink dark:text-white"
+              disabled={saving}
+              className="rounded-full bg-white px-5 py-3 text-center text-xs font-semibold text-[#141220] shadow-[0_2px_10px_rgba(20,18,32,0.08)] transition hover:brightness-95 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink dark:text-white"
             >
-              {t("Ouvrir le litige", "Open the dispute")}
+              {saving ? t("Envoi…", "Sending…") : t("Ouvrir le litige", "Open the dispute")}
             </button>
           </div>
         </div>

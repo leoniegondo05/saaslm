@@ -393,19 +393,16 @@ export function CollapsibleCards({
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={effectiveOpen}
-          className="group relative -mt-1 inline-flex shrink-0 rounded-full p-px transition-all shadow-[0_2px_12px_rgba(20,18,32,0.05)] hover:opacity-95"
-          style={{ backgroundImage: "linear-gradient(90deg, #EC0C8C 0%, #3A1D8A 58.35%, #FFFFFF 100%)" }}
+          className="relative -mt-1 flex items-center gap-1.5 rounded-full bg-brand-pink px-4 py-2 text-xs font-semibold text-white shadow-[0_4px_16px_rgba(236,12,140,0.35)] transition hover:bg-brand-pink/90"
         >
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--dashboard-card-bg)]/90 px-4 py-2 text-xs font-semibold text-[var(--dashboard-text)] backdrop-blur-md transition group-hover:bg-[var(--dashboard-card-bg)]/70">
-            {effectiveOpen ? t("Réduire", "Show less") : t(`Voir tout le contenu (+${hidden.length})`, `Show all content (+${hidden.length})`)}
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              className={`h-3 w-3 shrink-0 transition-transform ${effectiveOpen ? "rotate-180" : ""}`}
-            >
-              <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
+          {effectiveOpen ? t("Réduire", "Show less") : t(`Voir tout le contenu (+${hidden.length})`, `Show all content (+${hidden.length})`)}
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className={`h-3 w-3 shrink-0 transition-transform ${effectiveOpen ? "rotate-180" : ""}`}
+          >
+            <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
       </div>
     </>
@@ -917,6 +914,43 @@ function pseudoNoise(seed: number) {
 }
 
 /*
+  Seed déterministe dérivé de la période choisie sur le sélecteur
+  année/mois/jour du DashboardHeader (cf. [[dashboard-mock-data-pending-laravel-api]]
+  — mock en attendant l'API Laravel) : permet à chaque section (Finances,
+  Commandes, Clients, Litiges, Stock, Produits, Partenaire) de faire varier
+  ses chiffres selon la période affichée, sans dépendre de Math.random
+  (SSR/hydratation identiques) ni d'un vrai backend. Une même date donne
+  toujours le même seed, donc les mêmes chiffres.
+*/
+export function periodSeed(date: Date): number {
+  return date.getFullYear() * 372 + date.getMonth() * 31 + date.getDate();
+}
+
+// 1er août 2026 : date par défaut du sélecteur (DashboardHeader,
+// app/dashboard/accueil/page.tsx) et donc de tout premier rendu, sans clic
+// utilisateur — les chiffres mock ont été calés sur la maquette ("Écran 02 ·
+// Accueil", cf. [[dashboard-mock-data-pending-laravel-api]]) pour CETTE
+// date précise. scaleForPeriod court-circuite le bruit à cette période pour
+// que le premier rendu affiche exactement ces chiffres, identiques à la
+// maquette ; seul un vrai changement de période (clic année/mois/jour) les
+// fait varier.
+const BASELINE_SEED = periodSeed(new Date(2026, 7, 1));
+
+/*
+  Fait varier `base` d'un facteur déterministe dans [1 - variance, 1 +
+  variance] selon `seed` (cf. periodSeed) et `key` (un nombre arbitraire par
+  statistique, pour que deux stats de la même carte ne bougent pas à
+  l'identique). Résultat arrondi à l'entier le plus proche — les mock actuels
+  sont tous des quantités/montants entiers. À la période par défaut
+  (BASELINE_SEED), renvoie `base` tel quel (cf. commentaire ci-dessus).
+*/
+export function scaleForPeriod(base: number, seed: number, key = 0, variance = 0.35): number {
+  if (seed === BASELINE_SEED) return base;
+  const factor = 1 - variance + pseudoNoise(seed * 12.9898 + key * 78.233) * variance * 2;
+  return Math.round(base * factor);
+}
+
+/*
   Grand graphe en aire (Trésorerie / Trésorerie attendue), façon ticker
   boursier (cf. capture Yahoo Finance envoyée) : segments DROITS (pas de
   lissage Bézier) subdivisés en micro-dents façon cours de bourse — chaque
@@ -1276,6 +1310,75 @@ export function WaterfallChart({
       </div>
     </div>
   );
+}
+
+/*
+  Skeleton d'une Card (cf. Card ci-dessus) : même forme/ombre/arrondi, juste
+  un titre + quelques barres en pulse à la place du contenu réel — affiché
+  pendant SectionSkeleton (chargement de l'onglet Accueil) avant que les 7
+  sections (Finances, Commandes, Clients...) ne se montent.
+*/
+export function CardSkeleton({ className = "", lines = 3 }: { className?: string; lines?: number }) {
+  return (
+    <div className={`rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] ${className}`}>
+      <div className="h-3 w-24 animate-pulse rounded-full bg-[var(--dashboard-text)]/10" />
+      <div className="mt-4 space-y-2.5">
+        {Array.from({ length: lines }).map((_, i) => (
+          <div
+            key={i}
+            className="h-2.5 animate-pulse rounded-full bg-[var(--dashboard-text)]/[0.08]"
+            style={{ width: `${85 - i * 14}%` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/*
+  Skeleton d'une section entière (badge/titre + grille de CardSkeleton) —
+  une par onglet (Finances, Commandes, Clients, Litiges, Stock, Produits,
+  Partenaire) pendant le court chargement simulé de l'onglet Accueil (cf.
+  [[dashboard-mock-data-pending-laravel-api]] : pas encore de vraie requête
+  à attendre, juste le temps de laisser les cartes réelles se monter sans
+  à-coup visuel).
+*/
+export function SectionSkeleton({ first = false, cards = 3 }: { first?: boolean; cards?: number }) {
+  return (
+    <div className={first ? "mt-8" : "mt-12"}>
+      <div className="mb-4 h-7 w-40 animate-pulse rounded-full bg-[var(--dashboard-text)]/10" />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: cards }).map((_, i) => (
+          <CardSkeleton key={i} lines={2 + (i % 3)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/*
+  État "saving" pour tout bouton d'action du dashboard (Enregistrer, Créer,
+  Envoyer…) qui n'a encore aucun endpoint Laravel derrière lui, cf. mémoire
+  [[dashboard-mock-data-pending-laravel-api]]. Sans backend, ces clics
+  changeaient l'état instantanément — aucun retour visuel entre le clic et
+  la confirmation. Ce hook rejoue le délai qu'un vrai appel réseau aura
+  (courte phase "saving" avant "done") pour que le clic donne toujours un
+  retour immédiat, quel que soit l'écran.
+*/
+export function useMockSave(pendingMs = 500, confirmMs = 1800) {
+  const [status, setStatus] = useState<"idle" | "saving" | "done">("idle");
+
+  const trigger = (onDone?: () => void) => {
+    if (status === "saving") return;
+    setStatus("saving");
+    setTimeout(() => {
+      setStatus("done");
+      onDone?.();
+      setTimeout(() => setStatus("idle"), confirmMs);
+    }, pendingMs);
+  };
+
+  return { status, saving: status === "saving", done: status === "done", trigger };
 }
 
 export function Table({

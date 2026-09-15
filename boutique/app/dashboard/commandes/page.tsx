@@ -16,7 +16,7 @@ import LireUneLigne from "../../components/dashboard-commandes/LireUneLigne";
   tab choisi → une seule fiche, via CommandesNav.
 */
 
-const SECTIONS: Record<CommandesTab, React.ComponentType<{ first?: boolean; recherche?: string }>> = {
+const SECTIONS: Record<CommandesTab, React.ComponentType<{ first?: boolean; recherche?: string; activeDate?: Date }>> = {
   commandes: CommandesListe,
   "lire-une-ligne": LireUneLigne,
 };
@@ -32,6 +32,13 @@ export default function CommandesPage() {
     initialTab && TAB_ORDER.includes(initialTab as CommandesTab) ? (initialTab as CommandesTab) : null
   );
   const [recherche, setRecherche] = useState("");
+  // Même défaut/pattern que app/dashboard/accueil/page.tsx : levé ici pour
+  // être redescendu à CommandesListe (montants mock + libellés "Aujourd'hui"/
+  // "Hier") et à LireUneLigne (libellé de date de son exemple), cf.
+  // [[dashboard-mock-data-pending-laravel-api]]. LireUneLigne garde ses
+  // commandes d'exemple figées — fiche pédagogique — mais la date affichée
+  // suit désormais le sélecteur, comme partout ailleurs dans le dashboard.
+  const [activeDate, setActiveDate] = useState(() => new Date(2026, 7, 1));
 
   const handleChange = useCallback(
     (tab: CommandesTab | null) => {
@@ -48,7 +55,7 @@ export default function CommandesPage() {
         <DashboardSidebar />
 
         <div className="min-w-0 flex-1 lg:px-6">
-          <DashboardHeader />
+          <DashboardHeader activeDate={activeDate} onActiveDateChange={setActiveDate} />
           <DashboardSearchBar onChange={setRecherche} />
           <CommandesNav active={activeTab} onChange={handleChange} />
 
@@ -56,13 +63,13 @@ export default function CommandesPage() {
             <>
               {TAB_ORDER.map((tab, index) => {
                 const Section = SECTIONS[tab];
-                return <Section key={tab} first={index === 0} recherche={recherche} />;
+                return <Section key={tab} first={index === 0} recherche={recherche} activeDate={activeDate} />;
               })}
             </>
           ) : (
             (() => {
               const ActiveSection = SECTIONS[activeTab];
-              return <ActiveSection first recherche={recherche} />;
+              return <ActiveSection first recherche={recherche} activeDate={activeDate} />;
             })()
           )}
         </div>
