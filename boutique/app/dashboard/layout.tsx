@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { DashboardThemeProvider, STORAGE_KEY } from "../components/DashboardThemeProvider";
 import { DashboardLanguageProvider, LANG_STORAGE_KEY, type Langue } from "../components/DashboardLanguageProvider";
+import { DashboardBoutiqueLogoProvider } from "../components/DashboardBoutiqueLogoProvider";
 
 /*
   Layout partagé par toutes les pages du dashboard ("Ma journée",
@@ -50,8 +51,10 @@ export default async function DashboardLayout({
   return (
     <DashboardThemeProvider>
       <DashboardLanguageProvider initialLangue={initialLangue}>
-        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
-        {children}
+        <DashboardBoutiqueLogoProvider>
+          <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
+          {children}
+        </DashboardBoutiqueLogoProvider>
       </DashboardLanguageProvider>
     </DashboardThemeProvider>
   );

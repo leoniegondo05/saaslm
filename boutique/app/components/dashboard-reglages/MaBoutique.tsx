@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Card, SectionHeader, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
+import { useDashboardBoutiqueLogo } from "../DashboardBoutiqueLogoProvider";
 
 /*
   Écran 25 "Réglages · Ma boutique" : identité, adresse d'enlèvement, et
@@ -64,6 +65,22 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
   const [identite, setIdentite] = useState(IDENTITE_INIT);
   const [enlevement, setEnlevement] = useState(ENLEVEMENT_INIT);
   const { saving, done, trigger } = useMockSave();
+  const { logo, setLogo } = useDashboardBoutiqueLogo();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Aperçu local uniquement (FileReader → data URL), même limite que
+  // MonProfil.tsx : aucun endpoint Laravel n'existe encore pour l'upload.
+  const handlePickLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > 5 * 1024 * 1024) return; // 5 Mo, garde-fou simple
+
+    const reader = new FileReader();
+    reader.onload = () => setLogo(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   return (
     <>
@@ -91,6 +108,34 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
 
       <div className="grid gap-3">
         <Card title={t("Identité", "Identity")} titleTab className="!bg-[var(--dashboard-card-bg)]">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="group relative h-16 w-16 shrink-0 overflow-hidden rounded-full border-[3px] border-[var(--dashboard-card-bg)] shadow-[0_2px_10px_rgba(20,18,32,0.1)]">
+              {logo ? (
+                // eslint-disable-next-line @next/next/no-img-element -- aperçu local (data URL), pas une image du domaine
+                <img src={logo} alt={t("Logo de la boutique", "Shop logo")} className="h-full w-full object-cover" />
+              ) : (
+                <div
+                  className="h-full w-full"
+                  style={{ background: "linear-gradient(140deg,var(--color-brand-pink),var(--color-brand-purple))" }}
+                />
+              )}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label={t("Changer le logo de la boutique", "Change shop logo")}
+                className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[var(--dashboard-card-bg)] bg-[#141220] text-white shadow-[0_2px_10px_rgba(0,0,0,0.25)] transition hover:brightness-110 dark:bg-brand-pink"
+              >
+                <CameraIcon />
+              </button>
+            </div>
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePickLogo} className="hidden" />
+            <div>
+              <p className="text-xs font-semibold text-[var(--dashboard-text)]">{t("Logo de la boutique", "Shop logo")}</p>
+              <p className="text-[11px] text-[var(--dashboard-text)]/50">
+                {t("Affiché dans le header du dashboard.", "Shown in the dashboard header.")}
+              </p>
+            </div>
+          </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Champ
               label={t("Nom de la boutique", "Shop name")}
@@ -209,6 +254,15 @@ function Champ({
         />
       )}
     </div>
+  );
+}
+
+function CameraIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3" aria-hidden>
+      <path d="M4 8.5a1.5 1.5 0 0 1 1.5-1.5h1.7l1-1.6h7.6l1 1.6h1.7A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5v-9Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <circle cx="12" cy="13" r="3.2" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
   );
 }
 

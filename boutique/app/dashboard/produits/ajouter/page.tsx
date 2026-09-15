@@ -1,11 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import DashboardHeader from "../../../components/DashboardHeader";
 import DashboardSidebar from "../../../components/DashboardSidebar";
 import AjouterProduitModal from "../../../components/dashboard-produits/ajouter-produit/AjouterProduitModal";
 import { CATEGORIES_DEFAUT } from "../../../components/dashboard-produits/ajouter-produit/categoriesDefaut";
-import { definirProduitEnAttente, ajouterCategorieEnAttente } from "../../../components/dashboard-produits/ajouter-produit/pendingProduitStore";
+import {
+  definirProduitEnAttente,
+  ajouterCategorieEnAttente,
+  lireEtViderEditionAOuvrir,
+  definirEditionEnAttente,
+} from "../../../components/dashboard-produits/ajouter-produit/pendingProduitStore";
 
 /*
   Écran "Ajouter un produit" — page à part (plus un simple toggle de state
@@ -25,6 +31,11 @@ import { definirProduitEnAttente, ajouterCategorieEnAttente } from "../../../com
 */
 export default function AjouterProduitPage() {
   const router = useRouter();
+  // Lu une seule fois, à l'initialisation du state (pas en useEffect) : le
+  // formulaire doit recevoir `initial` dès son tout premier rendu, sinon ses
+  // useState internes se figent déjà sur leurs valeurs vides (cf.
+  // pendingProduitStore.ts pour le pont "Modifier").
+  const [edition] = useState(() => lireEtViderEditionAOuvrir());
 
   return (
     <div className="min-h-screen w-full bg-[var(--dashboard-bg)] font-sans text-[var(--dashboard-text)] antialiased transition-colors">
@@ -35,9 +46,15 @@ export default function AjouterProduitPage() {
           <DashboardHeader />
           <AjouterProduitModal
             categoriesInitiales={CATEGORIES_DEFAUT}
+            initial={edition?.initial}
+            modeEdition={!!edition}
             onFermer={() => router.push("/dashboard/produits")}
             onCreer={(produit, statut) => {
-              definirProduitEnAttente(produit, statut);
+              if (edition) {
+                definirEditionEnAttente(edition.nomOriginal, produit, statut);
+              } else {
+                definirProduitEnAttente(produit, statut);
+              }
               router.push("/dashboard/produits");
             }}
             onCategorieCreee={(categorie) => ajouterCategorieEnAttente(categorie)}

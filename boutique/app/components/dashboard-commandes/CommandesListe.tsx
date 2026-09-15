@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { Card, periodSeed, scaleForPeriod, SectionHeader, Tag } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import {
@@ -98,8 +98,39 @@ export default function CommandesListe({
     const livrees = toutes.filter((c) => c.statut.type === "livree" || c.statut.type === "disponible").length;
     const encaisse = toutes.filter((c) => !estSuspendue(c)).reduce((s, c) => s + netDe(c), 0);
     const suspendu = toutes.filter(estSuspendue).reduce((s, c) => s + netDe(c), 0);
-    return { total: toutes.length, livrees, encaisse, suspendu };
+    const litiges = toutes.filter((c) => c.statut.type === "litige").length;
+    return { total: toutes.length, livrees, encaisse, suspendu, litiges };
   }, [jours]);
+
+  // Répartition par statut (donut) : chaque commande range dans une seule
+  // des 5 catégories — mêmes couleurs que le reste de l'écran (StatutBloc,
+  // ETAPES, ISSUES) pour qu'un même statut garde toujours la même couleur.
+  const repartitionStatut = useMemo(() => {
+    const toutes = jours.flatMap((j) => j.commandes);
+    const categories = [
+      { label: t("En cours", "In progress"), couleur: "#5AA9FF", count: toutes.filter((c) => c.statut.type === "etape").length },
+      { label: t("Livrée", "Delivered"), couleur: "#178a3f", count: toutes.filter((c) => c.statut.type === "livree" || c.statut.type === "disponible").length },
+      { label: t("Refusée", "Refused"), couleur: "#c8262d", count: toutes.filter((c) => c.statut.type === "refusee").length },
+      { label: t("Litige", "Dispute"), couleur: "#a8690a", count: toutes.filter((c) => c.statut.type === "litige").length },
+      { label: t("Relancée", "Relaunched"), couleur: "#3a1d8a", count: toutes.filter((c) => c.statut.type === "relance").length },
+    ].filter((c) => c.count > 0);
+    return { categories, total: toutes.length };
+  }, [jours, t]);
+
+  // Payé (brut) vs Encaissé (net, hors commandes suspendues) par jour — les
+  // deux nombres que le sous-titre de l'écran annonce déjà ("ce que le
+  // client a payé" / "ce qui vous revient"), juste mis en barres au lieu de
+  // texte. Pas de fausse série temporelle : que les jours réellement dans
+  // JOURS (aujourd'hui/hier).
+  const payeVsEncaisse = useMemo(
+    () =>
+      jours.map((j) => ({
+        label: t(j.date, j.dateEn).split(" · ")[0],
+        paye: j.commandes.reduce((s, c) => s + c.montantPaye, 0),
+        encaisse: j.commandes.filter((c) => !estSuspendue(c)).reduce((s, c) => s + netDe(c), 0),
+      })),
+    [jours, t]
+  );
 
   return (
     <>
@@ -114,21 +145,29 @@ export default function CommandesListe({
         layout="inline"
       />
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-3">
-        <Card className="!bg-[var(--dashboard-glass)]">
-          <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Commandes", "Orders")}</p>
-          <p className="mt-1 text-2xl font-bold tracking-tight">{totaux.total}</p>
-          <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t(`${totaux.livrees} livrées`, `${totaux.livrees} delivered`)}</p>
+      {/* 4 tuiles, médaillon coloré en coin — même langage visuel que la
+          page Produits (cf. StatCell de ProduitsCatalogue.tsx) : label
+          discret, gros chiffre, accent couleur, sans dupliquer le
+          composant (pages restent indépendantes, pas de nouveau composant
+          partagé pour ça). */}
+      <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiTile label={t("Commandes", "Orders")} value={totaux.total} note={t(`${totaux.livrees} livrées`, `${totaux.livrees} delivered`)} dot="#141220" />
+        <KpiTile label={t("Encaissé", "Collected")} value={formatCfa(totaux.encaisse)} note={t("net, hors litiges", "net, disputes excluded")} dot="#178a3f" valueClassName="text-[#178a3f]" />
+        <KpiTile label={t("Suspendu", "Suspended")} value={formatCfa(totaux.suspendu)} note={t("en attente de résolution", "pending resolution")} dot="#a8690a" valueClassName="text-[#a8690a]" />
+        <KpiTile label={t("Litiges", "Disputes")} value={totaux.litiges} note={t("sur la période", "this period")} dot="#a8690a" />
+      </div>
+
+      {/* Deux graphes, inspirés de la référence envoyée (barres + anneau) :
+          à gauche payé vs encaissé jour par jour (reprend exactement le
+          sous-titre de l'écran, juste en barres), à droite la répartition
+          des commandes par statut — mêmes couleurs que StatutBloc plus bas,
+          pas de nouvelle légende à apprendre. */}
+      <div className="mt-3 grid gap-3 lg:grid-cols-[1.6fr_1fr]">
+        <Card title={t("Payé vs encaissé", "Paid vs collected")} className="!bg-[var(--dashboard-glass)]">
+          <PayeEncaisseBarChart data={payeVsEncaisse} />
         </Card>
-        <Card className="!bg-[var(--dashboard-glass)]">
-          <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Encaissé", "Collected")}</p>
-          <p className="mt-1 text-2xl font-bold tracking-tight text-[#178a3f]">{formatCfa(totaux.encaisse)}</p>
-          <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("net, hors litiges", "net, disputes excluded")}</p>
-        </Card>
-        <Card className="!bg-[var(--dashboard-glass)]">
-          <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Suspendu", "Suspended")}</p>
-          <p className="mt-1 text-2xl font-bold tracking-tight text-[#a8690a]">{formatCfa(totaux.suspendu)}</p>
-          <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("en attente de résolution", "pending resolution")}</p>
+        <Card title={t("Répartition par statut", "Status breakdown")} className="!bg-[var(--dashboard-glass)]">
+          <StatutDonut categories={repartitionStatut.categories} total={repartitionStatut.total} />
         </Card>
       </div>
 
@@ -366,5 +405,145 @@ function NombreEtMot({ nombre, mot, couleur }: { nombre: number; mot: string; co
       </span>
       <span className="text-[10px] text-[var(--dashboard-text)]/45">{mot}</span>
     </span>
+  );
+}
+
+function KpiTile({
+  label,
+  value,
+  note,
+  dot,
+  valueClassName = "",
+}: {
+  label: string;
+  value: string | number;
+  note?: string;
+  dot: string;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="rounded-2xl bg-[var(--dashboard-glass)] p-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ background: `${dot}1F` }}>
+          <span className="h-2 w-2 rounded-full" style={{ background: dot }} />
+        </span>
+      </div>
+      <p className={`mt-2 text-2xl font-bold tracking-tight ${valueClassName}`}>{value}</p>
+      {note && <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{note}</p>}
+    </div>
+  );
+}
+
+/*
+  Barres appairées payé (clair) / encaissé (foncé) par jour — inspirées de
+  la référence envoyée (paires de barres bleues par jour), mais sur deux
+  vraies valeurs de l'écran plutôt que deux années arbitraires. Grille
+  pointillée horizontale même idée que la référence.
+*/
+function PayeEncaisseBarChart({ data }: { data: { label: string; paye: number; encaisse: number }[] }) {
+  const { t } = useDashboardLangue();
+  const max = Math.max(...data.flatMap((d) => [d.paye, d.encaisse]), 1);
+  const ticks = 4;
+  return (
+    <div className="mt-2">
+      <div className="flex items-center gap-4 text-[10px] text-[var(--dashboard-text)]/45">
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-[#5AA9FF]" />
+          {t("Payé", "Paid")}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-[#011847]" />
+          {t("Encaissé", "Collected")}
+        </span>
+      </div>
+
+      <div className="relative mt-3 h-40">
+        {Array.from({ length: ticks + 1 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute inset-x-0 border-t border-dashed border-[var(--dashboard-text)]/10"
+            style={{ top: `${(i / ticks) * 100}%` }}
+          />
+        ))}
+        <div className="relative flex h-full items-end justify-around gap-6 px-2">
+          {data.map((d) => (
+            <div key={d.label} className="flex h-full items-end gap-1.5">
+              <div
+                className="w-4 rounded-t-md bg-[#5AA9FF] sm:w-6"
+                style={{ height: `${Math.max((d.paye / max) * 100, 3)}%` }}
+                title={formatCfa(d.paye)}
+              />
+              <div
+                className="w-4 rounded-t-md bg-[#011847] sm:w-6"
+                style={{ height: `${Math.max((d.encaisse / max) * 100, 3)}%` }}
+                title={formatCfa(d.encaisse)}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="mt-2 flex items-center justify-around gap-6 px-2">
+        {data.map((d) => (
+          <p key={d.label} className="text-center text-[10px] font-semibold text-[var(--dashboard-text)]/50">
+            {d.label}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/*
+  Anneau de répartition par statut — segments proportionnels au nombre de
+  commandes par catégorie, mêmes couleurs que StatutBloc/ETAPES/ISSUES plus
+  haut sur l'écran. Légende à droite/dessous plutôt qu'au survol : cohérent
+  avec le reste du dashboard qui n'a pas de tooltip de graphe.
+*/
+function StatutDonut({ categories, total }: { categories: { label: string; couleur: string; count: number }[]; total: number }) {
+  const uid = useId().replace(/:/g, "");
+  const size = 120;
+  const stroke = 16;
+  const r = (size - stroke) / 2;
+  const circonference = 2 * Math.PI * r;
+  let cumul = 0;
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-5">
+      <svg viewBox={`0 0 ${size} ${size}`} className="h-28 w-28 shrink-0 -rotate-90" aria-hidden>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--dashboard-text)" strokeOpacity="0.06" strokeWidth={stroke} />
+        {categories.map((c) => {
+          const part = total > 0 ? c.count / total : 0;
+          const dash = part * circonference;
+          const offset = -cumul * circonference;
+          cumul += part;
+          return (
+            <circle
+              key={`${uid}-${c.label}`}
+              cx={size / 2}
+              cy={size / 2}
+              r={r}
+              fill="none"
+              stroke={c.couleur}
+              strokeWidth={stroke}
+              strokeDasharray={`${dash} ${circonference - dash}`}
+              strokeDashoffset={offset}
+              strokeLinecap={categories.length > 1 ? "butt" : "round"}
+            />
+          );
+        })}
+      </svg>
+      <div className="min-w-0 flex-1 space-y-1.5">
+        {categories.map((c) => (
+          <div key={c.label} className="flex items-center justify-between gap-3 text-xs">
+            <span className="flex items-center gap-1.5 text-[var(--dashboard-text)]/60">
+              <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: c.couleur }} />
+              {c.label}
+            </span>
+            <span className="font-semibold">{c.count}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
