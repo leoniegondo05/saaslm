@@ -276,7 +276,13 @@ export function AnneauCompteARebours({
   const rayon = size === 36 ? 15 : (size / 36) * 15;
   const circonference = 2 * Math.PI * rayon;
   const pct = Math.min(1, Math.max(0, heuresRestantes / DELAI_DISPONIBILITE));
-  const offset = circonference * pct;
+  // Échelle en racine (pct^0.4, pas pct brut) : en linéaire, tout ce qui
+  // passe sous ~1h sur les 72h totales donne un offset quasi nul, donc un
+  // arc visible quasi complet — indiscernable du rond plein "Disponible"
+  // (cf. capture envoyée, anneau "58 min" qui semblait figé/complet alors
+  // qu'il restait du temps). La racine étire l'écart près de la fin tout en
+  // gardant 0h→anneau vide et 72h→anneau plein aux deux bouts.
+  const offset = circonference * Math.pow(pct, 0.4);
   const centre = size / 2;
 
   return (
@@ -295,7 +301,17 @@ export function AnneauCompteARebours({
           strokeDashoffset={offset}
         />
       </svg>
-      <span className="text-[9px] font-bold text-[var(--dashboard-text)]">{etiquette ?? `${heuresRestantes}h`}</span>
+      {/* "58 min"/"2 min" (étiquette custom, cf. Palier dans LireUneLigne)
+          sont plus longs que "72h"/"6h" — même taille de texte fixe pour
+          tous, ça collait aux bords du cercle. Police plus petite au-delà
+          de 4 caractères pour garder de l'air. */}
+      <span
+        className={`font-bold text-[var(--dashboard-text)] ${
+          (etiquette ?? `${heuresRestantes}h`).length > 4 ? "text-[7px]" : "text-[9px]"
+        }`}
+      >
+        {etiquette ?? `${heuresRestantes}h`}
+      </span>
     </div>
   );
 }

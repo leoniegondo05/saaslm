@@ -33,6 +33,38 @@ export function lireEtViderProduitEnAttente() {
   return valeur;
 }
 
+/*
+  Même pont, sens inverse, pour "Modifier" (fiche produit, voir
+  ProduitsCatalogue.tsx) : `editionAOuvrir` porte les valeurs à préremplir
+  vers la page /ajouter (lu à son montage), `editionEnAttente` porte le
+  résultat au retour — identifié par `nomOriginal` plutôt qu'un id (le
+  catalogue mock n'en a pas encore, cf.
+  [[dashboard-mock-data-pending-laravel-api]]), pour retrouver la bonne
+  ligne même si l'ordre du tableau a changé entre-temps.
+*/
+let editionAOuvrir: { nomOriginal: string; initial: Partial<NouveauProduit> } | null = null;
+let editionEnAttente: { nomOriginal: string; produit: NouveauProduit; statut: "brouillon" | "publie" } | null = null;
+
+export function ouvrirEditionProduit(nomOriginal: string, initial: Partial<NouveauProduit>) {
+  editionAOuvrir = { nomOriginal, initial };
+}
+
+export function lireEtViderEditionAOuvrir() {
+  const valeur = editionAOuvrir;
+  editionAOuvrir = null;
+  return valeur;
+}
+
+export function definirEditionEnAttente(nomOriginal: string, produit: NouveauProduit, statut: "brouillon" | "publie") {
+  editionEnAttente = { nomOriginal, produit, statut };
+}
+
+export function lireEtViderEditionEnAttente() {
+  const valeur = editionEnAttente;
+  editionEnAttente = null;
+  return valeur;
+}
+
 export function ajouterCategorieEnAttente(categorie: Categorie) {
   categoriesEnAttente = [...categoriesEnAttente, categorie];
 }

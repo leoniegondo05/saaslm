@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useDashboardLangue } from "./DashboardLanguageProvider";
+import { useDashboardBoutiqueLogo } from "./DashboardBoutiqueLogoProvider";
 import type { AccueilTab } from "./dashboard-accueil/AccueilNav";
 import AssistanceLMModal from "./dashboard-accueil/AssistanceLMModal";
 
@@ -185,6 +186,7 @@ export default function DashboardHeader({
   // app/dashboard/layout.tsx), même pattern que le mode nuit ci-dessous, pour
   // que le bascule agisse sur tout le dashboard et pas juste ce menu.
   const { langue, t } = useDashboardLangue();
+  const { logo: boutiqueLogo } = useDashboardBoutiqueLogo();
 
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   const [notifFiltre, setNotifFiltre] = useState<"tout" | CategorieNotif>("tout");
@@ -502,16 +504,24 @@ export default function DashboardHeader({
           </span>
         </Link>
 
-        {/* Icône boutique : accès direct à la fiche "Ma boutique" (Réglages).
-            Le bouton de compte (avatar, menu profil/sécurité/déconnexion…)
-            a été déplacé dans le rail de nav, sous l'icône Réglages — voir
-            DashboardSidebar.tsx. */}
+        {/* Logo de la boutique connectée : accès direct à la fiche "Ma
+            boutique" (Réglages), où il est déposé — voir MaBoutique.tsx et
+            DashboardBoutiqueLogoProvider.tsx. Pas encore de logo déposé
+            (mock, aucun endpoint Laravel) : repli sur l'icône générique
+            ShopIcon. Le bouton de compte (avatar, menu
+            profil/sécurité/déconnexion…) a été déplacé dans le rail de nav,
+            sous l'icône Réglages — voir DashboardSidebar.tsx. */}
         <Link
           href="/dashboard/reglages?tab=ma-boutique"
           aria-label={t("Ma boutique", "My shop")}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15"
+          className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15"
         >
-          <ShopIcon />
+          {boutiqueLogo ? (
+            // eslint-disable-next-line @next/next/no-img-element -- aperçu local (data URL), pas une image du domaine
+            <img src={boutiqueLogo} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <ShopIcon />
+          )}
         </Link>
       </div>
       </div>

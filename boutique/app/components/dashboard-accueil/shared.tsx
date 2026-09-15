@@ -511,11 +511,15 @@ export function Btn({
   variant = "outline",
   className = "",
   style,
+  onClick,
+  disabled = false,
 }: {
   children: React.ReactNode;
   variant?: "dark" | "outline" | "white";
   className?: string;
   style?: React.CSSProperties;
+  onClick?: () => void;
+  disabled?: boolean;
 }) {
   const variants: Record<string, string> = {
     dark: "bg-[#141220] text-white dark:bg-brand-pink",
@@ -525,7 +529,9 @@ export function Btn({
   return (
     <button
       type="button"
-      className={`w-full rounded-full px-4 py-2.5 text-center text-xs font-semibold transition hover:brightness-95 ${variants[variant]} ${className}`}
+      onClick={onClick}
+      disabled={disabled}
+      className={`w-full rounded-full px-4 py-2.5 text-center text-xs font-semibold transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
       style={style}
     >
       {children}

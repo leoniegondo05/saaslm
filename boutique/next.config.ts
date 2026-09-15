@@ -14,7 +14,12 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
+            // geolocation=(self) : le bouton "Capturer ma position" du
+            // formulaire "Déposer un stock" (DeposerStockModal.tsx) en a
+            // besoin — bloqué en () avant, c'était la vraie cause des
+            // erreurs "Permissions policy violation" côté geolocalisation,
+            // pas l'aperçu éditeur. Caméra/micro restent bloqués (inutilisés).
+            value: "camera=(), microphone=(), geolocation=(self)",
           },
         ],
       },

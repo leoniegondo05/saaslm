@@ -2,12 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Btn, Card, Divider, HeaderActionBtn, Nature, ProductSelector, SectionHeader, StatRow, Tag, Trend } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import CreerCategorieModal from "../dashboard-produits/CreerCategorieModal";
+import DeposerStockModal, { type DepotValide } from "../dashboard-produits/DeposerStockModal";
 import { CATEGORIES_DEFAUT } from "../dashboard-produits/ajouter-produit/categoriesDefaut";
-import { lireEtViderProduitEnAttente, lireEtViderCategoriesEnAttente } from "../dashboard-produits/ajouter-produit/pendingProduitStore";
+import {
+  lireEtViderProduitEnAttente,
+  lireEtViderCategoriesEnAttente,
+  lireEtViderEditionEnAttente,
+  ouvrirEditionProduit,
+} from "../dashboard-produits/ajouter-produit/pendingProduitStore";
+import { lireEtViderDepotEnAttente } from "../dashboard-produits/pendingDepotStore";
 import type { Categorie, NouveauProduit } from "../dashboard-produits/ajouter-produit/types";
 
 /*
@@ -30,7 +38,7 @@ import type { Categorie, NouveauProduit } from "../dashboard-produits/ajouter-pr
 type Nature4 = "S" | "P" | "L";
 type Etat = { label: string; labelEn: string; tone: "ok" | "warn" | "ko" };
 
-type Produit = {
+export type Produit = {
   nom: string;
   nomEn: string;
   nature: Nature4;
@@ -50,22 +58,50 @@ type Produit = {
   categorieId?: string | null; // id d'une Categorie (voir ajouter-produit/types.ts) — absent pour les produits d'exemple ci-dessous
 };
 
-const PRODUITS_INITIAUX: Produit[] = [
-  { nom: "Montre connectée S8", nomEn: "S8 connected watch", nature: "L", achat: 6200, vente: 14000, stock: 340, vendu: 48, margePct: 31, avis: 4.5, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 1660, couverture: "21 jours", couvertureEn: "21 days", litiges: 3, tendance: [5, 6, 5, 7, 6, 8, 7, 9, 10, 11] },
-  { nom: "Sérum éclat 30 ml", nomEn: "Radiance serum 30 ml", nature: "S", achat: 4300, vente: 12000, stock: 83, vendu: 37, margePct: 46, avis: 4.7, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 2180, couverture: "22 jours", couvertureEn: "22 days", litiges: 0, tendance: [4, 5, 4, 6, 5, 7, 6, 8, 9, 5] },
-  { nom: "Casque sans fil X2", nomEn: "X2 wireless headset", nature: "P", achat: 4800, vente: 11000, stock: 96, vendu: 21, margePct: 34, avis: 3.4, etat: { label: "Avis négatifs", labelEn: "Negative reviews", tone: "warn" }, fraisPreleves: 1420, couverture: "13 jours", couvertureEn: "13 days", litiges: 1, tendance: [6, 6, 5, 5, 4, 4, 3, 3, 2, 1] },
-  { nom: "Huile de ricin 100 ml", nomEn: "Castor oil 100 ml", nature: "S", achat: 2600, vente: 7500, stock: 2, vendu: 58, margePct: 44, avis: 4.8, etat: { label: "Rupture · 1 j", labelEn: "Out of stock · 1 day", tone: "ko" }, fraisPreleves: 1580, couverture: "1 jour", couvertureEn: "1 day", litiges: 0, tendance: [7, 8, 7, 9, 10, 11, 12, 13, 12, 14] },
-  { nom: "Beurre de karité 200 g", nomEn: "Shea butter 200 g", nature: "S", achat: 4100, vente: 9000, stock: 127, vendu: 73, margePct: 42, avis: 4.6, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 1120, couverture: "34 jours", couvertureEn: "34 days", litiges: 0, tendance: [8, 8, 7, 8, 9, 8, 9, 10, 9, 10] },
-  { nom: "Bracelet cuir", nomEn: "Leather bracelet", nature: "S", achat: 3800, vente: 6000, stock: 28, vendu: 2, margePct: 29, avis: 4.2, etat: { label: "Rotation lente", labelEn: "Slow turnover", tone: "warn" }, fraisPreleves: 460, couverture: "60+ jours", couvertureEn: "60+ days", litiges: 0, tendance: [2, 2, 1, 1, 1, 0, 1, 0, 1, 0] },
-  { nom: "Lotion tonique", nomEn: "Toning lotion", nature: "L", achat: 3800, vente: 8900, stock: 210, vendu: 9, margePct: 38, avis: 4.4, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 1440, couverture: "40 jours", couvertureEn: "40 days", litiges: 0, tendance: [3, 2, 3, 2, 3, 2, 4, 3, 4, 3] },
-  { nom: "Gel nettoyant", nomEn: "Cleansing gel", nature: "P", achat: 2200, vente: 6000, stock: 140, vendu: 4, margePct: 36, avis: null, etat: { label: "Jamais vendu", labelEn: "Never sold", tone: "warn" }, fraisPreleves: 940, couverture: "35 jours", couvertureEn: "35 days", litiges: 0, tendance: [0, 0, 0, 1, 0, 0, 1, 0, 0, 1] },
+// Images de test /images/1..8 (voir public/images) — juste pour avoir des
+// vignettes réelles pendant le développement, pas des vraies photos produit,
+// cf. [[dashboard-mock-data-pending-laravel-api]].
+export const PRODUITS_INITIAUX: Produit[] = [
+  { nom: "Montre connectée S8", nomEn: "S8 connected watch", nature: "L", achat: 6200, vente: 14000, stock: 340, vendu: 48, margePct: 31, avis: 4.5, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 1660, couverture: "21 jours", couvertureEn: "21 days", litiges: 3, tendance: [5, 6, 5, 7, 6, 8, 7, 9, 10, 11], images: ["/images/1.jpg"] },
+  { nom: "Sérum éclat 30 ml", nomEn: "Radiance serum 30 ml", nature: "S", achat: 4300, vente: 12000, stock: 83, vendu: 37, margePct: 46, avis: 4.7, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 2180, couverture: "22 jours", couvertureEn: "22 days", litiges: 0, tendance: [4, 5, 4, 6, 5, 7, 6, 8, 9, 5], images: ["/images/2.jpg"] },
+  { nom: "Casque sans fil X2", nomEn: "X2 wireless headset", nature: "P", achat: 4800, vente: 11000, stock: 96, vendu: 21, margePct: 34, avis: 3.4, etat: { label: "Avis négatifs", labelEn: "Negative reviews", tone: "warn" }, fraisPreleves: 1420, couverture: "13 jours", couvertureEn: "13 days", litiges: 1, tendance: [6, 6, 5, 5, 4, 4, 3, 3, 2, 1], images: ["/images/3.jpg"] },
+  { nom: "Huile de ricin 100 ml", nomEn: "Castor oil 100 ml", nature: "S", achat: 2600, vente: 7500, stock: 2, vendu: 58, margePct: 44, avis: 4.8, etat: { label: "Rupture · 1 j", labelEn: "Out of stock · 1 day", tone: "ko" }, fraisPreleves: 1580, couverture: "1 jour", couvertureEn: "1 day", litiges: 0, tendance: [7, 8, 7, 9, 10, 11, 12, 13, 12, 14], images: ["/images/4.jpg"] },
+  { nom: "Beurre de karité 200 g", nomEn: "Shea butter 200 g", nature: "S", achat: 4100, vente: 9000, stock: 127, vendu: 73, margePct: 42, avis: 4.6, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 1120, couverture: "34 jours", couvertureEn: "34 days", litiges: 0, tendance: [8, 8, 7, 8, 9, 8, 9, 10, 9, 10], images: ["/images/5.png"] },
+  { nom: "Bracelet cuir", nomEn: "Leather bracelet", nature: "S", achat: 3800, vente: 6000, stock: 28, vendu: 2, margePct: 29, avis: 4.2, etat: { label: "Rotation lente", labelEn: "Slow turnover", tone: "warn" }, fraisPreleves: 460, couverture: "60+ jours", couvertureEn: "60+ days", litiges: 0, tendance: [2, 2, 1, 1, 1, 0, 1, 0, 1, 0], images: ["/images/6.png"] },
+  { nom: "Lotion tonique", nomEn: "Toning lotion", nature: "L", achat: 3800, vente: 8900, stock: 210, vendu: 9, margePct: 38, avis: 4.4, etat: { label: "Actif", labelEn: "Active", tone: "ok" }, fraisPreleves: 1440, couverture: "40 jours", couvertureEn: "40 days", litiges: 0, tendance: [3, 2, 3, 2, 3, 2, 4, 3, 4, 3], images: ["/images/7.jpg"] },
+  { nom: "Gel nettoyant", nomEn: "Cleansing gel", nature: "P", achat: 2200, vente: 6000, stock: 140, vendu: 4, margePct: 36, avis: null, etat: { label: "Jamais vendu", labelEn: "Never sold", tone: "warn" }, fraisPreleves: 940, couverture: "35 jours", couvertureEn: "35 days", litiges: 0, tendance: [0, 0, 0, 1, 0, 0, 1, 0, 0, 1], images: ["/images/8.webp"] },
 ];
 
-// Code affiché dans la colonne "Source" du tableau : L (LM) et P (partenaire)
-// sont deux variantes de drop — on les affiche sous le même badge "D", S
-// (stockage) reste distinct. Le champ `nature` d'origine garde P/L intacts
-// pour les compteurs "dropPartenaire"/"dropLm" ci-dessous.
-const sourceBadge = (nature: Nature4) => (nature === "S" ? "S" : "D");
+// Couleur de la tuile-icône du tableau — reprend exactement la couleur de
+// nature déjà posée en badge à côté du nom (S bleu / P violet / L rose,
+// cf. Nature dans shared.tsx) : pas une couleur inventée, juste agrandie en
+// fond de tuile. Tant qu'aucune vraie photo produit n'existe côté serveur
+// (cf. [[dashboard-mock-data-pending-laravel-api]]), la tuile montre une
+// icône de catégorie plutôt qu'un lien vers un fichier qui n'existe pas.
+const NATURE_HEX: Record<Nature4, string> = { S: "#5AA9FF", P: "#3a1d8a", L: "#ec0c8c" };
+
+// Catégorie visuelle déduite du nom — juste pour choisir la bonne icône de
+// tuile (montre/flacon/casque/pot/bracelet), aucun lien avec `nature`
+// (stockage/drop) qui reste la seule info métier portée par la couleur.
+function iconeCategorie(nom: string) {
+  const n = nom.toLowerCase();
+  if (n.includes("montre")) return <MontreIcon />;
+  if (n.includes("casque")) return <CasqueIcon />;
+  if (n.includes("bracelet")) return <BraceletIcon />;
+  if (n.includes("beurre")) return <PotIcon />;
+  if (n.includes("sérum") || n.includes("huile") || n.includes("lotion") || n.includes("gel")) return <FlaconIcon />;
+  return <PhotoIcon />;
+}
+
+// Palier de performance de la ligne (jauge + libellé), dérivé de la marge —
+// même seuils/couleurs que le reste du dashboard : vert #178a3f (bon),
+// orange #a8690a (moyen), rouge #c8262d (mauvais), cf.
+// [[dashboard-chart-colors-stockage-drop]] pour la convention de couleurs.
+function performanceDeMarge(margePct: number): { label: string; labelEn: string; couleur: string } {
+  if (margePct >= 40) return { label: "Excellente", labelEn: "Excellent", couleur: "#178a3f" };
+  if (margePct >= 25) return { label: "Bonne", labelEn: "Good", couleur: "#a8690a" };
+  return { label: "Faible", labelEn: "Low", couleur: "#c8262d" };
+}
 
 /*
   Transforme la charge du formulaire "Ajouter un produit" en une ligne du
@@ -73,9 +109,10 @@ const sourceBadge = (nature: Nature4) => (nature === "S" ? "S" : "D");
   Laravel existe, c'est sa réponse (avec un vrai id, de vraies URLs de
   photos hébergées...) qui remplacera ce mapping, pas les composants du
   formulaire eux-mêmes — cf. [[dashboard-mock-data-pending-laravel-api]].
-  Les photos choisies restent pour l'instant dans le formulaire (fichiers
-  locaux, jamais uploadés) : sans endpoint de stockage, on n'affiche pas de
-  faux lien vers un fichier qui n'existe nulle part côté serveur.
+  Les photos choisies ne sont jamais uploadées (pas d'endpoint de stockage)
+  mais on les affiche quand même via URL.createObjectURL — un blob local au
+  navigateur, pas un lien vers un fichier serveur inexistant, même technique
+  que l'aperçu déjà fait dans MediaProduit.tsx.
 */
 function produitDepuisFormulaire(donnees: NouveauProduit, statut: "brouillon" | "publie"): Produit {
   const margePct = donnees.prixAchat !== null && donnees.prixVente > 0
@@ -101,18 +138,25 @@ function produitDepuisFormulaire(donnees: NouveauProduit, statut: "brouillon" | 
       : { label: "Actif", labelEn: "Active", tone: "ok" },
     litiges: 0,
     tendance: [0, 0, 0, 0, 0, 0],
+    images: donnees.photos.map((f) => URL.createObjectURL(f)),
   };
 }
 
 export default function ProduitsCatalogue({ first = true, recherche = "" }: { first?: boolean; recherche?: string }) {
+  const router = useRouter();
   const { t, langue } = useDashboardLangue();
   const numberLocale = langue === "EN" ? "en-US" : "fr-FR";
   const F = (n: number) => `${n.toLocaleString(numberLocale)} F`;
   const [produits, setProduits] = useState<Produit[]>(PRODUITS_INITIAUX);
   const [categories, setCategories] = useState<Categorie[]>(CATEGORIES_DEFAUT);
+  // Visibilité côté boutique — mock local (pas encore d'endpoint, cf.
+  // [[dashboard-mock-data-pending-laravel-api]]) : masquée par défaut pour
+  // un produit en rupture, visible pour le reste.
+  const [visibles, setVisibles] = useState<boolean[]>(() => PRODUITS_INITIAUX.map((p) => p.etat.tone !== "ko"));
   const [selected, setSelectedRaw] = useState(0);
   const [photo, setPhoto] = useState(0);
   const [categorieModalOuverte, setCategorieModalOuverte] = useState(false);
+  const [depotModalOuverte, setDepotModalOuverte] = useState(false);
   const produit = produits[selected];
   const photos = produit.images ?? [];
 
@@ -126,6 +170,7 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
   // pour que la boutique voie tout de suite le résultat de sa saisie.
   const ajouterProduit = (donnees: NouveauProduit, statut: "brouillon" | "publie") => {
     setProduits((prev) => [produitDepuisFormulaire(donnees, statut), ...prev]);
+    setVisibles((prev) => [statut === "publie", ...prev]);
     setSelected(0);
   };
 
@@ -136,18 +181,104 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
     setCategories((prev) => [...prev, { id: `cat-${Math.random().toString(36).slice(2, 9)}`, nom, nomEn: nom }]);
   };
 
+  // Dépôt validé : incrémente le stock du produit choisi. Reste local tant
+  // que l'API Laravel n'expose pas d'endpoint de dépôt, cf.
+  // [[dashboard-mock-data-pending-laravel-api]] — les autres détails du
+  // dépôt (protection, logistique, récupération) ne sont pas encore
+  // persistés ailleurs que dans ce mock. `produitIndex` vient de la liste
+  // passée au moment de l'ouverture : correct en panneau superposé (même
+  // liste), mais suppose que l'ordre n'a pas changé depuis quand le dépôt
+  // vient de la page à part (voir pendingDepotStore.ts) — même caveat que
+  // pendingProduitStore.ts pour les catégories.
+  const validerDepot = (depot: DepotValide) => {
+    setProduits((prev) =>
+      prev.map((p, i) => (i === depot.produitIndex ? { ...p, stock: p.stock + depot.quantite } : p))
+    );
+    setDepotModalOuverte(false);
+  };
+
+  // Retour de "Modifier" (fiche produit) : met à jour la ligne identifiée
+  // par son nom d'origine, sans toucher au stock/vendu/avis/litiges/tendance
+  // — ces données opérationnelles ne se modifient pas depuis ce formulaire
+  // (le stock passe par "Réapprovisionner", cf. validerDepot ci-dessus).
+  const appliquerEdition = (nomOriginal: string, donnees: NouveauProduit, statut: "brouillon" | "publie") => {
+    setProduits((prev) =>
+      prev.map((p) => {
+        if (p.nom !== nomOriginal) return p;
+        const margePct = donnees.prixAchat !== null && donnees.prixVente > 0
+          ? Math.round(((donnees.prixVente - donnees.prixAchat) / donnees.prixVente) * 100)
+          : p.margePct;
+        return {
+          ...p,
+          nom: donnees.nom,
+          nomEn: donnees.nom,
+          categorieId: donnees.categorieId,
+          achat: donnees.prixAchat,
+          vente: donnees.prixVente,
+          margePct,
+          etat: statut === "brouillon" ? { label: "Brouillon", labelEn: "Draft", tone: "warn" } : p.etat,
+          images: donnees.photos.length > 0 ? donnees.photos.map((f) => URL.createObjectURL(f)) : p.images,
+        };
+      })
+    );
+  };
+
   // Le formulaire vit maintenant sur sa propre page
   // (/dashboard/produits/ajouter) : ce qu'il produit revient via
   // pendingProduitStore plutôt qu'un callback direct, donc on le lit une
   // seule fois au montage puis on vide le pont pour ne pas réappliquer le
-  // même produit à chaque re-render.
+  // même produit à chaque re-render. Même pont pour le dépôt de stock
+  // validé depuis la page à part (mobile/tablette, voir pendingDepotStore.ts).
   useEffect(() => {
     const enAttente = lireEtViderProduitEnAttente();
     if (enAttente) ajouterProduit(enAttente.produit, enAttente.statut);
     const nouvellesCategories = lireEtViderCategoriesEnAttente();
     if (nouvellesCategories.length > 0) setCategories((prev) => [...prev, ...nouvellesCategories]);
+    const depotEnAttente = lireEtViderDepotEnAttente();
+    if (depotEnAttente) validerDepot(depotEnAttente);
+    const editionEnAttente = lireEtViderEditionEnAttente();
+    if (editionEnAttente) appliquerEdition(editionEnAttente.nomOriginal, editionEnAttente.produit, editionEnAttente.statut);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // En dessous du breakpoint lg (mobile/tablette), le formulaire à deux
+  // colonnes rend mal compressé dans un panneau superposé : on ouvre la
+  // page à part à la place (voir app/dashboard/produits/deposer/page.tsx).
+  const [depotPreselection, setDepotPreselection] = useState<number | null>(null);
+  const ouvrirDepotStock = (produitIndex: number | null = null) => {
+    setDepotPreselection(produitIndex);
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+      router.push("/dashboard/produits/deposer");
+      return;
+    }
+    setDepotModalOuverte(true);
+  };
+
+  // "Modifier" (fiche produit) : envoie nom/catégorie/prix vers le formulaire
+  // via le pont dédié (cf. pendingProduitStore.ts) — description/poids/
+  // vidéo/photos/variantes ne sont pas gardés sur la ligne du tableau, donc
+  // repartent vides même en édition.
+  const modifierProduit = () => {
+    ouvrirEditionProduit(produit.nom, {
+      nom: produit.nom,
+      categorieId: produit.categorieId ?? null,
+      prixAchat: produit.achat,
+      prixVente: produit.vente,
+    });
+    router.push("/dashboard/produits/ajouter");
+  };
+
+  // "Retirer de la boutique" : masque le produit (même bascule que la
+  // colonne Visibilité du tableau) — pas une suppression, cf.
+  // [[dashboard-mock-data-pending-laravel-api]] pour l'absence d'endpoint de
+  // suppression réel. Petite confirmation visuelle le temps que la boutique
+  // voie l'effet, même motif que handleExport dans CommandesSection.tsx.
+  const [retireConfirme, setRetireConfirme] = useState(false);
+  const retirerProduit = () => {
+    setVisibles((prev) => prev.map((v, vi) => (vi === selected ? false : v)));
+    setRetireConfirme(true);
+    setTimeout(() => setRetireConfirme(false), 1800);
+  };
 
   // Nombre réel de produits par catégorie — pas un chiffre d'exemple :
   // les produits de démonstration ci-dessus n'ont pas de categorieId, donc
@@ -195,20 +326,6 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
         subtitle={t("Toutes natures confondues, dans un seul tableau.", "All types combined, in a single table.")}
         first={first}
         layout="inline"
-        actions={
-          <>
-            <HeaderActionBtn onClick={() => setCategorieModalOuverte(true)}>
-              {t("Ajouter une catégorie", "Add a category")}
-            </HeaderActionBtn>
-            <HeaderActionBtn>{t("Déposer un stock", "Deposit stock")}</HeaderActionBtn>
-            <Link
-              href="/dashboard/produits/ajouter"
-              className="shrink-0 rounded-full bg-brand-pink px-4 py-2 text-xs font-semibold text-white shadow-[0_4px_16px_rgba(236,12,140,0.35)] transition hover:bg-brand-pink/90"
-            >
-              {t("Ajouter un produit", "Add a product")}
-            </Link>
-          </>
-        }
       />
 
       {/* Cinq tuiles distinctes, badge circulaire coloré en coin (repris de
@@ -234,21 +351,30 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
 
       <div className="mt-3 mb-8 grid gap-3 lg:grid-cols-[1.75fr_1fr] [&>*]:min-w-0">
         <Card className="!bg-[var(--dashboard-glass)]">
-          <div className="overflow-x-auto pt-1">
-            <table className="w-full min-w-[640px] border-collapse text-left text-xs">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <HeaderActionBtn onClick={() => setCategorieModalOuverte(true)}>
+              {t("Ajouter une catégorie", "Add a category")}
+            </HeaderActionBtn>
+            <HeaderActionBtn onClick={() => ouvrirDepotStock()}>{t("Déposer un stock", "Deposit stock")}</HeaderActionBtn>
+            <Link
+              href="/dashboard/produits/ajouter"
+              className="shrink-0 rounded-full bg-brand-pink px-4 py-2 text-xs font-semibold text-white shadow-[0_4px_16px_rgba(236,12,140,0.35)] transition hover:bg-brand-pink/90"
+            >
+              {t("Ajouter un produit", "Add a product")}
+            </Link>
+          </div>
+          <div className="overflow-x-auto pt-3">
+            <table className="w-full min-w-[720px] border-collapse text-left text-xs">
               <thead>
                 <tr className="border-b border-[var(--dashboard-text)]/10">
                   {[
                     t("Produit", "Product"),
-                    t("Source", "Source"),
-                    t("Achat", "Cost"),
-                    t("Vente", "Price"),
+                    t("Performance", "Performance"),
                     t("Stock", "Stock"),
-                    t("Vendu", "Sold"),
-                    t("Marge", "Margin"),
-                    t("Avis", "Rating"),
-                    t("État", "Status"),
+                    t("Prix", "Price"),
                     t("Tendance", "Trend"),
+                    t("Visibilité", "Visibility"),
+                    "",
                   ].map((h) => (
                     <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
                       {h}
@@ -259,41 +385,90 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
               <tbody>
                 {lignesTableau.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="py-6 text-center text-[var(--dashboard-text)]/40">
+                    <td colSpan={7} className="py-6 text-center text-[var(--dashboard-text)]/40">
                       {t(`Aucun produit pour « ${recherche} ».`, `No product for “${recherche}”.`)}
                     </td>
                   </tr>
                 ) : (
-                  lignesTableau.map(({ p, i }) => (
-                    <tr
-                      key={`${p.nom}-${i}`}
-                      onClick={() => setSelected(i)}
-                      className={`cursor-pointer border-b border-[var(--dashboard-text)]/[0.05] last:border-0 hover:bg-[var(--dashboard-text)]/[0.04] ${
-                        i === selected ? "bg-brand-pink/5" : ""
-                      }`}
-                    >
-                      <td
-                        className={`border-l-[3px] py-2.5 pl-2 pr-3 text-[13px] font-semibold ${
-                          i === selected ? "border-brand-pink" : "border-transparent"
+                  lignesTableau.map(({ p, i }) => {
+                    const performance = performanceDeMarge(p.margePct);
+                    const photo = p.images?.[0];
+                    return (
+                      <tr
+                        key={`${p.nom}-${i}`}
+                        onClick={() => setSelected(i)}
+                        className={`cursor-pointer border-b border-[var(--dashboard-text)]/[0.05] last:border-0 hover:bg-[var(--dashboard-text)]/[0.04] ${
+                          i === selected ? "bg-brand-pink/5" : ""
                         }`}
                       >
-                        {t(p.nom, p.nomEn)}
-                      </td>
-                      <td className="py-2.5 pr-3"><Nature code={sourceBadge(p.nature)} /></td>
-                      <td className="py-2.5 pr-3 text-[var(--dashboard-text)]/70">{p.achat !== null ? F(p.achat) : "—"}</td>
-                      <td className="py-2.5 pr-3">{F(p.vente)}</td>
-                      <td className="py-2.5 pr-3 text-[var(--dashboard-text)]/70">{p.stock}</td>
-                      <td className="py-2.5 pr-3 text-[var(--dashboard-text)]/70">{p.vendu}</td>
-                      <td className="py-2.5 pr-3">{p.margePct} %</td>
-                      <td className="py-2.5 pr-3 text-[var(--dashboard-text)]/70">{p.avis !== null ? p.avis.toLocaleString(numberLocale) : "—"}</td>
-                      <td className="py-2.5 pr-3">
-                        <Tag tone={p.etat.tone}>{t(p.etat.label, p.etat.labelEn)}</Tag>
-                      </td>
-                      <td className="py-2.5 pr-3">
-                        <Trend values={p.tendance} />
-                      </td>
-                    </tr>
-                  ))
+                        <td
+                          className={`border-l-[3px] py-2.5 pl-2 pr-3 ${
+                            i === selected ? "border-brand-pink" : "border-transparent"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl"
+                              style={photo ? { background: "var(--dashboard-card-bg)" } : { background: `${NATURE_HEX[p.nature]}17`, color: NATURE_HEX[p.nature] }}
+                            >
+                              {photo ? <Image src={photo} alt={t(p.nom, p.nomEn)} fill sizes="40px" className="object-cover" /> : iconeCategorie(p.nom)}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="flex items-center gap-1.5">
+                                <Nature code={p.nature} />
+                                <span className="truncate text-[13px] font-semibold">{t(p.nom, p.nomEn)}</span>
+                              </p>
+                              <div className="mt-1 flex items-center gap-1.5">
+                                <span className="flex items-center gap-1 text-[10px] text-[var(--dashboard-text)]/50">
+                                  <StarIcon />
+                                  {p.avis !== null ? p.avis.toLocaleString(numberLocale) : "—"}
+                                </span>
+                                <Tag tone={p.etat.tone} className="!px-1.5 !py-0.5 !text-[9px]">
+                                  {t(p.etat.label, p.etat.labelEn)}
+                                </Tag>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-2.5 pr-3">
+                          <div className="flex items-center gap-2">
+                            <PerformanceGauge pct={p.margePct} color={performance.couleur} />
+                            <div>
+                              <p className="text-[11px] font-bold" style={{ color: performance.couleur }}>
+                                {t(performance.label, performance.labelEn)}
+                              </p>
+                              <p className="text-[10px] text-[var(--dashboard-text)]/40">{p.margePct} % {t("marge", "margin")}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className={`py-2.5 pr-3 font-semibold ${p.stock < 10 ? "text-[#c8262d]" : "text-[var(--dashboard-text)]/70"}`}>{p.stock}</td>
+                        <td className="py-2.5 pr-3 font-semibold">{F(p.vente)}</td>
+                        <td className="py-2.5 pr-3">
+                          <Trend values={p.tendance} />
+                        </td>
+                        <td className="py-2.5 pr-3" onClick={(e) => e.stopPropagation()}>
+                          <ToggleSwitch
+                            checked={visibles[i] ?? true}
+                            onChange={() => setVisibles((prev) => prev.map((v, vi) => (vi === i ? !v : v)))}
+                            label={t(`Visibilité de ${p.nom}`, `${p.nom} visibility`)}
+                          />
+                        </td>
+                        <td className="py-2.5 pr-2">
+                          <div className="flex items-center justify-end gap-1 text-[var(--dashboard-text)]/45">
+                            <IconBtn title={t("Modifier", "Edit")} onClick={() => setSelected(i)}>
+                              <PencilIcon />
+                            </IconBtn>
+                            <IconBtn title={t("Aperçu boutique", "Storefront preview")} onClick={() => setSelected(i)}>
+                              <EyeIcon />
+                            </IconBtn>
+                            <IconBtn title={t("Plus d'actions", "More actions")} onClick={() => setSelected(i)}>
+                              <DotsIcon />
+                            </IconBtn>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -371,10 +546,16 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
           <StatRow label={t("Litiges", "Disputes")} value={String(produit.litiges ?? 0)} />
 
           <div className="mt-3.5 flex gap-2">
-            <Btn variant="white">{t("Modifier", "Edit")}</Btn>
-            <Btn variant="dark">{t("Réapprovisionner", "Restock")}</Btn>
+            <Btn variant="white" onClick={modifierProduit}>{t("Modifier", "Edit")}</Btn>
+            <Btn variant="dark" onClick={() => ouvrirDepotStock(selected)}>{t("Réapprovisionner", "Restock")}</Btn>
           </div>
-          <Btn variant="dark" className="mt-2 mb-2">{t("Retirer de la boutique", "Remove from shop")}</Btn>
+          <Btn variant="dark" className="mt-2 mb-2" onClick={retirerProduit} disabled={visibles[selected] === false}>
+            {retireConfirme
+              ? t("Retiré ✓", "Removed ✓")
+              : visibles[selected] === false
+                ? t("Déjà retiré de la boutique", "Already removed from shop")
+                : t("Retirer de la boutique", "Remove from shop")}
+          </Btn>
         </Card>
       </div>
 
@@ -386,6 +567,15 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
             ajouterCategorie(nom);
             setCategorieModalOuverte(false);
           }}
+        />
+      )}
+
+      {depotModalOuverte && (
+        <DeposerStockModal
+          produits={produits}
+          produitIndexInitial={depotPreselection}
+          onFermer={() => setDepotModalOuverte(false)}
+          onValider={validerDepot}
         />
       )}
     </>
@@ -437,6 +627,163 @@ function StatCell({
   est la marge d'un produit, dans l'ordre du catalogue. Un seul stat porte
   cet élément, pour rester "signature" et ne pas alourdir les 4 autres.
 */
+/* Jauge en anneau de la colonne "Performance" — même technique que
+   AnneauCompteARebours (dashboard-commandes/shared.tsx) : cercle de fond
+   translucide + cercle coloré tronqué au strokeDasharray, pas mutualisée
+   entre les deux dossiers (cf. commentaire équivalent sur ToggleSwitch
+   ci-dessous). */
+function PerformanceGauge({ pct, color, size = 30 }: { pct: number; color: string; size?: number }) {
+  const rayon = (size / 2) - 3;
+  const circonference = 2 * Math.PI * rayon;
+  const rempli = Math.min(1, Math.max(0, pct / 60)); // 60 % de marge = jauge pleine
+  const offset = circonference * (1 - rempli);
+  const centre = size / 2;
+  return (
+    <svg viewBox={`0 0 ${size} ${size}`} className="-rotate-90 shrink-0" style={{ height: size, width: size }}>
+      <circle cx={centre} cy={centre} r={rayon} fill="none" stroke="var(--dashboard-text)" strokeOpacity="0.1" strokeWidth="3" />
+      <circle
+        cx={centre}
+        cy={centre}
+        r={rayon}
+        fill="none"
+        stroke={color}
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeDasharray={circonference}
+        strokeDashoffset={offset}
+      />
+    </svg>
+  );
+}
+
+function PhotoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 text-[var(--dashboard-text)]/25" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
+      <circle cx="8.5" cy="10" r="1.6" />
+      <path d="m4.5 17 4.8-5 3.6 3.8 2.4-2.6L20 17" />
+    </svg>
+  );
+}
+
+function MontreIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="7.5" y="8" width="9" height="8" rx="2" />
+      <path d="M9 8V5.2h6V8M9 16v2.8h6V16M12 10.5V12l1.4.8" />
+    </svg>
+  );
+}
+
+function CasqueIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 14v-2a8 8 0 0 1 16 0v2" />
+      <rect x="3" y="13" width="4" height="6" rx="1.6" />
+      <rect x="17" y="13" width="4" height="6" rx="1.6" />
+    </svg>
+  );
+}
+
+function BraceletIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+      <circle cx="12" cy="12" r="7" strokeDasharray="3.4 3" />
+      <circle cx="12" cy="5.3" r="1.3" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function PotIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="6" y="10" width="12" height="9" rx="2" />
+      <path d="M5.5 10h13M7.5 10V7.5a1.5 1.5 0 0 1 1.5-1.5h6a1.5 1.5 0 0 1 1.5 1.5V10" />
+    </svg>
+  );
+}
+
+function FlaconIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="8.5" y="9" width="7" height="10.5" rx="1.8" />
+      <path d="M10.3 9V6.2a1.7 1.7 0 0 1 1.7-1.7 1.7 1.7 0 0 1 1.7 1.7V9" />
+      <path d="M8.5 13h7" />
+    </svg>
+  );
+}
+
+function StarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-2.5 w-2.5 text-[#DC9A3A]" fill="currentColor" aria-hidden>
+      <path d="M12 2.5 15 9 22 9.7 16.8 14.2 18.3 21 12 17.3 5.7 21 7.2 14.2 2 9.7 9 9Z" />
+    </svg>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M16.5 3.5 20.5 7.5 8 20 3.5 20.5 4 16Z" />
+    </svg>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function DotsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden>
+      <circle cx="12" cy="5" r="1.8" />
+      <circle cx="12" cy="12" r="1.8" />
+      <circle cx="12" cy="19" r="1.8" />
+    </svg>
+  );
+}
+
+function IconBtn({ title, onClick, children }: { title: string; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className="flex h-7 w-7 items-center justify-center rounded-full transition hover:bg-[var(--dashboard-text)]/8 hover:text-[var(--dashboard-text)]"
+    >
+      {children}
+    </button>
+  );
+}
+
+/* Même composant que dashboard-reglages/FinancesReglements.tsx et
+   dashboard-profil/MotDePasseSecurite.tsx, repris à l'identique — pas
+   encore mutualisé dans shared.tsx. */
+function ToggleSwitch({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={onChange}
+      className={`flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition ${
+        checked ? "justify-end bg-[#141220] dark:bg-brand-pink" : "justify-start bg-[var(--dashboard-text)]/20"
+      }`}
+    >
+      <span className="h-5 w-5 rounded-full bg-white shadow" />
+    </button>
+  );
+}
+
 function MarginWave({ values, color }: { values: number[]; color: string }) {
   const w = 200;
   const h = 40;

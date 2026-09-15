@@ -73,6 +73,8 @@ export default function AjouterProduitModal({
   onFermer,
   onCreer,
   onCategorieCreee,
+  initial,
+  modeEdition = false,
 }: {
   /** Catégories déjà existantes de la boutique — mock tant que l'API n'expose pas ce endpoint. */
   categoriesInitiales?: Categorie[];
@@ -81,16 +83,24 @@ export default function AjouterProduitModal({
   onCreer: (produit: NouveauProduit, statut: "brouillon" | "publie") => void;
   /** Optionnel : prévient le parent qu'une catégorie a été créée depuis ce formulaire, pour qu'il la garde dans sa propre liste (voir ProduitsCatalogue.tsx + CreerCategorieModal.tsx). */
   onCategorieCreee?: (categorie: Categorie) => void;
+  /** Préremplissage depuis "Modifier" (fiche produit, voir ProduitsCatalogue.tsx)
+   *  — le catalogue ne garde que nom/catégorie/prix, pas description/poids/
+   *  vidéo/photos/variantes (jamais stockés sur la ligne du tableau), donc
+   *  ces champs repartent vides même en édition. */
+  initial?: Partial<NouveauProduit>;
+  /** Change le titre/libellés et retire "brouillon" (un produit déjà publié
+   *  qu'on modifie n'a pas de raison de redevenir brouillon). */
+  modeEdition?: boolean;
 }) {
   const { t, langue } = useDashboardLangue();
 
   const [categories, setCategories] = useState(categoriesInitiales);
-  const [nom, setNom] = useState("");
-  const [categorieId, setCategorieId] = useState<string | null>(null);
-  const [description, setDescription] = useState("");
-  const [prixAchat, setPrixAchat] = useState<number | null>(null);
-  const [prixVente, setPrixVente] = useState(0);
-  const [poidsGrammes, setPoidsGrammes] = useState<number | null>(null);
+  const [nom, setNom] = useState(initial?.nom ?? "");
+  const [categorieId, setCategorieId] = useState<string | null>(initial?.categorieId ?? null);
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [prixAchat, setPrixAchat] = useState<number | null>(initial?.prixAchat ?? null);
+  const [prixVente, setPrixVente] = useState(initial?.prixVente ?? 0);
+  const [poidsGrammes, setPoidsGrammes] = useState<number | null>(initial?.poidsGrammes ?? null);
   const [video, setVideo] = useState<File | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const [attributs, setAttributs] = useState<Attribut[]>([]);
@@ -183,33 +193,48 @@ export default function AjouterProduitModal({
           className="inline-flex items-center gap-1.5 rounded-full bg-[var(--dashboard-card-bg)]/70 px-3.5 py-2 text-xs font-medium text-[var(--dashboard-text)]/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] hover:bg-[var(--dashboard-card-bg)]"
         >
           ← {t("Produits", "Products")} <span className="text-[var(--dashboard-text)]/30">›</span>{" "}
-          <span className="font-semibold text-[var(--dashboard-text)]">{t("Ajouter un produit", "Add a product")}</span>
+          <span className="font-semibold text-[var(--dashboard-text)]">
+            {modeEdition ? t("Modifier le produit", "Edit product") : t("Ajouter un produit", "Add a product")}
+          </span>
         </button>
       </div>
 
-      <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">{t("Ajouter un produit", "Add a product")}</h1>
+      <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">
+        {modeEdition ? t("Modifier le produit", "Edit product") : t("Ajouter un produit", "Add a product")}
+      </h1>
       <p className="mt-1 text-sm text-[var(--dashboard-text)]/50">
-        {t(
-          "La référence et les combinaisons se créent toutes seules à partir de ce que vous saisissez.",
-          "The reference and combinations build themselves from what you enter."
-        )}
+        {modeEdition
+          ? t(
+              "Nom, catégorie et prix — le stock se gère depuis « Réapprovisionner », pas ici.",
+              "Name, category and price — stock is managed from “Restock”, not here."
+            )
+          : t(
+              "La référence et les combinaisons se créent toutes seules à partir de ce que vous saisissez.",
+              "The reference and combinations build themselves from what you enter."
+            )}
       </p>
 
       {/* "Comment se crée un produit" (Écran 08) : remonté en haut d'écran,
           avant le premier champ — la boutique lit l'ordre des six étapes
           avant de remplir, pas après avoir tout saisi (l'emplacement bas de
-          maquette obligeait à scroller tout le formulaire pour la voir). */}
-      <p className="mt-6 text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">
-        {t("Comment se crée un produit", "How a product gets created")}
-      </p>
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        {ETAPES.map(({ titre, titreEn, texte, texteEn }) => (
-          <div key={titre} className="rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-3">
-            <p className="text-[11px] font-semibold">{t(titre, titreEn)}</p>
-            <p className="mt-0.5 text-[9px] leading-snug text-[var(--dashboard-text)]/40">{t(texte, texteEn)}</p>
+          maquette obligeait à scroller tout le formulaire pour la voir).
+          Sans objet en édition (un produit déjà créé n'a plus besoin de ce
+          mode d'emploi). */}
+      {!modeEdition && (
+        <>
+          <p className="mt-6 text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">
+            {t("Comment se crée un produit", "How a product gets created")}
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            {ETAPES.map(({ titre, titreEn, texte, texteEn }) => (
+              <div key={titre} className="rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-3">
+                <p className="text-[11px] font-semibold">{t(titre, titreEn)}</p>
+                <p className="mt-0.5 text-[9px] leading-snug text-[var(--dashboard-text)]/40">{t(texte, texteEn)}</p>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
       <div className="mt-6">
         <MediaProduit
@@ -289,41 +314,56 @@ export default function AjouterProduitModal({
 
       <div className="mt-3 flex flex-wrap items-center gap-2 rounded-[28px] bg-[var(--dashboard-card-bg)] p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
         <p className="flex-1 text-[10px] text-[var(--dashboard-text)]/40">
-          {t(
-            "Un brouillon garde tout ce qui est saisi. Le produit n'apparaît chez vos clients qu'une fois publié.",
-            "A draft keeps everything entered. The product only appears to customers once published."
-          )}
+          {modeEdition
+            ? t("Les modifications s'appliquent à la ligne existante du tableau.", "Changes apply to the existing row in the table.")
+            : t(
+                "Un brouillon garde tout ce qui est saisi. Le produit n'apparaît chez vos clients qu'une fois publié.",
+                "A draft keeps everything entered. The product only appears to customers once published."
+              )}
         </p>
-        {/* Remplace "Annuler" de nos premières versions : la maquette n'a
-            pas de bouton d'annulation ici, le fil d'ariane "← Produits" en
-            haut d'écran suffit à quitter. Pas de vraie page de commande
-            tant que le produit n'est pas publié (rien à montrer), donc
-            désactivé avec une explication plutôt que de simuler un lien
-            qui ne mène nulle part. */}
-        <button
-          type="button"
-          disabled
-          title={t("Disponible une fois le produit publié.", "Available once the product is published.")}
-          className="rounded-full border border-brand-pink/40 px-5 py-2.5 text-xs font-semibold text-brand-pink disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {t("Voir ma page de commande", "View my order page")}
-        </button>
-        <button
-          type="button"
-          onClick={() => onCreer(construireCharge(), "brouillon")}
-          disabled={!peutEnregistrerBrouillon}
-          className="rounded-full border border-brand-pink/40 px-5 py-2.5 text-xs font-semibold text-brand-pink disabled:cursor-not-allowed disabled:opacity-40 hover:bg-brand-pink/10"
-        >
-          {t("Enregistrer en brouillon", "Save as draft")}
-        </button>
-        <button
-          type="button"
-          onClick={() => onCreer(construireCharge(), "publie")}
-          disabled={!peutPublier}
-          className="rounded-full bg-[#141220] px-6 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-brand-pink"
-        >
-          {t("Publier le produit", "Publish the product")}
-        </button>
+        {modeEdition ? (
+          <button
+            type="button"
+            onClick={() => onCreer(construireCharge(), "publie")}
+            disabled={!peutPublier}
+            className="rounded-full bg-[#141220] px-6 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-brand-pink"
+          >
+            {t("Enregistrer les modifications", "Save changes")}
+          </button>
+        ) : (
+          <>
+            {/* Remplace "Annuler" de nos premières versions : la maquette n'a
+                pas de bouton d'annulation ici, le fil d'ariane "← Produits" en
+                haut d'écran suffit à quitter. Pas de vraie page de commande
+                tant que le produit n'est pas publié (rien à montrer), donc
+                désactivé avec une explication plutôt que de simuler un lien
+                qui ne mène nulle part. */}
+            <button
+              type="button"
+              disabled
+              title={t("Disponible une fois le produit publié.", "Available once the product is published.")}
+              className="rounded-full border border-brand-pink/40 px-5 py-2.5 text-xs font-semibold text-brand-pink disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {t("Voir ma page de commande", "View my order page")}
+            </button>
+            <button
+              type="button"
+              onClick={() => onCreer(construireCharge(), "brouillon")}
+              disabled={!peutEnregistrerBrouillon}
+              className="rounded-full border border-brand-pink/40 px-5 py-2.5 text-xs font-semibold text-brand-pink disabled:cursor-not-allowed disabled:opacity-40 hover:bg-brand-pink/10"
+            >
+              {t("Enregistrer en brouillon", "Save as draft")}
+            </button>
+            <button
+              type="button"
+              onClick={() => onCreer(construireCharge(), "publie")}
+              disabled={!peutPublier}
+              className="rounded-full bg-[#141220] px-6 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-brand-pink"
+            >
+              {t("Publier le produit", "Publish the product")}
+            </button>
+          </>
+        )}
       </div>
     </>
   );
