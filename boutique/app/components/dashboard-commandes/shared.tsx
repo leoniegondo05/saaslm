@@ -19,6 +19,7 @@ export type Statut =
   | { type: "livree"; heuresRestantes: number }
   | { type: "disponible" }
   | { type: "refusee" }
+  | { type: "relance" }
   | { type: "litige"; issue: IssueLitige | null };
 
 export type Commande = {
@@ -93,6 +94,25 @@ export const DEVISES = [
   { key: "eur" as const, label: "Euro", labelEn: "Euro", suffixe: "€" },
   { key: "usd" as const, label: "Dollar", labelEn: "Dollar", suffixe: "$" },
 ];
+
+// Recalcule les libellés "Aujourd'hui · [jour] [mois]" / "Hier · [jour] [mois]"
+// sur la date choisie dans DashboardHeader, pour que CommandesListe (Écran 11)
+// et LireUneLigne (Écran 12) affichent toujours une date cohérente avec le
+// sélecteur, même si le contenu des commandes reste le jeu figé de JOURS.
+export function libellesJour(base: Date): Record<"aujourdhui" | "hier", { date: string; dateEn: string }> {
+  const hier = new Date(base);
+  hier.setDate(hier.getDate() - 1);
+  return {
+    aujourdhui: {
+      date: `Aujourd'hui · ${base.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`,
+      dateEn: `Today · ${base.toLocaleDateString("en-US", { month: "long", day: "numeric" })}`,
+    },
+    hier: {
+      date: `Hier · ${hier.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`,
+      dateEn: `Yesterday · ${hier.toLocaleDateString("en-US", { month: "long", day: "numeric" })}`,
+    },
+  };
+}
 
 export const JOURS: Jour[] = [
   {
@@ -197,6 +217,15 @@ export const JOURS: Jour[] = [
         retenueOperation: 350,
         statut: { type: "refusee" },
       },
+      {
+        id: "CMD-58117",
+        produit: "Crème hydratante 50 ml",
+        quantite: 1,
+        montantPaye: 9500,
+        retenueLogistique: 750,
+        retenueOperation: 475,
+        statut: { type: "relance" },
+      },
     ],
   },
 ];
@@ -217,7 +246,7 @@ export function netDe(c: Commande): number {
 }
 
 export function estSuspendue(c: Commande): boolean {
-  return c.statut.type === "litige" && c.statut.issue !== "faveur";
+  return (c.statut.type === "litige" && c.statut.issue !== "faveur") || c.statut.type === "relance";
 }
 
 export function TriangleIcon({ filled = false, className = "" }: { filled?: boolean; className?: string }) {

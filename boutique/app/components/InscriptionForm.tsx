@@ -22,7 +22,7 @@ import { useApiRequest } from "../../lib/api/hooks/useApiRequest";
                     boutique ne sont PLUS demandés ici (demande
                     utilisateur) : le parcours "Compléter mon profil"
                     (CompleterProfilWizard.tsx, step 10) les recueille et
-                    génère le lien lm.ci/... automatiquement.
+                    génère le lien slug.liivremoi.com automatiquement.
     "conditions"   au clic sur "Créer ma boutique" : la case à cocher des
                     CGU n'est PAS dans le formulaire — cliquer dessus
                     déroule la liste des conditions, et c'est au bas de

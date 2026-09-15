@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DashboardHeader from "../../components/DashboardHeader";
 import DashboardSearchBar from "../../components/DashboardSearchBar";
 import DashboardSidebar from "../../components/DashboardSidebar";
@@ -15,6 +15,7 @@ import LitigesSection from "../../components/dashboard-accueil/LitigesSection";
 import StockSection from "../../components/dashboard-accueil/StockSection";
 import ProduitsSection from "../../components/dashboard-accueil/ProduitsSection";
 import PartenaireSection from "../../components/dashboard-accueil/PartenaireSection";
+import { SectionSkeleton } from "../../components/dashboard-accueil/shared";
 
 /*
   Onglet "Accueil" du dashboard boutique : le tableau de données complet
@@ -37,7 +38,7 @@ import PartenaireSection from "../../components/dashboard-accueil/PartenaireSect
   en attendant l'API Laravel.
 */
 
-const SECTIONS: Record<AccueilTab, React.ComponentType<{ first?: boolean }>> = {
+const SECTIONS: Record<AccueilTab, React.ComponentType<{ first?: boolean; activeDate?: Date }>> = {
   Finances: FinancesSection,
   Commandes: CommandesSection,
   Clients: ClientsSection,
@@ -57,6 +58,10 @@ export default function AccueilPage() {
     initialTab && (ACCUEIL_TABS as readonly string[]).includes(initialTab) ? (initialTab as AccueilTab) : null
   );
   const [recherche, setRecherche] = useState("");
+  // Même valeur par défaut que l'état local historique de DashboardHeader
+  // (cf. DashboardHeader.tsx) : ce défaut ne change pas, seul son
+  // "propriétaire" se déplace ici pour être redescendu aux 7 sections.
+  const [activeDate, setActiveDate] = useState(() => new Date(2026, 7, 1));
 
   // Chaque section se cache seule (via Card, cf. DashboardRecherche.tsx) dès
   // que rien de son contenu affiché — titre compris — ne correspond au terme
@@ -69,6 +74,17 @@ export default function AccueilPage() {
     Object.fromEntries(ACCUEIL_TABS.map((tab) => [tab, true])) as Record<AccueilTab, boolean>
   );
   const aucunResultat = recherche.trim() !== "" && ACCUEIL_TABS.every((tab) => !visibles[tab]);
+
+  // Pas encore de vraie requête à attendre (mock statique, cf.
+  // [[dashboard-mock-data-pending-laravel-api]]) : ce court chargement
+  // simulé n'existe que pour laisser un skeleton (SectionSkeleton,
+  // shared.tsx) apparaître à la place des cartes le temps du premier
+  // montage, plutôt qu'un blanc puis un "pop" instantané de tout l'onglet.
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const id = setTimeout(() => setLoading(false), 700);
+    return () => clearTimeout(id);
+  }, []);
 
   // Même bug que sur /dashboard/produits (cf. commentaire dans ce fichier
   // avant ce correctif) : le clic d'onglet ne touchait pas l'URL, donc un
@@ -89,40 +105,52 @@ export default function AccueilPage() {
         <DashboardSidebar />
 
         <div className="min-w-0 flex-1 lg:px-6">
-          <DashboardHeader activeAccueilTab={activeTab} />
+          <DashboardHeader activeAccueilTab={activeTab} activeDate={activeDate} onActiveDateChange={setActiveDate} />
           <DashboardSearchBar onChange={setRecherche} />
 
           <AccueilNav active={activeTab} onChange={handleChange} />
 
-          <RechercheProvider value={recherche}>
-            {activeTab === null ? (
+          {loading ? (
+            activeTab === null ? (
               <>
-                {aucunResultat && (
-                  <p className="mt-10 text-center text-xs text-[var(--dashboard-text)]/45">
-                    {t(`Aucune section pour « ${recherche} ».`, `No section for “${recherche}”.`)}
-                  </p>
-                )}
-                {ACCUEIL_TABS.map((tab, index) => {
-                  const Section = SECTIONS[tab];
-                  return (
-                    <Filtrable
-                      key={tab}
-                      onMatchChange={(match) =>
-                        setVisibles((v) => (v[tab] === match ? v : { ...v, [tab]: match }))
-                      }
-                    >
-                      <Section first={index === 0} />
-                    </Filtrable>
-                  );
-                })}
+                {ACCUEIL_TABS.map((tab, index) => (
+                  <SectionSkeleton key={tab} first={index === 0} />
+                ))}
               </>
             ) : (
-              (() => {
-                const ActiveSection = SECTIONS[activeTab];
-                return <ActiveSection />;
-              })()
-            )}
-          </RechercheProvider>
+              <SectionSkeleton first />
+            )
+          ) : (
+            <RechercheProvider value={recherche}>
+              {activeTab === null ? (
+                <>
+                  {aucunResultat && (
+                    <p className="mt-10 text-center text-xs text-[var(--dashboard-text)]/45">
+                      {t(`Aucune section pour « ${recherche} ».`, `No section for “${recherche}”.`)}
+                    </p>
+                  )}
+                  {ACCUEIL_TABS.map((tab, index) => {
+                    const Section = SECTIONS[tab];
+                    return (
+                      <Filtrable
+                        key={tab}
+                        onMatchChange={(match) =>
+                          setVisibles((v) => (v[tab] === match ? v : { ...v, [tab]: match }))
+                        }
+                      >
+                        <Section first={index === 0} activeDate={activeDate} />
+                      </Filtrable>
+                    );
+                  })}
+                </>
+              ) : (
+                (() => {
+                  const ActiveSection = SECTIONS[activeTab];
+                  return <ActiveSection activeDate={activeDate} />;
+                })()
+              )}
+            </RechercheProvider>
+          )}
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
-import { CollapsibleCards, HeaderActionBtn, Nature, openBrandedReport, SectionHeader } from "./shared";
+import { CollapsibleCards, HeaderActionBtn, Nature, openBrandedReport, periodSeed, scaleForPeriod, SectionHeader } from "./shared";
 import { KPIS_CLIENTS, TypeAchat } from "./clients/clientsData";
 import ClientsRfMatrix from "./clients/ClientsRfMatrix";
 import ClientsGrowthChart from "./clients/ClientsGrowthChart";
@@ -27,8 +27,40 @@ import ClientsActionsToday from "./clients/ClientsActionsToday";
   clients/ClientsAiAssistance.tsx supprimé, devenu mort.
 */
 
-export default function ClientsSection({ first = true }: { first?: boolean }) {
+/*
+  Les 6 KPIS_CLIENTS (clientsData.ts) arrivent déjà formatés en chaîne
+  ("27 100F", "18,2 %"...) plutôt qu'en nombre brut — contrairement aux
+  autres sections (Finances...), rien n'est en dur dans ce fichier-ci. Pour
+  que le sélecteur année/mois/jour fasse quand même varier ces cartes (cf.
+  [[dashboard-mock-data-pending-laravel-api]]) sans toucher clientsData.ts,
+  on extrait le nombre porté par la chaîne (espaces = milliers, virgule =
+  décimale, suffixe "F"/"%" optionnel), on le fait varier via
+  scaleForPeriod, puis on reformate à l'identique. Renvoie la chaîne
+  d'origine si le format ne matche pas — on ne casse jamais l'affichage
+  pour un cas imprévu.
+*/
+function scaleValeurStr(valeur: string, seed: number, key: number): string {
+  const m = valeur.match(/^(\d[\d\s]*)(,\d+)?(\s*%|\s*F)?$/);
+  if (!m) return valeur;
+  const decimals = m[2] ? m[2].length - 1 : 0;
+  const multiplier = 10 ** decimals;
+  const intPart = Number(m[1].replace(/\s/g, ""));
+  const decPart = m[2] ? Number("0" + m[2].replace(",", ".")) : 0;
+  const base = Math.round((intPart + decPart) * multiplier);
+  const scaled = scaleForPeriod(base, seed, key) / multiplier;
+  const suffix = m[3] ?? "";
+  const [intStr, decStr] = scaled.toFixed(decimals).split(".");
+  const withThousands = intStr.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return withThousands + (decStr ? "," + decStr : "") + suffix;
+}
+
+export default function ClientsSection({ first = true, activeDate }: { first?: boolean; activeDate?: Date }) {
   const { t } = useDashboardLangue();
+  // Seed déterministe dérivé de la période choisie sur le sélecteur du
+  // DashboardHeader — cf. [[dashboard-mock-data-pending-laravel-api]].
+  // Date par défaut alignée sur celle utilisée ailleurs dans le dashboard :
+  // même comportement qu'avant quand activeDate n'est pas encore fourni.
+  const seed = periodSeed(activeDate ?? new Date(2026, 7, 1));
   // Plus de toggle S/D/B : les autres sections (Commandes, Produits) n'en
   // ont pas non plus, juste la légende ci-dessous. typeAchat reste passé
   // aux sous-blocs pour le badge <Nature> et les filtres déjà écrits
@@ -47,9 +79,9 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
       {
         heading: t("Indicateurs clients", "Customer metrics"),
         columns: [t("Indicateur", "Metric"), t("Valeur", "Value"), t("Évolution", "Change"), t("Note", "Note")],
-        rows: KPIS_CLIENTS.map((kpi) => [
+        rows: KPIS_CLIENTS.map((kpi, i) => [
           t(kpi.labelFr, kpi.labelEn),
-          kpi.valeur,
+          scaleValeurStr(kpi.valeur, seed, i),
           kpi.evolutionFr ? t(kpi.evolutionFr, kpi.evolutionEn ?? "") : "",
           kpi.sousLabelFr ? t(kpi.sousLabelFr, kpi.sousLabelEn ?? "") : "",
         ]),
@@ -97,43 +129,47 @@ export default function ClientsSection({ first = true }: { first?: boolean }) {
 
       {/* ── GRILLE DES 6 KPIS PRINCIPAUX ── */}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
-        {KPIS_CLIENTS.map((kpi) => (
-          <div
-            key={kpi.id}
-            className="flex flex-col justify-between rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-3.5 shadow-[0_4px_12px_-4px_rgba(20,18,32,0.08)] transition-colors"
-          >
-            <div>
-              <span className="text-[9px] font-semibold uppercase tracking-wider text-[var(--dashboard-text)]/45">
-                {t(kpi.labelFr, kpi.labelEn)}
-              </span>
-              <div
-                className={`mt-1.5 text-xl font-bold tracking-tight sm:text-2xl ${
-                  kpi.id === "actifs" ? "text-[#10b981]" : ""
-                } ${kpi.id === "reviennent" || kpi.id === "a-relancer" ? "text-[#f59e0b]" : ""}`}
-              >
-                {kpi.valeur}
+        {KPIS_CLIENTS.map((kpi, i) => {
+          const valeur = scaleValeurStr(kpi.valeur, seed, i);
+          const prevValeur = kpi.prevValeur ? scaleValeurStr(kpi.prevValeur, seed, i) : undefined;
+          return (
+            <div
+              key={kpi.id}
+              className="flex flex-col justify-between rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-3.5 shadow-[0_4px_12px_-4px_rgba(20,18,32,0.08)] transition-colors"
+            >
+              <div>
+                <span className="text-[9px] font-semibold uppercase tracking-wider text-[var(--dashboard-text)]/45">
+                  {t(kpi.labelFr, kpi.labelEn)}
+                </span>
+                <div
+                  className={`mt-1.5 text-xl font-bold tracking-tight sm:text-2xl ${
+                    kpi.id === "actifs" ? "text-[#10b981]" : ""
+                  } ${kpi.id === "reviennent" || kpi.id === "a-relancer" ? "text-[#f59e0b]" : ""}`}
+                >
+                  {valeur}
+                </div>
               </div>
-            </div>
 
-            <div className="mt-1.5 text-[10px]">
-              {kpi.evolutionFr && (
-                <span className={`font-semibold ${kpi.evolutionColor ?? "text-[#10b981]"}`}>
-                  {t(kpi.evolutionFr, kpi.evolutionEn ?? "")}
-                </span>
-              )}
-              {kpi.sousLabelFr && (
-                <span className="text-[var(--dashboard-text)]/50">
-                  {t(kpi.sousLabelFr, kpi.sousLabelEn ?? "")}
-                </span>
+              <div className="mt-1.5 text-[10px]">
+                {kpi.evolutionFr && (
+                  <span className={`font-semibold ${kpi.evolutionColor ?? "text-[#10b981]"}`}>
+                    {t(kpi.evolutionFr, kpi.evolutionEn ?? "")}
+                  </span>
+                )}
+                {kpi.sousLabelFr && (
+                  <span className="text-[var(--dashboard-text)]/50">
+                    {t(kpi.sousLabelFr, kpi.sousLabelEn ?? "")}
+                  </span>
+                )}
+              </div>
+              {compare && prevValeur && (
+                <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">
+                  {t("Période précédente", "Previous period")} : {prevValeur}
+                </p>
               )}
             </div>
-            {compare && kpi.prevValeur && (
-              <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">
-                {t("Période précédente", "Previous period")} : {kpi.prevValeur}
-              </p>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* 3 premières sous-sections (RFM, croissance du fichier, valeur

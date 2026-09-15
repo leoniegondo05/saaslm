@@ -15,8 +15,8 @@ import { useState } from "react";
   nom et lien de la boutique sont demandés (demande utilisateur) —
   InscriptionForm.tsx ne les recueille plus (RegisterPayload n'a plus
   shop_name/shop_slug, voir lib/api/services/auth.ts). Le lien s'affiche
-  ici sous la forme "lm.ci/slug" ; brancher une vraie route API devra
-  choisir ce format ou l'aligner sur autre chose déjà en place ailleurs.
+  ici sous la forme "slug.liivremoi.com" ; brancher une vraie route API devra
+  générer ce sous-domaine (front public visé : https://www.slug.liivremoi.com).
   L'identifiant "B-24187" et le statut "Disponible" du lien sont pour
   l'instant des valeurs mock, faute de backend pour vérifier la
   disponibilité réelle ou générer l'identifiant.
@@ -513,7 +513,7 @@ export default function CompleterProfilWizard() {
       <QuestionShell
         step={5}
         question="Quel est votre catalogue ?"
-        sub={`Trois réponses au maximum · ${answers.categories.length}/${MAX_CATEGORIES} choisies.`}
+        sub={`Renseigner ${MAX_CATEGORIES} catégories principales`}
         canContinue={answers.categories.length > 0}
         onBack={precedent}
         onNext={suivant}
@@ -532,9 +532,7 @@ export default function CompleterProfilWizard() {
           ))}
         </div>
         <p className="mt-5 border-l border-white/15 pl-3.5 text-[11px] font-light leading-relaxed text-brand-white/50">
-          Ce choix range vos produits, sert de filtre à vos clients sur votre page de commande, et permet aux
-          entreprises agréées de savoir si elles savent transporter ce que vous vendez — un cosmétique liquide et
-          une pièce de moto ne s&apos;emballent pas de la même façon.
+          Ce choix permet aux entreprises agréées de savoir si elles savent transporter ce que vous vendez.
         </p>
       </QuestionShell>
     );
@@ -662,7 +660,7 @@ export default function CompleterProfilWizard() {
       <QuestionShell
         step={8}
         question="À qui vendez-vous ?"
-        sub="Une seule réponse. C'est elle qui décide de ce que la plateforme vous proposera."
+        sub="Choix unique."
         canContinue={answers.modele !== null}
         onBack={precedent}
         onNext={suivant}
@@ -687,7 +685,7 @@ export default function CompleterProfilWizard() {
       <QuestionShell
         step={9}
         question="Comment constituez-vous ce que vous vendez ?"
-        sub="Plusieurs réponses possibles : beaucoup de boutiques en combinent deux."
+        sub="Plusieurs réponses possibles."
         canContinue={answers.distribution.length > 0}
         onBack={precedent}
         onNext={suivant}
@@ -704,48 +702,19 @@ export default function CompleterProfilWizard() {
             />
           ))}
         </div>
-
-        <div className="mt-5 rounded-2xl border border-[#2A6E8C]/40 bg-[linear-gradient(160deg,rgba(24,64,98,0.22),rgba(20,26,48,0.4))] p-4">
-          <p className="text-[13px] font-semibold text-brand-white">Ce que votre réponse ouvrira</p>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
-            <div className="flex items-start gap-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#2E6FA0] text-[13px] font-bold text-brand-white">
-                S
-              </span>
-              <div>
-                <p className="text-[12.5px] font-semibold text-brand-white">Stockage Management</p>
-                <p className="mt-0.5 text-[11px] font-light leading-relaxed text-brand-white/50">
-                  Pour votre propre stock : vous déposez, le partenaire garde et livre.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#2E6FA0] text-[13px] font-bold text-brand-white">
-                P
-              </span>
-              <div>
-                <p className="text-[12.5px] font-semibold text-brand-white">Drop du partenaire</p>
-                <p className="mt-0.5 text-[11px] font-light leading-relaxed text-brand-white/50">
-                  Pour le dropshipping : aucun stock avancé de votre part.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
       </QuestionShell>
     );
   }
 
   if (step === 10) {
-    const slug = slugifier(answers.nomBoutique) || "votre-boutique";
+    const slug = slugifier(answers.nomBoutique) || "maboutique";
     return (
       <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-6 py-10">
         <h1 className="text-[27px] font-bold leading-[1.22] tracking-tight text-brand-white">
           Comment s&apos;appelle votre boutique ?
         </h1>
         <p className="mt-2 text-[11.5px] font-light text-brand-white/60">
-          C&apos;est le seul renseignement qui concerne la boutique et non vous. Jusqu&apos;ici, tout parlait de
-          l&apos;entrepreneur.
+          Le seul renseignement de l&apos;entreprise que vous êtes.
         </p>
 
         <div className="mt-6">
@@ -780,8 +749,8 @@ export default function CompleterProfilWizard() {
             <div className="min-w-0 flex-1">
               <p className="text-[9.5px] font-bold uppercase tracking-[0.1em] text-brand-white/40">Le lien de votre boutique</p>
               <p className="truncate text-[15px] font-bold text-brand-white">
-                <span className="font-normal text-brand-white/50">lm.ci/</span>
                 {slug}
+                <span className="font-normal text-brand-white/50">.liivremoi.com</span>
               </p>
             </div>
             <span className="shrink-0 rounded-full border border-[#4FE0AE]/45 bg-[#4FE0AE]/10 px-3 py-1 text-[10.5px] font-semibold text-[#4FE0AE]">
@@ -810,14 +779,7 @@ export default function CompleterProfilWizard() {
           </div>
         </div>
 
-        <p className="mt-5 border-l border-white/15 pl-3.5 text-[11px] font-light leading-relaxed text-brand-white/50">
-          Le lien se fabrique tout seul à partir du nom, pendant que vous l&apos;écrivez. Il peut être modifié une
-          fois, avant la publication de votre premier produit. L&apos;identifiant, lui, ne change jamais : c&apos;est
-          par lui que le partenaire agréé, les livreurs et le centre d&apos;appel reconnaissent votre boutique, même
-          si vous la renommez.
-        </p>
-
-        <div className="mt-auto flex items-center justify-between gap-3 pt-9">
+        <div className="mt-8 flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={precedent}

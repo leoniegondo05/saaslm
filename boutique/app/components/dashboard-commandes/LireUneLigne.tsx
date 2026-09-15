@@ -13,6 +13,7 @@ import {
   estSuspendue,
   formatCfa,
   formatDevise,
+  libellesJour,
   netDe,
   TriangleIcon,
 } from "./shared";
@@ -37,15 +38,20 @@ const EXEMPLE: Commande = {
   statut: { type: "livree", heuresRestantes: 69 },
 };
 
-const JOUR_RESUME = JOURS[1]; // "Hier" — contient un peu de tout : livrée, disponible, litiges, refusée
+const JOUR_RESUME_BASE = JOURS[1]; // "Hier" — contient un peu de tout : livrée, disponible, litiges, refusée
 
-export default function LireUneLigne({ first = false }: { first?: boolean }) {
+export default function LireUneLigne({ first = false, activeDate }: { first?: boolean; activeDate?: Date }) {
   const { t } = useDashboardLangue();
   const net = netDe(EXEMPLE);
+
+  // Commandes de l'exemple volontairement figées (fiche pédagogique, cf.
+  // shared.tsx) — seul le libellé de date suit le sélecteur du dashboard.
+  const JOUR_RESUME = { ...JOUR_RESUME_BASE, ...libellesJour(activeDate ?? new Date(2026, 7, 1)).hier };
 
   const livreesResume = JOUR_RESUME.commandes.filter((c) => c.statut.type === "livree" || c.statut.type === "disponible").length;
   const refuseesResume = JOUR_RESUME.commandes.filter((c) => c.statut.type === "refusee").length;
   const litigesResume = JOUR_RESUME.commandes.filter((c) => c.statut.type === "litige").length;
+  const relanceesResume = JOUR_RESUME.commandes.filter((c) => c.statut.type === "relance").length;
   const encaisseResume = JOUR_RESUME.commandes.filter((c) => !estSuspendue(c)).reduce((s, c) => s + netDe(c), 0);
 
   return (
@@ -61,44 +67,48 @@ export default function LireUneLigne({ first = false }: { first?: boolean }) {
         layout="inline"
       />
 
-      <Card className="!bg-[var(--dashboard-card-bg)] overflow-x-auto">
-        <div className="flex min-w-[740px] flex-nowrap items-center gap-5 pt-3">
-          <Numero n={1}>
-            <p className="whitespace-nowrap text-2xl font-bold tracking-tight text-[var(--dashboard-text)]">{EXEMPLE.id}</p>
-          </Numero>
+      <Card className="!bg-[var(--dashboard-card-bg)]">
+        <div className="mx-auto max-w-[280px]">
+          <div className="relative overflow-hidden rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-glass)] p-4 pl-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.12)]">
+            <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-[#178a3f]" />
 
-          <p className="whitespace-nowrap text-xs text-[var(--dashboard-text)]/40">{EXEMPLE.produit}</p>
-          <div className="h-px min-w-[24px] flex-1 border-t border-dashed border-[var(--dashboard-text)]/15" />
+            <Numero n={1}>
+              <p className="text-[15px] font-bold tracking-tight text-[var(--dashboard-text)]">{EXEMPLE.id}</p>
+            </Numero>
+            <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/55">{EXEMPLE.produit}</p>
 
-          <Numero n={2}>
-            <p className="whitespace-nowrap text-base font-semibold text-[var(--dashboard-text)]">{formatCfa(EXEMPLE.montantPaye)}</p>
-          </Numero>
-
-          <Numero n={3}>
-            <div className="flex items-center gap-3">
-              <p className="flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-[#c8262d]">
-                <TriangleIcon filled className="rotate-180" />-{formatCfa(EXEMPLE.retenueLogistique)}
-              </p>
-              <p className="flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-[#c8262d]">
-                <TriangleIcon className="rotate-180" />-{formatCfa(EXEMPLE.retenueOperation)}
-              </p>
+            <div className="mt-3.5 flex items-end justify-between gap-3">
+              <Numero n={2}>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">{t("Payé", "Paid")}</p>
+                <p className="mt-0.5 text-sm font-semibold text-[var(--dashboard-text)]">{formatCfa(EXEMPLE.montantPaye)}</p>
+              </Numero>
+              <Numero n={4}>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">{t("Net", "Net")}</p>
+                <p className="mt-0.5 flex items-center justify-end gap-1 text-lg font-bold tracking-tight text-[#178a3f]">
+                  <TriangleIcon filled />
+                  {formatCfa(net)}
+                </p>
+              </Numero>
             </div>
-          </Numero>
 
-          <Numero n={4}>
-            <p className="flex items-center gap-1 whitespace-nowrap text-2xl font-bold tracking-tight text-[#178a3f]">
-              <TriangleIcon filled />
-              {formatCfa(net)}
-            </p>
-          </Numero>
+            <Numero n={3}>
+              <div className="mt-2.5 flex items-center gap-3 text-[10.5px] font-semibold text-[#c8262d]">
+                <span className="flex items-center gap-1">
+                  <TriangleIcon filled className="rotate-180" />-{formatCfa(EXEMPLE.retenueLogistique)}
+                </span>
+                <span className="flex items-center gap-1">
+                  <TriangleIcon className="rotate-180" />-{formatCfa(EXEMPLE.retenueOperation)}
+                </span>
+              </div>
+            </Numero>
 
-          <Numero n={5}>
-            <div className="flex items-center gap-2 whitespace-nowrap">
-              <div className="h-0.5 w-10 rounded-full bg-[#178a3f]" />
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#178a3f]" />
-              <AnneauCompteARebours heuresRestantes={69} size={32} />
-            </div>
-          </Numero>
+            <Numero n={5}>
+              <div className="mt-3.5 flex items-center gap-2.5 border-t border-[var(--dashboard-text)]/[0.08] pt-3">
+                <div className="h-0.5 flex-1 rounded-full bg-[#178a3f]" />
+                <AnneauCompteARebours heuresRestantes={69} size={32} />
+              </div>
+            </Numero>
+          </div>
         </div>
 
         <div className="mt-5 grid gap-3 border-t border-[var(--dashboard-text)]/10 pt-4 sm:grid-cols-3">
@@ -263,6 +273,10 @@ export default function LireUneLigne({ first = false }: { first?: boolean }) {
                 <span className="text-sm font-bold text-[#a8690a]">{litigesResume}</span>
                 <span className="text-[10px] text-[var(--dashboard-text)]/45">{t("en litige", "disputed")}</span>
               </span>
+              <span className="flex items-baseline gap-1">
+                <span className="text-sm font-bold text-[#3a1d8a]">{relanceesResume}</span>
+                <span className="text-[10px] text-[var(--dashboard-text)]/45">{t("relancée", "relaunched")}</span>
+              </span>
               <div className="text-right">
                 <p className="text-[9px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Encaissé", "Collected")}</p>
                 <p className="text-sm font-bold text-[#178a3f]">{formatCfa(encaisseResume)}</p>
@@ -270,12 +284,6 @@ export default function LireUneLigne({ first = false }: { first?: boolean }) {
             </div>
           </div>
         </div>
-        <p className="mt-3 text-[11px] leading-relaxed text-[var(--dashboard-text)]/50">
-          {t(
-            "Le chiffre est grand et coloré, le mot est petit et gris : on compte avant de lire. Un compte à zéro disparaît.",
-            "The number is large and colored, the word is small and gray: you count before you read. A count of zero disappears."
-          )}
-        </p>
       </Card>
 
       <Card title={t("La devise suit vos réglages", "The currency follows your settings")} titleTab className="mt-3 !bg-[var(--dashboard-card-bg)]">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Divider, Tag } from "../dashboard-accueil/shared";
+import { Divider, Tag, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -125,6 +125,7 @@ export default function CreerCollaborateur({
   const [motDePasseVisible, setMotDePasseVisible] = useState(false);
 
   const [erreur, setErreur] = useState<string | null>(null);
+  const { saving, trigger } = useMockSave();
 
   const identifiantPropose = slugifier(nom);
   const identifiantAffiche = identifiantTouche ? identifiant : identifiantPropose;
@@ -180,16 +181,18 @@ export default function CreerCollaborateur({
       return;
     }
     setErreur(null);
-    onCreer({
-      nom: nom.trim(),
-      adresseConnexion: adresseConnexion.trim(),
-      telephone: telephone.trim(),
-      identifiant: identifiantAffiche,
-      role: role!,
-      pages: Array.from(pages),
-      debut,
-      fin,
-    });
+    trigger(() =>
+      onCreer({
+        nom: nom.trim(),
+        adresseConnexion: adresseConnexion.trim(),
+        telephone: telephone.trim(),
+        identifiant: identifiantAffiche,
+        role: role!,
+        pages: Array.from(pages),
+        debut,
+        fin,
+      })
+    );
   };
 
   return (
@@ -498,16 +501,18 @@ export default function CreerCollaborateur({
         <button
           type="button"
           onClick={onAnnuler}
-          className="rounded-full border border-[var(--dashboard-text)]/15 px-5 py-2.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
+          disabled={saving}
+          className="rounded-full border border-[var(--dashboard-text)]/15 px-5 py-2.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05] disabled:cursor-not-allowed disabled:opacity-40"
         >
           {t("Annuler", "Cancel")}
         </button>
         <button
           type="button"
           onClick={soumettre}
-          className="rounded-full bg-[#141220] px-5 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
+          disabled={saving}
+          className="rounded-full bg-[#141220] px-5 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
         >
-          {t("Créer le compte et envoyer les accès", "Create the account and send access")}
+          {saving ? t("Création…", "Creating…") : t("Créer le compte et envoyer les accès", "Create the account and send access")}
         </button>
       </div>
     </>

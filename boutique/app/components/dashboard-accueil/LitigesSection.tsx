@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import Link from "next/link";
-import { AreaChart, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, openBrandedReport, SectionHeader, StatRow, Tag } from "./shared";
+import { AreaChart, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, openBrandedReport, periodSeed, scaleForPeriod, SectionHeader, StatRow, Tag } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -383,14 +383,18 @@ function ActionItem({
   return href ? <Link href={href}>{content}</Link> : content;
 }
 
-export default function LitigesSection({ first = true }: { first?: boolean }) {
+export default function LitigesSection({ first = true, activeDate }: { first?: boolean; activeDate?: Date }) {
   const { t } = useDashboardLangue();
+  // Fait varier les mock de la section selon la période choisie sur le
+  // sélecteur du DashboardHeader, cf. [[dashboard-mock-data-pending-laravel-api]]
+  // — même date par défaut que l'ancien état local (2026-08-01).
+  const seed = periodSeed(activeDate ?? new Date(2026, 7, 1));
 
   // "Taux de litige dans le temps" — vous (en baisse) vs réseau (stable),
   // même échelle AreaChart que le reste du dashboard (cf. shared.tsx). La
   // zone colorée entre les deux courbes = l'économie réalisée.
-  const VOUS_TREND = [3.1, 2.6, 2.2, 1.9, 1.8, 1.7];
-  const RESEAU_TREND = [3.1, 3.1, 3.1, 3.1, 3.1, 3.1];
+  const VOUS_TREND = [3.1, 2.6, 2.2, 1.9, 1.8, 1.7].map((v) => scaleForPeriod(v, seed, 0));
+  const RESEAU_TREND = [3.1, 3.1, 3.1, 3.1, 3.1, 3.1].map((v) => scaleForPeriod(v, seed, 1));
   const MONTHS = [
     { fr: "Avril", en: "April" },
     { fr: "Mai", en: "May" },
@@ -404,11 +408,11 @@ export default function LitigesSection({ first = true }: { first?: boolean }) {
   // prise en main. Les deux dernières tranches (au-delà de 9 h, maximum
   // contractuel) ressortent en rouge.
   const HANDLING_BUCKETS = [
-    { fr: "< 1 h", en: "< 1h", count: 8 },
-    { fr: "1-3 h", en: "1-3h", count: 13 },
-    { fr: "3-6 h", en: "3-6h", count: 3 },
-    { fr: "6-9 h", en: "6-9h", count: 1 },
-    { fr: "> 9 h", en: "> 9h", count: 1 },
+    { fr: "< 1 h", en: "< 1h", count: scaleForPeriod(8, seed, 2) },
+    { fr: "1-3 h", en: "1-3h", count: scaleForPeriod(13, seed, 2) },
+    { fr: "3-6 h", en: "3-6h", count: scaleForPeriod(3, seed, 2) },
+    { fr: "6-9 h", en: "6-9h", count: scaleForPeriod(1, seed, 2) },
+    { fr: "> 9 h", en: "> 9h", count: scaleForPeriod(1, seed, 2) },
   ];
   const maxBucket = Math.max(...HANDLING_BUCKETS.map((b) => b.count));
 
@@ -416,16 +420,20 @@ export default function LitigesSection({ first = true }: { first?: boolean }) {
   // conic-gradient, même recette que le donut "Vos clients" de
   // CommandesSection.
   const OUTCOMES = [
-    { fr: "Remplacement", en: "Replacement", count: 20, color: GREEN_CHART },
-    { fr: "Remboursement", en: "Refund", count: 4, color: AMBER_CHART },
-    { fr: "Geste commercial", en: "Goodwill gesture", count: 1, color: PURPLE_CHART },
-    { fr: "Litige non fondé", en: "Dispute rejected", count: 1, color: GREY_CHART },
+    { fr: "Remplacement", en: "Replacement", count: scaleForPeriod(20, seed, 3), color: GREEN_CHART },
+    { fr: "Remboursement", en: "Refund", count: scaleForPeriod(4, seed, 3), color: AMBER_CHART },
+    { fr: "Geste commercial", en: "Goodwill gesture", count: scaleForPeriod(1, seed, 3), color: PURPLE_CHART },
+    { fr: "Litige non fondé", en: "Dispute rejected", count: scaleForPeriod(1, seed, 3), color: GREY_CHART },
   ];
   let acc = 0;
+  // Total recalculé (plutôt que le 26 d'origine) : les counts ci-dessus
+  // varient désormais avec la période, le dégradé conique doit rester
+  // cohérent avec leur somme réelle.
+  const outcomesTotal = OUTCOMES.reduce((s, o) => s + o.count, 0);
   const outcomeStops = OUTCOMES.map((o) => {
-    const start = (acc / 26) * 100;
+    const start = (acc / outcomesTotal) * 100;
     acc += o.count;
-    const end = (acc / 26) * 100;
+    const end = (acc / outcomesTotal) * 100;
     return `${o.color} ${start.toFixed(1)}% ${end.toFixed(1)}%`;
   }).join(", ");
 
@@ -433,17 +441,19 @@ export default function LitigesSection({ first = true }: { first?: boolean }) {
   // réachat par tranche de résolution, comparée au réachat sans litige
   // (18 %, trait de référence).
   const REPURCHASE = [
-    { fr: "< 3 h", en: "< 3h", pct: 68, color: GREEN_CHART },
-    { fr: "3-12 h", en: "3-12h", pct: 44, color: GREEN_CHART },
-    { fr: "12-24 h", en: "12-24h", pct: 29, color: AMBER_CHART },
-    { fr: "> 24 h", en: "> 24h", pct: 19, color: RED_CHART },
+    { fr: "< 3 h", en: "< 3h", pct: scaleForPeriod(68, seed, 4), color: GREEN_CHART },
+    { fr: "3-12 h", en: "3-12h", pct: scaleForPeriod(44, seed, 4), color: GREEN_CHART },
+    { fr: "12-24 h", en: "12-24h", pct: scaleForPeriod(29, seed, 4), color: AMBER_CHART },
+    { fr: "> 24 h", en: "> 24h", pct: scaleForPeriod(19, seed, 4), color: RED_CHART },
   ];
-  const maxRepurchase = 68;
+  // Recalculé (plutôt que le 68 d'origine) : suit désormais la valeur
+  // scaleForPeriod la plus haute au lieu d'un maximum figé.
+  const maxRepurchase = Math.max(...REPURCHASE.map((r) => r.pct));
 
   const flowMotifs = [
-    { fr: "Produit abîmé à l'arrivée", en: "Product damaged on arrival", value: 14 },
-    { fr: "Différent de l'annonce", en: "Different from the listing", value: 9 },
-    { fr: "Article manquant", en: "Missing item", value: 3 },
+    { fr: "Produit abîmé à l'arrivée", en: "Product damaged on arrival", value: scaleForPeriod(14, seed, 6) },
+    { fr: "Différent de l'annonce", en: "Different from the listing", value: scaleForPeriod(9, seed, 6) },
+    { fr: "Article manquant", en: "Missing item", value: scaleForPeriod(3, seed, 6) },
   ];
   // motif/resp = index dans flowMotifs / flowResp. Répartition déduite du
   // texte de la carte plus bas (seule répartition qui rend les trois phrases
@@ -452,17 +462,17 @@ export default function LitigesSection({ first = true }: { first?: boolean }) {
   //   Différent de l'annonce(9) = Fiche catalogue(5) + Votre fiche(4)
   //   Article manquant (3)    = Erreur de préparation(3)
   const flowCauses = [
-    { fr: "Emballage insuffisant", en: "Insufficient packaging", value: 7, color: RED_CHART, motif: 0, resp: 0 },
-    { fr: "Manutention au transport", en: "Handling in transit", value: 5, color: AMBER_CHART, motif: 0, resp: 0 },
-    { fr: "Fiche du catalogue partenaire", en: "Partner catalog listing", value: 5, color: PURPLE_CHART, motif: 1, resp: 0 },
-    { fr: "Votre propre fiche", en: "Your own listing", value: 4, color: "#EC0C8C", motif: 1, resp: 1 },
-    { fr: "Erreur de préparation", en: "Prep error", value: 3, color: "#5AA9FF", motif: 2, resp: 0 },
-    { fr: "Défaut de fabrication", en: "Manufacturing defect", value: 2, color: GREY_CHART, motif: 0, resp: 2 },
+    { fr: "Emballage insuffisant", en: "Insufficient packaging", value: scaleForPeriod(7, seed, 7), color: RED_CHART, motif: 0, resp: 0 },
+    { fr: "Manutention au transport", en: "Handling in transit", value: scaleForPeriod(5, seed, 7), color: AMBER_CHART, motif: 0, resp: 0 },
+    { fr: "Fiche du catalogue partenaire", en: "Partner catalog listing", value: scaleForPeriod(5, seed, 7), color: PURPLE_CHART, motif: 1, resp: 0 },
+    { fr: "Votre propre fiche", en: "Your own listing", value: scaleForPeriod(4, seed, 7), color: "#EC0C8C", motif: 1, resp: 1 },
+    { fr: "Erreur de préparation", en: "Prep error", value: scaleForPeriod(3, seed, 7), color: "#5AA9FF", motif: 2, resp: 0 },
+    { fr: "Défaut de fabrication", en: "Manufacturing defect", value: scaleForPeriod(2, seed, 7), color: GREY_CHART, motif: 0, resp: 2 },
   ];
   const flowResp = [
-    { fr: "Le partenaire agréé", en: "The approved partner", value: 20, pct: "77 %", color: "#5AA9FF" },
-    { fr: "Vous", en: "You", value: 4, pct: "15 %", color: "#EC0C8C" },
-    { fr: "Le fournisseur", en: "The supplier", value: 2, pct: "8 %", color: AMBER_CHART },
+    { fr: "Le partenaire agréé", en: "The approved partner", value: scaleForPeriod(20, seed, 8), pct: "77 %", color: "#5AA9FF" },
+    { fr: "Vous", en: "You", value: scaleForPeriod(4, seed, 8), pct: "15 %", color: "#EC0C8C" },
+    { fr: "Le fournisseur", en: "The supplier", value: scaleForPeriod(2, seed, 8), pct: "8 %", color: AMBER_CHART },
   ];
 
   // "Exporter" : KPI de la période, issues des litiges et responsable réel.
@@ -556,7 +566,7 @@ export default function LitigesSection({ first = true }: { first?: boolean }) {
               sinceColor={AMBER}
               handled={t("Faite en 1 h 20", "Done in 1h20")}
               remaining="60 h"
-              pct={17}
+              pct={scaleForPeriod(17, seed, 9)}
               pctColor="#5AA9FF"
               borderColor="#5AA9FF"
               note={t(
@@ -574,7 +584,7 @@ export default function LitigesSection({ first = true }: { first?: boolean }) {
               handled={t("Faite en 3 h 10", "Done in 3h10")}
               remaining="48 h"
               remainingColor={RED}
-              pct={33}
+              pct={scaleForPeriod(33, seed, 10)}
               pctColor={AMBER_CHART}
               borderColor="#EC0C8C"
               note={t(
@@ -888,7 +898,7 @@ export default function LitigesSection({ first = true }: { first?: boolean }) {
               <div className="relative flex h-32 gap-3 rounded-xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
                 <span
                   className="pointer-events-none absolute left-3 right-3 border-t border-dashed"
-                  style={{ bottom: `${(18 / maxRepurchase) * 100}%`, borderColor: "var(--dashboard-text)", opacity: 0.3 }}
+                  style={{ bottom: `${(scaleForPeriod(18, seed, 5) / maxRepurchase) * 100}%`, borderColor: "var(--dashboard-text)", opacity: 0.3 }}
                 />
                 {REPURCHASE.map((r) => (
                   <div key={r.fr} className="flex flex-1 flex-col items-center justify-end gap-1.5">
@@ -973,11 +983,11 @@ export default function LitigesSection({ first = true }: { first?: boolean }) {
                   </tr>
                 </thead>
                 <tbody>
-                  <RiskRow code="S" name={t("Ensemble lin deux pièces", "Linen two-piece set")} ventes={12} litiges={3} taux="25 %" taux_color={RED} cause={t("Emballage du partenaire", "Partner's packaging")} bad />
-                  <RiskRow code="D" name={t("Sac cabas en raphia", "Raffia tote bag")} ventes={24} litiges={4} taux="17 %" taux_color={RED} cause={t("Fiche du partenaire", "Partner's listing")} bad />
-                  <RiskRow code="D" name={t("Huile de ricin 100 ml", "Castor oil 100 ml")} ventes={29} litiges={3} taux="10 %" taux_color={AMBER} cause={t("Votre fiche", "Your own listing")} />
-                  <RiskRow code="S" name={t("Beurre de karité 200 g", "Shea butter 200 g")} ventes={33} litiges={2} taux="6 %" taux_color={AMBER} cause={t("Emballage du partenaire", "Partner's packaging")} />
-                  <RiskRow code="S" name={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} ventes={41} litiges={0} taux="0 %" taux_color={GREEN} cause={t("Aucun litige", "No dispute")} />
+                  <RiskRow code="S" name={t("Ensemble lin deux pièces", "Linen two-piece set")} ventes={scaleForPeriod(12, seed, 11)} litiges={scaleForPeriod(3, seed, 12)} taux="25 %" taux_color={RED} cause={t("Emballage du partenaire", "Partner's packaging")} bad />
+                  <RiskRow code="D" name={t("Sac cabas en raphia", "Raffia tote bag")} ventes={scaleForPeriod(24, seed, 11)} litiges={scaleForPeriod(4, seed, 12)} taux="17 %" taux_color={RED} cause={t("Fiche du partenaire", "Partner's listing")} bad />
+                  <RiskRow code="D" name={t("Huile de ricin 100 ml", "Castor oil 100 ml")} ventes={scaleForPeriod(29, seed, 11)} litiges={scaleForPeriod(3, seed, 12)} taux="10 %" taux_color={AMBER} cause={t("Votre fiche", "Your own listing")} />
+                  <RiskRow code="S" name={t("Beurre de karité 200 g", "Shea butter 200 g")} ventes={scaleForPeriod(33, seed, 11)} litiges={scaleForPeriod(2, seed, 12)} taux="6 %" taux_color={AMBER} cause={t("Emballage du partenaire", "Partner's packaging")} />
+                  <RiskRow code="S" name={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} ventes={scaleForPeriod(41, seed, 11)} litiges={scaleForPeriod(0, seed, 12)} taux="0 %" taux_color={GREEN} cause={t("Aucun litige", "No dispute")} />
                 </tbody>
               </table>
             </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AreaChart, Bar, Btn, Card, CollapsibleCards, Divider, HeaderActionBtn, MovementBars, Nature, openBrandedReport, SectionHeader, StatRow, Tag } from "./shared";
+import { AreaChart, Bar, Btn, Card, CollapsibleCards, Divider, HeaderActionBtn, MovementBars, Nature, openBrandedReport, periodSeed, scaleForPeriod, SectionHeader, StatRow, Tag } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -305,8 +305,168 @@ const STOCK_LEVEL = [
 const DEMAND = [3, 4, 3, 4, 4, 5, 4, 6, 5, 7, 4, 5, 4, 4, 3, 4, 4, 4, 5, 4, 6, 5, 4, 5, 7, 4, 4, 5, 4, 5];
 const VENDU_STOCK = [3, 4, 3, 4, 4, 5, 4, 5, 4, 5, 4, 5, 4, 4, 3, 4, 4, 4, 5, 3, 6, 5, 4, 5, 4, 3, 4, 3, 3, 5];
 
-export default function StockSection({ first = true }: { first?: boolean }) {
-  const { t } = useDashboardLangue();
+export default function StockSection({ first = true, activeDate }: { first?: boolean; activeDate?: Date }) {
+  const { t, langue } = useDashboardLangue();
+
+  // Période sélectionnée sur le picker du DashboardHeader → seed déterministe
+  // qui fait varier les chiffres mock ci-dessous (cf.
+  // [[dashboard-mock-data-pending-laravel-api]]) ; 2026-08-01 par défaut =
+  // même date que le reste du dashboard tant qu'aucune période n'est choisie.
+  const seed = periodSeed(activeDate ?? new Date(2026, 7, 1));
+  const numberLocale = langue === "EN" ? "en-US" : "fr-FR";
+  const F = (n: number) => `${n.toLocaleString(numberLocale)} F`;
+  const N = (n: number) => n.toLocaleString(numberLocale);
+  const dec1 = (n: number) => (n / 10).toLocaleString(numberLocale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const dec2 = (n: number) => (n / 100).toLocaleString(numberLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // KPI de la période
+  const stockValue = scaleForPeriod(1842000, seed, 0);
+  const stockValuePrev = scaleForPeriod(1758000, seed, 1);
+  const resaleValue = scaleForPeriod(3210000, seed, 2);
+  const resaleValuePrev = scaleForPeriod(3050000, seed, 3);
+  const turnover = scaleForPeriod(89, seed, 4); // ×10 → décimale via dec1
+  const turnoverPrev = scaleForPeriod(77, seed, 5);
+  const coverage = scaleForPeriod(41, seed, 6);
+  const coveragePrev = scaleForPeriod(46, seed, 7);
+  const serviceRate = scaleForPeriod(94, seed, 8);
+  const serviceRatePrev = scaleForPeriod(91, seed, 9);
+
+  // Vendable vs immobilisé
+  const availableUnits = scaleForPeriod(118, seed, 10);
+  const reservedUnits = scaleForPeriod(26, seed, 11);
+  const blockedUnits = scaleForPeriod(5, seed, 12);
+  const returnedUnits = scaleForPeriod(19, seed, 13);
+  const sellableTotal = availableUnits + reservedUnits + blockedUnits + returnedUnits;
+  const pctOf = (n: number) => (sellableTotal > 0 ? (n / sellableTotal) * 100 : 0);
+
+  // Mouvement du stock
+  const depositedUnits = scaleForPeriod(170, seed, 14);
+  const soldUnits = scaleForPeriod(123, seed, 15);
+  const discrepancyUnits = scaleForPeriod(4, seed, 16);
+
+  // Depuis quand la marchandise est là (valeur d'achat par tranche d'âge)
+  const ageUnder30 = scaleForPeriod(842000, seed, 17);
+  const age30to60 = scaleForPeriod(588000, seed, 18);
+  const age60to90 = scaleForPeriod(286000, seed, 19);
+  const ageOver90 = scaleForPeriod(126000, seed, 20);
+  const ageTotal = ageUnder30 + age30to60 + age60to90 + ageOver90;
+  const agePct = (n: number) => (ageTotal > 0 ? (n / ageTotal) * 100 : 0);
+  const ageMaxPct = Math.max(agePct(ageUnder30), agePct(age30to60), agePct(age60to90), agePct(ageOver90));
+
+  // Rotation par référence (fois par an, ×10 → décimale via dec1)
+  const rotSerum = scaleForPeriod(94, seed, 21);
+  const rotKarite = scaleForPeriod(68, seed, 22);
+  const rotSavon = scaleForPeriod(51, seed, 23);
+  const rotCreme = scaleForPeriod(42, seed, 24);
+  const rotSandales = scaleForPeriod(26, seed, 25);
+  const rotLin = scaleForPeriod(18, seed, 26);
+  const rotMax = Math.max(rotSerum, rotKarite, rotSavon, rotCreme, rotSandales, rotLin);
+  const rotPct = (n: number) => (rotMax > 0 ? (n / rotMax) * 100 : 0);
+
+  // Où se trouve la marchandise (sites du partenaire)
+  const stockCocody = scaleForPeriod(104, seed, 27);
+  const stockYopougon = scaleForPeriod(49, seed, 28);
+  const stockBouake = scaleForPeriod(15, seed, 29);
+  const sitesTotal = stockCocody + stockYopougon + stockBouake;
+  const commandesCocody = scaleForPeriod(71, seed, 30);
+  const commandesYopougon = scaleForPeriod(34, seed, 31);
+  const commandesBouake = scaleForPeriod(18, seed, 32);
+
+  // Qualité à chaque passage de main
+  const qualityReception = scaleForPeriod(977, seed, 33); // ×10 → dec1
+  const qualityDelivery = scaleForPeriod(989, seed, 34);
+  const returnsResellable = scaleForPeriod(73, seed, 35);
+  const breakageCocody = scaleForPeriod(8, seed, 36); // ×10 → dec1
+  const breakageYopougon = scaleForPeriod(14, seed, 37);
+  const breakageBouake = scaleForPeriod(32, seed, 38);
+  const breakageMax = Math.max(breakageCocody, breakageYopougon, breakageBouake);
+  const breakagePct = (n: number) => (breakageMax > 0 ? (n / breakageMax) * 100 : 0);
+
+  // Ce que valent vos retours
+  const returnIntactCount = scaleForPeriod(12, seed, 39);
+  const returnDamagedCount = scaleForPeriod(5, seed, 40);
+  const returnDefectCount = scaleForPeriod(2, seed, 41);
+  const returnIntactValue = scaleForPeriod(132000, seed, 42);
+  const returnDamagedValue = scaleForPeriod(54000, seed, 43);
+  const returnDefectValue = scaleForPeriod(19200, seed, 44);
+  const returnValueTotal = returnIntactValue + returnDamagedValue + returnDefectValue;
+  const returnValueLost = returnDamagedValue + returnDefectValue;
+
+  // La demande face au stock
+  const demandEstimated = scaleForPeriod(135, seed, 45);
+  const demandLost = Math.max(0, demandEstimated - soldUnits);
+  const demandServiceRate = demandEstimated > 0 ? Math.round((soldUnits / demandEstimated) * 100) : 0;
+  const marginLost = scaleForPeriod(56300, seed, 46);
+  const trendSerum = scaleForPeriod(34, seed, 47);
+  const trendKarite = scaleForPeriod(8, seed, 48);
+  const trendSandales = scaleForPeriod(22, seed, 49);
+
+  // Recherches sans réponse
+  const searchGel = scaleForPeriod(41, seed, 50);
+  const searchHuile = scaleForPeriod(28, seed, 51);
+  const searchMasque = scaleForPeriod(22, seed, 52);
+  const searchSavon = scaleForPeriod(17, seed, 53);
+  const searchCreme = scaleForPeriod(11, seed, 54);
+  const searchMax = Math.max(searchGel, searchHuile, searchMasque, searchSavon, searchCreme);
+  const searchPct = (n: number) => (searchMax > 0 ? (n / searchMax) * 100 : 0);
+
+  // Ce que le partenaire tient (dropshipping)
+  const dropSales = scaleForPeriod(733400, seed, 55);
+  const dropDisputes = scaleForPeriod(7, seed, 56);
+  const dropDisputesTotal = scaleForPeriod(26, seed, 57);
+  const dropAvailable = scaleForPeriod(10, seed, 58);
+
+  // Stock partagé entre "à déposer jeudi" et "point de commande" : mêmes
+  // références, même niveau de stock affiché dans les deux cartes.
+  const stockSerum = scaleForPeriod(6, seed, 59);
+  const stockCreme = scaleForPeriod(2, seed, 60);
+  const stockSavon = scaleForPeriod(6, seed, 61);
+  const stockKarite = scaleForPeriod(21, seed, 62);
+  const stockSandales = scaleForPeriod(18, seed, 63);
+  const stockLin = scaleForPeriod(16, seed, 64);
+
+  const replenSerumQty = scaleForPeriod(42, seed, 65);
+  const replenSerumCost = scaleForPeriod(218400, seed, 66);
+  const replenCremeQty = scaleForPeriod(14, seed, 67);
+  const replenCremeCost = scaleForPeriod(61600, seed, 68);
+  const replenSavonQty = scaleForPeriod(18, seed, 69);
+  const replenSavonCost = scaleForPeriod(72000, seed, 70);
+  const replenKariteQty = scaleForPeriod(12, seed, 71);
+  const replenKariteCost = scaleForPeriod(134000, seed, 72);
+  const replenBudget = replenSerumCost + replenCremeCost + replenSavonCost + replenKariteCost;
+
+  const opSerumPerDay = scaleForPeriod(137, seed, 73); // ×100 → dec2
+  const opSerumConsumed = scaleForPeriod(6, seed, 74);
+  const opSerumReserve = scaleForPeriod(7, seed, 75);
+  const opSerumPoint = scaleForPeriod(13, seed, 76);
+  const opCremePerDay = scaleForPeriod(31, seed, 77);
+  const opCremeConsumed = scaleForPeriod(2, seed, 78);
+  const opCremeReserve = scaleForPeriod(2, seed, 79);
+  const opCremePoint = scaleForPeriod(4, seed, 80);
+  const opSavonPerDay = scaleForPeriod(55, seed, 81);
+  const opSavonConsumed = scaleForPeriod(3, seed, 82);
+  const opSavonReserve = scaleForPeriod(3, seed, 83);
+  const opSavonPoint = scaleForPeriod(6, seed, 84);
+  const opKaritePerDay = scaleForPeriod(110, seed, 85);
+  const opKariteConsumed = scaleForPeriod(5, seed, 86);
+  const opKariteReserve = scaleForPeriod(6, seed, 87);
+  const opKaritePoint = scaleForPeriod(11, seed, 88);
+  const opSandalesPerDay = scaleForPeriod(70, seed, 89);
+  const opSandalesConsumed = scaleForPeriod(3, seed, 90);
+  const opSandalesReserve = scaleForPeriod(4, seed, 91);
+  const opSandalesPoint = scaleForPeriod(7, seed, 92);
+  const opLinPerDay = scaleForPeriod(40, seed, 93);
+  const opLinConsumed = scaleForPeriod(2, seed, 94);
+  const opLinReserve = scaleForPeriod(2, seed, 95);
+  const opLinPoint = scaleForPeriod(4, seed, 96);
+
+  // Mouvement du stock + demande face au stock : mêmes courbes que plus bas
+  // dans le fichier (STOCK_LEVEL / DEMAND / VENDU_STOCK), mises à l'échelle
+  // de la période. Même clé (300 + i) pour DEMAND et VENDU_STOCK afin que le
+  // rapport entre les deux courbes (et la zone de rupture) reste cohérent.
+  const stockLevel = STOCK_LEVEL.map((v, i) => scaleForPeriod(v, seed, 200 + i));
+  const demand = DEMAND.map((v, i) => scaleForPeriod(v, seed, 300 + i));
+  const venduStock = VENDU_STOCK.map((v, i) => scaleForPeriod(v, seed, 300 + i));
 
   // "Comparer à la période précédente" : révèle une ligne "Période
   // précédente" sous chaque KPI. Pas de vraie période antérieure tant que
@@ -325,29 +485,29 @@ export default function StockSection({ first = true }: { first?: boolean }) {
         heading: t("Indicateurs de la période", "Period metrics"),
         columns: [t("Indicateur", "Metric"), t("Valeur", "Value"), t("Note", "Note")],
         rows: [
-          [t("Valeur du stock", "Stock value"), "1 842 000 F", t("prix d'achat · 168 unités", "cost price · 168 units")],
-          [t("Valeur de revente", "Resale value"), "3 210 000 F", t("si tout se vend au prix affiché", "if everything sells at listed price")],
-          [t("Rotation annuelle", "Annual turnover"), "8,9×", t("+1,2 vs période précédente", "+1.2 vs previous period")],
-          [t("Couverture moyenne", "Average coverage"), "41 j", t("au rythme de vente actuel", "at the current sales pace")],
-          [t("Taux de service", "Service rate"), "94 %", t("12 ventes perdues sur rupture", "12 sales lost to stockouts")],
+          [t("Valeur du stock", "Stock value"), F(stockValue), t("prix d'achat · 168 unités", "cost price · 168 units")],
+          [t("Valeur de revente", "Resale value"), F(resaleValue), t("si tout se vend au prix affiché", "if everything sells at listed price")],
+          [t("Rotation annuelle", "Annual turnover"), `${dec1(turnover)}×`, t("+1,2 vs période précédente", "+1.2 vs previous period")],
+          [t("Couverture moyenne", "Average coverage"), `${N(coverage)} j`, t("au rythme de vente actuel", "at the current sales pace")],
+          [t("Taux de service", "Service rate"), `${N(serviceRate)} %`, t("12 ventes perdues sur rupture", "12 sales lost to stockouts")],
         ],
       },
       {
         heading: t("Vendable vs immobilisé", "Sellable vs tied up"),
         rows: [
-          [t("Disponibles à la vente", "Available for sale"), "118"],
-          [t("Réservées par des commandes en cours", "Reserved for orders in progress"), "26"],
-          [t("Bloquées par un litige", "Blocked by a dispute"), "5"],
-          [t("En retour après un refus", "Returned after a refusal"), "19"],
+          [t("Disponibles à la vente", "Available for sale"), N(availableUnits)],
+          [t("Réservées par des commandes en cours", "Reserved for orders in progress"), N(reservedUnits)],
+          [t("Bloquées par un litige", "Blocked by a dispute"), N(blockedUnits)],
+          [t("En retour après un refus", "Returned after a refusal"), N(returnedUnits)],
         ],
       },
       {
         heading: t("Sites du partenaire", "Partner sites"),
         columns: [t("Site", "Site"), t("Unités", "Units"), t("Cmd. servies", "Orders served"), t("Délai moyen", "Avg. time")],
         rows: [
-          ["Cocody", "104", "71", "3 h 40"],
-          ["Yopougon", "49", "34", "4 h 45"],
-          ["Bouaké", "15", "18", "11 h 30"],
+          ["Cocody", N(stockCocody), N(commandesCocody), "3 h 40"],
+          ["Yopougon", N(stockYopougon), N(commandesYopougon), "4 h 45"],
+          ["Bouaké", N(stockBouake), N(commandesBouake), "11 h 30"],
         ],
       },
       {
@@ -408,11 +568,11 @@ export default function StockSection({ first = true }: { first?: boolean }) {
       <CollapsibleCards visibleCount={3}>
       {/* KPI de la période */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <KpiCard label={t("Valeur du stock", "Stock value")} value="1 842 000 F" note={t("prix d'achat · 168 unités", "cost price · 168 units")} previous={compare ? "1 758 000 F" : undefined} />
-        <KpiCard label={t("Valeur de revente", "Resale value")} value="3 210 000 F" valueColor="#178a3f" note={t("si tout se vend au prix affiché", "if everything sells at listed price")} previous={compare ? "3 050 000 F" : undefined} />
-        <KpiCard label={t("Rotation annuelle", "Annual turnover")} value="8,9×" note={t("+1,2 vs période précédente", "+1.2 vs previous period")} noteColor="#178a3f" previous={compare ? "7,7×" : undefined} />
-        <KpiCard label={t("Couverture moyenne", "Average coverage")} value="41 j" note={t("au rythme de vente actuel", "at the current sales pace")} previous={compare ? "46 j" : undefined} />
-        <KpiCard label={t("Taux de service", "Service rate")} value="94 %" valueColor="#a8690a" note={t("12 ventes perdues sur rupture", "12 sales lost to stockouts")} noteColor="#c8262d" previous={compare ? "91 %" : undefined} />
+        <KpiCard label={t("Valeur du stock", "Stock value")} value={F(stockValue)} note={t("prix d'achat · 168 unités", "cost price · 168 units")} previous={compare ? F(stockValuePrev) : undefined} />
+        <KpiCard label={t("Valeur de revente", "Resale value")} value={F(resaleValue)} valueColor="#178a3f" note={t("si tout se vend au prix affiché", "if everything sells at listed price")} previous={compare ? F(resaleValuePrev) : undefined} />
+        <KpiCard label={t("Rotation annuelle", "Annual turnover")} value={`${dec1(turnover)}×`} note={t("+1,2 vs période précédente", "+1.2 vs previous period")} noteColor="#178a3f" previous={compare ? `${dec1(turnoverPrev)}×` : undefined} />
+        <KpiCard label={t("Couverture moyenne", "Average coverage")} value={`${N(coverage)} j`} note={t("au rythme de vente actuel", "at the current sales pace")} previous={compare ? `${N(coveragePrev)} j` : undefined} />
+        <KpiCard label={t("Taux de service", "Service rate")} value={`${N(serviceRate)} %`} valueColor="#a8690a" note={t("12 ventes perdues sur rupture", "12 sales lost to stockouts")} noteColor="#c8262d" previous={compare ? `${N(serviceRatePrev)} %` : undefined} />
       </div>
 
       {/* Vendable vs immobilisé */}
@@ -424,12 +584,12 @@ export default function StockSection({ first = true }: { first?: boolean }) {
           </div>
           <Tag tone="blue">S</Tag>
         </div>
-        <StackedBar segments={[{ pct: 70.2, color: "#4FE0AE" }, { pct: 15.5, color: "#38BDF8" }, { pct: 3, color: "#FFB020" }, { pct: 11.3, color: "#FF5A62" }]} />
+        <StackedBar segments={[{ pct: pctOf(availableUnits), color: "#4FE0AE" }, { pct: pctOf(reservedUnits), color: "#38BDF8" }, { pct: pctOf(blockedUnits), color: "#FFB020" }, { pct: pctOf(returnedUnits), color: "#FF5A62" }]} />
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="flex items-start gap-2"><span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: "#4FE0AE" }} /><div><p className="text-xs font-semibold">118 {t("unités", "units")}</p><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Disponibles à la vente", "Available for sale")}</p></div></div>
-          <div className="flex items-start gap-2"><span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: "#38BDF8" }} /><div><p className="text-xs font-semibold">26 {t("unités", "units")}</p><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Réservées par des commandes en cours", "Reserved for orders in progress")}</p></div></div>
-          <div className="flex items-start gap-2"><span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: "#FFB020" }} /><div><p className="text-xs font-semibold">5 {t("unités", "units")}</p><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Bloquées par un litige", "Blocked by a dispute")}</p></div></div>
-          <div className="flex items-start gap-2"><span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: "#FF5A62" }} /><div><p className="text-xs font-semibold">19 {t("unités", "units")}</p><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("En retour après un refus", "Returned after a refusal")}</p></div></div>
+          <div className="flex items-start gap-2"><span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: "#4FE0AE" }} /><div><p className="text-xs font-semibold">{N(availableUnits)} {t("unités", "units")}</p><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Disponibles à la vente", "Available for sale")}</p></div></div>
+          <div className="flex items-start gap-2"><span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: "#38BDF8" }} /><div><p className="text-xs font-semibold">{N(reservedUnits)} {t("unités", "units")}</p><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Réservées par des commandes en cours", "Reserved for orders in progress")}</p></div></div>
+          <div className="flex items-start gap-2"><span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: "#FFB020" }} /><div><p className="text-xs font-semibold">{N(blockedUnits)} {t("unités", "units")}</p><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Bloquées par un litige", "Blocked by a dispute")}</p></div></div>
+          <div className="flex items-start gap-2"><span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: "#FF5A62" }} /><div><p className="text-xs font-semibold">{N(returnedUnits)} {t("unités", "units")}</p><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("En retour après un refus", "Returned after a refusal")}</p></div></div>
         </div>
         <div className="mt-4 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
           <p className="text-xs font-semibold">{t("Trente unités sur cent soixante-huit ne peuvent pas être vendues aujourd'hui", "Thirty units out of a hundred and sixty-eight can't be sold today")}</p>
@@ -455,17 +615,17 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ background: "#9096AA" }} />{t("Sorties", "Outflows")}</span>
           </span>
         </div>
-        <AreaChart values={STOCK_LEVEL} color={STOCK_COLOR} />
-        <MovementBars values={STOCK_LEVEL} positive="#4FE0AE" negative="#9096AA" />
+        <AreaChart values={stockLevel} color={STOCK_COLOR} />
+        <MovementBars values={stockLevel} positive="#4FE0AE" negative="#9096AA" />
         <div className="mt-1 flex justify-between text-[9px] text-[var(--dashboard-text)]/40">
           <span>9 août</span><span>16 août</span><span>23 août</span><span>30 août</span><span>8 sept.</span>
         </div>
         <Divider />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Déposé", "Deposited")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#178a3f" }}>170</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("en 2 dépôts", "in 2 deposits")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Vendu", "Sold")}</p><p className="mt-0.5 text-base font-bold">123</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("4,1 par jour", "4.1 per day")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Revenu", "Returned")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#c8262d" }}>19</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("après refus", "after refusal")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Écarts constatés", "Discrepancies found")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#a8690a" }}>4</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("casse ou manquant", "breakage or missing")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Déposé", "Deposited")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#178a3f" }}>{N(depositedUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("en 2 dépôts", "in 2 deposits")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Vendu", "Sold")}</p><p className="mt-0.5 text-base font-bold">{N(soldUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("4,1 par jour", "4.1 per day")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Revenu", "Returned")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#c8262d" }}>{N(returnedUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("après refus", "after refusal")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Écarts constatés", "Discrepancies found")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#a8690a" }}>{N(discrepancyUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("casse ou manquant", "breakage or missing")}</p></div>
           <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Prochain dépôt", "Next deposit")}</p><p className="mt-0.5 text-base font-bold">{t("Jeudi 11", "Thursday 11")}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("déjà planifié", "already planned")}</p></div>
         </div>
         <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
@@ -487,16 +647,16 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             <Tag tone="blue">S</Tag>
           </div>
           <div className="mt-4 flex items-end gap-3">
-            <AgeBlock pct={46} maxPct={46} color="#4FE0AE" label={t("< 30 j", "<30d")} />
-            <AgeBlock pct={32} maxPct={46} color="#38BDF8" label={t("30-60 j", "30-60d")} />
-            <AgeBlock pct={16} maxPct={46} color="#FFB020" label={t("60-90 j", "60-90d")} />
-            <AgeBlock pct={6} maxPct={46} color="#FF5A62" label={t("> 90 j", ">90d")} pill />
+            <AgeBlock pct={agePct(ageUnder30)} maxPct={ageMaxPct} color="#4FE0AE" label={t("< 30 j", "<30d")} />
+            <AgeBlock pct={agePct(age30to60)} maxPct={ageMaxPct} color="#38BDF8" label={t("30-60 j", "30-60d")} />
+            <AgeBlock pct={agePct(age60to90)} maxPct={ageMaxPct} color="#FFB020" label={t("60-90 j", "60-90d")} />
+            <AgeBlock pct={agePct(ageOver90)} maxPct={ageMaxPct} color="#FF5A62" label={t("> 90 j", ">90d")} pill />
           </div>
           <div className="mt-4">
-            <AgeRow label={t("Moins de 30 jours", "Under 30 days")} value="842 000 F" pct="46 %" tone="ok" />
-            <AgeRow label={t("30 à 60 jours", "30 to 60 days")} value="588 000 F" pct="32 %" tone="ok" />
-            <AgeRow label={t("60 à 90 jours", "60 to 90 days")} value="286 000 F" pct="16 %" tone="mid" />
-            <AgeRow label={t("Plus de 90 jours", "Over 90 days")} value="126 000 F" pct="6 %" tone="bad" />
+            <AgeRow label={t("Moins de 30 jours", "Under 30 days")} value={F(ageUnder30)} pct={`${Math.round(agePct(ageUnder30))} %`} tone="ok" />
+            <AgeRow label={t("30 à 60 jours", "30 to 60 days")} value={F(age30to60)} pct={`${Math.round(agePct(age30to60))} %`} tone="ok" />
+            <AgeRow label={t("60 à 90 jours", "60 to 90 days")} value={F(age60to90)} pct={`${Math.round(agePct(age60to90))} %`} tone="mid" />
+            <AgeRow label={t("Plus de 90 jours", "Over 90 days")} value={F(ageOver90)} pct={`${Math.round(agePct(ageOver90))} %`} tone="bad" />
           </div>
           <div className="mt-4 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
             <p className="text-xs font-semibold">{t("Quatre cent douze mille francs dorment depuis plus de deux mois", "Four hundred twelve thousand francs have been sitting for over two months")}</p>
@@ -518,12 +678,12 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             <Tag tone="blue">S</Tag>
           </div>
           <div className="mt-3">
-            <RankRow label={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} value={t("9,4 fois", "9.4 times")} pct={100} color="#178a3f" valueColor="#178a3f" />
-            <RankRow label={t("Beurre de karité 200 g", "Shea butter 200 g")} value={t("6,8 fois", "6.8 times")} pct={72} color="#178a3f" valueColor="#178a3f" />
-            <RankRow label={t("Savon noir 250 g", "Black soap 250 g")} value={t("5,1 fois", "5.1 times")} pct={54} color="#178a3f" valueColor="#178a3f" />
-            <RankRow label={t("Crème mains 75 ml", "Hand cream 75 ml")} value={t("4,2 fois", "4.2 times")} pct={45} color="#5AA9FF" />
-            <RankRow label={t("Sandales tressées", "Woven sandals")} value={t("2,6 fois", "2.6 times")} pct={28} color="#FFB020" valueColor="#a8690a" />
-            <RankRow label={t("Ensemble lin deux pièces", "Two-piece linen set")} value={t("1,8 fois", "1.8 times")} pct={19} color="#FF5A62" valueColor="#c8262d" />
+            <RankRow label={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} value={`${dec1(rotSerum)} ${t("fois", "times")}`} pct={rotPct(rotSerum)} color="#178a3f" valueColor="#178a3f" />
+            <RankRow label={t("Beurre de karité 200 g", "Shea butter 200 g")} value={`${dec1(rotKarite)} ${t("fois", "times")}`} pct={rotPct(rotKarite)} color="#178a3f" valueColor="#178a3f" />
+            <RankRow label={t("Savon noir 250 g", "Black soap 250 g")} value={`${dec1(rotSavon)} ${t("fois", "times")}`} pct={rotPct(rotSavon)} color="#178a3f" valueColor="#178a3f" />
+            <RankRow label={t("Crème mains 75 ml", "Hand cream 75 ml")} value={`${dec1(rotCreme)} ${t("fois", "times")}`} pct={rotPct(rotCreme)} color="#5AA9FF" />
+            <RankRow label={t("Sandales tressées", "Woven sandals")} value={`${dec1(rotSandales)} ${t("fois", "times")}`} pct={rotPct(rotSandales)} color="#FFB020" valueColor="#a8690a" />
+            <RankRow label={t("Ensemble lin deux pièces", "Two-piece linen set")} value={`${dec1(rotLin)} ${t("fois", "times")}`} pct={rotPct(rotLin)} color="#FF5A62" valueColor="#c8262d" />
           </div>
           <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
             {t(
@@ -547,20 +707,20 @@ export default function StockSection({ first = true }: { first?: boolean }) {
           <div className="flex flex-col items-center gap-3">
             <Ring
               segments={[
-                { pct: (104 / 168) * 100, color: "#38BDF8" },
-                { pct: (49 / 168) * 100, color: "#8B5CF6" },
-                { pct: (15 / 168) * 100, color: "#FFB020" },
+                { pct: (stockCocody / sitesTotal) * 100, color: "#38BDF8" },
+                { pct: (stockYopougon / sitesTotal) * 100, color: "#8B5CF6" },
+                { pct: (stockBouake / sitesTotal) * 100, color: "#FFB020" },
               ]}
               size={100}
               className="sm:ml-28"
             >
-              <span className="text-lg font-bold">168</span>
+              <span className="text-lg font-bold">{N(sitesTotal)}</span>
               <span className="text-[8px] text-[var(--dashboard-text)]/40">{t("unités", "units")}</span>
             </Ring>
             <div className="w-full space-y-1.5 text-[10px]">
-              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#38BDF8" }} />Cocody <b className="ml-auto">104</b></span>
-              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#8B5CF6" }} />Yopougon <b className="ml-auto">49</b></span>
-              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FFB020" }} />Bouaké <b className="ml-auto">15</b></span>
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#38BDF8" }} />Cocody <b className="ml-auto">{N(stockCocody)}</b></span>
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#8B5CF6" }} />Yopougon <b className="ml-auto">{N(stockYopougon)}</b></span>
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FFB020" }} />Bouaké <b className="ml-auto">{N(stockBouake)}</b></span>
             </div>
           </div>
           <div>
@@ -568,9 +728,9 @@ export default function StockSection({ first = true }: { first?: boolean }) {
               <span>{t("Site", "Site")}</span><span>{t("Unités", "Units")}</span><span>{t("Cmd. servies", "Orders served")}</span><span className="text-right">{t("Délai moyen", "Avg. time")}</span>
             </div>
             <div className="divide-y divide-[var(--dashboard-text)]/[0.05]">
-              <WarehouseRow site="Cocody" unites="104" commandes="71" delai="3 h 40" />
-              <WarehouseRow site="Yopougon" unites="49" commandes="34" delai="4 h 45" />
-              <WarehouseRow site="Bouaké" unites="15" commandes="18" delai="11 h 30" bad />
+              <WarehouseRow site="Cocody" unites={N(stockCocody)} commandes={N(commandesCocody)} delai="3 h 40" />
+              <WarehouseRow site="Yopougon" unites={N(stockYopougon)} commandes={N(commandesYopougon)} delai="4 h 45" />
+              <WarehouseRow site="Bouaké" unites={N(stockBouake)} commandes={N(commandesBouake)} delai="11 h 30" bad={commandesBouake > stockBouake} />
             </div>
             <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
               <p className="text-xs font-semibold">{t("Bouaké sert plus de commandes qu'il n'a de stock", "Bouaké serves more orders than it has stock")}</p>
@@ -606,7 +766,7 @@ export default function StockSection({ first = true }: { first?: boolean }) {
         <div className="mt-3 grid grid-cols-[1.6fr_0.5fr_1fr_0.9fr_1fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
           <span>{t("Référence et lot", "Item and batch")}</span><span>{t("Unités", "Units")}</span><span>{t("Date limite", "Deadline")}</span><span>{t("Valeur", "Value")}</span><span className="text-right">{t("Reste", "Remaining")}</span>
         </div>
-        <div className="divide-y divide-[var(--dashboard-text)]/[0.05]">
+        <div className="max-h-[340px] divide-y divide-[var(--dashboard-text)]/[0.05] overflow-y-auto pr-1">
           <LotRow name={t("Crème mains 75 ml · lot C-2408", "Hand cream 75 ml · batch C-2408")} unites="2" date={t("5 octobre 2026", "Oct. 5, 2026")} valeur="8 800 F" badgeTone="urg" badgeLabel={t("27 jours", "27 days")} />
           <LotRow name={t("Beurre de karité 200 g · lot K-2409", "Shea butter 200 g · batch K-2409")} unites="21" date={t("12 novembre 2026", "Nov. 12, 2026")} valeur="59 200 F" badgeTone="att" badgeLabel={t("2 mois", "2 months")} />
           <LotRow name={t("Sérum éclat 30 ml · lot A-2411", "Radiance serum 30 ml · batch A-2411")} unites="6" date={t("18 janvier 2027", "Jan. 18, 2027")} valeur="31 200 F" badgeTone="ok" badgeLabel={t("4 mois", "4 months")} />
@@ -636,19 +796,19 @@ export default function StockSection({ first = true }: { first?: boolean }) {
           </div>
           <div className="mt-3 flex items-center gap-2 text-center">
             <div className="flex-1 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
-              <p className="text-lg font-bold">97,7 %</p>
+              <p className="text-lg font-bold">{dec1(qualityReception)} %</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Conformes à la réception", "Compliant on receipt")}</p>
               <p className="mt-1 text-[9px] text-[var(--dashboard-text)]/40">{t("11 écarts sur 486", "11 discrepancies out of 486")}</p>
             </div>
             <span className="shrink-0 text-[var(--dashboard-text)]/25">→</span>
             <div className="flex-1 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
-              <p className="text-lg font-bold">98,9 %</p>
+              <p className="text-lg font-bold">{dec1(qualityDelivery)} %</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Intacts à la livraison", "Intact on delivery")}</p>
               <p className="mt-1 text-[9px] text-[var(--dashboard-text)]/40">{t("2 litiges pour produit abîmé", "2 disputes for damaged goods")}</p>
             </div>
             <span className="shrink-0 text-[var(--dashboard-text)]/25">→</span>
             <div className="flex-1 rounded-xl p-3" style={{ background: "rgba(255,90,98,.1)" }}>
-              <p className="text-lg font-bold" style={{ color: "#c8262d" }}>73 %</p>
+              <p className="text-lg font-bold" style={{ color: "#c8262d" }}>{N(returnsResellable)} %</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Revendables après un retour", "Resellable after a return")}</p>
               <p className="mt-1 text-[9px] text-[var(--dashboard-text)]/40">{t("5 sur 19 abîmées au voyage", "5 of 19 damaged in transit")}</p>
             </div>
@@ -656,9 +816,9 @@ export default function StockSection({ first = true }: { first?: boolean }) {
           <Divider />
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Taux de casse par site", "Breakage rate by site")}</p>
           <div className="mt-2.5">
-            <RankRow label="Cocody" value="0,8 %" pct={25} color="#178a3f" valueColor="#178a3f" />
-            <RankRow label="Yopougon" value="1,4 %" pct={44} color="#a8690a" valueColor="#a8690a" />
-            <RankRow label="Bouaké" value="3,2 %" pct={100} color="#c8262d" valueColor="#c8262d" />
+            <RankRow label="Cocody" value={`${dec1(breakageCocody)} %`} pct={breakagePct(breakageCocody)} color="#178a3f" valueColor="#178a3f" />
+            <RankRow label="Yopougon" value={`${dec1(breakageYopougon)} %`} pct={breakagePct(breakageYopougon)} color="#a8690a" valueColor="#a8690a" />
+            <RankRow label="Bouaké" value={`${dec1(breakageBouake)} %`} pct={breakagePct(breakageBouake)} color="#c8262d" valueColor="#c8262d" />
           </div>
           <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
             <p className="text-xs font-semibold">{t("Bouaké casse quatre fois plus que Cocody", "Bouaké breaks four times more than Cocody")}</p>
@@ -681,25 +841,25 @@ export default function StockSection({ first = true }: { first?: boolean }) {
           </div>
           <div className="mt-3 space-y-2">
             <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: "rgba(79,224,174,.08)" }}>
-              <span className="w-7 shrink-0 text-center text-lg font-bold" style={{ color: "#178a3f" }}>12</span>
+              <span className="w-7 shrink-0 text-center text-lg font-bold" style={{ color: "#178a3f" }}>{N(returnIntactCount)}</span>
               <div className="min-w-0 flex-1"><p className="text-xs font-semibold">{t("Intactes, remises en vente", "Intact, back on sale")}</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Refus sans ouverture du colis. Aucune perte.", "Refused unopened. No loss.")}</p></div>
-              <span className="shrink-0 text-xs font-bold">132 000 F</span>
+              <span className="shrink-0 text-xs font-bold">{F(returnIntactValue)}</span>
             </div>
             <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: "rgba(255,184,77,.08)" }}>
-              <span className="w-7 shrink-0 text-center text-lg font-bold" style={{ color: "#a8690a" }}>5</span>
+              <span className="w-7 shrink-0 text-center text-lg font-bold" style={{ color: "#a8690a" }}>{N(returnDamagedCount)}</span>
               <div className="min-w-0 flex-1"><p className="text-xs font-semibold">{t("Abîmées pendant le voyage", "Damaged in transit")}</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Emballage ouvert ou écrasé. À solder ou à jeter.", "Open or crushed packaging. Clear or discard.")}</p></div>
-              <span className="shrink-0 text-xs font-bold">54 000 F</span>
+              <span className="shrink-0 text-xs font-bold">{F(returnDamagedValue)}</span>
             </div>
             <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: "rgba(255,90,98,.08)" }}>
-              <span className="w-7 shrink-0 text-center text-lg font-bold" style={{ color: "#c8262d" }}>2</span>
+              <span className="w-7 shrink-0 text-center text-lg font-bold" style={{ color: "#c8262d" }}>{N(returnDefectCount)}</span>
               <div className="min-w-0 flex-1"><p className="text-xs font-semibold">{t("Défaut de fabrication", "Manufacturing defect")}</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Le client avait raison. À réclamer au fournisseur.", "The customer was right. Claimable from the supplier.")}</p></div>
-              <span className="shrink-0 text-xs font-bold">19 200 F</span>
+              <span className="shrink-0 text-xs font-bold">{F(returnDefectValue)}</span>
             </div>
           </div>
           <Divider />
-          <StatRow label={t("Valeur récupérée", "Value recovered")} value={<span style={{ color: "#178a3f" }}>132 000 F {t("sur", "of")} 205 200 F</span>} />
-          <StatRow label={t("Perdu sur les retours", "Lost on returns")} value={<span style={{ color: "#c8262d" }}>73 200 F</span>} />
-          <StatRow label={t("Dont récupérable auprès du fournisseur", "Of which claimable from the supplier")} value="19 200 F" />
+          <StatRow label={t("Valeur récupérée", "Value recovered")} value={<span style={{ color: "#178a3f" }}>{F(returnIntactValue)} {t("sur", "of")} {F(returnValueTotal)}</span>} />
+          <StatRow label={t("Perdu sur les retours", "Lost on returns")} value={<span style={{ color: "#c8262d" }}>{F(returnValueLost)}</span>} />
+          <StatRow label={t("Dont récupérable auprès du fournisseur", "Of which claimable from the supplier")} value={F(returnDefectValue)} />
           <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
             {t(
               "Un colis refusé revient rarement neuf. Faire contrôler les retours à l'arrivée, plutôt qu'au moment de les revendre, évite de créer un second litige sur la même marchandise et permet de réclamer à temps ce qui est défectueux.",
@@ -722,32 +882,32 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ background: "#c8262d" }} />{t("Perdu sur rupture", "Lost to stockout")}</span>
           </span>
         </div>
-        <AreaChart values={DEMAND} color="#FF7A80" compareValues={VENDU_STOCK} compareColor="#5AA9FF" gapColor="#c8262d" />
+        <AreaChart values={demand} color="#FF7A80" compareValues={venduStock} compareColor="#5AA9FF" gapColor="#c8262d" />
         <div className="mt-1 flex justify-between text-[9px] text-[var(--dashboard-text)]/40">
           <span>9 août</span><span>16 août</span><span>23 août</span><span>30 août</span><span>8 sept.</span>
         </div>
         <Divider />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Demande estimée", "Estimated demand")}</p><p className="mt-0.5 text-base font-bold">135</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("unités sur la période", "units this period")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Vendu", "Sold")}</p><p className="mt-0.5 text-base font-bold">123</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("91 % de la demande", "91% of demand")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Perdu sur rupture", "Lost to stockout")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#c8262d" }}>12</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("214 000 F de chiffre", "214 000 F in revenue")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Marge perdue", "Margin lost")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#c8262d" }}>56 300 F</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("sur 3 références", "on 3 items")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Taux de service", "Service rate")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#a8690a" }}>91 %</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("cible du réseau : 95 %", "network target: 95%")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Demande estimée", "Estimated demand")}</p><p className="mt-0.5 text-base font-bold">{N(demandEstimated)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("unités sur la période", "units this period")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Vendu", "Sold")}</p><p className="mt-0.5 text-base font-bold">{N(soldUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("91 % de la demande", "91% of demand")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Perdu sur rupture", "Lost to stockout")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#c8262d" }}>{N(demandLost)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("214 000 F de chiffre", "214 000 F in revenue")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Marge perdue", "Margin lost")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#c8262d" }}>{F(marginLost)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("sur 3 références", "on 3 items")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Taux de service", "Service rate")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#a8690a" }}>{N(demandServiceRate)} %</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("cible du réseau : 95 %", "network target: 95%")}</p></div>
         </div>
         <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
           <div className="rounded-xl p-3" style={{ background: "rgba(79,224,174,.08)" }}>
             <p className="text-xs font-semibold">{t("Sérum éclat 30 ml", "Radiance serum 30 ml")}</p>
-            <p className="mt-0.5 text-sm font-bold" style={{ color: "#178a3f" }}>+34 %</p>
+            <p className="mt-0.5 text-sm font-bold" style={{ color: "#178a3f" }}>+{N(trendSerum)} %</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("La demande accélère depuis trois semaines. C'est aussi la référence en rupture dans quatre jours.", "Demand has accelerated for three weeks. It's also the item running out in four days.")}</p>
           </div>
           <div className="rounded-xl p-3" style={{ background: "rgba(255,184,77,.08)" }}>
             <p className="text-xs font-semibold">{t("Beurre de karité 200 g", "Shea butter 200 g")}</p>
-            <p className="mt-0.5 text-sm font-bold" style={{ color: "#a8690a" }}>+8 %</p>
+            <p className="mt-0.5 text-sm font-bold" style={{ color: "#a8690a" }}>+{N(trendKarite)} %</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Demande stable. Le stock suit, mais la date limite approche.", "Demand stable. Stock keeps pace, but the deadline is near.")}</p>
           </div>
           <div className="rounded-xl p-3" style={{ background: "rgba(255,90,98,.08)" }}>
             <p className="text-xs font-semibold">{t("Sandales tressées", "Woven sandals")}</p>
-            <p className="mt-0.5 text-sm font-bold" style={{ color: "#c8262d" }}>−22 %</p>
+            <p className="mt-0.5 text-sm font-bold" style={{ color: "#c8262d" }}>−{N(trendSandales)} %</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("La demande recule depuis un mois, et il reste vingt-six jours de couverture.", "Demand has fallen for a month, and twenty-six days of coverage remain.")}</p>
           </div>
         </div>
@@ -773,11 +933,11 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             <Tag tone="neutral">{t("Les deux", "Both")}</Tag>
           </div>
           <div className="mt-3">
-            <RankRow label={t("Gel douche", "Shower gel")} value="41" pct={100} color="#EC4899" />
-            <RankRow label={t("Huile de coco", "Coconut oil")} value="28" pct={68} color="#EC4899" />
-            <RankRow label={t("Masque cheveux", "Hair mask")} value="22" pct={54} color="#EC4899" />
-            <RankRow label={t("Savon liquide", "Liquid soap")} value="17" pct={41} color="#EC4899" />
-            <RankRow label={t("Crème solaire", "Sunscreen")} value="11" pct={27} color="#EC4899" />
+            <RankRow label={t("Gel douche", "Shower gel")} value={N(searchGel)} pct={searchPct(searchGel)} color="#EC4899" />
+            <RankRow label={t("Huile de coco", "Coconut oil")} value={N(searchHuile)} pct={searchPct(searchHuile)} color="#EC4899" />
+            <RankRow label={t("Masque cheveux", "Hair mask")} value={N(searchMasque)} pct={searchPct(searchMasque)} color="#EC4899" />
+            <RankRow label={t("Savon liquide", "Liquid soap")} value={N(searchSavon)} pct={searchPct(searchSavon)} color="#EC4899" />
+            <RankRow label={t("Crème solaire", "Sunscreen")} value={N(searchCreme)} pct={searchPct(searchCreme)} color="#EC4899" />
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
             <Tag tone="ok">{t("Gel douche · 3 au catalogue partenaire", "Shower gel · 3 in partner catalog")}</Tag>
@@ -823,10 +983,10 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             </div>
           </div>
           <Divider />
-          <StatRow label={t("Ventes faites sans avancer un franc", "Sales made without fronting a franc")} value={<span style={{ color: "#178a3f" }}>733 400 F</span>} />
+          <StatRow label={t("Ventes faites sans avancer un franc", "Sales made without fronting a franc")} value={<span style={{ color: "#178a3f" }}>{F(dropSales)}</span>} />
           <StatRow label={t("Immobilisation de votre côté", "Tied up on your side")} value="0 F" />
-          <StatRow label={t("Litiges pour produit non conforme", "Disputes for non-conforming goods")} value={<span style={{ color: "#a8690a" }}>7 {t("sur", "of")} 26</span>} />
-          <StatRow label={t("Références disponibles et non activées", "Available items not yet activated")} value={<span style={{ color: "#178a3f" }}>10</span>} />
+          <StatRow label={t("Litiges pour produit non conforme", "Disputes for non-conforming goods")} value={<span style={{ color: "#a8690a" }}>{N(dropDisputes)} {t("sur", "of")} {N(dropDisputesTotal)}</span>} />
+          <StatRow label={t("Références disponibles et non activées", "Available items not yet activated")} value={<span style={{ color: "#178a3f" }}>{N(dropAvailable)}</span>} />
           <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
             <p className="text-xs font-semibold">{t("Le drop ne coûte rien en stock, mais coûte en qualité de fiche", "Drop costs nothing in stock, but costs in listing quality")}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
@@ -846,18 +1006,18 @@ export default function StockSection({ first = true }: { first?: boolean }) {
             <p className="text-sm font-semibold">{t("Ce qu'il faut déposer jeudi", "What to deposit Thursday")}</p>
             <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Quantités calculées sur trente jours de couverture, délai de réapprovisionnement déduit", "Quantities calculated on thirty days of coverage, replenishment lead time deducted")}</p>
           </div>
-          <div className="flex items-center gap-2"><Tag tone="pink">{t("Budget 486 000 F", "Budget 486 000 F")}</Tag><Tag tone="blue">S</Tag></div>
+          <div className="flex items-center gap-2"><Tag tone="pink">{`${t("Budget", "Budget")} ${F(replenBudget)}`}</Tag><Tag tone="blue">S</Tag></div>
         </div>
         <div className="mt-3 grid grid-cols-[1.4fr_0.6fr_0.8fr_0.6fr_1fr_1fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
           <span>{t("Référence", "Item")}</span><span>{t("En stock", "In stock")}</span><span>{t("Couverture", "Coverage")}</span><span>{t("À déposer", "To deposit")}</span><span>{t("Coût", "Cost")}</span><span className="text-right">{t("État", "Status")}</span>
         </div>
-        <div className="divide-y divide-[var(--dashboard-text)]/[0.05]">
-          <ReplenishRow name={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} stock="6" couverture={t("4 jours", "4 days")} couvertureTone="bad" qty="42" cost="218 400 F" badge={t("Urgent", "Urgent")} badgeKind="urgent" />
-          <ReplenishRow name={t("Crème mains 75 ml", "Hand cream 75 ml")} stock="2" couverture={t("7 jours", "7 days")} couvertureTone="mid" qty="14" cost="61 600 F" badge={t("Urgent", "Urgent")} badgeKind="urgent" />
-          <ReplenishRow name={t("Savon noir 250 g", "Black soap 250 g")} stock="6" couverture={t("11 jours", "11 days")} couvertureTone="ok" qty="18" cost="72 000 F" badge={t("Conseillé", "Advised")} badgeKind="conseille" />
-          <ReplenishRow name={t("Beurre de karité 200 g", "Shea butter 200 g")} stock="21" couverture={t("19 jours", "19 days")} couvertureTone="ok" qty="12" cost="134 000 F" badge={t("Conseillé", "Advised")} badgeKind="conseille" />
-          <ReplenishRow name={t("Sandales tressées", "Woven sandals")} stock="18" couverture={t("26 jours", "26 days")} couvertureTone="ok" qty="0" cost="—" badge={t("Ne pas reprendre", "Don't restock")} badgeKind="non" dim />
-          <ReplenishRow name={t("Ensemble lin deux pièces", "Two-piece linen set")} stock="16" couverture={t("41 jours", "41 days")} couvertureTone="ok" qty="0" cost="—" badge={t("Ne pas reprendre", "Don't restock")} badgeKind="non" dim />
+        <div className="max-h-[340px] divide-y divide-[var(--dashboard-text)]/[0.05] overflow-y-auto pr-1">
+          <ReplenishRow name={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} stock={N(stockSerum)} couverture={t("4 jours", "4 days")} couvertureTone="bad" qty={N(replenSerumQty)} cost={F(replenSerumCost)} badge={t("Urgent", "Urgent")} badgeKind="urgent" />
+          <ReplenishRow name={t("Crème mains 75 ml", "Hand cream 75 ml")} stock={N(stockCreme)} couverture={t("7 jours", "7 days")} couvertureTone="mid" qty={N(replenCremeQty)} cost={F(replenCremeCost)} badge={t("Urgent", "Urgent")} badgeKind="urgent" />
+          <ReplenishRow name={t("Savon noir 250 g", "Black soap 250 g")} stock={N(stockSavon)} couverture={t("11 jours", "11 days")} couvertureTone="ok" qty={N(replenSavonQty)} cost={F(replenSavonCost)} badge={t("Conseillé", "Advised")} badgeKind="conseille" />
+          <ReplenishRow name={t("Beurre de karité 200 g", "Shea butter 200 g")} stock={N(stockKarite)} couverture={t("19 jours", "19 days")} couvertureTone="ok" qty={N(replenKariteQty)} cost={F(replenKariteCost)} badge={t("Conseillé", "Advised")} badgeKind="conseille" />
+          <ReplenishRow name={t("Sandales tressées", "Woven sandals")} stock={N(stockSandales)} couverture={t("26 jours", "26 days")} couvertureTone="ok" qty="0" cost="—" badge={t("Ne pas reprendre", "Don't restock")} badgeKind="non" dim />
+          <ReplenishRow name={t("Ensemble lin deux pièces", "Two-piece linen set")} stock={N(stockLin)} couverture={t("41 jours", "41 days")} couvertureTone="ok" qty="0" cost="—" badge={t("Ne pas reprendre", "Don't restock")} badgeKind="non" dim />
         </div>
         <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
           <p className="text-xs font-semibold">{t("Deux références urgentes, deux à ne pas reprendre", "Two urgent items, two not to restock")}</p>
@@ -906,13 +1066,13 @@ export default function StockSection({ first = true }: { first?: boolean }) {
         <div className="mt-4 grid grid-cols-[1.4fr_0.7fr_0.9fr_0.6fr_0.9fr_0.6fr_1fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
           <span>{t("Référence", "Item")}</span><span>{t("Ventes/j", "Sales/day")}</span><span>{t("Conso. 4 j", "4-day use")}</span><span>{t("Réserve", "Reserve")}</span><span>{t("Pt commande", "Reorder pt")}</span><span>{t("En stock", "In stock")}</span><span className="text-right">{t("État", "Status")}</span>
         </div>
-        <div className="divide-y divide-[var(--dashboard-text)]/[0.05]">
-          <OrderPointRow name={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} perDay="1,37" consumed="6" reserve="7" point="13" stock="6" stockBad badge="under" />
-          <OrderPointRow name={t("Crème mains 75 ml", "Hand cream 75 ml")} perDay="0,31" consumed="2" reserve="2" point="4" stock="2" stockBad badge="under" />
-          <OrderPointRow name={t("Savon noir 250 g", "Black soap 250 g")} perDay="0,55" consumed="3" reserve="3" point="6" stock="6" stockBad={false} badge="at" />
-          <OrderPointRow name={t("Beurre de karité 200 g", "Shea butter 200 g")} perDay="1,10" consumed="5" reserve="6" point="11" stock="21" stockBad={false} badge="ok" />
-          <OrderPointRow name={t("Sandales tressées", "Woven sandals")} perDay="0,70" consumed="3" reserve="4" point="7" stock="18" stockBad={false} badge="ok" />
-          <OrderPointRow name={t("Ensemble lin deux pièces", "Two-piece linen set")} perDay="0,40" consumed="2" reserve="2" point="4" stock="16" stockBad={false} badge="over" />
+        <div className="max-h-[340px] divide-y divide-[var(--dashboard-text)]/[0.05] overflow-y-auto pr-1">
+          <OrderPointRow name={t("Sérum éclat 30 ml", "Radiance serum 30 ml")} perDay={dec2(opSerumPerDay)} consumed={N(opSerumConsumed)} reserve={N(opSerumReserve)} point={N(opSerumPoint)} stock={N(stockSerum)} stockBad badge="under" />
+          <OrderPointRow name={t("Crème mains 75 ml", "Hand cream 75 ml")} perDay={dec2(opCremePerDay)} consumed={N(opCremeConsumed)} reserve={N(opCremeReserve)} point={N(opCremePoint)} stock={N(stockCreme)} stockBad badge="under" />
+          <OrderPointRow name={t("Savon noir 250 g", "Black soap 250 g")} perDay={dec2(opSavonPerDay)} consumed={N(opSavonConsumed)} reserve={N(opSavonReserve)} point={N(opSavonPoint)} stock={N(stockSavon)} stockBad={false} badge="at" />
+          <OrderPointRow name={t("Beurre de karité 200 g", "Shea butter 200 g")} perDay={dec2(opKaritePerDay)} consumed={N(opKariteConsumed)} reserve={N(opKariteReserve)} point={N(opKaritePoint)} stock={N(stockKarite)} stockBad={false} badge="ok" />
+          <OrderPointRow name={t("Sandales tressées", "Woven sandals")} perDay={dec2(opSandalesPerDay)} consumed={N(opSandalesConsumed)} reserve={N(opSandalesReserve)} point={N(opSandalesPoint)} stock={N(stockSandales)} stockBad={false} badge="ok" />
+          <OrderPointRow name={t("Ensemble lin deux pièces", "Two-piece linen set")} perDay={dec2(opLinPerDay)} consumed={N(opLinConsumed)} reserve={N(opLinReserve)} point={N(opLinPoint)} stock={N(stockLin)} stockBad={false} badge="over" />
         </div>
         <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
           <p className="text-xs font-semibold">{t("Une règle qui remplace le jugement", "A rule that replaces judgment")}</p>

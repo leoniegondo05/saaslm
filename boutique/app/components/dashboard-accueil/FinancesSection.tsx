@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import PaymentMethodCard from "../PaymentMethodCard";
-import { AreaChart, Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, LegendRow, MiniStat, Nature, openBrandedReport, SectionHeader, StatRow, Tag, WaterfallChart } from "./shared";
+import { AreaChart, Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, LegendRow, MiniStat, Nature, openBrandedReport, periodSeed, scaleForPeriod, SectionHeader, StatRow, Tag, WaterfallChart } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -106,8 +106,39 @@ function CompareRow({ label, value, pct, color, strong = false }: { label: strin
   );
 }
 
-export default function FinancesSection({ first = true }: { first?: boolean }) {
+/*
+  Petits formatteurs locaux pour les montants/pourcentages calculés à partir
+  des mocks mis à l'échelle par période (cf. scaleForPeriod, shared.tsx) —
+  même convention visuelle que les littéraux d'origine ("1 482 300 F",
+  "54,2 %", "− 1 062 000 F") pour que rien ne bouge à l'oeil hors des
+  chiffres eux-mêmes.
+*/
+function fmtF(n: number) {
+  return `${Math.round(Math.abs(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} F`;
+}
+function fmtDeltaF(n: number) {
+  return `− ${fmtF(n)}`;
+}
+function fmtSignedF(n: number) {
+  return n < 0 ? `− ${fmtF(n)}` : `+${fmtF(n)}`;
+}
+function fmtPct1(n: number) {
+  return `${n.toFixed(1).replace(".", ",")} %`;
+}
+function fmtPctSigned1(n: number) {
+  return n < 0 ? `− ${fmtPct1(Math.abs(n))}` : fmtPct1(n);
+}
+function fmtJours(n: number) {
+  return Number.isInteger(n) ? `${n} j` : `${n.toFixed(1).replace(".", ",")} j`;
+}
+
+export default function FinancesSection({ first = true, activeDate }: { first?: boolean; activeDate?: Date }) {
   const { t } = useDashboardLangue();
+
+  // Seed déterministe dérivé de la période choisie sur le sélecteur
+  // année/mois/jour (cf. [[dashboard-mock-data-pending-laravel-api]]) : fait
+  // varier tous les mocks ci-dessous sans backend, cf. shared.tsx.
+  const seed = periodSeed(activeDate ?? new Date(2026, 7, 1));
 
   // "Comparer à la période précédente" : révèle la valeur de la période
   // précédente sous les 4 chiffres de trésorerie, mock en attendant l'API
@@ -133,10 +164,139 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
     setEditingHold(false);
   }
 
+  // Mocks mis à l'échelle de la période choisie (cf. seed ci-dessus et
+  // [[dashboard-mock-data-pending-laravel-api]]) : chaque valeur "racine" est
+  // passée dans scaleForPeriod avec une clé qui lui est propre pour ne pas
+  // bouger en lock-step avec les autres stats de la même carte ; les montants
+  // qui doivent rester cohérents entre eux (cascade du compte de résultat,
+  // totaux, pourcentages) sont ensuite dérivés par simple arithmétique plutôt
+  // que remis à l'échelle indépendamment, pour que la cascade/les barres
+  // empilées continuent de sommer juste.
+  const soldeAvailable = scaleForPeriod(1022800, seed, 0);
+  const soldeSuspended = scaleForPeriod(459500, seed, 1); // réutilisé : immobiliseCard, projectionCard, export
+  const soldeTotal = soldeAvailable + soldeSuspended;
+  const soldePctAvailable = Math.round((soldeAvailable / soldeTotal) * 100);
+  const soldePctSuspended = 100 - soldePctAvailable;
+
+  const cashLowest = scaleForPeriod(318000, seed, 3);
+  const cashLowestPrev = scaleForPeriod(275000, seed, 4);
+  const cashHighest = scaleForPeriod(861000, seed, 5);
+  const cashHighestPrev = scaleForPeriod(790000, seed, 6);
+  const cashAvg = scaleForPeriod(601400, seed, 7);
+  const cashAvgPrev = scaleForPeriod(545000, seed, 8);
+  const cashVariationPct = scaleForPeriod(87, seed, 9);
+  const cashVariationPrevPct = scaleForPeriod(52, seed, 10);
+
+  const prEncaisse = scaleForPeriod(2316400, seed, 11);
+  const prPrixProduit = scaleForPeriod(1062000, seed, 12);
+  const prFraisLogistiques = scaleForPeriod(178500, seed, 13);
+  const prFraisTransaction = scaleForPeriod(34700, seed, 14);
+  const prGarantieProduit = scaleForPeriod(12400, seed, 15);
+  const prCoutRefus = scaleForPeriod(31000, seed, 16);
+  const prPublicite = scaleForPeriod(412000, seed, 17);
+  const prCommissionLM = scaleForPeriod(57900, seed, 18);
+  const prAbonnement = scaleForPeriod(25000, seed, 19); // réutilisé : projectionCard, export
+  const prGrossMargin = prEncaisse - prPrixProduit;
+  const prContributionMargin = prGrossMargin - prFraisLogistiques - prFraisTransaction - prGarantieProduit - prCoutRefus - prPublicite;
+  const prNetResult = prContributionMargin - prCommissionLM - prAbonnement;
+  const prGrossMarginPct = (prGrossMargin / prEncaisse) * 100;
+  const prContributionMarginPct = (prContributionMargin / prEncaisse) * 100;
+  const prNetMarginPct = (prNetResult / prEncaisse) * 100;
+
+  const cmpStockagePanier = scaleForPeriod(20295, seed, 20);
+  const cmpStockagePrixProduit = scaleForPeriod(9308, seed, 21);
+  const cmpLogistiqueFee = scaleForPeriod(1896, seed, 22); // partagé stockage/drop (même frais dans le mock d'origine)
+  const cmpAcquisitionFee = scaleForPeriod(3462, seed, 23); // partagé stockage/drop
+  const cmpStockageCommission = scaleForPeriod(507, seed, 24);
+  const cmpDropPanier = scaleForPeriod(17888, seed, 25);
+  const cmpDropPrixFixe = scaleForPeriod(8195, seed, 26);
+  const cmpDropCommission = scaleForPeriod(447, seed, 27);
+  const cmpStockageOrders = scaleForPeriod(78, seed, 28);
+  const cmpDropOrders = scaleForPeriod(41, seed, 29);
+  const cmpStockageContribution = cmpStockagePanier - cmpStockagePrixProduit - cmpLogistiqueFee - cmpAcquisitionFee - cmpStockageCommission;
+  const cmpDropContribution = cmpDropPanier - cmpDropPrixFixe - cmpLogistiqueFee - cmpAcquisitionFee - cmpDropCommission;
+  const cmpStockagePctProduit = Math.round((cmpStockagePrixProduit / cmpStockagePanier) * 100);
+  const cmpStockagePctLogistique = Math.round((cmpLogistiqueFee / cmpStockagePanier) * 100);
+  const cmpStockagePctAcquisition = Math.round((cmpAcquisitionFee / cmpStockagePanier) * 100);
+  const cmpStockagePctCommission = Math.round((cmpStockageCommission / cmpStockagePanier) * 100);
+  const cmpStockagePctContribution = Math.round((cmpStockageContribution / cmpStockagePanier) * 100);
+  const cmpStockageContributionRate = (cmpStockageContribution / cmpStockagePanier) * 100;
+  const cmpDropPctProduit = Math.round((cmpDropPrixFixe / cmpDropPanier) * 100);
+  const cmpDropPctLogistique = Math.round((cmpLogistiqueFee / cmpDropPanier) * 100);
+  const cmpDropPctAcquisition = Math.round((cmpAcquisitionFee / cmpDropPanier) * 100);
+  const cmpDropPctCommission = Math.round((cmpDropCommission / cmpDropPanier) * 100);
+  const cmpDropPctContribution = Math.round((cmpDropContribution / cmpDropPanier) * 100);
+  const cmpDropContributionRate = (cmpDropContribution / cmpDropPanier) * 100;
+  const cmpRingPct = Math.round((cmpStockageOrders / (cmpStockageOrders + cmpDropOrders)) * 100);
+  const stockDeposited = scaleForPeriod(1842000, seed, 59); // réutilisé : immobiliseCard ("Stock déposé")
+
+  const acqMetaRevenue = scaleForPeriod(892000, seed, 30);
+  const acqMetaSpend = scaleForPeriod(186000, seed, 31);
+  const acqTiktokRevenue = scaleForPeriod(748000, seed, 32);
+  const acqTiktokSpend = scaleForPeriod(142000, seed, 33);
+  const acqGoogleRevenue = scaleForPeriod(289000, seed, 34);
+  const acqGoogleSpend = scaleForPeriod(64000, seed, 35);
+  const acqYoutubeRevenue = scaleForPeriod(72000, seed, 36);
+  const acqYoutubeSpend = scaleForPeriod(20000, seed, 37);
+  const acqOrganicRevenue = scaleForPeriod(315400, seed, 38);
+  const acqMaxRevenue = Math.max(acqMetaRevenue, acqTiktokRevenue, acqGoogleRevenue, acqYoutubeRevenue, acqOrganicRevenue) || 1;
+  const acqMetaRevenuePct = (acqMetaRevenue / acqMaxRevenue) * 100;
+  const acqMetaSpendPct = (acqMetaSpend / acqMaxRevenue) * 100;
+  const acqTiktokRevenuePct = (acqTiktokRevenue / acqMaxRevenue) * 100;
+  const acqTiktokSpendPct = (acqTiktokSpend / acqMaxRevenue) * 100;
+  const acqGoogleRevenuePct = (acqGoogleRevenue / acqMaxRevenue) * 100;
+  const acqGoogleSpendPct = (acqGoogleSpend / acqMaxRevenue) * 100;
+  const acqYoutubeRevenuePct = (acqYoutubeRevenue / acqMaxRevenue) * 100;
+  const acqYoutubeSpendPct = (acqYoutubeSpend / acqMaxRevenue) * 100;
+  const acqOrganicPct = (acqOrganicRevenue / acqMaxRevenue) * 100;
+  const acqMetaRoas = acqMetaRevenue / acqMetaSpend;
+  const acqTiktokRoas = acqTiktokRevenue / acqTiktokSpend;
+  const acqGoogleRoas = acqGoogleRevenue / acqGoogleSpend;
+  const acqYoutubeRoas = acqYoutubeRevenue / acqYoutubeSpend;
+
+  const refDeliveredPaid = scaleForPeriod(119, seed, 39);
+  const refRefusedCall = scaleForPeriod(14, seed, 40);
+  const refRefusedDoor = scaleForPeriod(9, seed, 41);
+  const refStillOnWay = scaleForPeriod(6, seed, 42);
+  const refCostCall = scaleForPeriod(48500, seed, 43);
+  const refCostDoor = scaleForPeriod(53600, seed, 44);
+  const refGoodsBackInStock = scaleForPeriod(118400, seed, 45);
+  const refTotalOrders = refDeliveredPaid + refRefusedCall + refRefusedDoor + refStillOnWay || 1;
+  const refDeliveredPct = (refDeliveredPaid / refTotalOrders) * 100;
+  const refStackCallPct = (refRefusedCall / (refRefusedCall + refRefusedDoor || 1)) * 100;
+  const refStackDoorPct = 100 - refStackCallPct;
+
+  const prodTot0 = scaleForPeriod(6112, seed, 46);
+  const prodVal0 = scaleForPeriod(314, seed, 47) / 10;
+  const prodTot1 = scaleForPeriod(4908, seed, 48);
+  const prodVal1 = scaleForPeriod(261, seed, 49) / 10;
+  const prodTot2 = scaleForPeriod(3402, seed, 50);
+  const prodVal2 = scaleForPeriod(188, seed, 51) / 10;
+  const prodTot3 = scaleForPeriod(1214, seed, 52);
+  const prodVal3 = scaleForPeriod(84, seed, 53) / 10;
+  const prodTot4 = scaleForPeriod(-340, seed, 54);
+  const prodVal4 = scaleForPeriod(-18, seed, 55) / 10;
+  const prodTop3Share = scaleForPeriod(61, seed, 56);
+
+  const immShippedNotDelivered = scaleForPeriod(252000, seed, 57);
+  const immRefusedGoodsReturning = scaleForPeriod(205200, seed, 58);
+  const immTotal = stockDeposited + soldeSuspended + immShippedNotDelivered + immRefusedGoodsReturning || 1;
+  const immPctStock = (stockDeposited / immTotal) * 100;
+  const immPctSuspended = (soldeSuspended / immTotal) * 100;
+  const immPctShipped = (immShippedNotDelivered / immTotal) * 100;
+  const immPctRefused = (immRefusedGoodsReturning / immTotal) * 100;
+  const cycleDaysAchat = scaleForPeriod(4, seed, 60);
+  const cycleDaysStock = scaleForPeriod(18, seed, 61);
+  const cycleDaysLivraison = scaleForPeriod(11, seed, 62) / 10;
+  const cycleDaysLitige = holdHours / 24; // dérivé du réglage réel (holdHours), pas remis à l'échelle
+  const cycleDaysTotal = cycleDaysAchat + cycleDaysStock + cycleDaysLivraison + cycleDaysLitige;
+
+  const projExpectedBalance30d = scaleForPeriod(1495000, seed, 64);
+
   // 30 jours de solde disponible (cf. graphe "évolution de la trésorerie") :
   // deux paliers de fin de suspension groupée (bonds), comme sur le modèle envoyé.
-  const cashDays = [42, 44, 46, 48, 51, 53, 56, 59, 62, 65, 69, 72, 76, 25, 28, 31, 34, 37, 41, 45, 49, 53, 57, 61, 65, 26, 30, 34, 38, 41];
-  const forecastDays = [30, 31, 33, 32, 34, 36, 35, 38, 40, 39, 42, 44, 43, 46, 48];
+  const cashDays = [42, 44, 46, 48, 51, 53, 56, 59, 62, 65, 69, 72, 76, 25, 28, 31, 34, 37, 41, 45, 49, 53, 57, 61, 65, 26, 30, 34, 38, 41].map((v) => scaleForPeriod(v, seed, 2));
+  const forecastDays = [30, 31, 33, 32, 34, 36, 35, 38, 40, 39, 42, 44, 43, 46, 48].map((v) => scaleForPeriod(v, seed, 65));
 
   // Rangée du haut du document envoyé : le portefeuille (carte gardée) à
   // gauche, le solde du sous-compte à droite — même disposition (scw2).
@@ -146,14 +306,14 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
           <h3 className="text-sm font-bold tracking-tight sm:text-base">{t("Solde de votre sous-compte", "Your sub-account balance")}</h3>
           <Nature code="B" />
         </div>
-        <p className="mt-2 text-2xl font-bold tracking-tight">1 482 300 F</p>
+        <p className="mt-2 text-2xl font-bold tracking-tight">{fmtF(soldeTotal)}</p>
         <div className="mt-3 flex h-2.5 w-full overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]">
-          <span className="h-full" style={{ width: "69%", background: "linear-gradient(90deg,#4FE0AE,#38BDF8)" }} />
-          <span className="h-full" style={{ width: "31%", background: "linear-gradient(90deg,#FFB84D,#FF9A3D)" }} />
+          <span className="h-full" style={{ width: `${soldePctAvailable}%`, background: "linear-gradient(90deg,#4FE0AE,#38BDF8)" }} />
+          <span className="h-full" style={{ width: `${soldePctSuspended}%`, background: "linear-gradient(90deg,#FFB84D,#FF9A3D)" }} />
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-          <div className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#4FE0AE" }} /><div><p className="font-semibold">1 022 800 F</p><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Disponible tout de suite", "Available right away")}</p></div></div>
-          <div className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FFB84D" }} /><div><p className="font-semibold">459 500 F</p><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Suspendu · délai de litige", "On hold · dispute window")}</p></div></div>
+          <div className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#4FE0AE" }} /><div><p className="font-semibold">{fmtF(soldeAvailable)}</p><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Disponible tout de suite", "Available right away")}</p></div></div>
+          <div className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FFB84D" }} /><div><p className="font-semibold">{fmtF(soldeSuspended)}</p><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Suspendu · délai de litige", "On hold · dispute window")}</p></div></div>
         </div>
         <div className="mt-3 rounded-2xl p-4" style={{ background: "var(--dashboard-surface-2)" }}>
           <div className="flex items-center justify-between gap-3">
@@ -237,10 +397,10 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         </div>
         <Divider />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <MiniStat label={t("Point le plus bas", "Lowest point")} value="318 000 F" previous={compare ? "275 000 F" : undefined} previousLabel={t("Période précédente", "Previous period")} />
-          <MiniStat label={t("Point le plus haut", "Highest point")} value="861 000 F" previous={compare ? "790 000 F" : undefined} previousLabel={t("Période précédente", "Previous period")} />
-          <MiniStat label={t("Solde moyen", "Average balance")} value="601 400 F" previous={compare ? "545 000 F" : undefined} previousLabel={t("Période précédente", "Previous period")} />
-          <MiniStat label={t("Variation", "Change")} value="+87 %" tone="pink" previous={compare ? "+52 %" : undefined} previousLabel={t("Variation précédente", "Previous change")} />
+          <MiniStat label={t("Point le plus bas", "Lowest point")} value={fmtF(cashLowest)} previous={compare ? fmtF(cashLowestPrev) : undefined} previousLabel={t("Période précédente", "Previous period")} />
+          <MiniStat label={t("Point le plus haut", "Highest point")} value={fmtF(cashHighest)} previous={compare ? fmtF(cashHighestPrev) : undefined} previousLabel={t("Période précédente", "Previous period")} />
+          <MiniStat label={t("Solde moyen", "Average balance")} value={fmtF(cashAvg)} previous={compare ? fmtF(cashAvgPrev) : undefined} previousLabel={t("Période précédente", "Previous period")} />
+          <MiniStat label={t("Variation", "Change")} value={`+${cashVariationPct} %`} tone="pink" previous={compare ? `+${cashVariationPrevPct} %` : undefined} previousLabel={t("Variation précédente", "Previous change")} />
         </div>
         <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
           {t(
@@ -266,15 +426,15 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
           <div className="flex flex-wrap items-start gap-4 sm:gap-5">
             <div className="text-center">
               <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge brute", "Gross margin")}</p>
-              <p className="mt-0.5 text-sm font-bold">54,2 %</p>
+              <p className="mt-0.5 text-sm font-bold">{fmtPct1(prGrossMarginPct)}</p>
             </div>
             <div className="text-center">
               <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge de contribution", "Contribution margin")}</p>
-              <p className="mt-0.5 text-sm font-bold" style={{ color: "#0C86BE" }}>24,1 %</p>
+              <p className="mt-0.5 text-sm font-bold" style={{ color: "#0C86BE" }}>{fmtPct1(prContributionMarginPct)}</p>
             </div>
             <div className="text-center">
               <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge nette", "Net margin")}</p>
-              <p className="mt-0.5 text-sm font-bold" style={{ color: "#0E9F6E" }}>21,7 %</p>
+              <p className="mt-0.5 text-sm font-bold" style={{ color: "#0E9F6E" }}>{fmtPct1(prNetMarginPct)}</p>
             </div>
             <Nature code="B" />
           </div>
@@ -282,16 +442,16 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
 
         <WaterfallChart
           items={[
-            { label: t("Encaissé des clients", "Collected from clients"), display: "2 316 400 F", amount: 2316400, kind: "total" },
-            { label: t("Prix produit partenaire", "Partner product price"), display: "− 1 062 000 F", amount: -1062000, kind: "delta" },
-            { label: t("Frais logistiques", "Logistics fees"), display: "− 178 500 F", amount: -178500, kind: "delta" },
-            { label: t("Frais de transaction", "Transaction fees"), display: "− 34 700 F", amount: -34700, kind: "delta" },
-            { label: t("Garantie produit", "Product warranty"), display: "− 12 400 F", amount: -12400, kind: "delta" },
-            { label: t("Coût des refus", "Cost of refusals"), display: "− 31 000 F", amount: -31000, kind: "delta" },
-            { label: t("Publicité", "Advertising"), display: "− 412 000 F", amount: -412000, kind: "delta" },
-            { label: t("Commission LM", "LM commission"), display: "− 57 900 F", amount: -57900, kind: "delta" },
-            { label: t("Abonnement", "Subscription"), display: "− 25 000 F", amount: -25000, kind: "delta" },
-            { label: t("Résultat net", "Net result"), display: "502 900 F", amount: 502900, kind: "total" },
+            { label: t("Encaissé des clients", "Collected from clients"), display: fmtF(prEncaisse), amount: prEncaisse, kind: "total" },
+            { label: t("Prix produit partenaire", "Partner product price"), display: fmtDeltaF(prPrixProduit), amount: -prPrixProduit, kind: "delta" },
+            { label: t("Frais logistiques", "Logistics fees"), display: fmtDeltaF(prFraisLogistiques), amount: -prFraisLogistiques, kind: "delta" },
+            { label: t("Frais de transaction", "Transaction fees"), display: fmtDeltaF(prFraisTransaction), amount: -prFraisTransaction, kind: "delta" },
+            { label: t("Garantie produit", "Product warranty"), display: fmtDeltaF(prGarantieProduit), amount: -prGarantieProduit, kind: "delta" },
+            { label: t("Coût des refus", "Cost of refusals"), display: fmtDeltaF(prCoutRefus), amount: -prCoutRefus, kind: "delta" },
+            { label: t("Publicité", "Advertising"), display: fmtDeltaF(prPublicite), amount: -prPublicite, kind: "delta" },
+            { label: t("Commission LM", "LM commission"), display: fmtDeltaF(prCommissionLM), amount: -prCommissionLM, kind: "delta" },
+            { label: t("Abonnement", "Subscription"), display: fmtDeltaF(prAbonnement), amount: -prAbonnement, kind: "delta" },
+            { label: t("Résultat net", "Net result"), display: fmtF(prNetResult), amount: prNetResult, kind: "total" },
           ]}
         />
 
@@ -329,19 +489,19 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
             <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge brute", "Gross margin")}</p>
-            <p className="mt-1 text-lg font-bold">1 254 400 F</p>
+            <p className="mt-1 text-lg font-bold">{fmtF(prGrossMargin)}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Ce que laisse la marchandise, avant tout frais.", "What the goods leave, before any fees.")}</p>
           </div>
           <div className="rounded-2xl p-3" style={{ background: "rgba(56,189,248,.08)" }}>
             <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge de contribution", "Contribution margin")}</p>
-            <p className="mt-1 text-lg font-bold" style={{ color: "#0C86BE" }}>585 800 F</p>
+            <p className="mt-1 text-lg font-bold" style={{ color: "#0C86BE" }}>{fmtF(prContributionMargin)}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
               {t("Après logistique et publicité. C'est le chiffre qui dit si le modèle tient : sous zéro, vendre plus fait perdre plus.", "After logistics and ads. This is the number that says if the model holds: below zero, selling more loses more.")}
             </p>
           </div>
           <div className="rounded-2xl p-3" style={{ background: "rgba(79,224,174,.14)" }}>
             <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Résultat net", "Net result")}</p>
-            <p className="mt-1 text-lg font-bold" style={{ color: "#0E9F6E" }}>502 900 F</p>
+            <p className="mt-1 text-lg font-bold" style={{ color: "#0E9F6E" }}>{fmtF(prNetResult)}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Après commission et abonnement. Ce qui reste vraiment.", "After commission and subscription. What's really left.")}</p>
           </div>
         </div>
@@ -362,8 +522,8 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
             <h3 className="text-sm font-bold tracking-tight sm:text-base">{t("Vos deux façons de vendre, comparées", "Your two ways to sell, compared")}</h3>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("La même analyse, ramenée à une commande, de chaque côté", "The same analysis, brought down to one order, on each side")}</p>
           </div>
-          <Ring pct={68} color={STOCKAGE_COLOR} trackColor={DROP_COLOR} size={72}>
-            <span className="text-xs font-bold">68 %</span>
+          <Ring pct={cmpRingPct} color={STOCKAGE_COLOR} trackColor={DROP_COLOR} size={72}>
+            <span className="text-xs font-bold">{cmpRingPct} %</span>
             <span className="text-[7px] text-[var(--dashboard-text)]/40">{t("stockage", "warehousing")}</span>
           </Ring>
         </div>
@@ -378,24 +538,24 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
                   {t("Votre stock, déposé chez le partenaire. Vous avancez l'argent, vous gardez la marge.", "Your stock, held at the partner's. You front the cash, you keep the margin.")}
                 </p>
               </div>
-              <CountBadge count={78} color={STOCKAGE_COLOR} label={t("commandes", "orders")} />
+              <CountBadge count={cmpStockageOrders} color={STOCKAGE_COLOR} label={t("commandes", "orders")} />
             </div>
             <Divider />
-            <CompareRow label={t("Panier moyen encaissé", "Average basket collected")} value="20 295 F" pct={100} color={STOCKAGE_COLOR} />
-            <CompareRow label={t("Prix produit, déjà payé au fournisseur", "Product price, already paid to supplier")} value="− 9 308 F" pct={46} color={STOCKAGE_COLOR} />
-            <CompareRow label={t("Logistique, transaction, garantie", "Logistics, transaction, warranty")} value="− 1 896 F" pct={9} color={STOCKAGE_COLOR} />
-            <CompareRow label={t("Acquisition du client", "Client acquisition")} value="− 3 462 F" pct={17} color={STOCKAGE_COLOR} />
-            <CompareRow label={t("Commission LM", "LM commission")} value="− 507 F" pct={3} color={STOCKAGE_COLOR} />
-            <CompareRow label={t("Marge de contribution", "Contribution margin")} value="5 122 F" pct={25} color={STOCKAGE_COLOR} strong />
+            <CompareRow label={t("Panier moyen encaissé", "Average basket collected")} value={fmtF(cmpStockagePanier)} pct={100} color={STOCKAGE_COLOR} />
+            <CompareRow label={t("Prix produit, déjà payé au fournisseur", "Product price, already paid to supplier")} value={fmtDeltaF(cmpStockagePrixProduit)} pct={cmpStockagePctProduit} color={STOCKAGE_COLOR} />
+            <CompareRow label={t("Logistique, transaction, garantie", "Logistics, transaction, warranty")} value={fmtDeltaF(cmpLogistiqueFee)} pct={cmpStockagePctLogistique} color={STOCKAGE_COLOR} />
+            <CompareRow label={t("Acquisition du client", "Client acquisition")} value={fmtDeltaF(cmpAcquisitionFee)} pct={cmpStockagePctAcquisition} color={STOCKAGE_COLOR} />
+            <CompareRow label={t("Commission LM", "LM commission")} value={fmtDeltaF(cmpStockageCommission)} pct={cmpStockagePctCommission} color={STOCKAGE_COLOR} />
+            <CompareRow label={t("Marge de contribution", "Contribution margin")} value={fmtF(cmpStockageContribution)} pct={cmpStockagePctContribution} color={STOCKAGE_COLOR} strong />
             <Divider />
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Taux de contribution", "Contribution rate")}</p>
-                <p className="mt-0.5 text-sm font-bold" style={{ color: STOCKAGE_COLOR }}>25,2 %</p>
+                <p className="mt-0.5 text-sm font-bold" style={{ color: STOCKAGE_COLOR }}>{fmtPct1(cmpStockageContributionRate)}</p>
               </div>
               <div className="text-right">
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Argent avancé", "Cash advanced")}</p>
-                <p className="mt-0.5 text-sm font-bold">1 842 000 F</p>
+                <p className="mt-0.5 text-sm font-bold">{fmtF(stockDeposited)}</p>
               </div>
             </div>
           </div>
@@ -409,20 +569,20 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
                   {t("Le stock du partenaire. Vous n'avancez rien, il retient son prix à chaque vente.", "The partner's stock. You front nothing, they keep their price on every sale.")}
                 </p>
               </div>
-              <CountBadge count={41} color={DROP_COLOR} label={t("commandes", "orders")} />
+              <CountBadge count={cmpDropOrders} color={DROP_COLOR} label={t("commandes", "orders")} />
             </div>
             <Divider />
-            <CompareRow label={t("Panier moyen encaissé", "Average basket collected")} value="17 888 F" pct={100} color={DROP_COLOR} />
-            <CompareRow label={t("Prix fixé par le partenaire, retenu à la vente", "Price set by the partner, kept on the sale")} value="− 8 195 F" pct={46} color={DROP_COLOR} />
-            <CompareRow label={t("Logistique, transaction, garantie", "Logistics, transaction, warranty")} value="− 1 896 F" pct={11} color={DROP_COLOR} />
-            <CompareRow label={t("Acquisition du client", "Client acquisition")} value="− 3 462 F" pct={19} color={DROP_COLOR} />
-            <CompareRow label={t("Commission LM", "LM commission")} value="− 447 F" pct={3} color={DROP_COLOR} />
-            <CompareRow label={t("Marge de contribution", "Contribution margin")} value="3 888 F" pct={22} color={DROP_COLOR} strong />
+            <CompareRow label={t("Panier moyen encaissé", "Average basket collected")} value={fmtF(cmpDropPanier)} pct={100} color={DROP_COLOR} />
+            <CompareRow label={t("Prix fixé par le partenaire, retenu à la vente", "Price set by the partner, kept on the sale")} value={fmtDeltaF(cmpDropPrixFixe)} pct={cmpDropPctProduit} color={DROP_COLOR} />
+            <CompareRow label={t("Logistique, transaction, garantie", "Logistics, transaction, warranty")} value={fmtDeltaF(cmpLogistiqueFee)} pct={cmpDropPctLogistique} color={DROP_COLOR} />
+            <CompareRow label={t("Acquisition du client", "Client acquisition")} value={fmtDeltaF(cmpAcquisitionFee)} pct={cmpDropPctAcquisition} color={DROP_COLOR} />
+            <CompareRow label={t("Commission LM", "LM commission")} value={fmtDeltaF(cmpDropCommission)} pct={cmpDropPctCommission} color={DROP_COLOR} />
+            <CompareRow label={t("Marge de contribution", "Contribution margin")} value={fmtF(cmpDropContribution)} pct={cmpDropPctContribution} color={DROP_COLOR} strong />
             <Divider />
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Taux de contribution", "Contribution rate")}</p>
-                <p className="mt-0.5 text-sm font-bold" style={{ color: DROP_COLOR }}>21,7 %</p>
+                <p className="mt-0.5 text-sm font-bold" style={{ color: DROP_COLOR }}>{fmtPct1(cmpDropContributionRate)}</p>
               </div>
               <div className="text-right">
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Argent avancé", "Cash advanced")}</p>
@@ -453,18 +613,18 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         </div>
         <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">{t("Attribué par les pixels installés sur votre boutique", "Attributed by the pixels installed on your shop")}</p>
         <div className="mt-3 space-y-2">
-          <DualBar revenuePct={100} spendPct={20.9} />
-          <DualBar revenuePct={83.9} spendPct={15.9} />
-          <DualBar revenuePct={32.4} spendPct={7.2} />
-          <DualBar revenuePct={8.1} spendPct={2.2} />
-          <DualBar revenuePct={0} spendPct={35.4} />
+          <DualBar revenuePct={acqMetaRevenuePct} spendPct={acqMetaSpendPct} />
+          <DualBar revenuePct={acqTiktokRevenuePct} spendPct={acqTiktokSpendPct} />
+          <DualBar revenuePct={acqGoogleRevenuePct} spendPct={acqGoogleSpendPct} />
+          <DualBar revenuePct={acqYoutubeRevenuePct} spendPct={acqYoutubeSpendPct} />
+          <DualBar revenuePct={0} spendPct={acqOrganicPct} />
         </div>
         <div className="mt-3 space-y-2.5">
           {[
-            { name: t("Publicité Meta", "Meta ads"), roas: "4,8×", detail: t("186 000 F dépensés · 892 000 F", "186 000 F spent · 892 000 F") },
-            { name: t("Publicité TikTok", "TikTok ads"), roas: "5,3×", detail: t("142 000 F dépensés · 748 000 F", "142 000 F spent · 748 000 F") },
-            { name: t("Publicité Google", "Google ads"), roas: "4,5×", detail: t("64 000 F dépensés · 289 000 F", "64 000 F spent · 289 000 F") },
-            { name: t("Publicité YouTube", "YouTube ads"), roas: "3,6×", detail: t("20 000 F dépensés · 72 000 F", "20 000 F spent · 72 000 F") },
+            { name: t("Publicité Meta", "Meta ads"), roas: `${acqMetaRoas.toFixed(1).replace(".", ",")}×`, detail: t(`${fmtF(acqMetaSpend)} dépensés · ${fmtF(acqMetaRevenue)}`, `${fmtF(acqMetaSpend)} spent · ${fmtF(acqMetaRevenue)}`) },
+            { name: t("Publicité TikTok", "TikTok ads"), roas: `${acqTiktokRoas.toFixed(1).replace(".", ",")}×`, detail: t(`${fmtF(acqTiktokSpend)} dépensés · ${fmtF(acqTiktokRevenue)}`, `${fmtF(acqTiktokSpend)} spent · ${fmtF(acqTiktokRevenue)}`) },
+            { name: t("Publicité Google", "Google ads"), roas: `${acqGoogleRoas.toFixed(1).replace(".", ",")}×`, detail: t(`${fmtF(acqGoogleSpend)} dépensés · ${fmtF(acqGoogleRevenue)}`, `${fmtF(acqGoogleSpend)} spent · ${fmtF(acqGoogleRevenue)}`) },
+            { name: t("Publicité YouTube", "YouTube ads"), roas: `${acqYoutubeRoas.toFixed(1).replace(".", ",")}×`, detail: t(`${fmtF(acqYoutubeSpend)} dépensés · ${fmtF(acqYoutubeRevenue)}`, `${fmtF(acqYoutubeSpend)} spent · ${fmtF(acqYoutubeRevenue)}`) },
           ].map((r) => (
             <div key={r.name} className="flex items-center justify-between gap-2 text-xs">
               <span className="text-[var(--dashboard-text)]/60">{r.name}</span>
@@ -476,7 +636,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
           ))}
           <div className="flex items-center justify-between gap-2 text-xs">
             <span className="text-[var(--dashboard-text)]/40">{t("Ventes organiques", "Organic sales")}</span>
-            <span className="text-right text-[10px] text-[var(--dashboard-text)]/40">{t("Aucune dépense · 315 400 F", "No spend · 315 400 F")}</span>
+            <span className="text-right text-[10px] text-[var(--dashboard-text)]/40">{t(`Aucune dépense · ${fmtF(acqOrganicRevenue)}`, `No spend · ${fmtF(acqOrganicRevenue)}`)}</span>
           </div>
         </div>
         <div className="mt-3 rounded-2xl p-3" style={{ background: "rgba(56,189,248,.08)" }}>
@@ -504,37 +664,37 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         </div>
         <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">{t("Un refus coûte selon le moment où il tombe", "A refusal costs depending on when it lands")}</p>
         <div className="mt-3 flex items-center gap-4">
-          <Ring pct={80.4} color="#4FE0AE">
-            <span className="text-sm font-bold">80,4 %</span>
+          <Ring pct={refDeliveredPct} color="#4FE0AE">
+            <span className="text-sm font-bold">{fmtPct1(refDeliveredPct)}</span>
             <span className="text-[8px] text-[var(--dashboard-text)]/40">{t("Livrées", "Delivered")}</span>
           </Ring>
           <div className="flex-1 space-y-1.5 text-xs">
-            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ background: "#4FE0AE" }} />{t("Livrées et payées", "Delivered and paid")}</span><b>119</b></div>
-            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ background: "#FFB84D" }} />{t("Refusées à l'appel", "Refused on the call")}</span><b>14</b></div>
-            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ background: "#FF7A80" }} />{t("Refusées à la porte", "Refused at the door")}</span><b>9</b></div>
-            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[var(--dashboard-text)]/20" />{t("Encore en route", "Still on the way")}</span><b>6</b></div>
+            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ background: "#4FE0AE" }} />{t("Livrées et payées", "Delivered and paid")}</span><b>{refDeliveredPaid}</b></div>
+            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ background: "#FFB84D" }} />{t("Refusées à l'appel", "Refused on the call")}</span><b>{refRefusedCall}</b></div>
+            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ background: "#FF7A80" }} />{t("Refusées à la porte", "Refused at the door")}</span><b>{refRefusedDoor}</b></div>
+            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[var(--dashboard-text)]/20" />{t("Encore en route", "Still on the way")}</span><b>{refStillOnWay}</b></div>
           </div>
         </div>
-        <StackedBar segments={[{ pct: 60.9, color: "#FFB84D" }, { pct: 39.1, color: "#FF7A80" }]} />
+        <StackedBar segments={[{ pct: refStackCallPct, color: "#FFB84D" }, { pct: refStackDoorPct, color: "#FF7A80" }]} />
         <Divider />
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-xl p-2.5" style={{ background: "rgba(255,184,77,.1)" }}>
-            <p className="text-[10px] font-semibold">{t("Refusée à l'appel · 14", "Refused on the call · 14")}</p>
+            <p className="text-[10px] font-semibold">{t(`Refusée à l'appel · ${refRefusedCall}`, `Refused on the call · ${refRefusedCall}`)}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
               {t("Le centre d'appel annule depuis son interface avant que la course démarre. Aucun frais logistique, aucune marchandise sortie. Seule la publicité est perdue.", "The call center cancels from its interface before the run starts. No logistics fee, no goods out. Only the ad spend is lost.")}
             </p>
-            <p className="mt-1.5 text-xs font-bold" style={{ color: "#C07A0C" }}>48 500 F</p>
+            <p className="mt-1.5 text-xs font-bold" style={{ color: "#C07A0C" }}>{fmtF(refCostCall)}</p>
           </div>
           <div className="rounded-xl p-2.5" style={{ background: "rgba(255,122,128,.1)" }}>
-            <p className="text-[10px] font-semibold">{t("Refusée à la porte · 9", "Refused at the door · 9")}</p>
+            <p className="text-[10px] font-semibold">{t(`Refusée à la porte · ${refRefusedDoor}`, `Refused at the door · ${refRefusedDoor}`)}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
               {t("Le livreur a démarré sa course et marque la commande non livrée. La livraison est due, la récupération aussi, et la marchandise repart.", "The rider has started the run and marks the order not delivered. Delivery is due, so is the pickup, and the goods go back.")}
             </p>
-            <p className="mt-1.5 text-xs font-bold" style={{ color: "#DC3A45" }}>53 600 F</p>
+            <p className="mt-1.5 text-xs font-bold" style={{ color: "#DC3A45" }}>{fmtF(refCostDoor)}</p>
           </div>
         </div>
         <Divider />
-        <StatRow label={t("Marchandise revenue en stock (S)", "Goods back in stock (W)")} value="118 400 F" />
+        <StatRow label={t("Marchandise revenue en stock (S)", "Goods back in stock (W)")} value={fmtF(refGoodsBackInStock)} />
         <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">
           {t(
             "En dropshipping, la marchandise refusée retourne chez le partenaire : elle ne pèse pas sur votre stock. En stockage management, elle revient chez lui à votre nom et redevient vendable.",
@@ -558,11 +718,11 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">{t("Marge de contribution par commande, publicité comprise", "Contribution margin per order, ads included")}</p>
         <div className="mt-3 space-y-3">
           {[
-            { nature: "S", name: t("Sérum éclat 30 ml", "Radiance serum 30 ml"), pct: 82, val: "31,4 %", tot: "+6 112 F", color: "#4FE0AE" },
-            { nature: "S", name: t("Beurre de karité 200 g", "Shea butter 200 g"), pct: 68, val: "26,1 %", tot: "+4 908 F", color: "#4FE0AE" },
-            { nature: "D", name: t("Sac cabas en raphia", "Raffia tote bag"), pct: 49, val: "18,8 %", tot: "+3 402 F", color: "#EC0C8C" },
-            { nature: "D", name: t("Huile de ricin 100 ml", "Castor oil 100 ml"), pct: 22, val: "8,4 %", tot: "+1 214 F", color: "#FFB84D" },
-            { nature: "S", name: t("Sandales tressées", "Woven sandals"), pct: 11, val: "− 1,8 %", tot: "− 340 F", color: "#FF7A80" },
+            { nature: "S", name: t("Sérum éclat 30 ml", "Radiance serum 30 ml"), pct: 82, val: fmtPctSigned1(prodVal0), tot: fmtSignedF(prodTot0), color: "#4FE0AE" },
+            { nature: "S", name: t("Beurre de karité 200 g", "Shea butter 200 g"), pct: 68, val: fmtPctSigned1(prodVal1), tot: fmtSignedF(prodTot1), color: "#4FE0AE" },
+            { nature: "D", name: t("Sac cabas en raphia", "Raffia tote bag"), pct: 49, val: fmtPctSigned1(prodVal2), tot: fmtSignedF(prodTot2), color: "#EC0C8C" },
+            { nature: "D", name: t("Huile de ricin 100 ml", "Castor oil 100 ml"), pct: 22, val: fmtPctSigned1(prodVal3), tot: fmtSignedF(prodTot3), color: "#FFB84D" },
+            { nature: "S", name: t("Sandales tressées", "Woven sandals"), pct: 11, val: fmtPctSigned1(prodVal4), tot: fmtSignedF(prodTot4), color: "#FF7A80" },
           ].map((p) => (
             <div key={p.name} className="flex items-center gap-3 text-xs">
               <span className="flex w-40 shrink-0 items-center gap-1.5 truncate">
@@ -582,7 +742,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
           {t("Les sandales tressées coûtent 340 F par commande après publicité : monter le prix, couper la pub dessus, ou les écouler sans les pousser.", "Woven sandals cost 340 F per order after ads: raise the price, cut ads on it, or clear it without pushing.")}
         </p>
         <Divider />
-        <StatRow label={t("Part faite par vos 3 premiers produits", "Share made by your top 3 products")} value="61 %" />
+        <StatRow label={t("Part faite par vos 3 premiers produits", "Share made by your top 3 products")} value={`${prodTop3Share} %`} />
       </Card>
   );
 
@@ -595,15 +755,15 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
           </div>
           <div className="text-right">
             <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Total immobilisé", "Total tied up")}</p>
-            <p className="mt-0.5 text-lg font-bold" style={{ color: "#C07A0C" }}>2 758 700 F</p>
+            <p className="mt-0.5 text-lg font-bold" style={{ color: "#C07A0C" }}>{fmtF(immTotal)}</p>
           </div>
         </div>
-        <StackedBar segments={[{ pct: 66.8, color: "#8B5CF6" }, { pct: 16.3, color: "#FFB84D" }, { pct: 8.7, color: "#38BDF8" }, { pct: 8.2, color: "#FF7A80" }]} />
+        <StackedBar segments={[{ pct: immPctStock, color: "#8B5CF6" }, { pct: immPctSuspended, color: "#FFB84D" }, { pct: immPctShipped, color: "#38BDF8" }, { pct: immPctRefused, color: "#FF7A80" }]} />
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <LegendRow color="#8B5CF6" badge={t("S", "W")} label={t("Stock déposé, en valeur d'achat", "Deposited stock, at cost")} value="1 842 000 F" />
-          <LegendRow color="#FFB84D" label={t("Suspendu, le temps du délai de litige", "On hold, for the dispute window")} value="459 500 F" />
-          <LegendRow color="#38BDF8" label={t("Colis partis, pas encore livrés", "Shipped, not yet delivered")} value="252 000 F" />
-          <LegendRow color="#FF7A80" badge={t("S", "W")} label={t("Marchandise des refus, en retour", "Refused goods, coming back")} value="205 200 F" />
+          <LegendRow color="#8B5CF6" badge={t("S", "W")} label={t("Stock déposé, en valeur d'achat", "Deposited stock, at cost")} value={fmtF(stockDeposited)} />
+          <LegendRow color="#FFB84D" label={t("Suspendu, le temps du délai de litige", "On hold, for the dispute window")} value={fmtF(soldeSuspended)} />
+          <LegendRow color="#38BDF8" label={t("Colis partis, pas encore livrés", "Shipped, not yet delivered")} value={fmtF(immShippedNotDelivered)} />
+          <LegendRow color="#FF7A80" badge={t("S", "W")} label={t("Marchandise des refus, en retour", "Refused goods, coming back")} value={fmtF(immRefusedGoodsReturning)} />
         </div>
         <div className="mt-3 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)] p-3">
           <p className="text-xs font-semibold">{t("Seul le stockage management immobilise du stock", "Only warehousing ties up stock")}</p>
@@ -621,10 +781,10 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
         </p>
         <div className="mt-2 flex items-stretch gap-2.5 text-center text-[9px]">
           {[
-            { v: t("4 j", "4 d"), l: t("Achat et dépôt", "Purchase & deposit") },
-            { v: t("18 j", "18 d"), l: t("En stock avant vente", "In stock before sale") },
-            { v: t("1,1 j", "1.1 d"), l: t("Livraison", "Delivery") },
-            { v: t("3 j", "3 d"), l: t("Délai de litige", "Dispute window") },
+            { v: t(fmtJours(cycleDaysAchat), fmtJours(cycleDaysAchat).replace(" j", " d")), l: t("Achat et dépôt", "Purchase & deposit") },
+            { v: t(fmtJours(cycleDaysStock), fmtJours(cycleDaysStock).replace(" j", " d")), l: t("En stock avant vente", "In stock before sale") },
+            { v: t(fmtJours(cycleDaysLivraison), fmtJours(cycleDaysLivraison).replace(" j", " d")), l: t("Livraison", "Delivery") },
+            { v: t(fmtJours(cycleDaysLitige), fmtJours(cycleDaysLitige).replace(" j", " d")), l: t("Délai de litige", "Dispute window") },
           ].map((c, i) => (
             <div key={i} className="flex flex-1 items-center gap-2.5">
               <div className="min-w-0 flex-1 rounded-lg bg-[var(--dashboard-surface-2)] px-3 py-2.5">
@@ -635,7 +795,7 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
             </div>
           ))}
           <div className="min-w-0 flex-1 rounded-lg px-3 py-2.5" style={{ background: "rgba(255,184,77,.15)" }}>
-            <p className="text-xs font-bold" style={{ color: "#C07A0C" }}>26,1 j</p>
+            <p className="text-xs font-bold" style={{ color: "#C07A0C" }}>{fmtJours(cycleDaysTotal)}</p>
             <p className="mt-0.5 text-[8px] leading-tight text-[var(--dashboard-text)]/40">{t("Du franc sorti au franc disponible", "From cash out to cash available")}</p>
           </div>
         </div>
@@ -666,10 +826,10 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
             </div>
           </div>
           <div>
-            <StatRow label={t("Solde attendu dans 30 jours", "Expected balance in 30 days")} value={<span className="text-[#0E9F6E]">1 495 000 F</span>} />
-            <StatRow label={t("Suspensions qui se libèrent", "Holds being released")} value="459 500 F" />
+            <StatRow label={t("Solde attendu dans 30 jours", "Expected balance in 30 days")} value={<span className="text-[#0E9F6E]">{fmtF(projExpectedBalance30d)}</span>} />
+            <StatRow label={t("Suspensions qui se libèrent", "Holds being released")} value={fmtF(soldeSuspended)} />
             <StatRow label={t("Réapprovisionnement à prévoir (S)", "Restock to plan (W)")} value={t("Vers le 22 sept.", "Around Sept. 22")} />
-            <StatRow label={t("Abonnement", "Subscription")} value={t("Le 14 · 25 000 F", "On the 14th · 25 000 F")} />
+            <StatRow label={t("Abonnement", "Subscription")} value={t(`Le 14 · ${fmtF(prAbonnement)}`, `On the 14th · ${fmtF(prAbonnement)}`)} />
             <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">
               {t("Aucun creux sous zéro n'est prévu. Un réapprovisionnement avancé au 19 passerait la courbe au rouge 3 jours.", "No dip below zero is expected. Restocking on the 19th would push the curve red for 3 days.")}
             </p>
@@ -692,34 +852,34 @@ export default function FinancesSection({ first = true }: { first?: boolean }) {
       {
         heading: t("Solde du sous-compte", "Sub-account balance"),
         rows: [
-          [t("Solde total", "Total balance"), "1 482 300 F"],
-          [t("Disponible tout de suite", "Available right away"), "1 022 800 F"],
-          [t("Suspendu · délai de litige", "On hold · dispute window"), "459 500 F"],
+          [t("Solde total", "Total balance"), fmtF(soldeTotal)],
+          [t("Disponible tout de suite", "Available right away"), fmtF(soldeAvailable)],
+          [t("Suspendu · délai de litige", "On hold · dispute window"), fmtF(soldeSuspended)],
         ],
       },
       {
         heading: t("Trésorerie", "Cash flow"),
         rows: [
-          [t("Point le plus bas", "Lowest point"), "318 000 F"],
-          [t("Point le plus haut", "Highest point"), "861 000 F"],
-          [t("Solde moyen", "Average balance"), "601 400 F"],
-          [t("Variation", "Change"), "+87 %"],
+          [t("Point le plus bas", "Lowest point"), fmtF(cashLowest)],
+          [t("Point le plus haut", "Highest point"), fmtF(cashHighest)],
+          [t("Solde moyen", "Average balance"), fmtF(cashAvg)],
+          [t("Variation", "Change"), `+${cashVariationPct} %`],
         ],
       },
       {
         heading: t("Compte de résultat de la période", "P&L for the period"),
         columns: [t("Poste", "Item"), t("Montant", "Amount")],
         rows: [
-          [t("Encaissé des clients", "Collected from clients"), "2 316 400 F"],
-          [t("Prix produit partenaire", "Partner product price"), "− 1 062 000 F"],
-          [t("Frais logistiques", "Logistics fees"), "− 178 500 F"],
-          [t("Frais de transaction", "Transaction fees"), "− 34 700 F"],
-          [t("Garantie produit", "Product warranty"), "− 12 400 F"],
-          [t("Coût des refus", "Cost of refusals"), "− 31 000 F"],
-          [t("Publicité", "Advertising"), "− 412 000 F"],
-          [t("Commission LM", "LM commission"), "− 57 900 F"],
-          [t("Abonnement", "Subscription"), "− 25 000 F"],
-          [t("Résultat net", "Net result"), "502 900 F"],
+          [t("Encaissé des clients", "Collected from clients"), fmtF(prEncaisse)],
+          [t("Prix produit partenaire", "Partner product price"), fmtDeltaF(prPrixProduit)],
+          [t("Frais logistiques", "Logistics fees"), fmtDeltaF(prFraisLogistiques)],
+          [t("Frais de transaction", "Transaction fees"), fmtDeltaF(prFraisTransaction)],
+          [t("Garantie produit", "Product warranty"), fmtDeltaF(prGarantieProduit)],
+          [t("Coût des refus", "Cost of refusals"), fmtDeltaF(prCoutRefus)],
+          [t("Publicité", "Advertising"), fmtDeltaF(prPublicite)],
+          [t("Commission LM", "LM commission"), fmtDeltaF(prCommissionLM)],
+          [t("Abonnement", "Subscription"), fmtDeltaF(prAbonnement)],
+          [t("Résultat net", "Net result"), fmtF(prNetResult)],
         ],
       },
     ]);

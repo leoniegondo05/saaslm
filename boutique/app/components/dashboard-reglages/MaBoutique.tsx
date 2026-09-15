@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, SectionHeader } from "../dashboard-accueil/shared";
+import { Card, SectionHeader, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -47,7 +47,7 @@ const IDENTITE_INIT: Identite = {
   secteur: "Beauté et soins",
   presentation:
     "Cosmétiques et soins naturels, préparés et conditionnés à Abidjan. Livraison dans tout le district.",
-  adresse: "lm.ci/awa-beaute",
+  adresse: "awa-beaute.liivremoi.com",
   ouverte: true,
 };
 
@@ -63,12 +63,7 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
   const { t } = useDashboardLangue();
   const [identite, setIdentite] = useState(IDENTITE_INIT);
   const [enlevement, setEnlevement] = useState(ENLEVEMENT_INIT);
-  const [enregistre, setEnregistre] = useState(false);
-
-  const enregistrer = () => {
-    setEnregistre(true);
-    setTimeout(() => setEnregistre(false), 1800);
-  };
+  const { saving, done, trigger } = useMockSave();
 
   return (
     <>
@@ -86,10 +81,11 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
       <div className="mb-3 flex items-center justify-end">
         <button
           type="button"
-          onClick={enregistrer}
-          className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
+          onClick={() => trigger()}
+          disabled={saving}
+          className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
         >
-          {enregistre ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
+          {saving ? t("Enregistrement…", "Saving…") : done ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
         </button>
       </div>
 

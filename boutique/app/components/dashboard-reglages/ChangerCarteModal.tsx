@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
+import { useMockSave } from "../dashboard-accueil/shared";
 
 /*
   Panneau "Changer" de la carte de prélèvement (FinancesReglements.tsx,
@@ -18,7 +19,7 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
   l'API existe, seul `onEnregistrer` (côté appelant) a besoin de changer.
 */
 
-export type Carte = { marque: "Visa" | "Mastercard" | "Carte"; derniers4: string };
+export type Carte = { marque: "Visa" | "Mastercard" | "Carte"; derniers4: string; nomComplet: string };
 
 function detecterMarque(numero: string): Carte["marque"] {
   if (numero.startsWith("4")) return "Visa";
@@ -35,9 +36,11 @@ export default function ChangerCarteModal({
   onEnregistrer: (carte: Carte) => void;
 }) {
   const { t } = useDashboardLangue();
+  const [nomComplet, setNomComplet] = useState("");
   const [numero, setNumero] = useState("");
   const [expiration, setExpiration] = useState("");
   const [cvc, setCvc] = useState("");
+  const { saving, trigger } = useMockSave();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onFermer();
@@ -47,7 +50,8 @@ export default function ChangerCarteModal({
 
   const chiffresNumero = numero.replace(/\D/g, "");
   const chiffresExpiration = expiration.replace(/\D/g, "");
-  const peutEnregistrer = chiffresNumero.length === 16 && chiffresExpiration.length === 4 && cvc.length >= 3;
+  const peutEnregistrer =
+    nomComplet.trim().length > 0 && chiffresNumero.length === 16 && chiffresExpiration.length === 4 && cvc.length >= 3;
 
   const formaterNumero = (v: string) =>
     v
@@ -63,7 +67,9 @@ export default function ChangerCarteModal({
 
   const valider = () => {
     if (!peutEnregistrer) return;
-    onEnregistrer({ marque: detecterMarque(chiffresNumero), derniers4: chiffresNumero.slice(-4) });
+    trigger(() =>
+      onEnregistrer({ marque: detecterMarque(chiffresNumero), derniers4: chiffresNumero.slice(-4), nomComplet: nomComplet.trim() })
+    );
   };
 
   return (
@@ -84,9 +90,19 @@ export default function ChangerCarteModal({
         <div className="my-3.5 h-px bg-[var(--dashboard-text)]/10" />
 
         <div>
-          <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">{t("Numéro de carte", "Card number")}</p>
+          <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">{t("Nom complet", "Full name")}</p>
           <input
             autoFocus
+            value={nomComplet}
+            onChange={(e) => setNomComplet(e.target.value)}
+            placeholder={t("Nom sur la carte", "Name on card")}
+            className="mt-1.5 w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2.5 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04]"
+          />
+        </div>
+
+        <div className="mt-3">
+          <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">{t("Numéro de carte", "Card number")}</p>
+          <input
             inputMode="numeric"
             value={numero}
             onChange={(e) => setNumero(formaterNumero(e.target.value))}
@@ -122,17 +138,18 @@ export default function ChangerCarteModal({
           <button
             type="button"
             onClick={onFermer}
-            className="flex-1 rounded-full border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-card-bg)] py-2.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.03]"
+            disabled={saving}
+            className="flex-1 rounded-full border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-card-bg)] py-2.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.03] disabled:cursor-not-allowed disabled:opacity-40"
           >
             {t("Annuler", "Cancel")}
           </button>
           <button
             type="button"
             onClick={valider}
-            disabled={!peutEnregistrer}
+            disabled={!peutEnregistrer || saving}
             className="flex-[1.4] rounded-full bg-[#141220] py-2.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-brand-pink"
           >
-            {t("Enregistrer la carte", "Save the card")}
+            {saving ? t("Enregistrement…", "Saving…") : t("Enregistrer la carte", "Save the card")}
           </button>
         </div>
       </div>

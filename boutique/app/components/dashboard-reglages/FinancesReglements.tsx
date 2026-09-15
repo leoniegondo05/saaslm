@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, SectionHeader, Tag } from "../dashboard-accueil/shared";
+import { Card, SectionHeader, Tag, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import ChangerCarteModal, { type Carte } from "./ChangerCarteModal";
 
@@ -44,14 +44,9 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
   const [exercice, setExercice] = useState("Janvier – décembre");
   const [emettreRecu, setEmettreRecu] = useState(true);
   const [exportMensuel, setExportMensuel] = useState(true);
-  const [enregistre, setEnregistre] = useState(false);
-  const [carte, setCarte] = useState<Carte>({ marque: "Visa", derniers4: "4417" });
+  const { saving, done, trigger } = useMockSave();
+  const [carte, setCarte] = useState<Carte>({ marque: "Visa", derniers4: "4417", nomComplet: "Awa Beauté" });
   const [modalCarteOuvert, setModalCarteOuvert] = useState(false);
-
-  const enregistrer = () => {
-    setEnregistre(true);
-    setTimeout(() => setEnregistre(false), 1800);
-  };
 
   return (
     <>
@@ -69,10 +64,11 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
       <div className="mb-3 flex items-center justify-end">
         <button
           type="button"
-          onClick={enregistrer}
-          className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
+          onClick={() => trigger()}
+          disabled={saving}
+          className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
         >
-          {enregistre ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
+          {saving ? t("Enregistrement…", "Saving…") : done ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
         </button>
       </div>
 
@@ -209,7 +205,7 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
           onEnregistrer={(nouvelleCarte) => {
             setCarte(nouvelleCarte);
             setModalCarteOuvert(false);
-            enregistrer();
+            trigger();
           }}
         />
       )}
