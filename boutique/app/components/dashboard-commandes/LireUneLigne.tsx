@@ -76,7 +76,7 @@ export default function LireUneLigne({ first = false, activeDate }: { first?: bo
           vignette perdue au centre. */}
       <Card className="!bg-[var(--dashboard-card-bg)]">
         <div className="grid items-center gap-6 lg:grid-cols-[300px_1fr]">
-          <div className="relative overflow-hidden rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-glass)] p-4 pl-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.12)]">
+          <div className="relative overflow-hidden rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-glass)] p-4 pl-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
             <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-[#178a3f]" />
 
             <p className="text-[15px] font-bold tracking-tight text-[var(--dashboard-text)]">{EXEMPLE.id}</p>
@@ -89,7 +89,7 @@ export default function LireUneLigne({ first = false, activeDate }: { first?: bo
               </div>
               <div className="text-right">
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">{t("Net", "Net")}</p>
-                <p className="mt-0.5 flex items-center justify-end gap-1 text-lg font-bold tracking-tight text-[#178a3f]">
+                <p className="mt-0.5 flex items-center justify-end gap-1 text-lg font-bold tracking-tight text-[#178a3f] font-figures">
                   <TriangleIcon filled />
                   {formatCfa(net)}
                 </p>
@@ -328,30 +328,30 @@ export default function LireUneLigne({ first = false, activeDate }: { first?: bo
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <p className="text-xs font-bold text-[var(--dashboard-text)]">{t(JOUR_RESUME.date, JOUR_RESUME.dateEn)}</p>
               <span className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-[var(--dashboard-text)]">{JOUR_RESUME.commandes.length}</span>
+                <span className="text-sm font-bold text-[var(--dashboard-text)] font-figures">{JOUR_RESUME.commandes.length}</span>
                 <span className="text-[10px] text-[var(--dashboard-text)]/45">{t("reçues", "received")}</span>
               </span>
             </div>
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
               <span className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-[#178a3f]">{livreesResume}</span>
+                <span className="text-sm font-bold text-[#178a3f] font-figures">{livreesResume}</span>
                 <span className="text-[10px] text-[var(--dashboard-text)]/45">{t("livrée", "delivered")}</span>
               </span>
               <span className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-[#c8262d]">{refuseesResume}</span>
+                <span className="text-sm font-bold text-[#c8262d] font-figures">{refuseesResume}</span>
                 <span className="text-[10px] text-[var(--dashboard-text)]/45">{t("refusée", "refused")}</span>
               </span>
               <span className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-[#a8690a]">{litigesResume}</span>
+                <span className="text-sm font-bold text-[#a8690a] font-figures">{litigesResume}</span>
                 <span className="text-[10px] text-[var(--dashboard-text)]/45">{t("en litige", "disputed")}</span>
               </span>
               <span className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-[#3a1d8a]">{relanceesResume}</span>
+                <span className="text-sm font-bold text-[#3a1d8a] font-figures">{relanceesResume}</span>
                 <span className="text-[10px] text-[var(--dashboard-text)]/45">{t("relancée", "relaunched")}</span>
               </span>
               <div className="text-right">
                 <p className="text-[9px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Encaissé", "Collected")}</p>
-                <p className="text-sm font-bold text-[#178a3f]">{formatCfa(encaisseResume)}</p>
+                <p className="text-sm font-bold text-[#178a3f] font-figures">{formatCfa(encaisseResume)}</p>
               </div>
             </div>
           </div>
@@ -387,7 +387,7 @@ export default function LireUneLigne({ first = false, activeDate }: { first?: bo
                   <td className="py-2 pr-3 font-semibold">{formatDevise(EXEMPLE.montantPaye, d.key)}</td>
                   <td className="py-2 pr-3 text-[#c8262d]">-{formatDevise(EXEMPLE.retenueLogistique, d.key)}</td>
                   <td className="py-2 pr-3 text-[#c8262d]">-{formatDevise(EXEMPLE.retenueOperation, d.key)}</td>
-                  <td className="py-2 pr-3 text-sm font-bold text-[#178a3f]">{formatDevise(net, d.key)}</td>
+                  <td className="py-2 pr-3 text-sm font-bold text-[#178a3f] font-figures">{formatDevise(net, d.key)}</td>
                 </tr>
               ))}
             </tbody>

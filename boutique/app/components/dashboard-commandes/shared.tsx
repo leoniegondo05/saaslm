@@ -306,7 +306,7 @@ export function AnneauCompteARebours({
           tous, ça collait aux bords du cercle. Police plus petite au-delà
           de 4 caractères pour garder de l'air. */}
       <span
-        className={`font-bold text-[var(--dashboard-text)] ${
+        className={`font-bold text-[var(--dashboard-text)] font-figures ${
           (etiquette ?? `${heuresRestantes}h`).length > 4 ? "text-[7px]" : "text-[9px]"
         }`}
       >

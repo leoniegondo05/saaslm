@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
-import { CollapsibleCards, HeaderActionBtn, Nature, openBrandedReport, periodSeed, scaleForPeriod, SectionHeader } from "./shared";
+import { CollapsibleCards, HeaderActionBtn, Nature, openBrandedReport, periodSeed, scaleForPeriod, SectionHeader, texteAvecChiffres } from "./shared";
 import { KPIS_CLIENTS, TypeAchat } from "./clients/clientsData";
 import ClientsRfMatrix from "./clients/ClientsRfMatrix";
 import ClientsGrowthChart from "./clients/ClientsGrowthChart";
@@ -142,7 +142,7 @@ export default function ClientsSection({ first = true, activeDate }: { first?: b
                   {t(kpi.labelFr, kpi.labelEn)}
                 </span>
                 <div
-                  className={`mt-1.5 text-xl font-bold tracking-tight sm:text-2xl ${
+                  className={`mt-1.5 text-xl font-bold tracking-tight sm:text-2xl font-figures ${
                     kpi.id === "actifs" ? "text-[#10b981]" : ""
                   } ${kpi.id === "reviennent" || kpi.id === "a-relancer" ? "text-[#f59e0b]" : ""}`}
                 >
@@ -153,18 +153,18 @@ export default function ClientsSection({ first = true, activeDate }: { first?: b
               <div className="mt-1.5 text-[10px]">
                 {kpi.evolutionFr && (
                   <span className={`font-semibold ${kpi.evolutionColor ?? "text-[#10b981]"}`}>
-                    {t(kpi.evolutionFr, kpi.evolutionEn ?? "")}
+                    {texteAvecChiffres(t(kpi.evolutionFr, kpi.evolutionEn ?? ""))}
                   </span>
                 )}
                 {kpi.sousLabelFr && (
                   <span className="text-[var(--dashboard-text)]/50">
-                    {t(kpi.sousLabelFr, kpi.sousLabelEn ?? "")}
+                    {texteAvecChiffres(t(kpi.sousLabelFr, kpi.sousLabelEn ?? ""))}
                   </span>
                 )}
               </div>
               {compare && prevValeur && (
                 <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">
-                  {t("Période précédente", "Previous period")} : {prevValeur}
+                  {t("Période précédente", "Previous period")} : <span className="font-figures">{prevValeur}</span>
                 </p>
               )}
             </div>

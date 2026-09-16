@@ -41,7 +41,7 @@ function KpiTile({ label, value, valueColor, sub, subColor }: { label: string; v
   return (
     <div className="rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-3.5 shadow-[0_4px_12px_-4px_rgba(20,18,32,0.08)] transition-colors">
       <p className="text-[9px] font-semibold uppercase tracking-wider text-[var(--dashboard-text)]/45">{label}</p>
-      <p className="mt-1.5 text-xl font-bold tracking-tight sm:text-2xl" style={{ color: valueColor }}>
+      <p className="mt-1.5 text-xl font-bold tracking-tight sm:text-2xl font-figures" style={{ color: valueColor }}>
         {value}
       </p>
       <p className={`mt-1 text-[10px] ${subColor ? "" : "text-[var(--dashboard-text)]/50"}`} style={{ color: subColor }}>
@@ -100,7 +100,7 @@ function DisputeCard({
           <span className="text-sm font-bold tracking-tight">{id}</span>
           <Tag tone="warn">{t("Litige ouvert", "Dispute open")}</Tag>
         </div>
-        <span className="text-sm font-bold">{amount}</span>
+        <span className="text-sm font-bold font-figures">{amount}</span>
       </div>
       <div className="mt-3.5 grid grid-cols-3 gap-3 sm:grid-cols-5">
         <DisputeStat label={t("Ouvert par", "Opened by")} value={t("Le client", "The customer")} />
@@ -139,7 +139,7 @@ function TimelineStep({
   return (
     <div className="grid grid-cols-[64px_20px_1fr] gap-0 sm:grid-cols-[84px_20px_1fr]">
       <div className="pr-3 pt-0.5 text-right">
-        <p className="text-sm font-bold tracking-tight">{time}</p>
+        <p className="text-sm font-bold tracking-tight font-figures">{time}</p>
         {timeNote && <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{timeNote}</p>}
       </div>
       <div className="relative flex justify-center">
@@ -623,22 +623,22 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div>
               <p className="text-[9px] text-[var(--dashboard-text)]/40">{t("Litiges cumulés", "Cumulative disputes")}</p>
-              <p className="mt-1 text-base font-bold tracking-tight">26</p>
+              <p className="mt-1 text-base font-bold tracking-tight font-figures">26</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("sur 1 480 livraisons", "of 1 480 deliveries")}</p>
             </div>
             <div>
               <p className="text-[9px] text-[var(--dashboard-text)]/40">{t("Il y a six mois", "Six months ago")}</p>
-              <p className="mt-1 text-base font-bold tracking-tight">3,1 %</p>
+              <p className="mt-1 text-base font-bold tracking-tight font-figures">3,1 %</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("au niveau du réseau", "at network level")}</p>
             </div>
             <div>
               <p className="text-[9px] text-[var(--dashboard-text)]/40">{t("Aujourd'hui", "Today")}</p>
-              <p className="mt-1 text-base font-bold tracking-tight" style={{ color: GREEN }}>1,7 %</p>
+              <p className="mt-1 text-base font-bold tracking-tight font-figures" style={{ color: GREEN }}>1,7 %</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("deux fois mieux", "twice as good")}</p>
             </div>
             <div>
               <p className="text-[9px] text-[var(--dashboard-text)]/40">{t("Économie réalisée", "Savings achieved")}</p>
-              <p className="mt-1 text-base font-bold tracking-tight" style={{ color: GREEN }}>71 400 F</p>
+              <p className="mt-1 text-base font-bold tracking-tight font-figures" style={{ color: GREEN }}>71 400 F</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("sur six mois", "over six months")}</p>
             </div>
           </div>
@@ -853,7 +853,7 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
               >
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--dashboard-card-bg)] text-center">
                   <div>
-                    <p className="text-base font-bold leading-none">26</p>
+                    <p className="text-base font-bold leading-none font-figures">26</p>
                     <p className="mt-1 text-[8px] text-[var(--dashboard-text)]/40">{t("litiges", "disputes")}</p>
                   </div>
                 </div>

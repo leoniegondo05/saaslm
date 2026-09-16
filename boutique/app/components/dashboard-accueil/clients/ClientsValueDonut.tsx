@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { TypeAchatTag } from "../shared";
+import { TypeAchatTag, texteAvecChiffres } from "../shared";
 import { TypeAchat } from "./clientsData";
 
 export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat }) {
@@ -61,7 +61,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                   {t("Ce qu'il vous rapporte au total", "Total lifetime revenue")}
                 </span>
               </div>
-              <span className="font-bold">27 100F</span>
+              <span className="font-bold font-figures">27 100F</span>
             </div>
 
             <div className="flex items-center justify-between text-[11px]">
@@ -71,7 +71,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                   {t("Ce qu'il a coûté à faire venir", "Acquisition cost spent")}
                 </span>
               </div>
-              <span className="font-bold">3 462F</span>
+              <span className="font-bold font-figures">3 462F</span>
             </div>
           </div>
 
@@ -82,27 +82,27 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                 {t("Rapport valeur sur coût", "Value-to-cost ratio")}
               </span>
               <span className="font-bold text-[#10b981]">
-                {t("7,8 pour 1", "7.8 to 1")}
+                {texteAvecChiffres(t("7,8 pour 1", "7.8 to 1"))}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Achats par client sur sa vie", "Lifetime orders per customer")}
               </span>
-              <span className="font-semibold">1,4</span>
+              <span className="font-semibold font-figures">1,4</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Marge de contribution par client", "Contribution margin per customer")}
               </span>
-              <span className="font-semibold">6 574F</span>
+              <span className="font-semibold font-figures">6 574F</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Temps pour rembourser l'acquisition", "Time to payback CAC")}
               </span>
               <span className="font-bold text-[#10b981]">
-                {t("Dès le premier achat", "Upon 1st purchase")}
+                {texteAvecChiffres(t("Dès le premier achat", "Upon 1st purchase"))}
               </span>
             </div>
           </div>
@@ -117,10 +117,10 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
             )}
           </h5>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--dashboard-text)]/55">
-            {t(
+            {texteAvecChiffres(t(
               "C'est confortable, et c'est ce qui vous permet de recruter sans risque. Mais le rapport de sept virgule huit repose sur un virgule quatre achat : il tiendrait à quinze si vos clients achetaient deux fois. La marge de progression n'est pas dans la publicité, elle est dans le deuxième achat.",
               "This provides strong cashflow security, allowing risk-free customer acquisition. However, the 7.8x ratio currently rests on only 1.4 purchases: it would jump past 15x if customers simply bought twice. Your real leverage is not more advertising, but accelerating the second purchase."
-            )}
+            ))}
           </p>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                 </span>
               </div>
               <p className="text-[10px] text-[var(--dashboard-text)]/45">
-                {t("Vos clients rangés par dix pour cent, du meilleur au moins bon", "Customers ranked in 10% deciles, from best to lowest")}
+                {texteAvecChiffres(t("Vos clients rangés par dix pour cent, du meilleur au moins bon", "Customers ranked in 10% deciles, from best to lowest"))}
               </p>
             </div>
             <TypeAchatTag typeAchat={typeAchat} />
@@ -147,7 +147,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
 
           {/* Toggles interactifs type Shakuro (○ / ●) */}
           <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] font-medium border-b border-[var(--dashboard-text)]/10 pb-2.5">
-            <span className="text-[var(--dashboard-text)]/40 font-mono uppercase text-[9px]">
+            <span className="text-[var(--dashboard-text)]/40 uppercase text-[9px]">
               {t("Vues :", "Views:")}
             </span>
             <span className="inline-flex items-center gap-1.5 font-semibold text-[var(--dashboard-text)]">
@@ -345,7 +345,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                             y={3}
                             textAnchor="middle"
                             fill="#ffffff"
-                            className="text-[9px] font-bold font-mono select-none"
+                            className="text-[9px] font-bold font-figures select-none"
                           >
                             {selectedPoint.d}
                           </text>
@@ -380,7 +380,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                                 <text x={7} y={2} className="fill-[var(--dashboard-text)]/65 text-[9px] font-medium select-none">
                                   Part CA
                                 </text>
-                                <text x={tipW - 16} y={2} textAnchor="end" className="fill-[var(--dashboard-text)] text-[9px] font-bold font-mono select-none">
+                                <text x={tipW - 16} y={2} textAnchor="end" className="fill-[var(--dashboard-text)] text-[9px] font-bold font-figures select-none">
                                   {selectedPoint.pct}%
                                 </text>
                               </g>
@@ -391,7 +391,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                                 <text x={7} y={2} className="fill-[var(--dashboard-text)]/65 text-[9px] font-medium select-none">
                                   Panier
                                 </text>
-                                <text x={tipW - 16} y={2} textAnchor="end" className="fill-[var(--dashboard-text)] text-[9px] font-bold font-mono select-none">
+                                <text x={tipW - 16} y={2} textAnchor="end" className="fill-[var(--dashboard-text)] text-[9px] font-bold font-figures select-none">
                                   {selectedPoint.panierNum}k
                                 </text>
                               </g>
@@ -402,7 +402,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                                 <text x={7} y={2} className="fill-[var(--dashboard-text)]/65 text-[9px] font-medium select-none">
                                   Cumul
                                 </text>
-                                <text x={tipW - 16} y={2} textAnchor="end" className="fill-[var(--dashboard-text)] text-[9px] font-bold font-mono select-none">
+                                <text x={tipW - 16} y={2} textAnchor="end" className="fill-[var(--dashboard-text)] text-[9px] font-bold font-figures select-none">
                                   {selectedPoint.cumul}%
                                 </text>
                               </g>
@@ -446,7 +446,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                           x={p.x}
                           y={gHeight - gPadBottom + 13}
                           textAnchor="middle"
-                          className={`text-[8px] font-mono tracking-wider font-semibold transition-opacity ${
+                          className={`text-[8px] font-figures tracking-wider font-semibold transition-opacity ${
                             isCovered ? "opacity-0" : "fill-[var(--dashboard-text)]/40"
                           }`}
                         >
@@ -481,43 +481,43 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
           <div className="mt-4 space-y-1.5 border-t border-[var(--dashboard-text)]/10 pt-3 text-[11px]">
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
-                {t("Part faite par les 10 % meilleurs", "Share from top 10%")}
+                {texteAvecChiffres(t("Part faite par les 10 % meilleurs", "Share from top 10%"))}
               </span>
-              <span className="font-bold text-[#f05638]">34 %</span>
+              <span className="font-bold font-figures text-[#f05638]">34 %</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
-                {t("Part faite par les 30 % meilleurs", "Share from top 30%")}
+                {texteAvecChiffres(t("Part faite par les 30 % meilleurs", "Share from top 30%"))}
               </span>
-              <span className="font-semibold text-[#38bdf8]">64 %</span>
+              <span className="font-semibold font-figures text-[#38bdf8]">64 %</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
-                {t("Panier moyen des 10 % meilleurs", "Top 10% average basket")}
+                {texteAvecChiffres(t("Panier moyen des 10 % meilleurs", "Top 10% average basket"))}
               </span>
-              <span className="font-semibold">41 800F</span>
+              <span className="font-semibold font-figures">41 800F</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Panier moyen des autres", "Other customers average basket")}
               </span>
-              <span className="font-semibold">16 200F</span>
+              <span className="font-semibold font-figures">16 200F</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
-                {t("Taux de livraison des 10 % meilleurs", "Top 10% delivery rate")}
+                {texteAvecChiffres(t("Taux de livraison des 10 % meilleurs", "Top 10% delivery rate"))}
               </span>
-              <span className="font-bold text-[#10b981]">97 %</span>
+              <span className="font-bold font-figures text-[#10b981]">97 %</span>
             </div>
           </div>
         </div>
 
         {/* Note de bas de carte */}
         <p className="mt-3 text-[10px] leading-relaxed text-[var(--dashboard-text)]/45">
-          {t(
+          {texteAvecChiffres(t(
             "Trente-neuf clients font un tiers de votre chiffre, avec un panier deux fois et demie plus gros et presque aucun refus. Ce sont les seuls à qui il vaut la peine de proposer une nouveauté avant tout le monde, ou l'express sans le facturer.",
             "Thirty-nine top customers generate one-third of all sales, with baskets 2.5x larger and virtually zero refusals. They are the only segment where offering preview access or free VIP express shipping makes immense economic sense."
-          )}
+          ))}
         </p>
       </div>
 
@@ -568,7 +568,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
               />
             </svg>
             <div className="pointer-events-none absolute flex flex-col items-center justify-center text-center">
-              <span className="text-base font-bold tracking-tight text-[var(--dashboard-text)]">{total}</span>
+              <span className="text-base font-bold tracking-tight text-[var(--dashboard-text)] font-figures">{total}</span>
               <span className="text-[9px] text-[var(--dashboard-text)]/40">
                 {t("clients", "clients")}
               </span>
@@ -581,30 +581,30 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
               <div className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#34d399]" />
                 <span className="text-[var(--dashboard-text)]/65">
-                  {t("Actifs, moins de 90 jours", "Active, under 90 days")}
+                  {texteAvecChiffres(t("Actifs, moins de 90 jours", "Active, under 90 days"))}
                 </span>
               </div>
-              <span className="font-semibold">198</span>
+              <span className="font-semibold font-figures">198</span>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#f59e0b]" />
                 <span className="text-[var(--dashboard-text)]/65">
-                  {t("Dormants, 3 à 6 mois", "Dormant, 3 to 6 months")}
+                  {texteAvecChiffres(t("Dormants, 3 à 6 mois", "Dormant, 3 to 6 months"))}
                 </span>
               </div>
-              <span className="font-semibold">104</span>
+              <span className="font-semibold font-figures">104</span>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#f43f5e]" />
                 <span className="text-[var(--dashboard-text)]/65">
-                  {t("Perdus, plus de 6 mois", "Lost, over 6 months")}
+                  {texteAvecChiffres(t("Perdus, plus de 6 mois", "Lost, over 6 months"))}
                 </span>
               </div>
-              <span className="font-semibold">85</span>
+              <span className="font-semibold font-figures">85</span>
             </div>
           </div>
 
@@ -614,29 +614,29 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Valeur dormante récupérable", "Recoverable dormant value")}
               </span>
-              <span className="font-bold text-[#f59e0b]">1 240 000F</span>
+              <span className="font-bold font-figures text-[#f59e0b]">1 240 000F</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Taux de réveil constaté", "Observed reactivation rate")}
               </span>
-              <span className="font-semibold">11 %</span>
+              <span className="font-semibold font-figures">11 %</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Chiffre attendu d'une relance", "Expected campaign revenue")}
               </span>
-              <span className="font-bold text-[#10b981]">136 400F</span>
+              <span className="font-bold font-figures text-[#10b981]">136 400F</span>
             </div>
           </div>
         </div>
 
         {/* Note de synthèse */}
         <p className="mt-3 text-[10px] leading-relaxed text-[var(--dashboard-text)]/45">
-          {t(
+          {texteAvecChiffres(t(
             "Cent quatre dormants, onze pour cent qui reviennent quand on les relance : c'est onze clients et cent trente-six mille francs, pour le coût d'un message. Aucun canal publicitaire ne rend cela.",
             "104 dormant customers with an 11% reactivation rate: that means 11 recaptured buyers and 136,000 CFA francs for the simple cost of a broadcast SMS. No ad channel matches that ROI."
-          )}
+          ))}
         </p>
       </div>
     </div>

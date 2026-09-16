@@ -48,7 +48,7 @@ export default function Abonnement({ first = false }: { first?: boolean }) {
       </div>
 
       <div className="grid gap-3">
-        <div className="rounded-2xl border border-brand-pink/20 bg-brand-pink/[0.05] p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+        <div className="rounded-2xl border border-brand-pink/20 bg-brand-pink/[0.05] p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Votre abonnement", "Your subscription")}</p>

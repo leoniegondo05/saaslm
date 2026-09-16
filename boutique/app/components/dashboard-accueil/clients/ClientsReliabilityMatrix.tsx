@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { TypeAchatTag } from "../shared";
+import { TypeAchatTag, texteAvecChiffres } from "../shared";
 import { TypeAchat } from "./clientsData";
 
 export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: TypeAchat }) {
@@ -21,10 +21,10 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
                 {t("Le score de fiabilité", "Customer reliability score")}
               </h3>
               <p className="text-[10px] text-[var(--dashboard-text)]/45">
-                {t(
+                {texteAvecChiffres(t(
                   "Calculé sur quatre choses : décroche au téléphone, confirme, reçoit le colis, n'ouvre pas de litige",
                   "Computed across 4 factors: phone pickup, confirmation, parcel acceptance, dispute-free"
-                )}
+                ))}
               </p>
             </div>
             <TypeAchatTag typeAchat={typeAchat} />
@@ -87,7 +87,7 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
                         x={486}
                         y={y + 3}
                         textAnchor="end"
-                        className="fill-[var(--dashboard-text)]/30 text-[8px] font-mono select-none"
+                        className="fill-[var(--dashboard-text)]/30 text-[8px] font-figures select-none"
                       >
                         {val}
                       </text>
@@ -196,14 +196,14 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
                       {tier.isPeak ? (
                         <g transform={`translate(${tier.x}, ${tier.y - 12})`}>
                           <rect x={-32} y={-7} width={64} height={14} rx={3} fill="#38bdf8" />
-                          <text x={0} y={3} textAnchor="middle" fill="#ffffff" className="text-[8px] font-mono font-bold select-none">
+                          <text x={0} y={3} textAnchor="middle" fill="#ffffff" className="text-[8px] font-figures font-bold select-none">
                             SOMMET · 142
                           </text>
                         </g>
                       ) : (
                         <g transform={`translate(${tier.x}, ${tier.y - 10})`}>
                           <rect x={-12} y={-6} width={24} height={12} rx={2.5} fill={tier.color} fillOpacity={0.9} />
-                          <text x={0} y={2.5} textAnchor="middle" fill="#ffffff" className="text-[7.5px] font-mono font-bold select-none">
+                          <text x={0} y={2.5} textAnchor="middle" fill="#ffffff" className="text-[7.5px] font-figures font-bold select-none">
                             {tier.count}
                           </text>
                         </g>
@@ -214,7 +214,7 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
               </svg>
 
               {/* Repères sous la courbe de fiabilité */}
-              <div className="mt-2 flex justify-between text-[9.5px] font-mono text-[var(--dashboard-text)]/50 px-1">
+              <div className="mt-2 flex justify-between text-[9.5px] text-[var(--dashboard-text)]/50 px-1">
                 <span className="text-[#f43f5e] font-semibold">{t("Très faible", "Very low")}</span>
                 <span className="text-[#f97316] font-semibold">{t("Faible", "Low")}</span>
                 <span className="text-[#f59e0b] font-semibold">{t("Moyen", "Average")}</span>
@@ -229,10 +229,10 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
             {/* Excellent */}
             <div className="flex items-center justify-between rounded-xl border border-[#10b981]/25 bg-[#10b981]/5 px-3 py-2">
               <div className="flex items-center gap-3">
-                <span className="text-lg font-bold text-[#10b981]">68</span>
+                <span className="text-lg font-bold font-figures text-[#10b981]">68</span>
                 <div>
                   <h4 className="text-[11px] font-semibold text-[var(--dashboard-text)]">
-                    {t("Excellent · 90 à 100", "Excellent · 90 to 100")}
+                    {texteAvecChiffres(t("Excellent · 90 à 100", "Excellent · 90 to 100"))}
                   </h4>
                   <p className="text-[9px] text-[var(--dashboard-text)]/45">
                     {t("Décrochent, confirment, reçoivent. Aucun litige.", "Pick up, confirm, receive. Zero disputes.")}
@@ -247,10 +247,10 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
             {/* Bon */}
             <div className="flex items-center justify-between rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)]/30 px-3 py-2">
               <div className="flex items-center gap-3">
-                <span className="text-lg font-bold text-[var(--dashboard-text)]">142</span>
+                <span className="text-lg font-bold font-figures text-[var(--dashboard-text)]">142</span>
                 <div>
                   <h4 className="text-[11px] font-semibold text-[var(--dashboard-text)]">
-                    {t("Bon · 70 à 89", "Good · 70 to 89")}
+                    {texteAvecChiffres(t("Bon · 70 à 89", "Good · 70 to 89"))}
                   </h4>
                   <p className="text-[9px] text-[var(--dashboard-text)]/45">
                     {t("Le gros du fichier. Comportement normal.", "Majority of customers. Standard behavior.")}
@@ -265,10 +265,10 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
             {/* Moyen */}
             <div className="flex items-center justify-between rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)]/30 px-3 py-2">
               <div className="flex items-center gap-3">
-                <span className="text-lg font-bold text-[var(--dashboard-text)]">108</span>
+                <span className="text-lg font-bold font-figures text-[var(--dashboard-text)]">108</span>
                 <div>
                   <h4 className="text-[11px] font-semibold text-[var(--dashboard-text)]">
-                    {t("Moyen · 50 à 69", "Average · 50 to 69")}
+                    {texteAvecChiffres(t("Moyen · 50 à 69", "Average · 50 to 69"))}
                   </h4>
                   <p className="text-[9px] text-[var(--dashboard-text)]/45">
                     {t("Un refus ou plusieurs appels avant contact.", "One refusal or multiple calls before answer.")}
@@ -283,10 +283,10 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
             {/* Faible */}
             <div className="flex items-center justify-between rounded-xl border border-[#f59e0b]/20 bg-[#f59e0b]/5 px-3 py-2">
               <div className="flex items-center gap-3">
-                <span className="text-lg font-bold text-[#f59e0b]">47</span>
+                <span className="text-lg font-bold font-figures text-[#f59e0b]">47</span>
                 <div>
                   <h4 className="text-[11px] font-semibold text-[var(--dashboard-text)]">
-                    {t("Faible · 30 à 49", "Low · 30 to 49")}
+                    {texteAvecChiffres(t("Faible · 30 à 49", "Low · 30 to 49"))}
                   </h4>
                   <p className="text-[9px] text-[var(--dashboard-text)]/45">
                     {t("Deux refus, ou souvent injoignables.", "Two refusals, or frequently unreachable.")}
@@ -301,10 +301,10 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
             {/* Très faible */}
             <div className="flex items-center justify-between rounded-xl border border-[#f43f5e]/25 bg-[#f43f5e]/5 px-3 py-2">
               <div className="flex items-center gap-3">
-                <span className="text-lg font-bold text-[#f43f5e]">22</span>
+                <span className="text-lg font-bold font-figures text-[#f43f5e]">22</span>
                 <div>
                   <h4 className="text-[11px] font-semibold text-[#f43f5e]">
-                    {t("Très faible · moins de 30", "Very low · under 30")}
+                    {texteAvecChiffres(t("Très faible · moins de 30", "Very low · under 30"))}
                   </h4>
                   <p className="text-[9px] text-[var(--dashboard-text)]/45">
                     {t("Trois refus ou plus. Chaque commande coûte une course.", "Three or more refusals. Every dispatch costs fees.")}
@@ -324,10 +324,10 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
             {t("Vingt-deux clients, et la plateforme sait quoi en faire", "Twenty-two customers, and the platform knows how to handle them")}
           </h4>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--dashboard-text)]/55">
-            {t(
+            {texteAvecChiffres(t(
               "Ils ne sont pas à exclure : ils sont à servir autrement. Leur proposer le paiement immédiat plutôt que le paiement à la livraison règle tout — s'ils paient, le colis part sans risque ; s'ils ne paient pas, la course n'a pas lieu. Aucun client perdu, aucune course perdue. Sur les trente derniers jours, ces vingt-deux numéros ont coûté 41 800 F en courses non payées.",
               "Do not exclude them: serve them through adapted terms. Recommending upfront digital prepayment instead of COD completely protects your balance sheet: if they prepay, the courier dispatches without risk; if not, no delivery fee is lost. Zero lost revenue, zero wasted courier runs. Over the last 30 days, these 22 accounts accounted for 41,800 CFA francs in unpaid delivery runs."
-            )}
+            ))}
           </p>
         </div>
       </div>
@@ -392,19 +392,19 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
             {/* Bulles interactives de la matrice croisée */}
             <div className="pointer-events-none absolute inset-0">
               {/* Bulle 142 (À DÉVELOPPER) */}
-              <div className="absolute top-[32%] left-[36%] -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-[#38bdf8] text-white text-[11px] font-bold shadow-md">
+              <div className="absolute top-[32%] left-[36%] -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-[#38bdf8] text-white text-[11px] font-bold font-figures shadow-md">
                 142
               </div>
               {/* Bulle 68 (À CHOUCHOUTER) */}
-              <div className="absolute top-[34%] left-[78%] -translate-x-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-[#34d399] text-white text-[11px] font-bold shadow-md">
+              <div className="absolute top-[34%] left-[78%] -translate-x-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-[#34d399] text-white text-[11px] font-bold font-figures shadow-md">
                 68
               </div>
               {/* Bulle 146 (À LAISSER) */}
-              <div className="absolute top-[72%] left-[34%] -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-[#5A6072] text-white text-[11px] font-bold shadow-md">
+              <div className="absolute top-[72%] left-[34%] -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-[#5A6072] text-white text-[11px] font-bold font-figures shadow-md">
                 146
               </div>
               {/* Bulle 31 (À SÉCURISER) */}
-              <div className="absolute top-[68%] left-[80%] -translate-x-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-[#f59e0b] text-white text-[10px] font-bold shadow-md">
+              <div className="absolute top-[68%] left-[80%] -translate-x-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-[#f59e0b] text-white text-[10px] font-bold font-figures shadow-md">
                 31
               </div>
             </div>
@@ -425,8 +425,8 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
               <span className="text-[8px] font-bold uppercase tracking-wider text-[#10b981]">
                 {t("À chouchouter", "VIP Care")}
               </span>
-              <div className="mt-0.5 text-base font-bold text-[var(--dashboard-text)]">68</div>
-              <p className="text-[9px] font-semibold text-[var(--dashboard-text)]/60">{t("41 % du chiffre", "41% revenue")}</p>
+              <div className="mt-0.5 text-base font-bold text-[var(--dashboard-text)] font-figures">68</div>
+              <p className="text-[9px] font-semibold text-[var(--dashboard-text)]/60">{texteAvecChiffres(t("41 % du chiffre", "41% revenue"))}</p>
               <p className="mt-1 text-[8px] text-[var(--dashboard-text)]/45 leading-tight">
                 {t("Nouveautés en avant-première, express offert, jamais d'attente au téléphone.", "Preview access, free express, priority call.")}
               </p>
@@ -437,8 +437,8 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
               <span className="text-[8px] font-bold uppercase tracking-wider text-[#fb923c]">
                 {t("À sécuriser", "Secure")}
               </span>
-              <div className="mt-0.5 text-base font-bold text-[#10b981]">31</div>
-              <p className="text-[9px] font-semibold text-[var(--dashboard-text)]/60">{t("14 % du chiffre", "14% revenue")}</p>
+              <div className="mt-0.5 text-base font-bold text-[#10b981] font-figures">31</div>
+              <p className="text-[9px] font-semibold text-[var(--dashboard-text)]/60">{texteAvecChiffres(t("14 % du chiffre", "14% revenue"))}</p>
               <p className="mt-1 text-[8px] text-[var(--dashboard-text)]/45 leading-tight">
                 {t("Ils achètent gros mais refusent parfois. Leur proposer le paiement immédiat.", "Buy big but return sometimes. Offer prepayment.")}
               </p>
@@ -449,8 +449,8 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
               <span className="text-[8px] font-bold uppercase tracking-wider text-[#38bdf8]">
                 {t("À développer", "Nurture")}
               </span>
-              <div className="mt-0.5 text-base font-bold text-[var(--dashboard-text)]">142</div>
-              <p className="text-[9px] font-semibold text-[var(--dashboard-text)]/60">{t("32 % du chiffre", "32% revenue")}</p>
+              <div className="mt-0.5 text-base font-bold text-[var(--dashboard-text)] font-figures">142</div>
+              <p className="text-[9px] font-semibold text-[var(--dashboard-text)]/60">{texteAvecChiffres(t("32 % du chiffre", "32% revenue"))}</p>
               <p className="mt-1 text-[8px] text-[var(--dashboard-text)]/45 leading-tight">
                 {t("Fiables mais petits paniers. C'est là que le deuxième produit se vend.", "Reliable, small baskets. Cross-sell items.")}
               </p>
@@ -461,8 +461,8 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
               <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--dashboard-text)]/50">
                 {t("À laisser", "Leave")}
               </span>
-              <div className="mt-0.5 text-base font-bold text-[var(--dashboard-text)]">146</div>
-              <p className="text-[9px] font-semibold text-[var(--dashboard-text)]/60">{t("13 % du chiffre", "13% revenue")}</p>
+              <div className="mt-0.5 text-base font-bold text-[var(--dashboard-text)] font-figures">146</div>
+              <p className="text-[9px] font-semibold text-[var(--dashboard-text)]/60">{texteAvecChiffres(t("13 % du chiffre", "13% revenue"))}</p>
               <p className="mt-1 text-[8px] text-[var(--dashboard-text)]/45 leading-tight">
                 {t("Ni valeur ni fiabilité. Ne rien dépenser dessus.", "Neither value nor reliability. Spend zero.")}
               </p>
@@ -473,13 +473,13 @@ export default function ClientsReliabilityMatrix({ typeAchat }: { typeAchat: Typ
         {/* Encart analytique */}
         <div className="mt-4 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)]/40 p-3">
           <h4 className="text-xs font-bold text-[var(--dashboard-text)]">
-            {t("Les trente et un clients « à sécuriser » sont ceux qui coûtent le plus cher à mal traiter", "The 31 'Secure' clients cost the most if mistreated")}
+            {texteAvecChiffres(t("Les trente et un clients « à sécuriser » sont ceux qui coûtent le plus cher à mal traiter", "The 31 'Secure' clients cost the most if mistreated"))}
           </h4>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--dashboard-text)]/55">
-            {t(
+            {texteAvecChiffres(t(
               "Ils font quatorze pour cent du chiffre avec les paniers les plus gros, et refusent une fois sur trois. Les exclure vous ferait perdre plus que leurs refus ne vous coûtent. Les servir sans précaution revient à payer des courses de gros colis qui reviennent. Le paiement immédiat est exactement l'outil fait pour eux, et c'est le seul endroit du fichier où il faut le proposer activement.",
               "They generate 14% of revenue with the largest average baskets, but refuse one out of three shipments. Excluding them would cost more in lost gross sales than their returns cost. Delivering unconditionally means paying delivery runs for heavy packages that return. Prepayment is the exact remedy built for them, and this is the only segment where you should actively promote it."
-            )}
+            ))}
           </p>
         </div>
       </div>

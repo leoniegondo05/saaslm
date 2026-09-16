@@ -358,7 +358,7 @@ export default function OuvrirLitige({ first = true }: { first?: boolean }) {
 // (icône + texte, pas de titre visible séparé).
 function InfoBar({ first, children }: { first?: boolean; children: React.ReactNode }) {
   return (
-    <div className={`${first ? "mt-6" : "mt-8"} mb-6 flex items-center gap-3 rounded-2xl card-tint px-4 py-3.5 text-xs leading-relaxed text-[var(--dashboard-text)]/70 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] [&_b]:font-semibold [&_b]:text-[var(--dashboard-text)]`}>
+    <div className={`${first ? "mt-6" : "mt-8"} mb-6 flex items-center gap-3 rounded-2xl card-tint px-4 py-3.5 text-xs leading-relaxed text-[var(--dashboard-text)]/70 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] [&_b]:font-semibold [&_b]:text-[var(--dashboard-text)]`}>
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink">
         <IconCible />
       </span>

@@ -37,7 +37,7 @@ export default function TarificationProduit({
   const { t } = useDashboardLangue();
 
   return (
-    <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+    <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
       <Champ
         label={t("Prix d'achat (F)", "Cost price (F)")}
         aide={t(

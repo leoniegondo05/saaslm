@@ -59,7 +59,6 @@ export default function Reach() {
       ["ABIDJAN", "Lagos"],
       ["ACCRA", "Lagos"],
       ["ACCRA", "YAOUNDE"],
-      ["BAMAKO", "ALGER"],
       ["BAMAKO", "BISSAU"],
       ["Lagos", "YAOUNDE"],
       ["Lagos", "KINSHASA"],

@@ -7,6 +7,7 @@ import Reach from "@/app/components/Reach";
 import Statement from "@/app/components/Statement";
 import CTA from "@/app/components/CTA";
 import Footer from "@/app/components/Footer";
+import ScrollToTop from "@/app/components/ScrollToTop";
 
 // La page d'accueil : on assemble ici, dans l'ordre, toutes les sections
 // telles qu'elles apparaissent dans la maquette de référence
@@ -32,6 +33,7 @@ export default function Home() {
         <CTA />
       </main>
       <Footer />
+      <ScrollToTop />
     </div>
   );
 }

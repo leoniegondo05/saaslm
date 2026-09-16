@@ -1,7 +1,7 @@
 "use client";
 
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { TypeAchatTag } from "../shared";
+import { TypeAchatTag, texteAvecChiffres } from "../shared";
 import { PRODUITS_ENTREE, TypeAchat } from "./clientsData";
 
 export default function ClientsProductsGateway({ typeAchat }: { typeAchat: TypeAchat }) {
@@ -26,10 +26,10 @@ export default function ClientsProductsGateway({ typeAchat }: { typeAchat: TypeA
             )}
           </h3>
           <p className="text-[11px] text-[var(--dashboard-text)]/50">
-            {t(
+            {texteAvecChiffres(t(
               "Premier achat, puis deuxième, sur les 288 clients qui ont acheté au moins une fois il y a plus de deux mois",
               "First vs second purchase across 288 customers who ordered at least once over two months ago"
-            )}
+            ))}
           </p>
         </div>
         <TypeAchatTag typeAchat={typeAchat} />
@@ -71,18 +71,18 @@ export default function ClientsProductsGateway({ typeAchat }: { typeAchat: TypeA
                         {item.type}
                       </span>
                       <span className="font-semibold text-[var(--dashboard-text)]">
-                        {item.nom}
+                        {texteAvecChiffres(item.nom)}
                       </span>
                     </div>
                   </td>
 
                   {/* Nombre de clients */}
-                  <td className="py-2.5 text-right font-semibold text-[var(--dashboard-text)] sm:text-center">
+                  <td className="py-2.5 text-right font-semibold font-figures text-[var(--dashboard-text)] sm:text-center">
                     {item.clientsEntres}
                   </td>
 
                   {/* Taux de retour */}
-                  <td className={`py-2.5 text-right font-bold ${colorClass}`}>
+                  <td className={`py-2.5 text-right font-bold font-figures ${colorClass}`}>
                     {item.tauxRetour} %
                   </td>
 
@@ -106,10 +106,10 @@ export default function ClientsProductsGateway({ typeAchat }: { typeAchat: TypeA
                           </span>
                         )}
                         <span className="font-medium text-[var(--dashboard-text)]/75">
-                          {item.produitDeuxiemeAchatNom}
+                          {texteAvecChiffres(item.produitDeuxiemeAchatNom)}
                         </span>
                         {item.produitDeuxiemeAchatPct && (
-                          <span className="font-semibold text-[var(--dashboard-text)]">
+                          <span className="font-semibold font-figures text-[var(--dashboard-text)]">
                             · {item.produitDeuxiemeAchatPct} %
                           </span>
                         )}
@@ -132,10 +132,10 @@ export default function ClientsProductsGateway({ typeAchat }: { typeAchat: TypeA
           )}
         </h4>
         <p className="mt-1 text-[11px] leading-relaxed text-[var(--dashboard-text)]/55">
-          {t(
+          {texteAvecChiffres(t(
             "Vingt-six pour cent des clients entrés par le sérum reviennent, contre quatre pour cent de ceux entrés par les sandales. Et six fois sur dix, leur deuxième achat est le beurre de karité. Cela vaut mieux qu'une règle de marge : mettre la publicité sur le sérum, c'est acheter un client qui reviendra ; la mettre sur les sandales, c'est acheter une vente unique, sur un produit qui perd déjà de l'argent. Les deux produits d'entrée les plus faibles sont aussi les deux plus chers et les plus refusés.",
             "26% of customers whose first order was the serum return, compared to barely 4% for those buying sandals. In 6 out of 10 cases, their second purchase is the shea butter. This insight is much more valuable than a pure markup formula: investing ad dollars into the serum purchases a recurring customer; promoting sandals yields a one-off sale on an item with already negative margins and elevated refusal rates."
-          )}
+          ))}
         </p>
       </div>
     </div>

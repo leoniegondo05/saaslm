@@ -12,6 +12,27 @@ import { useFiltrable, useRecherche } from "../DashboardRecherche";
 */
 
 /*
+  Isole les chiffres d'une phrase (ex. "Votre délai de suspension : 72 h")
+  pour leur appliquer "font-figures" sans toucher au reste du texte, sans
+  avoir à découper chaque traduction FR/EN à la main (ordre des mots
+  différent selon la langue) — un même passage à travers un split regex
+  marche pour les deux. Partagé (pas juste dashboard/page.tsx) : toute
+  phrase du dashboard qui mélange texte et chiffre(s) passe par ici plutôt
+  que par une classe posée à la main sur un fragment de string.
+*/
+export function texteAvecChiffres(texte: string) {
+  return texte.split(/(\d+(?:[.,\s]\d+)*)/g).map((partie, i) =>
+    /\d/.test(partie) ? (
+      <span key={i} className="font-figures">
+        {partie}
+      </span>
+    ) : (
+      partie
+    )
+  );
+}
+
+/*
   Export "Exporter" — utilisé par chaque section (Finances, Commandes,
   Clients, Litiges, Stock, Produits, Partenaire, Confidentialité) : même
   recette partout pour ne pas la réécrire à chaque section. Un CSV brut ne
@@ -65,15 +86,15 @@ export function openBrandedReport(title: string, subtitle: string, sections: Exp
 <meta charset="utf-8" />
 <title>${escapeHtml(title)}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Bricolage+Grotesque:wght@600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
   :root { --navy: #011847; --pink: #EC0C8C; --indigo: #3A1D8A; --offwhite: #FAF7FC; --slate: #5A6072; }
   * { box-sizing: border-box; }
   body { margin: 0; padding: 40px; background: var(--offwhite); color: #000; font-family: Sora, sans-serif; }
   header { display: flex; align-items: center; gap: 14px; padding-bottom: 20px; border-bottom: 3px solid var(--pink); margin-bottom: 24px; }
   .logo { width: 44px; height: 44px; flex-shrink: 0; }
-  .wordmark { margin: 0; font-family: "Bricolage Grotesque", Sora, sans-serif; font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: .01em; }
+  .wordmark { margin: 0; font-family: Sora, sans-serif; font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: .01em; }
   .wordmark .o { color: var(--pink); }
-  h1 { margin: 2px 0 0; font-family: "Bricolage Grotesque", Sora, sans-serif; font-size: 19px; font-weight: 700; color: #000; }
+  h1 { margin: 2px 0 0; font-family: Sora, sans-serif; font-size: 19px; font-weight: 700; color: #000; }
   .subtitle { margin: 3px 0 0; font-size: 11px; color: var(--slate); }
   h2 { margin: 26px 0 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--indigo); }
   h2:first-of-type { margin-top: 0; }
@@ -308,14 +329,14 @@ export function Card({
   return (
     <div
       ref={ref}
-      className={`rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] ${className}`}
+      className={`rounded-2xl card-tint border border-[var(--dashboard-text)]/10 p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] ${className}`}
       style={match ? style : { ...style, display: "none" }}
     >
       {title && titleTab && (
         <div className={`relative -mt-4 mb-5 flex items-center ${titleAlign === "left" ? "justify-start" : "justify-center"}`}>
           <p
             className="rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]"
-            style={{ background: "var(--dashboard-surface-2)", fontFamily: "var(--font-bricolage)" }}
+            style={{ background: "var(--dashboard-surface-2)", fontFamily: "var(--font-sans)" }}
           >
             {title}
           </p>
@@ -416,7 +437,7 @@ export function StatRow({
   light = false,
   compact = false,
 }: {
-  label: string;
+  label: React.ReactNode;
   value: React.ReactNode;
   bold?: boolean;
   light?: boolean;
@@ -436,7 +457,7 @@ export function LegendRow({ color, label, value, badge }: { color: string; label
     <div className="text-xs">
       <span className="flex items-center gap-1.5">
         <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color }} />
-        <span className="font-semibold">{value}</span>
+        <span className="font-semibold font-figures">{value}</span>
         {badge ? (
           <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border border-[var(--dashboard-text)]/30 text-[8px] font-semibold text-[var(--dashboard-text)]/60">
             {badge}
@@ -577,7 +598,7 @@ export function MiniStat({
   return (
     <div>
       <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
-      <p className={`mt-0.5 text-base font-bold ${tone === "pink" ? "text-brand-pink" : ""}`}>{value}</p>
+      <p className={`mt-0.5 text-base font-bold font-figures ${tone === "pink" ? "text-brand-pink" : ""}`}>{value}</p>
       {previous && <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/35">{previousLabel} : {previous}</p>}
     </div>
   );
@@ -585,7 +606,7 @@ export function MiniStat({
 
 export function MiniTile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <div className="flex h-full flex-col rounded-2xl card-tint p-3 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+    <div className="flex h-full flex-col rounded-2xl card-tint p-3 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
       <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
       <p className="mt-0.5 text-sm font-bold">{value}</p>
       <p className="mt-auto pt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{note}</p>
@@ -1306,7 +1327,7 @@ export function WaterfallChart({
               {b.label}
             </p>
             <p
-              className="mt-0.5 truncate text-[8.5px] font-bold sm:text-[10px]"
+              className="mt-0.5 truncate text-[8.5px] font-bold sm:text-[10px] font-figures"
               style={{ color: b.kind === "delta" ? "#DC3A45" : i === 0 ? undefined : "#0E9F6E" }}
             >
               {b.display}
@@ -1326,7 +1347,7 @@ export function WaterfallChart({
 */
 export function CardSkeleton({ className = "", lines = 3 }: { className?: string; lines?: number }) {
   return (
-    <div className={`rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] ${className}`}>
+    <div className={`rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] ${className}`}>
       <div className="h-3 w-24 animate-pulse rounded-full bg-[var(--dashboard-text)]/10" />
       <div className="mt-4 space-y-2.5">
         {Array.from({ length: lines }).map((_, i) => (

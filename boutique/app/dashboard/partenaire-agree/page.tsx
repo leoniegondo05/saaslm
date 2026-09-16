@@ -1,6 +1,7 @@
 import DashboardHeader from "../../components/DashboardHeader";
 import DashboardSidebar from "../../components/DashboardSidebar";
 import PartenaireAgree from "../../components/dashboard-produits/PartenaireAgree";
+import { PARTENAIRE_AGREE_ASSISTANCE_QUESTIONS } from "../../components/dashboard-accueil/assistanceQuestions";
 
 /*
   Écran 04 "Le partenaire agréé", atteint depuis la chip "Partenaire agréé"
@@ -16,7 +17,10 @@ export default function PartenaireAgreePage() {
         <DashboardSidebar />
 
         <div className="min-w-0 flex-1 lg:px-6">
-          <DashboardHeader />
+          <DashboardHeader
+            pageQuestions={PARTENAIRE_AGREE_ASSISTANCE_QUESTIONS}
+            pageLabel={{ fr: "Partenaire agréé", en: "Approved partner" }}
+          />
           <PartenaireAgree />
         </div>
       </div>

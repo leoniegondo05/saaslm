@@ -24,7 +24,7 @@ export default async function ApercuProduitPage({ params }: { params: Promise<{ 
         <DashboardSidebar />
 
         <div className="min-w-0 flex-1">
-          <DashboardHeader />
+          <DashboardHeader activeAccueilTab="Produits" />
           <ApercuProduitDrop produit={produit} />
         </div>
       </div>

@@ -6,7 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import { useDashboardLangue } from "./DashboardLanguageProvider";
 import { useDashboardBoutiqueLogo } from "./DashboardBoutiqueLogoProvider";
 import type { AccueilTab } from "./dashboard-accueil/AccueilNav";
+import type { ReglagesTab } from "./dashboard-reglages/ReglagesNav";
 import AssistanceLMModal from "./dashboard-accueil/AssistanceLMModal";
+import type { AssistanceQuestion } from "./dashboard-accueil/assistanceQuestions";
 
 /*
   Écran 31 "La cloche" : les notifications ne sont plus un réglage, ce
@@ -128,6 +130,9 @@ const MONTH_NAMES_EN = [
 
 export default function DashboardHeader({
   activeAccueilTab = null,
+  activeReglagesTab,
+  pageQuestions,
+  pageLabel,
   activeDate: controlledDate,
   onActiveDateChange,
 }: {
@@ -136,9 +141,27 @@ export default function DashboardHeader({
    * app/dashboard/accueil/page.tsx : détermine si "solution LM" ouvre les
    * questions d'une seule section ou le briefing des 7. Sur toute autre
    * page du dashboard (pas de notion d'onglet-section), reste à null →
-   * le bouton ouvre le briefing, cf. AssistanceLMModal.tsx.
+   * le bouton ouvre le briefing, cf. AssistanceLMModal.tsx — sauf si
+   * `pageQuestions` est passé (voir plus bas).
    */
   activeAccueilTab?: AccueilTab | null;
+  /**
+   * Onglet actif de l'écran Réglages (ReglagesNav), passé par
+   * app/dashboard/reglages/page.tsx uniquement : bascule "solution LM" sur
+   * les questions des 6 fiches Réglages plutôt que sur activeAccueilTab
+   * (undefined sur toute autre page → ignoré, cf. AssistanceLMModal.tsx).
+   */
+  activeReglagesTab?: ReglagesTab | null;
+  /**
+   * Liste de questions propre à une page sans onglet (Demandes,
+   * Partenaire agréé — voir assistanceQuestions.ts,
+   * DEMANDES_ASSISTANCE_QUESTIONS / PARTENAIRE_AGREE_ASSISTANCE_QUESTIONS) :
+   * évite que "solution LM" y retombe sur le briefing des 7 sections
+   * Accueil (retour utilisateur du 2026-09-16). `pageLabel` est le titre
+   * FR/EN affiché dans le sous-titre du panneau (cf. AssistanceLMModal.tsx).
+   */
+  pageQuestions?: AssistanceQuestion[];
+  pageLabel?: { fr: string; en: string };
   /**
    * Période sélectionnée, contrôlée par le parent (ex. app/dashboard/accueil/page.tsx,
    * qui la redescend à ses 7 sections pour faire varier leurs chiffres mock
@@ -576,7 +599,15 @@ export default function DashboardHeader({
         </span>
       </div>
 
-      {showAssistance && <AssistanceLMModal activeTab={activeAccueilTab} onFermer={() => setShowAssistance(false)} />}
+      {showAssistance && (
+        <AssistanceLMModal
+          activeTab={activeAccueilTab}
+          activeReglagesTab={activeReglagesTab}
+          pageQuestions={pageQuestions}
+          pageLabel={pageLabel}
+          onFermer={() => setShowAssistance(false)}
+        />
+      )}
     </header>
   );
 }

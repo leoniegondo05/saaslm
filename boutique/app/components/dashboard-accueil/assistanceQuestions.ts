@@ -1,4 +1,5 @@
 import type { AccueilTab } from "./AccueilNav";
+import type { ReglagesTab } from "../dashboard-reglages/ReglagesNav";
 
 /*
   Questions que "solution LM" (badge devenu bouton dans DashboardHeader,
@@ -135,3 +136,120 @@ export function getAssistanceBrief(): { tab: AccueilTab; questions: AssistanceQu
     questions: ASSISTANCE_QUESTIONS[tab].slice(0, 2),
   }));
 }
+
+/*
+  Mêmes principes que ASSISTANCE_QUESTIONS ci-dessus, mais pour les 6
+  fiches de l'onglet Réglages (voir ReglagesNav.tsx et
+  app/dashboard/reglages/page.tsx) — chaque question se répond avec un
+  champ ou un texte déjà affiché sur la fiche correspondante (MaBoutique.tsx,
+  PageDeCommande.tsx, FinancesReglements.tsx, ReglesDeVente.tsx,
+  Abonnement.tsx, Confidentialite.tsx), aucune donnée inventée, même règle
+  que le reste du dashboard, cf. [[dashboard-mock-data-pending-laravel-api]].
+*/
+export const REGLAGES_ASSISTANCE_QUESTIONS: Record<ReglagesTab, AssistanceQuestion[]> = {
+  "ma-boutique": [
+    { fr: "Qui fixe les jours et heures de passage du livreur ?", en: "Who sets the courier's pickup days and times?" },
+    { fr: "À quoi sert l'adresse d'enlèvement ?", en: "What's the pickup address used for?" },
+    { fr: "Où s'affiche le logo de ma boutique une fois déposé ?", en: "Where does my shop logo show up once uploaded?" },
+    { fr: "Quel est mon secteur d'activité principal ?", en: "What's my main business sector?" },
+    { fr: "Ma boutique est-elle actuellement ouverte aux clients ?", en: "Is my shop currently open to customers?" },
+  ],
+  commande: [
+    { fr: "Quels formats puis-je choisir pour le lien de ma page de commande ?", en: "Which formats can I pick for my order page link?" },
+    { fr: "Quel délai de livraison s'affiche toujours sur ma page, et puis-je le changer ?", en: "What delivery time always shows on my page, and can I change it?" },
+    { fr: "Le prix affiché inclut-il les frais de livraison ?", en: "Does the displayed price include delivery fees?" },
+    { fr: "Quels moyens de paiement sont actifs sur ma page en ce moment ?", en: "Which payment methods are active on my page right now?" },
+    { fr: "Où se règle l'apparence de ma page de commande ?", en: "Where do I set the look of my order page?" },
+  ],
+  finances: [
+    { fr: "Puis-je choisir où je reçois mon argent selon le moyen de paiement du client ?", en: "Can I choose where I receive money based on the customer's payment method?" },
+    { fr: "À quoi sert ma carte de prélèvement, et quand est-elle débitée ?", en: "What's my payment card for, and when is it charged?" },
+    { fr: "Changer ma devise convertit-il les montants déjà enregistrés ?", en: "Does changing my currency convert amounts already recorded?" },
+    { fr: "Un reçu est-il envoyé automatiquement à mes clients ?", en: "Is a receipt sent to my customers automatically?" },
+    { fr: "Est-ce que je reçois un export mensuel de mes ventes ?", en: "Do I get a monthly export of my sales?" },
+  ],
+  "regles-vente": [
+    { fr: "Pourquoi la vidéo est-elle obligatoire pour publier un produit ?", en: "Why is video required to publish a product?" },
+    { fr: "Combien de photos minimum dois-je fournir par produit ?", en: "How many photos minimum do I need per product?" },
+    { fr: "Sous quel seuil de marge un produit ne peut-il pas être publié ?", en: "Below what margin can a product not be published?" },
+    { fr: "Quel est le délai minimum que je dois laisser à un client pour ouvrir un litige ?", en: "What's the minimum window I must give a customer to open a dispute?" },
+    { fr: "Qui fixe le taux de protection contre le vol et la perte de mes colis ?", en: "Who sets the theft-and-loss protection rate for my parcels?" },
+  ],
+  abonnement: [
+    { fr: "Combien je paie d'abonnement chaque mois, et à qui ?", en: "How much subscription do I pay each month, and to whom?" },
+    { fr: "Dois-je payer l'abonnement même sans aucune vente ?", en: "Do I owe the subscription even with no sales at all?" },
+    { fr: "Que se passe-t-il si je désactive le prélèvement automatique ?", en: "What happens if I turn off automatic payment?" },
+    { fr: "Si je résilie, est-ce que je perds mon rattachement à mon partenaire ?", en: "If I cancel, do I lose my attachment to my partner?" },
+    { fr: "Mes dépôts de stock, que dois-je en faire avant la fin de mon abonnement ?", en: "What must I do with my stock deposits before my subscription ends?" },
+  ],
+  confidentialite: [
+    { fr: "Mon partenaire agréé peut-il contacter mes clients directement ?", en: "Can my approved partner contact my customers directly?" },
+    { fr: "Quelles informations sur moi le client voit-il toujours, sans pouvoir les masquer ?", en: "What information about me does the customer always see, unable to be hidden?" },
+    { fr: "Que devient un client que j'efface à sa demande ?", en: "What happens to a customer I erase on request?" },
+    { fr: "Qu'est-ce qui est inclus dans l'export de mes données ?", en: "What's included in my data export?" },
+    { fr: "Où puis-je corriger mon téléphone ou mon email affichés au client ?", en: "Where can I correct the phone or email shown to the customer?" },
+  ],
+};
+
+export function getReglagesAssistanceBrief(): { tab: ReglagesTab; questions: AssistanceQuestion[] }[] {
+  return (Object.keys(REGLAGES_ASSISTANCE_QUESTIONS) as ReglagesTab[]).map((tab) => ({
+    tab,
+    questions: REGLAGES_ASSISTANCE_QUESTIONS[tab].slice(0, 2),
+  }));
+}
+
+/*
+  Mêmes principes que ci-dessus, mais pour deux pages hors Accueil/Réglages
+  qui n'ont pas d'onglets (DashboardHeader y était monté sans prop, donc
+  "solution LM" retombait sur le briefing des 7 sections Accueil — retour
+  utilisateur du 2026-09-16 : questions doivent parler de CETTE page).
+  Une seule liste chacune (pas de brief à raccourcir, pas de sous-onglet),
+  groundée sur les seules données affichées par le composant correspondant :
+  DemandesModules.tsx (règles des 72h/9h de litige, chiffres des trois
+  modules Litiges/Questions/Support) et PartenaireAgree.tsx (PARTENAIRE,
+  PROCHAIN_PRODUIT) — même règle [[dashboard-mock-data-pending-laravel-api]].
+*/
+export const DEMANDES_ASSISTANCE_QUESTIONS: AssistanceQuestion[] = [
+  { fr: "Combien de temps ai-je pour ouvrir un litige après réception par le client ?", en: "How long do I have to open a dispute after the customer receives the order?" },
+  { fr: "En combien de temps mon partenaire doit-il prendre un litige en main ?", en: "How fast must my partner take a dispute in hand?" },
+  { fr: "Combien d'argent est bloqué en ce moment par mes litiges ?", en: "How much money is held right now by my disputes?" },
+  { fr: "Quelle part de mes litiges se solde par un remplacement obtenu ?", en: "What share of my disputes end with an exchange granted?" },
+  { fr: "Combien de temps met un litige à être tranché en moyenne ?", en: "How long does a dispute take to settle on average?" },
+  { fr: "Une question au partenaire bloque-t-elle mon argent ou mon stock ?", en: "Does a question to my partner block my money or my stock?" },
+  { fr: "Combien de questions ai-je posées à mon partenaire depuis le début, et combien ont eu réponse ?", en: "How many questions have I asked my partner since the start, and how many got answered?" },
+  { fr: "Combien de temps met mon partenaire à répondre à une question ?", en: "How long does my partner take to answer a question?" },
+  { fr: "Qui répond quand je signale un problème technique, LM ou le partenaire ?", en: "Who replies when I report a technical problem, LM or the partner?" },
+  { fr: "Combien de signalements techniques ai-je faits, et combien sont déjà corrigés ?", en: "How many technical reports have I filed, and how many are already fixed?" },
+  { fr: "Quelle différence entre un litige, une question et un signalement ?", en: "What's the difference between a dispute, a question and a report?" },
+  { fr: "Combien de temps LM met-il à corriger un problème signalé, en moyenne ?", en: "How long does LM take to fix a reported problem, on average?" },
+];
+
+export const COMMANDES_ASSISTANCE_QUESTIONS: AssistanceQuestion[] = [
+  { fr: "Combien de commandes ai-je reçues sur la période affichée ?", en: "How many orders did I receive over the shown period?" },
+  { fr: "Combien d'argent est réellement encaissé, net des retenues ?", en: "How much money is actually collected, net of withholdings?" },
+  { fr: "Combien d'argent reste suspendu en attente de résolution ?", en: "How much money stays suspended pending resolution?" },
+  { fr: "Qu'est-ce qui retient une commande, la logistique ou l'opération ?", en: "What withholds part of an order, logistics or operation?" },
+  { fr: "Combien de commandes sont en ce moment en litige ?", en: "How many orders are currently in dispute?" },
+  { fr: "Que devient l'argent d'une commande en litige tant qu'il n'est pas tranché ?", en: "What happens to a disputed order's money until it's settled?" },
+  { fr: "Quelle différence entre changement de colis, retour de fonds et gain de cause ?", en: "What's the difference between parcel exchange, funds returned and ruled in my favor?" },
+  { fr: "Combien de temps après la livraison mon argent devient-il disponible ?", en: "How long after delivery does my money become available?" },
+  { fr: "Qu'est-ce qu'une commande relancée, et bloque-t-elle mon argent ?", en: "What's a relaunched order, and does it block my money?" },
+  { fr: "Comment se répartissent mes commandes entre en cours, livrée, refusée, litige et relancée ?", en: "How are my orders split between in progress, delivered, refused, disputed and relaunched?" },
+  { fr: "Quelle est la différence entre ce que le client a payé et ce qui m'est réellement versé ?", en: "What's the difference between what the customer paid and what I'm actually paid out?" },
+  { fr: "Par quelles étapes passe une commande avant la livraison ?", en: "What stages does an order go through before delivery?" },
+];
+
+export const PARTENAIRE_AGREE_ASSISTANCE_QUESTIONS: AssistanceQuestion[] = [
+  { fr: "Quelle note mon partenaire a-t-il sur le réseau ?", en: "What rating does my partner have on the network?" },
+  { fr: "Depuis quand suis-je affilié à mon partenaire ?", en: "Since when am I affiliated with my partner?" },
+  { fr: "Combien coûte l'abonnement mensuel de mon partenaire ?", en: "How much is my partner's monthly subscription?" },
+  { fr: "Combien coûtent les frais logistiques par commande ?", en: "How much are the logistics fees per order?" },
+  { fr: "L'emballage est-il inclus dans les frais logistiques ?", en: "Is packaging included in the logistics fees?" },
+  { fr: "Combien coûte la garantie perte, et est-elle obligatoire ?", en: "How much does loss protection cost, and is it mandatory?" },
+  { fr: "Combien coûte la livraison express chez mon partenaire ?", en: "How much does express delivery cost with my partner?" },
+  { fr: "Combien d'entrepôts et de villes couvre mon partenaire ?", en: "How many warehouses and cities does my partner cover?" },
+  { fr: "Combien d'engins de distribution mon partenaire possède-t-il ?", en: "How many delivery vehicles does my partner own?" },
+  { fr: "Quel est le délai moyen de livraison de mon partenaire ?", en: "What's my partner's average delivery lead time?" },
+  { fr: "Quel est le prochain produit à venir chez mon partenaire, et quand ?", en: "What's the next product coming to my partner, and when?" },
+  { fr: "Mon partenaire est-il certifié et visité par LM ?", en: "Is my partner certified and visited by LM?" },
+];

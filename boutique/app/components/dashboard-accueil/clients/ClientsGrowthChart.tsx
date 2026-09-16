@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
+import { texteAvecChiffres } from "../shared";
 import { CROISSANCE_SEMAINES } from "./clientsData";
 
 export default function ClientsGrowthChart() {
@@ -101,24 +102,24 @@ export default function ClientsGrowthChart() {
           <div>
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-[#10b981] animate-pulse" />
-              <h3 className="text-xs font-mono font-bold tracking-wider uppercase text-[var(--dashboard-text)]/60">
+              <h3 className="text-xs font-bold tracking-wider uppercase text-[var(--dashboard-text)]/60">
                 {t("CROISSANCE DU FICHIER CLIENT", "CUSTOMER BASE GROWTH")}
               </h3>
-              <span className="rounded bg-[var(--dashboard-text)]/[0.06] px-1.5 py-0.5 text-[9px] font-mono text-[var(--dashboard-text)]/50">
+              <span className="rounded bg-[var(--dashboard-text)]/[0.06] px-1.5 py-0.5 text-[9px] font-figures text-[var(--dashboard-text)]/50">
                 LIVE · 12W
               </span>
             </div>
 
             {/* Chiffre vedette dynamique type cours de bourse */}
             <div className="mt-1.5 flex items-baseline gap-3">
-              <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-[var(--dashboard-text)]">
+              <span className="text-2xl sm:text-3xl font-bold font-figures tracking-tight text-[var(--dashboard-text)]">
                 {activePoint.total}{" "}
                 <span className="text-sm font-sans font-medium text-[var(--dashboard-text)]/50">
                   {t("clients", "customers")}
                 </span>
               </span>
               <span
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold font-mono ${
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold font-figures ${
                   deltaPct >= 0
                     ? "bg-[#10b981]/15 text-[#10b981]"
                     : "bg-[#f43f5e]/15 text-[#f43f5e]"
@@ -127,7 +128,7 @@ export default function ClientsGrowthChart() {
                 {deltaPct >= 0 ? "+" : ""}
                 {deltaPct} %
               </span>
-              <span className="text-[11px] font-mono text-[var(--dashboard-text)]/40 hidden sm:inline">
+              <span className="text-[11px] font-figures text-[var(--dashboard-text)]/40 hidden sm:inline">
                 {activePoint.semaine}
               </span>
             </div>
@@ -136,26 +137,26 @@ export default function ClientsGrowthChart() {
           {/* HUD Metrics en temps réel & Sélecteur de vue */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             {/* HUD Stats */}
-            <div className="flex items-center gap-3 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)]/80 px-3 py-1.5 text-[11px] font-mono shadow-xs backdrop-blur-md">
+            <div className="flex items-center gap-3 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)]/80 px-3 py-1.5 text-[11px] shadow-xs backdrop-blur-md">
               <div>
                 <span className="text-[9px] text-[var(--dashboard-text)]/40 block">
                   {t("REVIENNENT", "RETURNING")}
                 </span>
-                <span className="font-bold text-[#10b981]">+{activePoint.reviennent}</span>
+                <span className="font-bold font-figures text-[#10b981]">+{activePoint.reviennent}</span>
               </div>
               <div className="h-6 w-px bg-[var(--dashboard-text)]/10" />
               <div>
                 <span className="text-[9px] text-[var(--dashboard-text)]/40 block">
                   {t("NOUVEAUX", "NEW")}
                 </span>
-                <span className="font-bold text-[#38bdf8]">+{activePoint.nouveaux}</span>
+                <span className="font-bold font-figures text-[#38bdf8]">+{activePoint.nouveaux}</span>
               </div>
               <div className="h-6 w-px bg-[var(--dashboard-text)]/10" />
               <div>
                 <span className="text-[9px] text-[var(--dashboard-text)]/40 block">
                   {t("RATIO", "RATIO")}
                 </span>
-                <span className="font-bold text-[var(--dashboard-text)]">{activePoint.ratio}%</span>
+                <span className="font-bold font-figures text-[var(--dashboard-text)]">{activePoint.ratio}%</span>
               </div>
             </div>
 
@@ -242,7 +243,7 @@ export default function ClientsGrowthChart() {
                   x={width - padRight}
                   y={y - 4}
                   textAnchor="end"
-                  className="fill-[var(--dashboard-text)]/30 text-[9px] font-mono select-none"
+                  className="fill-[var(--dashboard-text)]/30 text-[9px] font-figures select-none"
                 >
                   {labelVal}
                 </text>
@@ -295,7 +296,7 @@ export default function ClientsGrowthChart() {
               x={peakPoint.x}
               y={peakPoint.y - 7}
               textAnchor="middle"
-              className="fill-[#10b981] text-[8px] font-mono font-bold"
+              className="fill-[#10b981] text-[8px] font-figures font-bold"
             >
               ATH {peakPoint.total}
             </text>
@@ -343,7 +344,7 @@ export default function ClientsGrowthChart() {
                   y={3.5}
                   textAnchor="middle"
                   fill="#ffffff"
-                  className="text-[9px] font-mono font-bold select-none"
+                  className="text-[9px] font-figures font-bold select-none"
                 >
                   {activePoint.total}
                 </text>
@@ -365,7 +366,7 @@ export default function ClientsGrowthChart() {
                   y={3}
                   textAnchor="middle"
                   fill="#ffffff"
-                  className="text-[8px] font-mono font-bold select-none"
+                  className="text-[8px] font-figures font-bold select-none"
                 >
                   {activePoint.total}
                 </text>
@@ -411,7 +412,7 @@ export default function ClientsGrowthChart() {
                 x={p.x}
                 y={height - 8}
                 textAnchor="middle"
-                className={`text-[9px] font-mono transition-colors ${
+                className={`text-[9px] font-figures transition-colors ${
                   isSelected
                     ? "fill-[#10b981] font-bold"
                     : "fill-[var(--dashboard-text)]/40"
@@ -445,50 +446,50 @@ export default function ClientsGrowthChart() {
       {/* ── 4 MÉTRIQUES SOUS LE GRAPHIQUE TRADING ── */}
       <div className="grid grid-cols-2 gap-3 border-t border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)]/10 p-4 sm:grid-cols-4 sm:p-5">
         <div className="rounded-xl border border-[var(--dashboard-text)]/5 bg-[var(--dashboard-card-bg)] p-3">
-          <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-[var(--dashboard-text)]/45">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--dashboard-text)]/45">
             {t("PIC D'ACQUISITION", "PEAK INFLOW")}
           </span>
-          <div className="mt-1 text-base font-bold font-mono text-[#10b981]">
-            +58 {t("clients", "clients")}
+          <div className="mt-1 text-base font-bold text-[#10b981]">
+            <span className="font-figures">+58</span> {t("clients", "clients")}
           </div>
-          <span className="text-[10px] text-[var(--dashboard-text)]/40 font-mono">
-            {t("Semaine 10 (Sérum éclat)", "Week 10 (Glow Serum)")}
+          <span className="text-[10px] text-[var(--dashboard-text)]/40">
+            {texteAvecChiffres(t("Semaine 10 (Sérum éclat)", "Week 10 (Glow Serum)"))}
           </span>
         </div>
 
         <div className="rounded-xl border border-[var(--dashboard-text)]/5 bg-[var(--dashboard-card-bg)] p-3">
-          <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-[var(--dashboard-text)]/45">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--dashboard-text)]/45">
             {t("RÉCURRENCE MOYENNE", "RETENTION AVERAGE")}
           </span>
-          <div className="mt-1 text-base font-bold font-mono text-[#38bdf8]">
-            +9,4 {t("retours/sem", "returns/wk")}
+          <div className="mt-1 text-base font-bold text-[#38bdf8]">
+            <span className="font-figures">+9,4</span> {t("retours/sem", "returns/wk")}
           </div>
-          <span className="text-[10px] text-[var(--dashboard-text)]/40 font-mono">
-            {t("18,2 % du flux entrant", "18.2% of inflow")}
+          <span className="text-[10px] text-[var(--dashboard-text)]/40">
+            {texteAvecChiffres(t("18,2 % du flux entrant", "18.2% of inflow"))}
           </span>
         </div>
 
         <div className="rounded-xl border border-[var(--dashboard-text)]/5 bg-[var(--dashboard-card-bg)] p-3">
-          <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-[var(--dashboard-text)]/45">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--dashboard-text)]/45">
             {t("CROISSANCE NETTE", "NET GROWTH")}
           </span>
-          <div className="mt-1 text-base font-bold font-mono text-[#10b981]">
+          <div className="mt-1 text-base font-bold font-figures text-[#10b981]">
             +34,2 %
           </div>
-          <span className="text-[10px] text-[var(--dashboard-text)]/40 font-mono">
-            {t("Sur les 12 dernières semaines", "Over last 12 weeks")}
+          <span className="text-[10px] text-[var(--dashboard-text)]/40">
+            {texteAvecChiffres(t("Sur les 12 dernières semaines", "Over last 12 weeks"))}
           </span>
         </div>
 
         <div className="rounded-xl border border-[var(--dashboard-text)]/5 bg-[var(--dashboard-card-bg)] p-3">
-          <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-[var(--dashboard-text)]/45">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--dashboard-text)]/45">
             {t("PROJECTION S13", "FORECAST W13")}
           </span>
-          <div className="mt-1 text-base font-bold font-mono text-[var(--dashboard-text)]">
-            ~62 {t("clients", "clients")}
+          <div className="mt-1 text-base font-bold text-[var(--dashboard-text)]">
+            <span className="font-figures">~62</span> {t("clients", "clients")}
           </div>
-          <span className="text-[10px] text-[var(--dashboard-text)]/40 font-mono">
-            {t("Confiance modèle 91 %", "91% confidence")}
+          <span className="text-[10px] text-[var(--dashboard-text)]/40">
+            {texteAvecChiffres(t("Confiance modèle 91 %", "91% confidence"))}
           </span>
         </div>
       </div>

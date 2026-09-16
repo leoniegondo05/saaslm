@@ -82,7 +82,7 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
             <Tag tone="dark">{t("Sur ce partenaire", "From this partner")}</Tag>
           </div>
           <div className="mt-1.5 flex items-center justify-between gap-2">
-            <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-2xl font-bold tracking-tight text-white">
+            <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-2xl font-bold tracking-tight text-white font-figures">
               {F(produit.prixDrop ?? 0)}
             </p>
             <Tag tone="neutral">{t("Prix drop", "Drop price")}</Tag>
@@ -138,7 +138,7 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
                 type="number"
                 value={monPrix}
                 onChange={(e) => setMonPrix(Number(e.target.value) || 0)}
-                className="w-full bg-transparent text-lg font-bold tabular-nums outline-none"
+                className="w-full bg-transparent text-lg font-bold tabular-nums outline-none font-figures"
               />
             </div>
             <div className="mt-3 flex items-center justify-between text-xs text-white/55">
@@ -156,7 +156,7 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
             <div className="my-3 h-px bg-white/15" />
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold">{t("Il vous reste", "You're left with")}</span>
-              <span className={`text-lg font-bold ${ilReste < 0 ? "text-red-300" : "text-brand-pink"}`}>{F(ilReste)}</span>
+              <span className={`text-lg font-bold font-figures ${ilReste < 0 ? "text-red-300" : "text-brand-pink"}`}>{F(ilReste)}</span>
             </div>
           </div>
           <button type="button" className="mt-3 w-full rounded-full bg-[var(--dashboard-card-bg)] px-4 py-2.5 text-center text-xs font-semibold shadow-[0_2px_10px_rgba(20,18,32,0.08)]">

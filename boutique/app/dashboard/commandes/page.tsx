@@ -1,13 +1,15 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DashboardHeader from "../../components/DashboardHeader";
 import DashboardSearchBar from "../../components/DashboardSearchBar";
 import DashboardSidebar from "../../components/DashboardSidebar";
 import CommandesListe from "../../components/dashboard-commandes/CommandesListe";
 import CommandesNav, { CommandesTab } from "../../components/dashboard-commandes/CommandesNav";
 import LireUneLigne from "../../components/dashboard-commandes/LireUneLigne";
+import { SectionSkeleton } from "../../components/dashboard-accueil/shared";
+import { COMMANDES_ASSISTANCE_QUESTIONS } from "../../components/dashboard-accueil/assistanceQuestions";
 
 /*
   Onglet "Commande" du dashboard, atteint depuis l'icône dédiée du rail
@@ -40,6 +42,14 @@ export default function CommandesPage() {
   // suit désormais le sélecteur, comme partout ailleurs dans le dashboard.
   const [activeDate, setActiveDate] = useState(() => new Date(2026, 7, 1));
 
+  // Même skeleton temporaire que app/dashboard/accueil/page.tsx (mock
+  // statique, cf. [[dashboard-mock-data-pending-laravel-api]]).
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const id = setTimeout(() => setLoading(false), 700);
+    return () => clearTimeout(id);
+  }, []);
+
   const handleChange = useCallback(
     (tab: CommandesTab | null) => {
       setActiveTab(tab);
@@ -55,11 +65,26 @@ export default function CommandesPage() {
         <DashboardSidebar />
 
         <div className="min-w-0 flex-1 lg:px-6">
-          <DashboardHeader activeDate={activeDate} onActiveDateChange={setActiveDate} />
+          <DashboardHeader
+            activeDate={activeDate}
+            onActiveDateChange={setActiveDate}
+            pageQuestions={COMMANDES_ASSISTANCE_QUESTIONS}
+            pageLabel={{ fr: "Commandes", en: "Orders" }}
+          />
           <DashboardSearchBar onChange={setRecherche} />
           <CommandesNav active={activeTab} onChange={handleChange} />
 
-          {activeTab === null ? (
+          {loading ? (
+            activeTab === null ? (
+              <>
+                {TAB_ORDER.map((tab, index) => (
+                  <SectionSkeleton key={tab} first={index === 0} />
+                ))}
+              </>
+            ) : (
+              <SectionSkeleton first />
+            )
+          ) : activeTab === null ? (
             <>
               {TAB_ORDER.map((tab, index) => {
                 const Section = SECTIONS[tab];

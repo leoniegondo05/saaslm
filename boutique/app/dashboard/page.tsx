@@ -7,6 +7,7 @@ import DashboardHeader, { ChevronIcon } from "../components/DashboardHeader";
 import DashboardSidebar from "../components/DashboardSidebar";
 import QrCode from "../components/QrCode";
 import { useDashboardLangue } from "../components/DashboardLanguageProvider";
+import { texteAvecChiffres } from "../components/dashboard-accueil/shared";
 
 /*
   Tableau de bord (dashboard) affiché après connexion, reproduction exacte
@@ -44,7 +45,7 @@ export default function DashboardPage() {
           <DashboardHeader />
 
           {/* ── Salutation ── */}
-          <h1 className="mt-10 text-4xl font-semibold leading-[1.15] tracking-tight sm:text-[44px]">
+          <h1 className="mt-10 text-3xl font-semibold leading-[1.15] tracking-tight sm:text-4xl">
             {t("Bonjour Awa,", "Hello Awa,")}
             <br />
             {t("voici votre ", "here's your ")}
@@ -59,7 +60,7 @@ export default function DashboardPage() {
 
               <LocalConditionsCard />
 
-              <div className="flex items-center gap-3 rounded-2xl card-tint p-3 pr-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+              <div className="flex items-center gap-3 rounded-2xl card-tint p-3 pr-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink">
                   <WarningIcon />
                 </span>
@@ -68,7 +69,7 @@ export default function DashboardPage() {
                     {t("Recommandation", "Recommendation")}
                   </span>
                   <span className="block whitespace-nowrap text-sm font-semibold">
-                    {t("Livrer à yopougon avant 23h", "Deliver to Yopougon before 11pm")}
+                    {texteAvecChiffres(t("Livrer à yopougon avant 23h", "Deliver to Yopougon before 11pm"))}
                   </span>
                 </span>
               </div>
@@ -85,7 +86,7 @@ export default function DashboardPage() {
 
             {/* Colonne droite : ventes + identité — une seule carte, les deux
                 sections sont liées (pas deux cartes séparées par un gap) */}
-            <div className="order-2 flex flex-col rounded-2xl card-tint shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] lg:order-none">
+            <div className="order-2 flex flex-col rounded-2xl card-tint shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] lg:order-none">
               <div className="p-3">
                 <span className="inline-flex items-center gap-2 text-xs text-[var(--dashboard-text)]/50">
                   <TrendUpIcon />
@@ -97,20 +98,20 @@ export default function DashboardPage() {
                     <p className="text-xs text-[var(--dashboard-text)]/50">
                       {t("Aujourd'hui", "Today")}
                     </p>
-                    <p className="mt-0.5 text-xl font-bold">48.300F</p>
+                    <p className="mt-0.5 text-xl font-bold font-figures">48.300F</p>
                     <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-brand-pink px-2.5 py-1 text-xs font-semibold text-white">
-                      <ClockIcon />{t("5 commandes en cours", "5 orders in progress")}
+                      <ClockIcon />{texteAvecChiffres(t("5 commandes en cours", "5 orders in progress"))}
                     </span>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-[var(--dashboard-text)]/50">
-                      {t("Hier. Ven . 29", "Yesterday. Fri. 29")}
+                      {texteAvecChiffres(t("Hier. Ven . 29", "Yesterday. Fri. 29"))}
                     </p>
-                    <p className="mt-0.5 text-lg font-bold">118 400 F</p>
+                    <p className="mt-0.5 text-lg font-bold font-figures">118 400 F</p>
                     <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/40">
-                      {t("12 commandes", "12 orders")}
+                      {texteAvecChiffres(t("12 commandes", "12 orders"))}
                       <br />
-                      {t("9 livrées", "9 delivered")}
+                      {texteAvecChiffres(t("9 livrées", "9 delivered"))}
                     </p>
                   </div>
                 </div>
@@ -120,18 +121,18 @@ export default function DashboardPage() {
                 <p className="mt-3 text-xs text-[var(--dashboard-text)]/50">
                   {t("Objectif demain soir", "Tomorrow evening's target")}
                 </p>
-                <p className="mt-0.5 text-2xl font-bold">142 000 F</p>
+                <p className="mt-0.5 text-2xl font-bold font-figures">142 000 F</p>
 
                 <div className="mt-2">
                   <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]">
                     <div className="h-full w-[34%] rounded-full bg-[linear-gradient(90deg,var(--color-brand-pink),var(--color-brand-purple))]" />
                   </div>
                   <p className="mt-1.5 text-xs">
-                    <span className="font-semibold">34%</span>{" "}
+                    <span className="font-semibold font-figures">34%</span>{" "}
                     <span className="text-[var(--dashboard-text)]/50">{t("du chemin fait", "of the way there")}</span>
                   </p>
                   <p className="text-xs text-[var(--dashboard-text)]/50">
-                    {t("Il reste que 93 700 F", "Only 93,700 F left")}
+                    {texteAvecChiffres(t("Il reste que 93 700 F", "Only 93,700 F left"))}
                   </p>
                 </div>
               </div>
@@ -164,8 +165,8 @@ export default function DashboardPage() {
                     </div>
                     <div className="text-[var(--dashboard-text)]/50">
                       <p className="break-words">a.konan@awabeaute.ci</p>
-                      <p>{t("Créée le 14 mars 2026", "Created on March 14, 2026")}</p>
-                      <p>{t("Expire le 14 sept. 2026", "Expires on Sept. 14, 2026")}</p>
+                      <p>{texteAvecChiffres(t("Créée le 14 mars 2026", "Created on March 14, 2026"))}</p>
+                      <p>{texteAvecChiffres(t("Expire le 14 sept. 2026", "Expires on Sept. 14, 2026"))}</p>
                     </div>
                   </div>
                 </div>
@@ -377,7 +378,7 @@ function WeatherCard() {
       : null;
 
   return (
-    <div className="rounded-2xl card-tint p-3 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+    <div className="rounded-2xl card-tint p-3 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
       <div className="flex items-start justify-between">
         <h2 className="text-base font-semibold">{t("Aujourd'hui", "Today")}</h2>
         {today && today.emoji === "☀️" ? (
@@ -409,7 +410,7 @@ function WeatherCard() {
       </p>
       <p className="text-xs text-[var(--dashboard-text)]/50">
         {weather.status === "ready"
-          ? `${t("Toute la journée", "All day")} · ${weather.todayTempMax}°C`
+          ? texteAvecChiffres(`${t("Toute la journée", "All day")} · ${weather.todayTempMax}°C`)
           : t("Toute la journée", "All day")}
       </p>
 
@@ -418,7 +419,7 @@ function WeatherCard() {
       <h3 className="text-sm font-semibold">{t("Demain", "Tomorrow")}</h3>
       <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/50">
         {weather.status === "ready" && tomorrow
-          ? `${tomorrow.label} · ${weather.tomorrowTempMax}°C`
+          ? texteAvecChiffres(`${tomorrow.label} · ${weather.tomorrowTempMax}°C`)
           : weather.status === "error"
             ? t("Indisponible.", "Unavailable.")
             : t("Chargement…", "Loading…")}
@@ -471,7 +472,7 @@ function LocalConditionsCard() {
       <button
         type="button"
         onClick={() => setModalOpen(true)}
-        className="flex w-full items-center gap-3 rounded-2xl card-tint p-3 pr-4 text-left shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]"
+        className="flex w-full items-center gap-3 rounded-2xl card-tint p-3 pr-4 text-left shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]"
         aria-haspopup="dialog"
       >
         <span
@@ -487,7 +488,7 @@ function LocalConditionsCard() {
             <CarouselDots count={LOCAL_CONDITIONS.length} activeIndex={phaseIndex} />
           </span>
           <span className="block truncate text-sm font-semibold">
-            {t(phase.fr, phase.en)} · {t(headline.valueFr, headline.valueEn)}
+            {t(phase.fr, phase.en)} · {texteAvecChiffres(t(headline.valueFr, headline.valueEn))}
           </span>
         </span>
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--dashboard-text)]/[0.06]">
@@ -533,7 +534,7 @@ function LocalConditionsModal({ open, onClose }: { open: boolean; onClose: () =>
           {LOCAL_CONDITIONS.map((condition) => (
             <div
               key={condition.fr}
-              className="flex gap-3 rounded-2xl bg-[var(--dashboard-card-bg)] p-3 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.12)]"
+              className="flex gap-3 rounded-2xl bg-[var(--dashboard-card-bg)] p-3 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]"
             >
               <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${condition.dotClass}`} aria-hidden />
               <div className="min-w-0 flex-1">
@@ -541,7 +542,7 @@ function LocalConditionsModal({ open, onClose }: { open: boolean; onClose: () =>
                 {condition.rows.map((row) => (
                   <p key={row.fr} className="mt-1 text-xs leading-snug text-[var(--dashboard-text)]/60">
                     <span className="text-[var(--dashboard-text)]/40">{t(row.fr, row.en)}</span>{" "}
-                    {t(row.valueFr, row.valueEn)}
+                    {texteAvecChiffres(t(row.valueFr, row.valueEn))}
                   </p>
                 ))}
               </div>
@@ -578,17 +579,17 @@ function EventsCard() {
 
   if (upcoming.length === 0) {
     return (
-      <div className="rounded-2xl card-tint p-3 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+      <div className="rounded-2xl card-tint p-3 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         <h3 className="text-sm font-semibold">{t("Événements à venir", "Upcoming events")}</h3>
         <p className="mt-1 text-xs text-[var(--dashboard-text)]/50">
-          {t("Rien dans les 14 prochains jours.", "Nothing in the next 14 days.")}
+          {texteAvecChiffres(t("Rien dans les 14 prochains jours.", "Nothing in the next 14 days."))}
         </p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl card-tint p-3 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+    <div className="rounded-2xl card-tint p-3 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
       <h3 className="text-sm font-semibold">{t("Événements à venir", "Upcoming events")}</h3>
       <div className="mt-2 flex flex-col gap-2.5">
         {upcoming.map((holiday) => (
@@ -600,7 +601,7 @@ function EventsCard() {
                   ? t("Aujourd'hui", "Today")
                   : holiday.inDays === 1
                     ? t("Demain", "Tomorrow")
-                    : t(`Dans ${holiday.inDays} j`, `In ${holiday.inDays}d`)}
+                    : texteAvecChiffres(t(`Dans ${holiday.inDays} j`, `In ${holiday.inDays}d`))}
               </span>
             </div>
             <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/50">

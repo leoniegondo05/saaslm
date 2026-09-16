@@ -30,6 +30,10 @@ import type { Produit } from "../dashboard-accueil/ProduitsCatalogue";
 // configurer ici, juste l'afficher, cf. [[dashboard-mock-data-pending-laravel-api]].
 const ENTREPRISE_AGREEE = "Groupe Logistique Ivoire";
 
+// Taux du frais de protection (perte/dommage pendant le stockage), prélevé
+// sur la valeur du dépôt si l'utilisateur l'active — cf. bascule Étape 3.
+const TAUX_PROTECTION = 0.05;
+
 type ModeDepot = "moi-meme" | "recuperation";
 
 type Localisation = { lat: number; lng: number };
@@ -42,6 +46,7 @@ export type DepotValide = {
   valeurTotale: number;
   protectionActivee: boolean;
   modeDepot: ModeDepot;
+  notes?: string;
   recuperation?: {
     nomPrenom: string;
     telephone: string;
@@ -62,6 +67,24 @@ function genererCodeDepot(): string {
 
 function aujourdhui(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+// Réf/SKU affichés en étape 1 et dans le talon (cf. "Réf. ENC-BT-014  SKU-4471"
+// de la référence) — dérivés du nom + index, déterministes (stables au
+// re-render), pas de vrai champ réf/SKU côté Produit tant que l'API Laravel
+// ne les fournit pas, cf. [[dashboard-mock-data-pending-laravel-api]].
+function refEtSku(nom: string, index: number): { ref: string; sku: string } {
+  const initiales = nom
+    .split(/\s+/)
+    .map((mot) => mot[0]?.toUpperCase() ?? "")
+    .join("")
+    .slice(0, 3) || "PRD";
+  let hash = 0;
+  for (let i = 0; i < nom.length; i++) hash = (hash * 31 + nom.charCodeAt(i)) >>> 0;
+  return {
+    ref: `${initiales}-${String(index + 1).padStart(3, "0")}`,
+    sku: `SKU-${String(hash % 10000).padStart(4, "0")}`,
+  };
 }
 
 export default function DeposerStockModal({
@@ -96,7 +119,7 @@ export default function DeposerStockModal({
   );
   const [quantite, setQuantite] = useState(1);
   const [dateDepot, setDateDepot] = useState(aujourdhui);
-  const [protectionActivee, setProtectionActivee] = useState<boolean | null>(null);
+  const [protectionActivee, setProtectionActivee] = useState(false);
   const [modeDepot, setModeDepot] = useState<ModeDepot | null>(null);
   const [nomPrenom, setNomPrenom] = useState("");
   const [telephone, setTelephone] = useState("");
@@ -104,6 +127,7 @@ export default function DeposerStockModal({
   const [heureFin, setHeureFin] = useState("");
   const [localisation, setLocalisation] = useState<Localisation | null>(null);
   const [erreurLocalisation, setErreurLocalisation] = useState<string | null>(null);
+  const [notes, setNotes] = useState("");
 
   // Code dépôt stable pour la durée de vie du panneau (pas régénéré à
   // chaque re-render) : identifie ce dépôt précis dans le récapitulatif.
@@ -135,11 +159,14 @@ export default function DeposerStockModal({
 
   const produit = produitIndex !== null ? produits[produitIndex] : null;
   const prixUnitaire = produit ? (produit.achat ?? produit.vente) : 0;
-  const valeurTotale = quantite * prixUnitaire;
+  const valeurBase = quantite * prixUnitaire;
+  const fraisProtection = protectionActivee ? Math.round(valeurBase * TAUX_PROTECTION) : 0;
+  const valeurTotale = valeurBase + fraisProtection;
+  const refSku = produit ? refEtSku(produit.nom, produitIndex ?? 0) : { ref: "—", sku: "—" };
 
   const etape2Deverrouillee = produit !== null;
   const etape3Deverrouillee = etape2Deverrouillee && quantite > 0 && dateDepot !== "";
-  const etape4Deverrouillee = etape3Deverrouillee && protectionActivee !== null;
+  const etape4Deverrouillee = etape3Deverrouillee;
   const etape5Deverrouillee = etape4Deverrouillee;
 
   const recuperationComplete =
@@ -189,7 +216,7 @@ export default function DeposerStockModal({
   };
 
   const valider = () => {
-    if (!peutValider || produitIndex === null || protectionActivee === null || modeDepot === null) return;
+    if (!peutValider || produitIndex === null || modeDepot === null) return;
     onValider({
       produitIndex,
       quantite,
@@ -198,6 +225,7 @@ export default function DeposerStockModal({
       valeurTotale,
       protectionActivee,
       modeDepot,
+      notes: notes.trim() || undefined,
       recuperation:
         modeDepot === "recuperation"
           ? { nomPrenom: nomPrenom.trim(), telephone: telephone.trim(), heureDebut, heureFin, localisation }
@@ -215,21 +243,24 @@ export default function DeposerStockModal({
                     <ProduitVignette produit={produit} />
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{t(produit.nom, produit.nomEn)}</p>
-                      <p className="text-[10px] text-[var(--dashboard-text)]/45">
-                        {t(`Stock actuel : ${produit.stock}`, `Current stock: ${produit.stock}`)} · {F(prixUnitaire)}
+                      <p className="truncate text-[10px] text-[var(--dashboard-text)]/45">
+                        {t("Réf.", "Ref.")} {refSku.ref} · {refSku.sku} · {t(`Stock : ${produit.stock}`, `Stock: ${produit.stock}`)}
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setProduitIndex(null);
-                      setRecherche("");
-                    }}
-                    className="shrink-0 rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[10px] font-semibold transition hover:bg-[var(--dashboard-text)]/[0.04]"
-                  >
-                    {t("Changer", "Change")}
-                  </button>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className="text-sm font-bold">{F(prixUnitaire)}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProduitIndex(null);
+                        setRecherche("");
+                      }}
+                      className="shrink-0 rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[10px] font-semibold transition hover:bg-[var(--dashboard-text)]/[0.04]"
+                    >
+                      {t("Changer", "Change")}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -246,18 +277,24 @@ export default function DeposerStockModal({
                         {t("Aucun produit en stockage trouvé.", "No warehoused product found.")}
                       </p>
                     ) : (
-                      resultats.map(({ p, i }) => (
-                        <button
-                          key={`${p.nom}-${i}`}
-                          type="button"
-                          onClick={() => setProduitIndex(i)}
-                          className="flex w-full items-center gap-2.5 border-b border-[var(--dashboard-text)]/[0.06] px-3 py-2 text-left text-xs last:border-0 hover:bg-[var(--dashboard-text)]/[0.04]"
-                        >
-                          <ProduitVignette produit={p} size={32} />
-                          <span className="min-w-0 flex-1 truncate font-medium">{t(p.nom, p.nomEn)}</span>
-                          <span className="shrink-0 text-[var(--dashboard-text)]/40">{F(p.achat ?? p.vente)}</span>
-                        </button>
-                      ))
+                      resultats.map(({ p, i }) => {
+                        const rs = refEtSku(p.nom, i);
+                        return (
+                          <button
+                            key={`${p.nom}-${i}`}
+                            type="button"
+                            onClick={() => setProduitIndex(i)}
+                            className="flex w-full items-center gap-2.5 border-b border-[var(--dashboard-text)]/[0.06] px-3 py-2 text-left text-xs last:border-0 hover:bg-[var(--dashboard-text)]/[0.04]"
+                          >
+                            <ProduitVignette produit={p} size={32} />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate font-medium">{t(p.nom, p.nomEn)}</span>
+                              <span className="block truncate text-[10px] text-[var(--dashboard-text)]/40">{rs.ref} · {rs.sku}</span>
+                            </span>
+                            <span className="shrink-0 font-bold text-[var(--dashboard-text)]/70">{F(p.achat ?? p.vente)}</span>
+                          </button>
+                        );
+                      })
                     )}
                   </div>
                 </>
@@ -265,8 +302,20 @@ export default function DeposerStockModal({
             </Etape>
 
             {/* Étape 2 — Détails du stock */}
-            <Etape numero={2} titre={t("Détails du stock", "Stock details")} verrouillee={!etape2Deverrouillee}>
-              <div className="grid grid-cols-2 gap-3">
+            <Etape
+              numero={2}
+              titre={t("Détails du stock", "Stock details")}
+              verrouillee={!etape2Deverrouillee}
+              badgeVerrouillee={t("Visible une fois le produit choisi", "Visible once the product is chosen")}
+            >
+              <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-3">
+                <Champ label={t("Code dépôt", "Deposit code")}>
+                  <input
+                    readOnly
+                    value={etape2Deverrouillee ? codeDepot : "—"}
+                    className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-text)]/[0.04] px-3 py-2 text-sm text-[var(--dashboard-text)]/60 outline-none"
+                  />
+                </Champ>
                 <Champ label={t("Quantité", "Quantity")}>
                   <input
                     type="number"
@@ -286,17 +335,10 @@ export default function DeposerStockModal({
                     className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2 text-sm outline-none focus:border-brand-pink disabled:opacity-50 dark:bg-white/[0.04]"
                   />
                 </Champ>
-                <Champ label={t("Code dépôt", "Deposit code")}>
-                  <input
-                    readOnly
-                    value={etape2Deverrouillee ? codeDepot : "—"}
-                    className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-text)]/[0.04] px-3 py-2 text-sm text-[var(--dashboard-text)]/60 outline-none"
-                  />
-                </Champ>
                 <Champ label={t("Valeur totale", "Total value")}>
                   <input
                     readOnly
-                    value={etape2Deverrouillee ? F(valeurTotale) : "—"}
+                    value={etape2Deverrouillee ? F(valeurBase) : "—"}
                     className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-text)]/[0.04] px-3 py-2 text-sm font-semibold outline-none"
                   />
                 </Champ>
@@ -304,31 +346,40 @@ export default function DeposerStockModal({
             </Etape>
 
             {/* Étape 3 — Protection */}
-            <Etape numero={3} titre={t("Protection", "Protection")} verrouillee={!etape3Deverrouillee}>
-              <div className="flex gap-2">
-                <ChoixPill
-                  actif={protectionActivee === true}
-                  onClick={() => setProtectionActivee(true)}
+            <Etape
+              numero={3}
+              titre={t("Protection", "Protection")}
+              verrouillee={!etape3Deverrouillee}
+              badgeVerrouillee={t("Visible après la quantité et la date", "Visible once quantity and date are set")}
+            >
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)] px-3 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">{t("Protection du dépôt", "Deposit protection")}</p>
+                  <p className="text-[10px] text-[var(--dashboard-text)]/45">
+                    {t(`Frais de protection : ${TAUX_PROTECTION * 100}% de la valeur, ajoutés si activée`, `Protection fee: ${TAUX_PROTECTION * 100}% of the value, added if enabled`)}
+                  </p>
+                </div>
+                <ToggleSwitch
+                  actif={protectionActivee}
                   disabled={!etape3Deverrouillee}
-                >
-                  {t("Activer la protection", "Enable protection")}
-                </ChoixPill>
-                <ChoixPill
-                  actif={protectionActivee === false}
-                  onClick={() => setProtectionActivee(false)}
-                  disabled={!etape3Deverrouillee}
-                >
-                  {t("Ne pas activer", "Don't enable")}
-                </ChoixPill>
+                  onClick={() => setProtectionActivee((prev) => !prev)}
+                />
               </div>
-              {protectionActivee === true && (
+              {protectionActivee && (
                 <div className="mt-3 flex items-start gap-2 rounded-xl bg-[#dcf5e3] px-3 py-2.5 text-[#178a3f]">
                   <ShieldIcon />
                   <p className="text-xs leading-snug">
                     {t(
-                      "Votre produit sera protégé : en cas de perte ou de dommage pendant son stockage.",
-                      "Your product will be protected: in case of loss or damage during storage."
+                      "Votre produit sera protégé en cas de perte ou de dommage pendant son stockage.",
+                      "Your product will be protected in case of loss or damage during storage."
                     )}
+                    {" "}
+                    <span className="font-semibold">
+                      {t(
+                        `Frais de protection (${TAUX_PROTECTION * 100}%) : ${F(fraisProtection)}, ajoutés à la valeur totale.`,
+                        `Protection fee (${TAUX_PROTECTION * 100}%): ${F(fraisProtection)}, added to the total value.`
+                      )}
+                    </span>
                   </p>
                 </div>
               )}
@@ -337,20 +388,43 @@ export default function DeposerStockModal({
             {/* Étape 4 — Configuration logistique : rien à saisir, la
                 boutique n'est affiliée qu'à une seule entreprise agréée
                 (cf. Affiliation.tsx), donc son nom s'affiche seul. */}
-            <Etape numero={4} titre={t("Configuration logistique", "Logistics setup")} verrouillee={!etape4Deverrouillee}>
-              <p className="mb-1 text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">
+            <Etape
+              numero={4}
+              titre={t("Configuration logistique", "Logistics setup")}
+              verrouillee={!etape4Deverrouillee}
+              badgeVerrouillee={t("Visible après la protection", "Visible once protection is set")}
+            >
+              <p className="mb-2 text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">
                 {t("Entreprise agréée", "Approved partner")}
               </p>
-              <div className="flex items-center gap-2 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)] px-3 py-2.5">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink">
-                  <EntrepotIcon />
-                </span>
-                <span className="text-sm font-semibold">{ENTREPRISE_AGREEE}</span>
+              <div className="rounded-2xl border border-brand-purple/15 bg-gradient-to-br from-brand-purple/10 via-brand-purple/[0.03] to-transparent px-5 py-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-purple text-white shadow-[0_8px_18px_-6px_rgba(58,29,138,0.5)]">
+                    <BuildingIcon />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold">{ENTREPRISE_AGREEE}</p>
+                    <p className="truncate text-[11px] text-[var(--dashboard-text)]/50">
+                      {t("Livraison et collecte des dépôts", "Delivery and deposit pickup")}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t border-brand-purple/10 pt-2.5">
+                  <span className="text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">
+                    {t("Statut", "Status")}
+                  </span>
+                  <Tag tone="ok">{t("Partenaire actif", "Active partner")}</Tag>
+                </div>
               </div>
             </Etape>
 
             {/* Étape 5 — Modalité de dépôt */}
-            <Etape numero={5} titre={t("Modalité de dépôt", "Deposit method")} verrouillee={!etape5Deverrouillee}>
+            <Etape
+              numero={5}
+              titre={t("Modalité de dépôt", "Deposit method")}
+              verrouillee={!etape5Deverrouillee}
+              badgeVerrouillee={t("Visible après la configuration logistique", "Visible once logistics is configured")}
+            >
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <CarteChoix
                   actif={modeDepot === "moi-meme"}
@@ -358,6 +432,7 @@ export default function DeposerStockModal({
                   icone={<CamionIcon />}
                   titre={t("Je dépose moi-même", "I'll deposit it myself")}
                   sousTitre={t("Ouvre l'itinéraire vers l'entreprise agréée", "Opens directions to the approved partner")}
+                  tag={<Tag tone="ok">{t("Activation immédiate", "Immediate activation")}</Tag>}
                   onClick={ouvrirItineraire}
                 />
                 <CarteChoix
@@ -366,6 +441,7 @@ export default function DeposerStockModal({
                   icone={<EntrepotIcon />}
                   titre={t("L'entreprise agréée récupère", "The approved partner picks up")}
                   sousTitre={t("Renseignez vos disponibilités", "Fill in your availability")}
+                  tag={<Tag tone="warn">{t("En attente de validation", "Pending validation")}</Tag>}
                   onClick={() => setModeDepot("recuperation")}
                 />
               </div>
@@ -434,6 +510,29 @@ export default function DeposerStockModal({
                 </div>
               )}
             </Etape>
+
+            {/* Étape 6 — Informations complémentaires : notes libres visibles
+                par le partenaire logistique au moment de la collecte/du dépôt. */}
+            <Etape
+              numero={6}
+              titre={t("Informations complémentaires", "Additional information")}
+              verrouillee={!etape5Deverrouillee}
+              badgeVerrouillee={t("Visible après la modalité de dépôt", "Visible once deposit method is set")}
+            >
+              <Champ label={t("Notes (optionnel)", "Notes (optional)")}>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  disabled={!etape5Deverrouillee}
+                  rows={2}
+                  placeholder={t("Ex. colis fragile, prévoir emballage renforcé…", "E.g. fragile parcel, use reinforced packaging…")}
+                  className="w-full resize-none rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2 text-sm outline-none focus:border-brand-pink disabled:opacity-50 dark:bg-white/[0.04]"
+                />
+              </Champ>
+              <p className="mt-1.5 text-[10px] text-[var(--dashboard-text)]/40">
+                {t("Visibles par le partenaire logistique.", "Visible to the logistics partner.")}
+              </p>
+            </Etape>
     </>
   );
 
@@ -445,59 +544,48 @@ export default function DeposerStockModal({
   // sticky en page à part, cf. les deux gabarits plus bas).
   const colonneRecap = (
     <>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
-              {t("Récapitulatif", "Summary")}
-            </p>
+            <EyebrowTag>{t("Talon", "Stub")}</EyebrowTag>
+            <p className="mt-1 text-sm font-bold tracking-tight">{t("Récapitulatif", "Summary")}</p>
 
-            {produit && (
-              <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-[var(--dashboard-card-bg)] p-2.5">
-                <ProduitVignette produit={produit} size={36} />
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold">{t(produit.nom, produit.nomEn)}</p>
-                  <p className="text-[10px] text-[var(--dashboard-text)]/45">{F(prixUnitaire)} {t("/ unité", "/ unit")}</p>
-                </div>
-              </div>
-            )}
+            <div className="mt-3 space-y-3 text-xs">
+              <RecapSection titre={t("Produit", "Product")}>
+                <RecapLigne label={t("Nom", "Name")} valeur={produit ? t(produit.nom, produit.nomEn) : "—"} />
+                <RecapLigne label={t("Référence", "Reference")} valeur={produit ? refSku.ref : "—"} />
+                <RecapLigne label="SKU" valeur={produit ? refSku.sku : "—"} />
+                <RecapLigne label={t("Prix unitaire", "Unit price")} valeur={produit ? F(prixUnitaire) : "—"} />
+              </RecapSection>
 
-            <div className="mt-3 space-y-2.5 text-xs">
-              <RecapBloc titre={t("Stock", "Stock")} couleur="#5AA9FF">
+              <RecapSection titre={t("Stock", "Stock")}>
                 <RecapLigne label={t("Code dépôt", "Deposit code")} valeur={etape2Deverrouillee ? codeDepot : "—"} />
-                <RecapLigne label={t("Quantité", "Quantity")} valeur={etape2Deverrouillee ? `${quantite}` : "—"} />
-              </RecapBloc>
+                <RecapLigne label={t("Quantité", "Quantity")} valeur={etape2Deverrouillee ? t(`${quantite} unités`, `${quantite} units`) : "—"} />
+              </RecapSection>
 
               {etape2Deverrouillee && (
-                <div className="flex items-center justify-between gap-2 rounded-xl bg-[#141220] px-3 py-2.5 dark:bg-brand-pink">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/60">
-                    {t("Valeur totale", "Total value")}
-                  </span>
-                  <span className="text-sm font-bold text-white">{F(valeurTotale)}</span>
+                <div className="flex items-center justify-between gap-2 rounded-xl bg-[var(--dashboard-text)]/[0.05] px-3 py-2.5">
+                  <span className="text-xs font-semibold">{t("Valeur totale", "Total value")}</span>
+                  <span className="text-sm font-bold font-figures">{F(valeurTotale)}</span>
                 </div>
               )}
 
-              <RecapBloc
-                titre={t("Protection", "Protection")}
-                couleur={protectionActivee ? "#178a3f" : "#5A6072"}
-              >
+              <RecapSection titre={t("Protection", "Protection")}>
                 <RecapLigne
                   label={t("Statut", "Status")}
-                  valeur={
-                    protectionActivee === null
-                      ? "—"
-                      : <Tag tone={protectionActivee ? "ok" : "neutral"}>{protectionActivee ? t("Activée", "Enabled") : t("Non activée", "Not enabled")}</Tag>
-                  }
+                  valeur={<Tag tone={protectionActivee ? "ok" : "neutral"}>{protectionActivee ? t("Activée", "Enabled") : t("Non activée", "Not enabled")}</Tag>}
                 />
-              </RecapBloc>
+                {protectionActivee && (
+                  <RecapLigne label={t(`Frais (${TAUX_PROTECTION * 100}%)`, `Fee (${TAUX_PROTECTION * 100}%)`)} valeur={F(fraisProtection)} />
+                )}
+              </RecapSection>
 
-              <RecapBloc titre={t("Logistique", "Logistics")} couleur="#3A1D8A">
-                <RecapLigne label={t("Entreprise agréée", "Approved partner")} valeur={ENTREPRISE_AGREEE} />
+              <RecapSection titre={t("Logistique", "Logistics")}>
                 <RecapLigne
-                  label={t("Mode", "Method")}
+                  label={t("Type", "Type")}
                   valeur={
                     modeDepot === null
                       ? "—"
                       : modeDepot === "moi-meme"
-                        ? t("Dépôt par vous-même", "Self deposit")
-                        : t("Récupération par le partenaire", "Partner pickup")
+                        ? t("Vous-même", "Yourself")
+                        : ENTREPRISE_AGREEE
                   }
                 />
                 {modeDepot === "recuperation" && (
@@ -514,7 +602,24 @@ export default function DeposerStockModal({
                     />
                   </>
                 )}
-              </RecapBloc>
+                {modeDepot !== null && (
+                  <Tag tone={modeDepot === "moi-meme" ? "ok" : "warn"} className="mt-1">
+                    {modeDepot === "moi-meme"
+                      ? t("Activation immédiate", "Immediate activation")
+                      : t("En attente de collecte", "Pending pickup")}
+                  </Tag>
+                )}
+              </RecapSection>
+
+              <RecapSection titre={t("Conseils", "Tips")}>
+                <div className="space-y-1.5 text-[11px] text-[var(--dashboard-text)]/60">
+                  <ConseilLigne>{t("Vérifiez la quantité avant de valider", "Check the quantity before validating")}</ConseilLigne>
+                  <ConseilLigne>{t("Le code dépôt est unique, conservez-le", "The deposit code is unique, keep it")}</ConseilLigne>
+                  {modeDepot === "moi-meme" && (
+                    <ConseilLigne>{t("Activation immédiate à la dépose", "Immediate activation on drop-off")}</ConseilLigne>
+                  )}
+                </div>
+              </RecapSection>
             </div>
 
             <div className="mt-auto pt-4">
@@ -547,15 +652,30 @@ export default function DeposerStockModal({
           </button>
         </div>
 
-        <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">{t("Déposer un stock", "Deposit stock")}</h1>
+        <EyebrowTag className="mt-4">{t("Dépôt de stock · Formulaire", "Stock deposit · Form")}</EyebrowTag>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{t("Déposer un stock", "Deposit stock")}</h1>
         <p className="mt-1 text-sm text-[var(--dashboard-text)]/50">
-          {t("Cinq étapes pour enregistrer un dépôt de stock physique.", "Five steps to record a physical stock deposit.")}
+          {t("Six étapes pour enregistrer un dépôt de stock physique.", "Six steps to record a physical stock deposit.")}
         </p>
 
-        <div className="mb-10 mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[1.7fr_1fr] lg:items-start">
+        <div className="mt-4 border-t border-dashed border-[var(--dashboard-text)]/15" />
+
+        <InfoCallout className="mt-4">
+          {t(
+            "Chaque dépôt génère un code unique et une valeur totale calculée automatiquement — vérifiez le produit et la quantité avant de valider.",
+            "Each deposit generates a unique code and an automatically computed total value — check the product and quantity before validating."
+          )}
+        </InfoCallout>
+
+        <div className="mb-10 mt-6 grid grid-cols-1 gap-4 md:grid-cols-[1.7fr_1fr] md:items-start">
           <div className="space-y-4">{colonneEtapes}</div>
-          <div className="rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] lg:sticky lg:top-6">
-            {colonneRecap}
+          <div className="md:sticky md:top-6">
+            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+              <ScissorsIcon /> {t("Détacher · Talon récapitulatif", "Detach · Summary stub")}
+            </p>
+            <div className="rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
+              {colonneRecap}
+            </div>
           </div>
         </div>
       </>
@@ -568,26 +688,41 @@ export default function DeposerStockModal({
         onClick={(e) => e.stopPropagation()}
         className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[28px] bg-[var(--dashboard-card-bg)] shadow-[0_30px_80px_rgba(0,0,0,0.35)]"
       >
-        <div className="flex items-start justify-between gap-3 border-b border-[var(--dashboard-text)]/10 p-5">
-          <div>
-            <h2 className="text-xl font-bold tracking-tight">{t("Déposer un stock", "Deposit stock")}</h2>
-            <p className="mt-1 text-xs text-[var(--dashboard-text)]/50">
-              {t("Cinq étapes pour enregistrer un dépôt de stock physique.", "Five steps to record a physical stock deposit.")}
-            </p>
+        <div className="border-b border-[var(--dashboard-text)]/10 p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <EyebrowTag>{t("Dépôt de stock · Formulaire", "Stock deposit · Form")}</EyebrowTag>
+              <h2 className="mt-1.5 text-xl font-bold tracking-tight">{t("Déposer un stock", "Deposit stock")}</h2>
+              <p className="mt-1 text-xs text-[var(--dashboard-text)]/50">
+                {t("Six étapes pour enregistrer un dépôt de stock physique.", "Six steps to record a physical stock deposit.")}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onFermer}
+              aria-label={t("Fermer", "Close")}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--dashboard-text)]/50 transition hover:bg-[var(--dashboard-text)]/8 hover:text-[var(--dashboard-text)]"
+            >
+              <CroixIcon />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onFermer}
-            aria-label={t("Fermer", "Close")}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--dashboard-text)]/50 transition hover:bg-[var(--dashboard-text)]/8 hover:text-[var(--dashboard-text)]"
-          >
-            <CroixIcon />
-          </button>
+
+          <div className="mt-3 border-t border-dashed border-[var(--dashboard-text)]/15" />
+
+          <InfoCallout className="mt-3">
+            {t(
+              "Chaque dépôt génère un code unique et une valeur totale calculée automatiquement — vérifiez le produit et la quantité avant de valider.",
+              "Each deposit generates a unique code and an automatically computed total value — check the product and quantity before validating."
+            )}
+          </InfoCallout>
         </div>
 
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1.7fr_1fr]">
           <div className="min-h-0 space-y-4 overflow-y-auto p-5">{colonneEtapes}</div>
           <div className="flex min-h-0 flex-col overflow-y-auto border-t border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)] p-5 lg:border-t-0 lg:border-l">
+            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+              <ScissorsIcon /> {t("Détacher · Talon récapitulatif", "Detach · Summary stub")}
+            </p>
             {colonneRecap}
           </div>
         </div>
@@ -615,21 +750,31 @@ function Etape({
   numero,
   titre,
   verrouillee = false,
+  badgeVerrouillee,
   children,
 }: {
   numero: number;
   titre: string;
   /** Étape pas encore atteignable — visible mais grisée, cf. talon "visible une fois..." de la référence. */
   verrouillee?: boolean;
+  /** Puce à droite du titre quand verrouillée (ex. "Visible une fois le produit choisi", cf. référence). */
+  badgeVerrouillee?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className={`rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] transition ${verrouillee ? "opacity-40" : ""}`}>
-      <div className="mb-3 flex items-center gap-2">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#141220] text-[11px] font-bold text-white dark:bg-brand-pink">
-          {numero}
-        </span>
-        <p className="text-sm font-semibold">{titre}</p>
+    <div className={`rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] transition ${verrouillee ? "opacity-40" : ""}`}>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#141220] text-[11px] font-bold text-white dark:bg-brand-pink">
+            {numero}
+          </span>
+          <p className="text-sm font-semibold">{titre}</p>
+        </div>
+        {verrouillee && badgeVerrouillee && (
+          <span className="shrink-0 rounded-full bg-brand-purple/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] text-brand-purple">
+            {badgeVerrouillee}
+          </span>
+        )}
       </div>
       <fieldset disabled={verrouillee} className="contents">
         {children}
@@ -647,29 +792,34 @@ function Champ({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function ChoixPill({
+// Bascule on/off pour la Protection (Étape 3) — remplace l'ancien choix à
+// deux pastilles : un binaire activé/désactivé se prête mieux à un switch
+// qu'à deux boutons distincts, avec l'état "désactivé" comme défaut naturel.
+function ToggleSwitch({
   actif,
   onClick,
   disabled,
-  children,
 }: {
   actif: boolean;
   onClick: () => void;
   disabled?: boolean;
-  children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={actif}
       onClick={onClick}
       disabled={disabled}
-      className={`flex-1 rounded-full border px-3 py-2 text-[11px] font-semibold transition disabled:cursor-not-allowed ${
-        actif
-          ? "border-brand-pink bg-brand-pink/10 text-brand-pink"
-          : "border-[var(--dashboard-text)]/15 text-[var(--dashboard-text)]/70 hover:bg-[var(--dashboard-text)]/[0.04]"
+      className={`relative h-6 w-11 shrink-0 rounded-full transition disabled:cursor-not-allowed disabled:opacity-50 ${
+        actif ? "bg-brand-pink" : "bg-[var(--dashboard-text)]/15"
       }`}
     >
-      {children}
+      <span
+        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${
+          actif ? "left-[22px]" : "left-0.5"
+        }`}
+      />
     </button>
   );
 }
@@ -680,6 +830,7 @@ function CarteChoix({
   icone,
   titre,
   sousTitre,
+  tag,
   onClick,
 }: {
   actif: boolean;
@@ -687,6 +838,8 @@ function CarteChoix({
   icone: React.ReactNode;
   titre: string;
   sousTitre: string;
+  /** Puce de statut sous le sous-titre (cf. cartes "Client / LIIVREMOI / Logisticien externe" de la référence). */
+  tag?: React.ReactNode;
   onClick: () => void;
 }) {
   return (
@@ -705,19 +858,51 @@ function CarteChoix({
       </span>
       <span className="text-xs font-semibold">{titre}</span>
       <span className="text-[10px] leading-snug text-[var(--dashboard-text)]/45">{sousTitre}</span>
+      {tag && <span className="mt-0.5">{tag}</span>}
     </button>
   );
 }
 
-function RecapBloc({ titre, couleur, children }: { titre: string; couleur: string; children: React.ReactNode }) {
+// Section du talon récapitulatif — label muet + séparateur pointillé au-dessus
+// (sauf la première), pas d'accent de couleur par bloc : format plat repris
+// tel quel de la référence envoyée par l'utilisateur.
+function RecapSection({ titre, children }: { titre: string; children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border-l-[3px] bg-[var(--dashboard-card-bg)]" style={{ borderColor: couleur }}>
-      <div className="flex items-center gap-1.5 px-2.5 pt-2">
-        <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: couleur }} />
-        <p className="text-[9px] font-bold uppercase tracking-[0.1em]" style={{ color: couleur }}>{titre}</p>
-      </div>
-      <div className="space-y-1 p-2.5">{children}</div>
+    <div className="border-t border-dashed border-[var(--dashboard-text)]/15 pt-3 first:border-t-0 first:pt-0">
+      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--dashboard-text)]/35">{titre}</p>
+      <div className="space-y-1">{children}</div>
     </div>
+  );
+}
+
+// Repère "● LABEL" en petites majuscules — même rôle que l'eyebrow de la
+// référence ("● RÉCAPITULATIF VISUEL", "● TALON") au-dessus d'un titre.
+function EyebrowTag({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <p className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40 ${className}`}>
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-pink" />
+      {children}
+    </p>
+  );
+}
+
+// Bandeau "Exemple illustratif" de la référence, recoloré aux tokens du
+// dashboard plutôt que son bleu d'origine (cf. [[charte-graphique-livre-moi]]).
+function InfoCallout({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`flex items-start gap-2 rounded-xl bg-brand-pink/8 px-3.5 py-2.5 text-[11px] leading-snug text-[var(--dashboard-text)]/70 ${className}`}>
+      <InfoIcon />
+      <p>{children}</p>
+    </div>
+  );
+}
+
+function ConseilLigne({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-start gap-1.5">
+      <CheckIcon />
+      <span>{children}</span>
+    </p>
   );
 }
 
@@ -758,11 +943,51 @@ function CamionIcon() {
   );
 }
 
+function BuildingIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" aria-hidden>
+      <rect x="5" y="3" width="14" height="18" rx="1.5" strokeWidth="1.6" />
+      <path
+        d="M9 7h1.5M13.5 7H15M9 11h1.5M13.5 11H15M9 15h1.5M13.5 15H15"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function EntrepotIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M3 10 12 4l9 6v9H3z" />
-      <path d="M9 19v-6h6v6" />
+      <rect x="5" y="3" width="14" height="18" rx="1.5" />
+      <path d="M9 7h1.5M13.5 7H15M9 11h1.5M13.5 11H15M9 15h1.5M13.5 15H15" />
+    </svg>
+  );
+}
+
+function InfoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-pink" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5.5M12 8v.01" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="mt-0.5 h-3 w-3 shrink-0 text-[#178a3f]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 12l5 5L20 6" />
+    </svg>
+  );
+}
+
+function ScissorsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="6" cy="6" r="2.4" />
+      <circle cx="6" cy="18" r="2.4" />
+      <path d="M8.5 7.5 20 18M20 6 8.5 16.5" />
     </svg>
   );
 }

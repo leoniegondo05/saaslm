@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { TypeAchatTag } from "../shared";
+import { TypeAchatTag, texteAvecChiffres } from "../shared";
 import { SEGMENTS_RF, TypeAchat } from "./clientsData";
 
 export default function ClientsRfMatrix({ typeAchat }: { typeAchat: TypeAchat }) {
@@ -107,7 +107,7 @@ export default function ClientsRfMatrix({ typeAchat }: { typeAchat: TypeAchat })
                     : `0 2px 8px ${seg.color}40`,
                 }}
               >
-                <span className="text-[10px] sm:text-[11px] font-semibold">{seg.count}</span>
+                <span className="text-[10px] sm:text-[11px] font-semibold font-figures">{seg.count}</span>
               </div>
             );
           })}
@@ -147,12 +147,12 @@ export default function ClientsRfMatrix({ typeAchat }: { typeAchat: TypeAchat })
                     style={{ backgroundColor: segment.color }}
                   />
                 </div>
-                <div className="mt-1 text-lg font-bold tracking-tight text-[var(--dashboard-text)] sm:text-xl">
+                <div className="mt-1 text-lg font-bold tracking-tight text-[var(--dashboard-text)] sm:text-xl font-figures">
                   {segment.count}
                 </div>
                 {segment.partChiffreFr && (
                   <p className="text-[10px] font-medium text-[var(--dashboard-text)]/50">
-                    {t(segment.partChiffreFr, segment.partChiffreEn ?? "")}
+                    {texteAvecChiffres(t(segment.partChiffreFr, segment.partChiffreEn ?? ""))}
                   </p>
                 )}
               </div>
@@ -173,10 +173,10 @@ export default function ClientsRfMatrix({ typeAchat }: { typeAchat: TypeAchat })
           )}
         </h4>
         <p className="mt-1 text-[11px] leading-relaxed text-[var(--dashboard-text)]/55">
-          {t(
+          {texteAvecChiffres(t(
             "Les champions et les fidèles représentent treize pour cent du fichier et cinquante et un pour cent des ventes. Ce sont eux qu'il faut connaître par leur nom, prévenir en premier d'une nouveauté, et ne jamais laisser attendre au téléphone. À l'autre bout, les quatre-vingt-cinq perdus ne méritent pas un franc de publicité : la même somme dépensée sur les cent quatre dormants rapporte cinq fois plus, parce qu'ils ont déjà acheté une fois et qu'ils savent que le colis arrive.",
             "Champions and loyal customers represent 13% of all accounts and 51% of sales. You should know them by name, notify them first about new arrivals, and never leave them on hold. At the other extreme, the 85 lost customers do not warrant an extra franc of advertising: that same budget spent re-engaging the 104 dormant customers yields 5x more, because they have already ordered once and trust that their package will arrive."
-          )}
+          ))}
         </p>
       </div>
     </div>

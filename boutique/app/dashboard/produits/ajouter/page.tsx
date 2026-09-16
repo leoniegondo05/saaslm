@@ -43,7 +43,7 @@ export default function AjouterProduitPage() {
         <DashboardSidebar />
 
         <div className="min-w-0 flex-1 lg:px-6">
-          <DashboardHeader />
+          <DashboardHeader activeAccueilTab="Produits" />
           <AjouterProduitModal
             categoriesInitiales={CATEGORIES_DEFAUT}
             initial={edition?.initial}

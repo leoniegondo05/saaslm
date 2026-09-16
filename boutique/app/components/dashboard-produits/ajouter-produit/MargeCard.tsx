@@ -57,7 +57,7 @@ export default function MargeCard({
     : [];
 
   return (
-    <div className="flex h-full flex-col rounded-[28px] bg-[var(--dashboard-card-bg)] p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+    <div className="flex h-full flex-col rounded-[28px] bg-[var(--dashboard-card-bg)] p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{t("Ce qui vous reste", "What you keep")}</p>
         <span className="shrink-0 rounded-full bg-black/[0.05] px-2.5 py-1 text-[9px] font-semibold text-[var(--dashboard-text)]/50 dark:bg-white/[0.08]">
@@ -66,7 +66,7 @@ export default function MargeCard({
       </div>
 
       <div className="mt-2.5 flex items-end justify-between gap-2">
-        <p className={`text-3xl font-bold tracking-tight ${venteAPerte ? "text-[#c8262d]" : ""}`}>{marge !== null ? F(marge) : "—"}</p>
+        <p className={`text-3xl font-bold tracking-tight font-figures ${venteAPerte ? "text-[#c8262d]" : ""}`}>{marge !== null ? F(marge) : "—"}</p>
         {margePct !== null && (
           <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${venteAPerte ? "bg-[#ffe1e2] text-[#c8262d]" : "bg-black/[0.05] text-[var(--dashboard-text)]/60 dark:bg-white/[0.08]"}`}>
             {t("Marge", "Margin")} {margePct}%
@@ -90,7 +90,7 @@ export default function MargeCard({
 
       <div className="flex items-center justify-between text-xs">
         <span className="font-semibold">{t("Il vous reste", "You keep")}</span>
-        <span className={`text-base font-bold ${venteAPerte ? "text-[#c8262d]" : ""}`}>{marge !== null ? F(marge) : "—"}</span>
+        <span className={`text-base font-bold font-figures ${venteAPerte ? "text-[#c8262d]" : ""}`}>{marge !== null ? F(marge) : "—"}</span>
       </div>
 
       {(venteAPerte || combinaisonMiseEnAvant) && (
