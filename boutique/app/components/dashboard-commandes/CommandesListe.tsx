@@ -193,7 +193,7 @@ export default function CommandesListe({
                   <NombreEtMot nombre={relancees} mot={t("relancée", "relaunched")} couleur="#3a1d8a" />
                   <div className="text-right">
                     <p className="text-[9px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Encaissé", "Collected")}</p>
-                    <p className="text-sm font-bold text-[#178a3f]">{formatCfa(encaisseJour)}</p>
+                    <p className="text-sm font-bold text-[#178a3f] font-figures">{formatCfa(encaisseJour)}</p>
                   </div>
                 </div>
               </div>
@@ -261,7 +261,7 @@ function LigneCommande({
 
         <div className="min-w-0 pl-2">
           <div className="flex items-baseline gap-2">
-            <p className="text-[12.5px] font-bold text-[var(--dashboard-text)]">{commande.id}</p>
+            <p className="text-[12.5px] font-bold text-[var(--dashboard-text)] font-figures">{commande.id}</p>
             {commande.quantite > 1 && (
               <span className="shrink-0 rounded-full bg-[var(--dashboard-text)]/[0.08] px-1.5 py-0.5 text-[9px] font-bold text-[var(--dashboard-text)]/60">
                 ×{commande.quantite}
@@ -271,9 +271,9 @@ function LigneCommande({
           <p className="mt-0.5 truncate text-[11px] text-[var(--dashboard-text)]/55">{commande.produit}</p>
         </div>
 
-        <p className="text-right text-[12.5px] font-semibold text-[var(--dashboard-text)]">{formatCfa(commande.montantPaye)}</p>
+        <p className="text-right text-[12.5px] font-semibold text-[var(--dashboard-text)] font-figures">{formatCfa(commande.montantPaye)}</p>
 
-        <div className="flex flex-col items-end gap-0.5 text-[10.5px] font-semibold text-[#c8262d]">
+        <div className="flex flex-col items-end gap-0.5 text-[10.5px] font-semibold text-[#c8262d] font-figures">
           <span className="inline-flex items-center gap-1">
             <TriangleIcon filled className="rotate-180" />-{formatCfa(commande.retenueLogistique).replace(" F", "")}
           </span>
@@ -283,9 +283,9 @@ function LigneCommande({
         </div>
 
         {suspendue ? (
-          <p className="text-right text-[13px] font-bold text-[var(--dashboard-text)]/35 line-through">{formatCfa(net)}</p>
+          <p className="text-right text-[13px] font-bold text-[var(--dashboard-text)]/35 line-through font-figures">{formatCfa(net)}</p>
         ) : (
-          <p className="flex items-center justify-end gap-1 text-[15px] font-bold tracking-tight text-[#178a3f]">
+          <p className="flex items-center justify-end gap-1 text-[15px] font-bold tracking-tight text-[#178a3f] font-figures">
             <TriangleIcon filled />
             {formatCfa(net)}
           </p>
@@ -400,7 +400,7 @@ function NombreEtMot({ nombre, mot, couleur }: { nombre: number; mot: string; co
   if (nombre === 0) return null;
   return (
     <span className="flex items-baseline gap-1">
-      <span className="text-sm font-bold" style={couleur ? { color: couleur } : undefined}>
+      <span className="text-sm font-bold font-figures" style={couleur ? { color: couleur } : undefined}>
         {nombre}
       </span>
       <span className="text-[10px] text-[var(--dashboard-text)]/45">{mot}</span>
@@ -422,14 +422,14 @@ function KpiTile({
   valueClassName?: string;
 }) {
   return (
-    <div className="rounded-2xl bg-[var(--dashboard-glass)] p-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+    <div className="rounded-2xl bg-[var(--dashboard-glass)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
+        <p className="text-sm font-bold tracking-tight text-[var(--dashboard-text)]">{label}</p>
         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ background: `${dot}1F` }}>
           <span className="h-2 w-2 rounded-full" style={{ background: dot }} />
         </span>
       </div>
-      <p className={`mt-2 text-2xl font-bold tracking-tight ${valueClassName}`}>{value}</p>
+      <p className={`mt-2 text-2xl font-bold tracking-tight font-figures ${valueClassName}`}>{value}</p>
       {note && <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{note}</p>}
     </div>
   );

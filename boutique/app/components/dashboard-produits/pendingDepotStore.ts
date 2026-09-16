@@ -26,3 +26,23 @@ export function lireEtViderDepotEnAttente() {
   depotEnAttente = null;
   return valeur;
 }
+
+/*
+  Même pont, sens inverse : "Réapprovisionner" (fiche produit détaillée,
+  ProduitsCatalogue.tsx) présélectionne un produit avant d'envoyer vers la
+  page /deposer, qui vit sur PRODUITS_INITIAUX plutôt que le tableau local
+  du catalogue — identifié par nom plutôt qu'index, même raison que
+  pendingProduitStore.ts (ordre pas garanti identique entre les deux).
+*/
+let nomProduitAPreselectionner: string | null = null;
+
+export function definirDepotAPreselectionner(nom: string) {
+  nomProduitAPreselectionner = nom;
+}
+
+/** Lit le nom du produit à présélectionner puis vide le pont — à appeler une seule fois, au montage de la page /deposer. */
+export function lireEtViderDepotAPreselectionner() {
+  const valeur = nomProduitAPreselectionner;
+  nomProduitAPreselectionner = null;
+  return valeur;
+}

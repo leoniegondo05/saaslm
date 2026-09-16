@@ -196,7 +196,7 @@ export default function DemandesModules({ first = true }: { first?: boolean }) {
                 key={m.key}
                 type="button"
                 onClick={() => setActif(m.key)}
-                className="rounded-2xl p-4 text-left shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] transition"
+                className="rounded-2xl p-4 text-left shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] transition"
                 style={
                   on
                     ? { background: `${couleur}14`, border: `1px solid ${couleur}66`, boxShadow: `0 12px 28px -8px ${couleur}40` }
@@ -410,7 +410,7 @@ function StatRow4({ stats }: { stats: { valeur: string; label: string; couleur?:
     <div className="mt-4 grid grid-cols-2 gap-3 border-y border-[var(--dashboard-text)]/10 py-4 sm:grid-cols-4">
       {stats.map((s, i) => (
         <div key={i}>
-          <p className="text-lg font-bold tracking-tight" style={s.couleur ? { color: s.couleur } : undefined}>
+          <p className="text-lg font-bold tracking-tight font-figures" style={s.couleur ? { color: s.couleur } : undefined}>
             {s.valeur}
           </p>
           <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/45">{s.label}</p>

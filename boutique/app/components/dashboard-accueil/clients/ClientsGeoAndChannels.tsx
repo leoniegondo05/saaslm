@@ -1,7 +1,7 @@
 "use client";
 
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { TypeAchatTag } from "../shared";
+import { TypeAchatTag, texteAvecChiffres } from "../shared";
 import { COMMUNES_DATA, CANAUX_ACQUISITION, TypeAchat } from "./clientsData";
 
 export default function ClientsGeoAndChannels({ typeAchat }: { typeAchat: TypeAchat }) {
@@ -51,13 +51,13 @@ export default function ClientsGeoAndChannels({ typeAchat }: { typeAchat: TypeAc
                           <div className="h-2 w-20 sm:w-28 overflow-hidden rounded-full bg-[var(--dashboard-surface-2)]">
                             <div className={`h-full rounded-full ${barColor}`} style={{ width: `${c.reachat * 3.2}%` }} />
                           </div>
-                          <span className={`font-semibold ${isHigh ? "text-[var(--dashboard-text)]" : "text-[#fb923c]"}`}>
+                          <span className={`font-semibold font-figures ${isHigh ? "text-[var(--dashboard-text)]" : "text-[#fb923c]"}`}>
                             {c.reachat} %
                           </span>
                         </div>
                       </td>
-                      <td className="py-2.5 text-right font-medium text-[var(--dashboard-text)]/70">{c.clients}</td>
-                      <td className="py-2.5 text-right font-bold">{c.panier}</td>
+                      <td className="py-2.5 text-right font-medium font-figures text-[var(--dashboard-text)]/70">{c.clients}</td>
+                      <td className="py-2.5 text-right font-bold font-figures">{c.panier}</td>
                     </tr>
                   );
                 })}
@@ -72,10 +72,10 @@ export default function ClientsGeoAndChannels({ typeAchat }: { typeAchat: TypeAc
             {t("Le réachat suit exactement le délai de livraison", "Repeat rate mirrors delivery speed with absolute precision")}
           </h4>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--dashboard-text)]/55">
-            {t(
+            {texteAvecChiffres(t(
               "Cocody est livré en trois heures quarante et réachète à vingt-six pour cent. Bouaké est livré en onze heures trente et réachète à sept. L'ordre des six communes est le même dans les deux colonnes, sans une seule exception. Ce n'est donc pas une question de pouvoir d'achat : un client livré vite revient, un client qui a attendu ne revient pas. Réduire le délai à Bouaké ne réglerait pas seulement le taux de refus, cela créerait des clients.",
               "Cocody is delivered within 3h40 and exhibits a 26% repeat rate. Bouaké is delivered in 11h30 and re-orders at 7%. The order across all 6 districts matches shipping speed without a single exception. It is not a matter of local purchasing power: a fast delivery brings shoppers back; long transit times eliminate repeat intent. Improving logistics to Bouaké would not only cut refusal rates, it would directly unlock recurring customers."
-            )}
+            ))}
           </p>
         </div>
       </div>
@@ -116,14 +116,14 @@ export default function ClientsGeoAndChannels({ typeAchat }: { typeAchat: TypeAc
                       <td className="py-2.5 font-medium">
                         {t(canal.nomFr, canal.nomEn)}
                       </td>
-                      <td className="py-2.5 text-center font-semibold">{canal.clients}</td>
-                      <td className={`py-2.5 text-right font-medium ${canal.isOrganique ? "text-[#10b981] font-bold" : "text-[var(--dashboard-text)]/70"}`}>
+                      <td className="py-2.5 text-center font-semibold font-figures">{canal.clients}</td>
+                      <td className={`py-2.5 text-right font-medium font-figures ${canal.isOrganique ? "text-[#10b981] font-bold" : "text-[var(--dashboard-text)]/70"}`}>
                         {canal.coutClient}
                       </td>
-                      <td className={`py-2.5 text-right font-bold ${isGreen ? "text-[#10b981]" : "text-[#f59e0b]"}`}>
+                      <td className={`py-2.5 text-right font-bold font-figures ${isGreen ? "text-[#10b981]" : "text-[#f59e0b]"}`}>
                         {canal.reviennent} %
                       </td>
-                      <td className={`py-2.5 text-right font-bold ${canal.isOrganique ? "text-[#10b981]" : ""}`}>
+                      <td className={`py-2.5 text-right font-bold font-figures ${canal.isOrganique ? "text-[#10b981]" : ""}`}>
                         {canal.valeur}
                       </td>
                     </tr>
@@ -140,10 +140,10 @@ export default function ClientsGeoAndChannels({ typeAchat }: { typeAchat: TypeAc
             {t("Le client qui vient tout seul est le meilleur de tous", "Organic customers represent the highest lifetime value")}
           </h4>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--dashboard-text)]/55">
-            {t(
+            {texteAvecChiffres(t(
               "Trente et un pour cent de réachat, trente-quatre mille francs de valeur, et pas un franc de publicité. Il vient d'un partage, d'un live, d'une recommandation — la plateforme ne sait pas dire lequel, faute de pixel, et n'inventera pas la réponse. Mais elle sait dire qu'il vaut quarante pour cent de plus qu'un client acheté. Cela justifie d'entretenir ce qui ne se mesure pas : les lives, les groupes, le bouche-à-oreille. Google amène peu de clients mais les meilleurs des payants : ils cherchaient déjà le produit.",
               "31% repeat purchase rate, 34,200 CFA francs in lifetime revenue, and zero advertising costs spent. These buyers arrive via shares, social lives, or referrals. Without pixel tracking, the platform won't guess the exact touchpoint, but definitively proves they yield 40% more margin than ad-acquired traffic. This demonstrates the critical value of word-of-mouth and organic communities. Among paid ads, Google captures high intent, yielding your strongest paid repeat buyers."
-            )}
+            ))}
           </p>
         </div>
       </div>

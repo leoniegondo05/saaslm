@@ -130,7 +130,7 @@ export default function VariantesProduit({
   return (
     <div className="grid items-start gap-3 lg:grid-cols-[0.85fr_1.4fr]">
       {/* Colonne gauche : les attributs posés + ceux qu'on peut ajouter */}
-      <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+      <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">{t("Vos attributs", "Your attributes")}</p>
 
         <div className="mt-2 flex flex-col gap-2.5">
@@ -253,7 +253,7 @@ export default function VariantesProduit({
       </div>
 
       {/* Colonne droite : les combinaisons, générées automatiquement */}
-      <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+      <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         <div className="flex items-center justify-between">
           <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">{t("Les combinaisons", "The combinations")}</p>
           <span className="rounded-full bg-brand-pink/10 px-2.5 py-1 text-[10px] font-semibold text-brand-pink">

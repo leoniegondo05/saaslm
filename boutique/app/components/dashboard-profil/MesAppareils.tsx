@@ -69,7 +69,7 @@ export default function MesAppareils() {
         type="button"
         onClick={deconnecterTout}
         disabled={!autresConnectes}
-        className="mt-4 w-full rounded-full border border-[#c8262d]/30 bg-[var(--dashboard-card-bg)] py-3.5 text-sm font-bold text-[#c8262d] shadow-[0_8px_20px_-6px_rgba(20,18,32,0.12)] transition hover:bg-[#ffe1e2] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[var(--dashboard-card-bg)]"
+        className="mt-4 w-full rounded-full border border-[#c8262d]/30 bg-[var(--dashboard-card-bg)] py-3.5 text-sm font-bold text-[#c8262d] shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] transition hover:bg-[#ffe1e2] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[var(--dashboard-card-bg)]"
       >
         {t("Tout déconnecter sauf cet appareil", "Disconnect all except this device")}
       </button>
@@ -100,7 +100,7 @@ function AppareilCard({ appareil, onDeconnecter }: { appareil: Appareil; onDecon
   const estActuel = appareil.statut === "actuel";
 
   return (
-    <div className={`flex flex-col rounded-[24px] p-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.1)] ${styles.card}`}>
+    <div className={`flex flex-col rounded-[24px] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] ${styles.card}`}>
       <span className={`flex h-14 w-14 items-center justify-center rounded-2xl ${styles.icon}`}>
         {appareil.type === "ordinateur" ? <LaptopIcon /> : <PhoneIcon />}
       </span>

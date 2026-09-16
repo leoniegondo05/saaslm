@@ -1,11 +1,12 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DashboardHeader from "../../components/DashboardHeader";
 import DashboardSearchBar from "../../components/DashboardSearchBar";
 import DashboardSidebar from "../../components/DashboardSidebar";
 import { Filtrable, RechercheProvider } from "../../components/DashboardRecherche";
+import { SectionSkeleton } from "../../components/dashboard-accueil/shared";
 import Abonnement from "../../components/dashboard-reglages/Abonnement";
 import Confidentialite from "../../components/dashboard-reglages/Confidentialite";
 import FinancesReglements from "../../components/dashboard-reglages/FinancesReglements";
@@ -72,6 +73,14 @@ export default function ReglagesPage() {
   );
   const aucunResultat = recherche.trim() !== "" && TAB_ORDER.every((tab) => !visibles[tab]);
 
+  // Même skeleton temporaire que app/dashboard/accueil/page.tsx (mock
+  // statique, cf. [[dashboard-mock-data-pending-laravel-api]]).
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const id = setTimeout(() => setLoading(false), 700);
+    return () => clearTimeout(id);
+  }, []);
+
   const handleChange = useCallback(
     (tab: ReglagesTab | null) => {
       setActiveTab(tab);
@@ -87,39 +96,51 @@ export default function ReglagesPage() {
         <DashboardSidebar />
 
         <div className="min-w-0 flex-1 lg:px-6">
-          <DashboardHeader />
+          <DashboardHeader activeReglagesTab={activeTab} />
           <DashboardSearchBar onChange={setRecherche} />
           <ReglagesNav active={activeTab} onChange={handleChange} />
 
-          <RechercheProvider value={recherche}>
-            {activeTab === null ? (
+          {loading ? (
+            activeTab === null ? (
               <>
-                {aucunResultat && (
-                  <p className="mt-10 text-center text-xs text-[var(--dashboard-text)]/45">
-                    {t(`Aucun réglage pour « ${recherche} ».`, `No setting for “${recherche}”.`)}
-                  </p>
-                )}
-                {TAB_ORDER.map((tab, index) => {
-                  const Section = SECTIONS[tab];
-                  return (
-                    <Filtrable
-                      key={tab}
-                      onMatchChange={(match) =>
-                        setVisibles((v) => (v[tab] === match ? v : { ...v, [tab]: match }))
-                      }
-                    >
-                      <Section first={index === 0} />
-                    </Filtrable>
-                  );
-                })}
+                {TAB_ORDER.map((tab, index) => (
+                  <SectionSkeleton key={tab} first={index === 0} cards={2} />
+                ))}
               </>
             ) : (
-              (() => {
-                const ActiveSection = SECTIONS[activeTab];
-                return <ActiveSection first />;
-              })()
-            )}
-          </RechercheProvider>
+              <SectionSkeleton first cards={2} />
+            )
+          ) : (
+            <RechercheProvider value={recherche}>
+              {activeTab === null ? (
+                <>
+                  {aucunResultat && (
+                    <p className="mt-10 text-center text-xs text-[var(--dashboard-text)]/45">
+                      {t(`Aucun réglage pour « ${recherche} ».`, `No setting for “${recherche}”.`)}
+                    </p>
+                  )}
+                  {TAB_ORDER.map((tab, index) => {
+                    const Section = SECTIONS[tab];
+                    return (
+                      <Filtrable
+                        key={tab}
+                        onMatchChange={(match) =>
+                          setVisibles((v) => (v[tab] === match ? v : { ...v, [tab]: match }))
+                        }
+                      >
+                        <Section first={index === 0} />
+                      </Filtrable>
+                    );
+                  })}
+                </>
+              ) : (
+                (() => {
+                  const ActiveSection = SECTIONS[activeTab];
+                  return <ActiveSection first />;
+                })()
+              )}
+            </RechercheProvider>
+          )}
         </div>
       </div>
     </div>

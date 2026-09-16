@@ -1,17 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
-import { Card, SectionHeader, useMockSave } from "../dashboard-accueil/shared";
+import { Card, SectionHeader, Tag, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import { useDashboardBoutiqueLogo } from "../DashboardBoutiqueLogoProvider";
 
 /*
-  Écran 25 "Réglages · Ma boutique" : identité, adresse d'enlèvement, et
-  l'accès à la personnalisation. Les champs sont éditables directement,
-  sans passer par un mode "Modifier" au préalable — seul "Enregistrer"
-  fige l'état courant. Aucun endpoint Laravel n'existe encore pour
-  persister (cf. mémoire [[dashboard-mock-data-pending-laravel-api]]) :
-  "Enregistrer" ne fait donc que confirmer visuellement.
+  Écran 25 "Réglages · Ma boutique" : identité, adresse d'enlèvement, ce qui
+  reste toujours visible par les clients, et l'accès à la personnalisation
+  (PersonnaliserBoutique.tsx, route /dashboard/reglages/personnaliser). Les
+  champs sont éditables directement, sans passer par un mode "Modifier" au
+  préalable — seul "Enregistrer" fige l'état courant. Aucun endpoint
+  Laravel n'existe encore pour persister (cf. mémoire
+  [[dashboard-mock-data-pending-laravel-api]]) : "Enregistrer" ne fait donc
+  que confirmer visuellement.
 */
 
 const SECTEURS = [
@@ -60,10 +63,21 @@ const ENLEVEMENT_INIT: Enlevement = {
   contact: "Awa K.",
 };
 
+// Généré par la plateforme à la création de la boutique — non modifiable
+// ici, cf. Écran 25.
+const IDENTIFIANT_BOUTIQUE = "BTQ-7K4Q2";
+
+type VisiblePublic = { telephone: string; email: string; localisation: string };
+
+// Laissés vides comme dans la maquette : rien à afficher tant qu'ils ne
+// sont pas renseignés, plutôt qu'une fausse valeur de démonstration.
+const VISIBLE_PUBLIC_INIT: VisiblePublic = { telephone: "", email: "", localisation: "" };
+
 export default function MaBoutique({ first = false }: { first?: boolean }) {
   const { t } = useDashboardLangue();
   const [identite, setIdentite] = useState(IDENTITE_INIT);
   const [enlevement, setEnlevement] = useState(ENLEVEMENT_INIT);
+  const [visiblePublic, setVisiblePublic] = useState(VISIBLE_PUBLIC_INIT);
   const { saving, done, trigger } = useMockSave();
   const { logo, setLogo } = useDashboardBoutiqueLogo();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -142,6 +156,9 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
               value={identite.nom}
               onChange={(nom) => setIdentite((b) => ({ ...b, nom }))}
             />
+            <ChampLectureSeule label={t("Identifiant de la boutique", "Shop ID")} value={IDENTIFIANT_BOUTIQUE} />
+          </div>
+          <div className="mt-3">
             <ChampSelect
               label={t("Secteur principal", "Main sector")}
               value={identite.secteur}
@@ -212,6 +229,63 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
             />
           </div>
         </Card>
+
+        <Card
+          title={t("Visible par vos clients", "Shown to your customers")}
+          titleTab
+          badge={<Tag tone="neutral">{t("Toujours affiché", "Always shown")}</Tag>}
+          className="!bg-[var(--dashboard-card-bg)]"
+        >
+          <p className="text-xs text-[var(--dashboard-text)]/50">
+            {t(
+              "Avec le nom de la boutique, ces informations restent visibles sur chaque page de commande — la section « Vendu par » ne se masque pas.",
+              "Along with the shop name, this information stays visible on every order page — the “Sold by” section can't be hidden."
+            )}
+          </p>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Champ
+              label={t("Téléphone", "Phone number")}
+              value={visiblePublic.telephone}
+              placeholder={t("Non renseigné", "Not provided")}
+              onChange={(telephone) => setVisiblePublic((v) => ({ ...v, telephone }))}
+            />
+            <Champ
+              label={t("Adresse email", "Email address")}
+              value={visiblePublic.email}
+              placeholder={t("Non renseignée", "Not provided")}
+              onChange={(email) => setVisiblePublic((v) => ({ ...v, email }))}
+            />
+          </div>
+          <div className="mt-3">
+            <Champ
+              label={t("Localisation", "Location")}
+              value={visiblePublic.localisation}
+              placeholder={t("Non renseignée", "Not provided")}
+              onChange={(localisation) => setVisiblePublic((v) => ({ ...v, localisation }))}
+            />
+          </div>
+        </Card>
+
+        <Link
+          href="/dashboard/reglages/personnaliser"
+          className="group relative flex items-center gap-3.5 overflow-hidden rounded-2xl p-px transition hover:brightness-105"
+          style={{ backgroundImage: "linear-gradient(100deg, #EC0C8C 0%, #6B21D6 55%, rgba(255,255,255,.4) 100%)" }}
+        >
+          <span className="flex w-full items-center gap-3.5 rounded-[15px] px-4 py-3.5" style={{ background: "linear-gradient(120deg, rgba(236,12,140,.14), rgba(58,29,138,.16) 60%, var(--dashboard-card-bg) 100%)" }}>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-pink/40 bg-brand-pink/15 text-brand-pink">
+              <PaletteIcon />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[13px] font-bold text-[var(--dashboard-text)]">{t("Personnaliser ma boutique", "Customize my shop")}</span>
+              <span className="block text-[10.5px] text-[var(--dashboard-text)]/55">
+                {t("Sections, style, formulaire de commande, avis, questions", "Sections, style, order form, reviews, questions")}
+              </span>
+            </span>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-[0_2px_10px_rgba(20,18,32,0.15)] transition group-hover:translate-x-0.5">
+              <FlecheDroiteIcon />
+            </span>
+          </span>
+        </Link>
       </div>
     </>
   );
@@ -254,6 +328,38 @@ function Champ({
         />
       )}
     </div>
+  );
+}
+
+function ChampLectureSeule({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{label}</p>
+      <p className={`${champBoxClasses} flex items-center text-[var(--dashboard-text)]/60`}>{value}</p>
+    </div>
+  );
+}
+
+function PaletteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+      <path
+        d="M12 3.5a8.5 8.5 0 1 0 0 17c1.3 0 2-.8 2-1.8 0-1.3-1.1-1.6-1.1-2.7 0-1 .8-1.7 1.9-1.7h2.2a3.5 3.5 0 0 0 3.5-3.5c0-4.2-3.8-7.3-8.5-7.3Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <circle cx="7.8" cy="11.2" r="1.1" fill="currentColor" />
+      <circle cx="10.4" cy="7.6" r="1.1" fill="currentColor" />
+      <circle cx="14.8" cy="7.9" r="1.1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function FlecheDroiteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden>
+      <path d="m9.5 5 7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 

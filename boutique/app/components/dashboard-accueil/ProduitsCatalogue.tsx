@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { Btn, Card, Divider, HeaderActionBtn, Nature, ProductSelector, SectionHeader, StatRow, Tag, Trend } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import CreerCategorieModal from "../dashboard-produits/CreerCategorieModal";
-import DeposerStockModal, { type DepotValide } from "../dashboard-produits/DeposerStockModal";
+import type { DepotValide } from "../dashboard-produits/DeposerStockModal";
 import { CATEGORIES_DEFAUT } from "../dashboard-produits/ajouter-produit/categoriesDefaut";
 import {
   lireEtViderProduitEnAttente,
@@ -15,7 +15,7 @@ import {
   lireEtViderEditionEnAttente,
   ouvrirEditionProduit,
 } from "../dashboard-produits/ajouter-produit/pendingProduitStore";
-import { lireEtViderDepotEnAttente } from "../dashboard-produits/pendingDepotStore";
+import { lireEtViderDepotEnAttente, definirDepotAPreselectionner } from "../dashboard-produits/pendingDepotStore";
 import type { Categorie, NouveauProduit } from "../dashboard-produits/ajouter-produit/types";
 
 /*
@@ -156,7 +156,6 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
   const [selected, setSelectedRaw] = useState(0);
   const [photo, setPhoto] = useState(0);
   const [categorieModalOuverte, setCategorieModalOuverte] = useState(false);
-  const [depotModalOuverte, setDepotModalOuverte] = useState(false);
   const produit = produits[selected];
   const photos = produit.images ?? [];
 
@@ -194,7 +193,6 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
     setProduits((prev) =>
       prev.map((p, i) => (i === depot.produitIndex ? { ...p, stock: p.stock + depot.quantite } : p))
     );
-    setDepotModalOuverte(false);
   };
 
   // Retour de "Modifier" (fiche produit) : met à jour la ligne identifiée
@@ -241,17 +239,16 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // En dessous du breakpoint lg (mobile/tablette), le formulaire à deux
-  // colonnes rend mal compressé dans un panneau superposé : on ouvre la
-  // page à part à la place (voir app/dashboard/produits/deposer/page.tsx).
-  const [depotPreselection, setDepotPreselection] = useState<number | null>(null);
+  // Toujours en page à part (voir app/dashboard/produits/deposer/page.tsx),
+  // y compris en desktop : le formulaire à deux colonnes + talon se présente
+  // mieux sur une page dédiée qu'en panneau superposé, quelle que soit la
+  // largeur d'écran — décision utilisateur, cf. l'ancien découpage par
+  // breakpoint lg encore visible dans DeposerStockModal.tsx (prop pleinePage).
+  // Présélection ("Réapprovisionner") transmise par nom via pendingDepotStore
+  // (la page /deposer vit sur PRODUITS_INITIAUX, pas ce tableau local).
   const ouvrirDepotStock = (produitIndex: number | null = null) => {
-    setDepotPreselection(produitIndex);
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
-      router.push("/dashboard/produits/deposer");
-      return;
-    }
-    setDepotModalOuverte(true);
+    if (produitIndex !== null) definirDepotAPreselectionner(produits[produitIndex].nom);
+    router.push("/dashboard/produits/deposer");
   };
 
   // "Modifier" (fiche produit) : envoie nom/catégorie/prix vers le formulaire
@@ -363,7 +360,7 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
               {t("Ajouter un produit", "Add a product")}
             </Link>
           </div>
-          <div className="overflow-x-auto pt-3">
+          <div className="overflow-x-auto pt-10">
             <table className="w-full min-w-[720px] border-collapse text-left text-xs">
               <thead>
                 <tr className="border-b border-[var(--dashboard-text)]/10">
@@ -376,7 +373,7 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
                     t("Visibilité", "Visibility"),
                     "",
                   ].map((h) => (
-                    <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+                    <th key={h} className="pb-2 pr-3 text-[11px] font-bold tracking-tight text-[var(--dashboard-text)]">
                       {h}
                     </th>
                   ))}
@@ -419,7 +416,7 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
                                 <span className="truncate text-[13px] font-semibold">{t(p.nom, p.nomEn)}</span>
                               </p>
                               <div className="mt-1 flex items-center gap-1.5">
-                                <span className="flex items-center gap-1 text-[10px] text-[var(--dashboard-text)]/50">
+                                <span className="flex items-center gap-1 text-[10px] text-[var(--dashboard-text)]/50 font-figures">
                                   <StarIcon />
                                   {p.avis !== null ? p.avis.toLocaleString(numberLocale) : "—"}
                                 </span>
@@ -437,12 +434,12 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
                               <p className="text-[11px] font-bold" style={{ color: performance.couleur }}>
                                 {t(performance.label, performance.labelEn)}
                               </p>
-                              <p className="text-[10px] text-[var(--dashboard-text)]/40">{p.margePct} % {t("marge", "margin")}</p>
+                              <p className="text-[10px] text-[var(--dashboard-text)]/40"><span className="font-figures">{p.margePct} %</span> {t("marge", "margin")}</p>
                             </div>
                           </div>
                         </td>
-                        <td className={`py-2.5 pr-3 font-semibold ${p.stock < 10 ? "text-[#c8262d]" : "text-[var(--dashboard-text)]/70"}`}>{p.stock}</td>
-                        <td className="py-2.5 pr-3 font-semibold">{F(p.vente)}</td>
+                        <td className={`py-2.5 pr-3 font-semibold font-figures ${p.stock < 10 ? "text-[#c8262d]" : "text-[var(--dashboard-text)]/70"}`}>{p.stock}</td>
+                        <td className="py-2.5 pr-3 font-semibold font-figures">{F(p.vente)}</td>
                         <td className="py-2.5 pr-3">
                           <Trend values={p.tendance} />
                         </td>
@@ -534,16 +531,16 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
               groupe stock/avis/litiges en dessous, plutôt que quatre lignes
               de même poids visuel noyées dans la carte. */}
           <div className="rounded-xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
-            <StatRow label={t("Prix de vente", "Sale price")} value={F(produit.vente)} compact />
-            {produit.achat !== null && <StatRow label={t("Coût de revient", "Cost price")} value={F(produit.achat)} compact />}
-            {produit.fraisPreleves !== undefined && <StatRow label={t("Frais prélevés", "Fees deducted")} value={F(produit.fraisPreleves)} compact />}
-            <StatRow label={t("Bénéfice par vente", "Profit per sale")} value={<span className="text-sm text-brand-pink">{F(benefice)}</span>} compact />
+            <StatRow label={t("Prix de vente", "Sale price")} value={<span className="font-figures">{F(produit.vente)}</span>} compact />
+            {produit.achat !== null && <StatRow label={t("Coût de revient", "Cost price")} value={<span className="font-figures">{F(produit.achat)}</span>} compact />}
+            {produit.fraisPreleves !== undefined && <StatRow label={t("Frais prélevés", "Fees deducted")} value={<span className="font-figures">{F(produit.fraisPreleves)}</span>} compact />}
+            <StatRow label={t("Bénéfice par vente", "Profit per sale")} value={<span className="text-sm text-brand-pink font-figures">{F(benefice)}</span>} compact />
           </div>
           <Divider />
-          <StatRow label={t("Stock restant", "Remaining stock")} value={`${produit.stock} · ${(produit.couverture ? t(produit.couverture, produit.couvertureEn ?? produit.couverture) : "—")}`} />
-          <StatRow label={t("Vendu sur la période", "Sold this period")} value={String(produit.vendu)} />
-          <StatRow label={t("Note moyenne", "Average rating")} value={produit.avis !== null ? `${produit.avis.toLocaleString(numberLocale)} / 5` : "—"} />
-          <StatRow label={t("Litiges", "Disputes")} value={String(produit.litiges ?? 0)} />
+          <StatRow label={t("Stock restant", "Remaining stock")} value={<span className="font-figures">{produit.stock} · {(produit.couverture ? t(produit.couverture, produit.couvertureEn ?? produit.couverture) : "—")}</span>} />
+          <StatRow label={t("Vendu sur la période", "Sold this period")} value={<span className="font-figures">{produit.vendu}</span>} />
+          <StatRow label={t("Note moyenne", "Average rating")} value={<span className="font-figures">{produit.avis !== null ? `${produit.avis.toLocaleString(numberLocale)} / 5` : "—"}</span>} />
+          <StatRow label={t("Litiges", "Disputes")} value={<span className="font-figures">{produit.litiges ?? 0}</span>} />
 
           <div className="mt-3.5 flex gap-2">
             <Btn variant="white" onClick={modifierProduit}>{t("Modifier", "Edit")}</Btn>
@@ -567,15 +564,6 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
             ajouterCategorie(nom);
             setCategorieModalOuverte(false);
           }}
-        />
-      )}
-
-      {depotModalOuverte && (
-        <DeposerStockModal
-          produits={produits}
-          produitIndexInitial={depotPreselection}
-          onFermer={() => setDepotModalOuverte(false)}
-          onValider={validerDepot}
         />
       )}
     </>
@@ -603,9 +591,9 @@ function StatCell({
   wave?: number[];
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[var(--dashboard-card-bg)] p-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+    <div className="relative overflow-hidden rounded-2xl bg-[var(--dashboard-card-bg)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{label}</p>
+        <p className="text-xs font-bold tracking-tight text-[var(--dashboard-text)]">{label}</p>
         <span
           className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
           style={{ background: `${dot}1F` }}
@@ -613,7 +601,7 @@ function StatCell({
           <span className="h-2 w-2 rounded-full" style={{ background: dot }} />
         </span>
       </div>
-      <p className={`mt-3 text-2xl font-bold tracking-tight ${accent ? "text-brand-pink" : ""}`}>{value}</p>
+      <p className={`mt-3 text-2xl font-bold tracking-tight font-figures ${accent ? "text-brand-pink" : ""}`}>{value}</p>
       {note && <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{note}</p>}
       {wave && wave.length > 1 && <MarginWave values={wave} color={dot} />}
     </div>

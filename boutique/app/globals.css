@@ -25,6 +25,57 @@
   --font-sans: var(--font-sora);
 }
 
+/*
+  Rendu des chiffres du dashboard (KPI, totaux, charts type trading) : pile
+  de polices système (style "SF Pro Display"), graisse regular, chiffres
+  tabulaires (alignement uniforme en colonne) et tracking resserré — demandé
+  tel quel par l'utilisateur. !important volontaire : la classe "font-figures"
+  est posée à côté d'utilitaires Tailwind (font-bold, tracking-tight...) déjà
+  présents sur ~40 emplacements du dashboard, elle doit gagner sans qu'il
+  faille retirer ces classes une par une. Couleur/fond volontairement absents
+  d'ici : restent ceux du composant/thème (clair ou sombre) — décision
+  utilisateur, ne pas les forcer en blanc/noir.
+*/
+.font-figures {
+  font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif !important;
+  font-weight: 400 !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -0.02em !important;
+}
+
+/*
+  Filet de sécurité : garantit que TOUT chiffre affiché n'importe où dans le
+  dashboard utilise la même police système "SF Pro Display" que ci-dessus,
+  même sur un élément où personne n'a pensé à poser la classe "font-figures"
+  — et donc aussi sur les futures données réelles de l'API Laravel une fois
+  branchées (cf. [[dashboard-mock-data-pending-laravel-api]]), sans rien à
+  retoucher ce jour-là : ça ne dépend pas de la valeur affichée, juste de
+  l'endroit (dans .dashboard-figures-scope, posé une fois pour toutes dans
+  app/dashboard/layout.tsx) et du fait que le caractère rendu est un chiffre.
+
+  Technique : @font-face avec "unicode-range" limité aux chiffres (et
+  virgule/point/pourcentage/plus/moins) — le navigateur pioche uniquement
+  ces caractères dans cette police et laisse tout le reste (lettres) à la
+  police normale du site (Sora, cf. --font-sans) qui vient juste après dans
+  la pile. "local(...)" : polices déjà présentes sur l'ordinateur de
+  l'utilisateur (Mac/Windows), aucun fichier téléchargé, donc aucune requête
+  réseau (contrairement à un Google Font) — cohérent avec le choix déjà fait
+  pour Sora/Bricolage Grotesque d'éviter les appels sortants.
+*/
+@font-face {
+  font-family: "DashboardFigures";
+  src:
+    local("SF Pro Display"),
+    local(".SFNSDisplay-Regular"),
+    local("Helvetica Neue"),
+    local("Arial");
+  unicode-range: U+0030-0039, U+002C, U+002E, U+0025, U+002B, U+2212;
+}
+
+.dashboard-figures-scope {
+  font-family: "DashboardFigures", var(--font-sans);
+}
+
 body {
   background: var(--color-brand-bg);
   color: var(--color-brand-white);

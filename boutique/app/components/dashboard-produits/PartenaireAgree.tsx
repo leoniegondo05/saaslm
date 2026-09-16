@@ -76,7 +76,7 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
 
       <div className="grid gap-4 lg:grid-cols-[334px_1fr] [&>*]:min-w-0">
         <div>
-          <div className="rounded-2xl bg-[var(--dashboard-card-bg)] p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+          <div className="rounded-2xl bg-[var(--dashboard-card-bg)] p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
             <div className="flex items-center gap-3">
               <span className="h-14 w-14 shrink-0 rounded-2xl bg-[linear-gradient(140deg,#2F6BE0,#011847)]" />
               <div>
@@ -87,13 +87,13 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
             <div className="my-3 h-px bg-[var(--dashboard-text)]/10" />
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{t("Note du réseau", "Network rating")}</p>
-                <p className="text-base font-bold">
+                <p className="text-xs font-bold tracking-tight text-[var(--dashboard-text)]">{t("Note du réseau", "Network rating")}</p>
+                <p className="text-base font-bold font-figures">
                   {PARTENAIRE.note.toLocaleString("fr-FR")} <span className="text-xs font-normal text-[var(--dashboard-text)]/50">/ 10</span>
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{t("Affiliée depuis", "Partner since")}</p>
+                <p className="text-xs font-bold tracking-tight text-[var(--dashboard-text)]">{t("Affiliée depuis", "Partner since")}</p>
                 <p className="text-sm font-semibold">{t(PARTENAIRE.affilieeDepuis, PARTENAIRE.affilieeDepuisEn)}</p>
               </div>
             </div>

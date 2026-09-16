@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, openBrandedReport, periodSeed, scaleForPeriod, SectionHeader, StatRow, Tag } from "./shared";
+import { Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, openBrandedReport, periodSeed, scaleForPeriod, SectionHeader, StatRow, Tag, texteAvecChiffres } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -94,15 +94,15 @@ function KpiCard({ label, value, valueColor, note, noteColor, previous }: { labe
   return (
     <Card className="!bg-[var(--dashboard-glass)]">
       <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
-      <p className="mt-1 text-2xl font-bold tracking-tight" style={valueColor ? { color: valueColor } : undefined}>
+      <p className="mt-1 text-2xl font-bold tracking-tight font-figures" style={valueColor ? { color: valueColor } : undefined}>
         {value}
       </p>
       <p className="mt-1 text-[10px]" style={noteColor ? { color: noteColor } : undefined}>
-        <span className={noteColor ? "" : "text-[var(--dashboard-text)]/40"}>{note}</span>
+        <span className={noteColor ? "" : "text-[var(--dashboard-text)]/40"}>{texteAvecChiffres(note)}</span>
       </p>
       {previous && (
         <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">
-          {t("Période précédente", "Previous period")} : {previous}
+          {t("Période précédente", "Previous period")} : <span className="font-figures">{previous}</span>
         </p>
       )}
     </Card>
@@ -114,9 +114,9 @@ function KpiCard({ label, value, valueColor, note, noteColor, previous }: { labe
 function RankBar({ label, value, pct, color, valueColor }: { label: string; value: string; pct: number; color: string; valueColor?: string }) {
   return (
     <div className="mt-2.5 flex items-center justify-between gap-3 text-xs first:mt-0">
-      <span className="min-w-0 flex-1 truncate text-[var(--dashboard-text)]/60">{label}</span>
+      <span className="min-w-0 flex-1 truncate text-[var(--dashboard-text)]/60">{texteAvecChiffres(label)}</span>
       <span className="w-20 shrink-0"><Bar pct={pct} background={color} /></span>
-      <span className="w-16 shrink-0 text-right font-semibold" style={valueColor ? { color: valueColor } : undefined}>{value}</span>
+      <span className="w-16 shrink-0 text-right font-semibold font-figures" style={valueColor ? { color: valueColor } : undefined}>{value}</span>
     </div>
   );
 }
@@ -132,7 +132,7 @@ function QuadTag({ name, kind, label }: { name: string; kind: keyof typeof QUAD_
   const s = QUAD_TONE[kind];
   return (
     <span className="inline-flex items-center gap-2 rounded-full border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-glass)] px-3 py-1.5 text-[11px]">
-      <b className="font-medium">{name}</b>
+      <b className="font-medium">{texteAvecChiffres(name)}</b>
       <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide" style={{ background: s.bg, color: s.color }}>{label}</span>
     </span>
   );
@@ -196,11 +196,11 @@ function LifeItem({ code, name, values, kind, age }: { code: "S" | "D"; name: st
   const tone = LIFE_TONE[kind];
   return (
     <div className="mt-2.5 flex items-center gap-3 first:mt-0">
-      <span className="flex items-center gap-2 min-w-0 flex-1 text-xs"><Nature code={code} /><span className="truncate">{name}</span></span>
+      <span className="flex items-center gap-2 min-w-0 flex-1 text-xs"><Nature code={code} /><span className="truncate">{texteAvecChiffres(name)}</span></span>
       <LifeSpark values={values} color={tone.color} />
       <span className="w-28 shrink-0 text-right">
         <span className="block text-[10px] font-semibold" style={{ color: tone.color }}>{t(tone.fr, tone.en)}</span>
-        <span className="block text-[9px] text-[var(--dashboard-text)]/35">{age}</span>
+        <span className="block text-[9px] text-[var(--dashboard-text)]/35">{texteAvecChiffres(age)}</span>
       </span>
     </div>
   );
@@ -211,11 +211,11 @@ const REFUS_TONE: Record<"ok" | "mid" | "bad", string> = { ok: "#178a3f", mid: "
 function PriceRow({ name, prix, reseau, ecart, ecartUp, refus, refusTone }: { name: string; prix: string; reseau: string; ecart: string; ecartUp: boolean; refus: string; refusTone: "ok" | "mid" | "bad" }) {
   return (
     <div className="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.7fr_0.6fr] items-center gap-2 py-2 text-xs">
-      <span className="font-semibold">{name}</span>
-      <span className="text-[var(--dashboard-text)]/60">{prix}</span>
-      <span className="text-[var(--dashboard-text)]/60">{reseau}</span>
-      <span className="font-semibold" style={{ color: ecartUp ? "#a8690a" : "#178a3f" }}>{ecart}</span>
-      <span className="text-right font-semibold" style={{ color: REFUS_TONE[refusTone] }}>{refus}</span>
+      <span className="font-semibold">{texteAvecChiffres(name)}</span>
+      <span className="text-[var(--dashboard-text)]/60 font-figures">{prix}</span>
+      <span className="text-[var(--dashboard-text)]/60 font-figures">{reseau}</span>
+      <span className="font-semibold font-figures" style={{ color: ecartUp ? "#a8690a" : "#178a3f" }}>{ecart}</span>
+      <span className="text-right font-semibold font-figures" style={{ color: REFUS_TONE[refusTone] }}>{refus}</span>
     </div>
   );
 }
@@ -247,14 +247,14 @@ function ProductRow({
 }) {
   return (
     <div className={`grid grid-cols-[1.6fr_0.5fr_0.9fr_0.6fr_0.6fr_0.6fr_0.5fr_0.5fr] items-center gap-2 py-2 text-xs ${neg ? "rounded-lg bg-[#c8262d0d] px-2" : ""}`}>
-      <span className="flex items-center gap-2 font-semibold"><Nature code={code} />{name}</span>
-      <span className="text-[var(--dashboard-text)]/60">{unites}</span>
-      <span className="text-[var(--dashboard-text)]/60">{ca}</span>
-      <span className="font-semibold" style={{ color: margeNeg ? "#c8262d" : "#178a3f" }}>{marge}</span>
-      <span className="text-[var(--dashboard-text)]/60">{parJour}</span>
-      <span className="text-[var(--dashboard-text)]/60">{couverture}</span>
-      <span className="text-[var(--dashboard-text)]/60">{refus}</span>
-      <span className="text-right text-[var(--dashboard-text)]/60">{litiges}</span>
+      <span className="flex items-center gap-2 font-semibold"><Nature code={code} />{texteAvecChiffres(name)}</span>
+      <span className="text-[var(--dashboard-text)]/60 font-figures">{unites}</span>
+      <span className="text-[var(--dashboard-text)]/60 font-figures">{ca}</span>
+      <span className="font-semibold font-figures" style={{ color: margeNeg ? "#c8262d" : "#178a3f" }}>{marge}</span>
+      <span className="text-[var(--dashboard-text)]/60 font-figures">{parJour}</span>
+      <span className="text-[var(--dashboard-text)]/60 font-figures">{couverture}</span>
+      <span className="text-[var(--dashboard-text)]/60 font-figures">{refus}</span>
+      <span className="text-right text-[var(--dashboard-text)]/60 font-figures">{litiges}</span>
     </div>
   );
 }
@@ -267,10 +267,10 @@ function AlertItem({ tone, code, title, desc, cta, href }: { tone: "r" | "w" | "
       <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${dot}`}>{tone === "b" ? "i" : "!"}</span>
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-2 text-xs font-semibold">
-          {title}
+          {texteAvecChiffres(title)}
           {code && <Nature code={code} />}
         </p>
-        <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{desc}</p>
+        <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(desc)}</p>
       </div>
       <Link
         href={href}
@@ -642,12 +642,12 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
             <line x1={51} y1={0} x2={51} y2={140} stroke="var(--dashboard-text)" strokeOpacity={0.2} strokeWidth={1} strokeDasharray="3 4" />
           </svg>
           <div className="flex justify-between text-[9px] text-[var(--dashboard-text)]/40">
-            <span>{t("1re", "1st")}</span><span>{t("5e", "5th")}</span><span>{t("10e", "10th")}</span><span>{t("15e", "15th")}</span><span>{t("20e", "20th")}</span>
+            <span className="font-figures">{t("1re", "1st")}</span><span className="font-figures">{t("5e", "5th")}</span><span className="font-figures">{t("10e", "10th")}</span><span className="font-figures">{t("15e", "15th")}</span><span className="font-figures">{t("20e", "20th")}</span>
           </div>
           <Divider />
-          <StatRow label={t("Part du chiffre d'affaires faite par 4 références", "Revenue share made by 4 items")} value={<span style={{ color: "#a8690a" }}>{share4Items} %</span>} />
-          <StatRow label={t("Références sous 1 % du chiffre d'affaires", "Items under 1% of revenue")} value={String(under1pct)} />
-          <StatRow label={t("Références sans une seule vente", "Items with zero sales")} value={<span style={{ color: "#c8262d" }}>{zeroSales}</span>} />
+          <StatRow label={texteAvecChiffres(t("Part du chiffre d'affaires faite par 4 références", "Revenue share made by 4 items"))} value={<span className="font-figures" style={{ color: "#a8690a" }}>{share4Items} %</span>} />
+          <StatRow label={texteAvecChiffres(t("Références sous 1 % du chiffre d'affaires", "Items under 1% of revenue"))} value={<span className="font-figures">{under1pct}</span>} />
+          <StatRow label={t("Références sans une seule vente", "Items with zero sales")} value={<span className="font-figures" style={{ color: "#c8262d" }}>{zeroSales}</span>} />
           <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
             {t(
               "Quatre références sur trente-deux font les deux tiers du chiffre. C'est efficace et fragile à la fois : une rupture sur l'une d'elles coûte un tiers du mois. Les quatorze références sous un pour cent encombrent la page de commande sans rien rapporter.",
@@ -669,21 +669,21 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
               ]}
               size={100}
             >
-              <span className="text-lg font-bold">{totalRefs}</span>
+              <span className="text-lg font-bold font-figures">{totalRefs}</span>
               <span className="text-[8px] text-[var(--dashboard-text)]/40">{t("références", "items")}</span>
             </Ring>
             <div className="w-full space-y-1.5 text-[10px]">
-              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#4FE0AE" }} />{t("En vente", "Live")} <b className="ml-auto">{enVente}</b></span>
-              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FF5A62" }} />{t("En rupture", "Out of stock")} <b className="ml-auto">{rupture}</b></span>
-              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FFB020" }} />{t("Dormantes, 30 jours sans vente", "Dormant, 30 days no sale")} <b className="ml-auto">{dormantes}</b></span>
-              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--dashboard-text)]/25" />{t("Brouillon, fiche incomplète", "Draft, incomplete listing")} <b className="ml-auto">{brouillon}</b></span>
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#4FE0AE" }} />{t("En vente", "Live")} <b className="ml-auto font-figures">{enVente}</b></span>
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FF5A62" }} />{t("En rupture", "Out of stock")} <b className="ml-auto font-figures">{rupture}</b></span>
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FFB020" }} />{texteAvecChiffres(t("Dormantes, 30 jours sans vente", "Dormant, 30 days no sale"))} <b className="ml-auto font-figures">{dormantes}</b></span>
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--dashboard-text)]/25" />{t("Brouillon, fiche incomplète", "Draft, incomplete listing")} <b className="ml-auto font-figures">{brouillon}</b></span>
             </div>
           </div>
           <Divider />
-          <StatRow label={t("Fiches sans vidéo", "Listings without video")} value={<span style={{ color: "#c8262d" }}>{t(`${noVideo} · 1 publication bloquée`, `${noVideo} · 1 listing blocked`)}</span>} />
-          <StatRow label={t("Fiches à moins de trois photos", "Listings under three photos")} value={String(under3Photos)} />
-          <StatRow label={t("Transformation, fiche complète", "Conversion, complete listing")} value={<span style={{ color: "#178a3f" }}>{fmtFr(convComplete, 1)} %</span>} />
-          <StatRow label={t("Transformation, fiche incomplète", "Conversion, incomplete listing")} value={`${fmtFr(convIncomplete, 1)} %`} />
+          <StatRow label={t("Fiches sans vidéo", "Listings without video")} value={<span className="font-figures" style={{ color: "#c8262d" }}>{t(`${noVideo} · 1 publication bloquée`, `${noVideo} · 1 listing blocked`)}</span>} />
+          <StatRow label={t("Fiches à moins de trois photos", "Listings under three photos")} value={<span className="font-figures">{under3Photos}</span>} />
+          <StatRow label={t("Transformation, fiche complète", "Conversion, complete listing")} value={<span className="font-figures" style={{ color: "#178a3f" }}>{fmtFr(convComplete, 1)} %</span>} />
+          <StatRow label={t("Transformation, fiche incomplète", "Conversion, incomplete listing")} value={<span className="font-figures">{fmtFr(convIncomplete, 1)} %</span>} />
           <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
             {t(
               "Une fiche complète transforme deux fois mieux. C'est le rendement le plus élevé de cet écran, et il ne coûte que du temps.",
@@ -803,8 +803,8 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
                 <RankBar label={t("Ensemble lin deux pièces", "Two-piece linen set")} value={t(`${daysS[5]} j`, `${daysS[5]}d`)} pct={100} color="#9096AA" />
               </div>
               <Divider />
-              <StatRow label={t("Délai de réapprovisionnement", "Replenishment lead time")} value={t("4 jours", "4 days")} />
-              <StatRow label={t("Stock dormant, plus de 30 jours", "Dormant stock, over 30 days")} value={<span style={{ color: "#a8690a" }}>{fmtAmount(dormantStock)}</span>} />
+              <StatRow label={t("Délai de réapprovisionnement", "Replenishment lead time")} value={<span className="font-figures">{t("4 jours", "4 days")}</span>} />
+              <StatRow label={texteAvecChiffres(t("Stock dormant, plus de 30 jours", "Dormant stock, over 30 days"))} value={<span className="font-figures" style={{ color: "#a8690a" }}>{fmtAmount(dormantStock)}</span>} />
             </div>
 
             <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(236,12,140,.07)", border: "1px solid rgba(236,12,140,.24)" }}>
@@ -829,7 +829,7 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
                 </p>
               </div>
               <Divider />
-              <StatRow label={t("Sous six jours en ce moment", "Under six days right now")} value={<span style={{ color: "#c8262d" }}>{t(`${under6Count} références · alerte`, `${under6Count} items · alert`)}</span>} />
+              <StatRow label={t("Sous six jours en ce moment", "Under six days right now")} value={<span style={{ color: "#c8262d" }}>{texteAvecChiffres(t(`${under6Count} références · alerte`, `${under6Count} items · alert`))}</span>} />
             </div>
 
             <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
@@ -872,7 +872,7 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
                   {r.values.map((v, i) => (
                     <div
                       key={i}
-                      className="flex h-9 flex-1 items-center justify-center rounded-lg text-[11px] font-bold"
+                      className="flex h-9 flex-1 items-center justify-center rounded-lg text-[11px] font-bold font-figures"
                       style={{ background: `rgba(139,92,246,${0.08 + (v / comboMax) * 0.75})`, color: v / comboMax > 0.5 ? "#fff" : "var(--dashboard-text)" }}
                     >
                       {v > 0 ? v : ""}
@@ -884,18 +884,18 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Taille la plus vendue", "Best-selling size")}</p><p className="mt-0.5 text-base font-bold">L</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t(`${bestSizeUnits} unités sur ${bestSizeTotal}`, `${bestSizeUnits} units out of ${bestSizeTotal}`)}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Couleur la plus vendue", "Best-selling color")}</p><p className="mt-0.5 text-base font-bold">{t("Noir", "Black")}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t(`${bestColorUnits} unités`, `${bestColorUnits} units`)}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Combinaisons qui n'ont rien vendu", "Combinations with zero sales")}</p><p className="mt-0.5 text-base font-bold" style={{ color: "#a8690a" }}>{t(`${zeroComboCount} sur 20`, `${zeroComboCount} of 20`)}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t("dont tout le rouge", "including all of the red")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Stock immobilisé dessus", "Stock tied up in them")}</p><p className="mt-0.5 text-base font-bold">{fmtAmount(comboStockTied)}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t("jamais commandé", "never ordered")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Taille la plus vendue", "Best-selling size")}</p><p className="mt-0.5 text-base font-bold">L</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{texteAvecChiffres(t(`${bestSizeUnits} unités sur ${bestSizeTotal}`, `${bestSizeUnits} units out of ${bestSizeTotal}`))}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Couleur la plus vendue", "Best-selling color")}</p><p className="mt-0.5 text-base font-bold">{t("Noir", "Black")}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{texteAvecChiffres(t(`${bestColorUnits} unités`, `${bestColorUnits} units`))}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Combinaisons qui n'ont rien vendu", "Combinations with zero sales")}</p><p className="mt-0.5 text-base font-bold font-figures" style={{ color: "#a8690a" }}>{t(`${zeroComboCount} sur 20`, `${zeroComboCount} of 20`)}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t("dont tout le rouge", "including all of the red")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Stock immobilisé dessus", "Stock tied up in them")}</p><p className="mt-0.5 text-base font-bold font-figures">{fmtAmount(comboStockTied)}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t("jamais commandé", "never ordered")}</p></div>
         </div>
         <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
           <p className="text-xs font-semibold">{t("Le rouge et le XL ne partent pas", "Red and XL don't move")}</p>
           <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
-            {t(
+            {texteAvecChiffres(t(
               "Six combinaisons sur vingt n'ont jamais été commandées, et elles portent 87 000 F de stock. Au prochain dépôt, commander la même chose reviendrait à immobiliser deux fois. Le bon réflexe est de doubler le L noir et le L beige, et de ne plus reprendre de rouge.",
               "Six combinations out of twenty have never been ordered, and they carry 87 000 F of stock. Ordering the same thing at the next deposit would tie up money twice. The right move is to double black L and beige L, and stop restocking red."
-            )}
+            ))}
           </p>
         </div>
       </Card>
@@ -916,9 +916,9 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
             <LifeItem code="S" name={t("Sandales tressées", "Woven sandals")} values={lifeSandales} kind="down" age={t("Lancé il y a 5 mois", "Launched 5 months ago")} />
           </div>
           <Divider />
-          <StatRow label={t("Nouveautés lancées sur la période", "New items launched this period")} value={String(newItems)} />
-          <StatRow label={t("Dont une au-dessus de la moyenne du catalogue", "Of which one above the catalog average")} value={<span style={{ color: "#178a3f" }}>{newItemsAboveAvg}</span>} />
-          <StatRow label={t("Âge moyen d'une référence", "Average item age")} value={t(`${fmtFr(avgAge, 1)} mois`, `${fmtFr(avgAge, 1)} months`)} />
+          <StatRow label={t("Nouveautés lancées sur la période", "New items launched this period")} value={<span className="font-figures">{newItems}</span>} />
+          <StatRow label={t("Dont une au-dessus de la moyenne du catalogue", "Of which one above the catalog average")} value={<span className="font-figures" style={{ color: "#178a3f" }}>{newItemsAboveAvg}</span>} />
+          <StatRow label={t("Âge moyen d'une référence", "Average item age")} value={<span className="font-figures">{t(`${fmtFr(avgAge, 1)} mois`, `${fmtFr(avgAge, 1)} months`)}</span>} />
           <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
             {t(
               "Une référence en fin de course se reconnaît trois semaines avant la rupture d'envie : les ventes baissent alors que le refus monte. C'est le moment de l'écouler, pas d'en recommander.",
@@ -951,10 +951,10 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
           <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
             <p className="text-xs font-semibold">{t("Le sérum est vingt pour cent sous le marché et se refuse le moins", "The serum is twenty percent under market and gets refused the least")}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
-              {t(
+              {texteAvecChiffres(t(
                 "Vous pouvez monter son prix de mille francs sans toucher au volume : ce serait 41 000 F de marge en plus sur la période. À l'inverse, les sandales sont vingt pour cent au-dessus du réseau et se refusent trois fois plus. Le prix explique le refus mieux que le produit.",
                 "You can raise its price by a thousand francs without touching volume: that would be 41 000 F more margin this period. Conversely, the sandals sit twenty percent above the network and get refused three times more. Price explains the refusal better than the product does."
-              )}
+              ))}
             </p>
           </div>
         </Card>
@@ -967,7 +967,7 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
             <p className="text-sm font-semibold">{t("Les références à traiter", "Items to handle")}</p>
             <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Sept références classées par ce que leur inaction coûte", "Seven items ranked by what inaction costs")}</p>
           </div>
-          <Tag tone="warn">{t("7 signaux", "7 signals")}</Tag>
+          <Tag tone="warn"><span className="font-figures">{t("7 signaux", "7 signals")}</span></Tag>
         </div>
         <AlertItem
           tone="r"

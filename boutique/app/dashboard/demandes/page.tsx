@@ -1,6 +1,7 @@
 import DashboardHeader from "../../components/DashboardHeader";
 import DashboardSidebar from "../../components/DashboardSidebar";
 import DemandesModules from "../../components/dashboard-demandes/DemandesModules";
+import { DEMANDES_ASSISTANCE_QUESTIONS } from "../../components/dashboard-accueil/assistanceQuestions";
 
 /*
   "Demandes" (/dashboard/demandes), atteinte depuis le bouton "Besoin
@@ -17,7 +18,10 @@ export default function DemandesPage() {
         <DashboardSidebar />
 
         <div className="min-w-0 flex-1 lg:px-6">
-          <DashboardHeader />
+          <DashboardHeader
+            pageQuestions={DEMANDES_ASSISTANCE_QUESTIONS}
+            pageLabel={{ fr: "Besoin d'assistance", en: "Need help" }}
+          />
           <DemandesModules />
         </div>
       </div>

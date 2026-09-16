@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Divider, Nature, StatRow } from "./shared";
+import { Card, Divider, Nature, StatRow, texteAvecChiffres } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -49,7 +49,7 @@ function Cell({ value }: { value: number | null }) {
   }
   return (
     <div
-      className="flex h-11 flex-1 items-center justify-center rounded-xl text-sm font-extrabold text-white"
+      className="flex h-11 flex-1 items-center justify-center rounded-xl text-sm font-extrabold text-white font-figures"
       style={{ background: cellColor(value) }}
     >
       {value} %
@@ -74,13 +74,13 @@ export default function RetentionCard() {
 
       <div className="mt-4 flex gap-2 pl-12">
         <span className="flex-1 text-center text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">
-          {t("À 30 jours", "At 30 days")}
+          {texteAvecChiffres(t("À 30 jours", "At 30 days"))}
         </span>
         <span className="flex-1 text-center text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">
-          {t("À 60 jours", "At 60 days")}
+          {texteAvecChiffres(t("À 60 jours", "At 60 days"))}
         </span>
         <span className="flex-1 text-center text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">
-          {t("À 90 jours", "At 90 days")}
+          {texteAvecChiffres(t("À 90 jours", "At 90 days"))}
         </span>
       </div>
 
@@ -88,7 +88,7 @@ export default function RetentionCard() {
         {COHORTES.map((c) => (
           <div key={c.semaine} className="flex items-center gap-2">
             <span className="w-10 shrink-0 text-[11px] text-[var(--dashboard-text)]/50">
-              {t(`Sem. ${c.semaine}`, `Wk ${c.semaine}`)}
+              {texteAvecChiffres(t(`Sem. ${c.semaine}`, `Wk ${c.semaine}`))}
             </span>
             <Cell value={c.j30} />
             <Cell value={c.j60} />
@@ -99,9 +99,9 @@ export default function RetentionCard() {
 
       <Divider />
 
-      <StatRow label={t("Délai moyen entre la 1re et la 2e commande", "Average time between 1st and 2nd order")} value={t("34 jours", "34 days")} bold={false} />
-      <StatRow label={t("Commandes par client sur 12 mois", "Orders per customer over 12 months")} value="1,4" bold={false} />
-      <StatRow label={t("Valeur d'un client sur sa vie", "Customer lifetime value")} value={<span className="text-[#178a3f]">27 100 F</span>} />
+      <StatRow label={t("Délai moyen entre la 1re et la 2e commande", "Average time between 1st and 2nd order")} value={<span className="font-figures">{t("34 jours", "34 days")}</span>} bold={false} />
+      <StatRow label={t("Commandes par client sur 12 mois", "Orders per customer over 12 months")} value={<span className="font-figures">1,4</span>} bold={false} />
+      <StatRow label={t("Valeur d'un client sur sa vie", "Customer lifetime value")} value={<span className="text-[#178a3f] font-figures">27 100 F</span>} />
 
       <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/50">
         {t(

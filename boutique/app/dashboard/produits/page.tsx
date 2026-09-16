@@ -1,11 +1,12 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardHeader from "../../components/DashboardHeader";
 import DashboardSearchBar from "../../components/DashboardSearchBar";
 import DashboardSidebar from "../../components/DashboardSidebar";
 import ProduitsCatalogue from "../../components/dashboard-accueil/ProduitsCatalogue";
+import { SectionSkeleton } from "../../components/dashboard-accueil/shared";
 
 /*
   Onglet "Produits" du dashboard, atteint depuis l'icône "Produits" du rail
@@ -32,15 +33,24 @@ import ProduitsCatalogue from "../../components/dashboard-accueil/ProduitsCatalo
 export default function ProduitsPage() {
   const searchParams = useSearchParams();
   const [recherche, setRecherche] = useState(searchParams.get("q") ?? "");
+
+  // Même skeleton temporaire que app/dashboard/accueil/page.tsx (mock
+  // statique, cf. [[dashboard-mock-data-pending-laravel-api]]).
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const id = setTimeout(() => setLoading(false), 700);
+    return () => clearTimeout(id);
+  }, []);
+
   return (
     <div className="min-h-screen w-full bg-[var(--dashboard-bg)] font-sans text-[var(--dashboard-text)] antialiased transition-colors">
       <div className="mx-auto flex max-w-[1620px] flex-col gap-6 px-4 pb-28 pt-6 sm:px-6 md:px-10 lg:flex-row lg:pb-10 lg:pl-3 lg:pt-8">
         <DashboardSidebar />
 
         <div className="min-w-0 flex-1 lg:px-6">
-          <DashboardHeader />
+          <DashboardHeader activeAccueilTab="Produits" />
           <DashboardSearchBar onChange={setRecherche} initialValue={recherche} />
-          <ProduitsCatalogue recherche={recherche} />
+          {loading ? <SectionSkeleton first cards={6} /> : <ProduitsCatalogue recherche={recherche} />}
         </div>
       </div>
     </div>

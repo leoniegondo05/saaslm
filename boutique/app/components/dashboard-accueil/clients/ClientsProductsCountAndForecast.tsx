@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { TypeAchatTag } from "../shared";
+import { TypeAchatTag, texteAvecChiffres } from "../shared";
 import { TypeAchat } from "./clientsData";
 
 export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAchat: TypeAchat }) {
@@ -35,26 +35,26 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
             <div className="flex h-12 items-center gap-2">
               {/* 1 produit : 75% */}
               <div className="flex h-full flex-[75] flex-col justify-center rounded-lg border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-surface-2)]/60 px-2.5">
-                <span className="text-[10px] font-bold text-[var(--dashboard-text)]">75 %</span>
+                <span className="text-[10px] font-bold font-figures text-[var(--dashboard-text)]">75 %</span>
               </div>
               {/* 2 produits : 17% */}
               <div className="flex h-full flex-[17] flex-col justify-center rounded-lg border border-[#38bdf8]/30 bg-[#38bdf8]/20 px-2">
-                <span className="text-[10px] font-bold text-[#38bdf8]">17 %</span>
+                <span className="text-[10px] font-bold font-figures text-[#38bdf8]">17 %</span>
               </div>
               {/* 3 produits : 6% */}
               <div className="flex h-full flex-[6] flex-col justify-center rounded-lg border border-[#a78bfa]/30 bg-[#a78bfa]/20 px-1 text-center">
-                <span className="text-[9px] font-bold text-[#a78bfa]">6%</span>
+                <span className="text-[9px] font-bold font-figures text-[#a78bfa]">6%</span>
               </div>
               {/* 4+ : 2% */}
               <div className="flex h-full flex-[2] flex-col justify-center rounded-lg border border-[#34d399]/30 bg-[#34d399]/20 text-center">
-                <span className="text-[8px] font-bold text-[#34d399]">2</span>
+                <span className="text-[8px] font-bold font-figures text-[#34d399]">2</span>
               </div>
             </div>
             <div className="mt-1.5 flex justify-between text-[9px] text-[var(--dashboard-text)]/45">
-              <span>{t("1 produit", "1 product")}</span>
-              <span className="-translate-x-6">{t("2 produits", "2 products")}</span>
-              <span>{t("3 produits", "3 products")}</span>
-              <span>{t("4 et plus", "4 or more")}</span>
+              <span>{texteAvecChiffres(t("1 produit", "1 product"))}</span>
+              <span className="-translate-x-6">{texteAvecChiffres(t("2 produits", "2 products"))}</span>
+              <span>{texteAvecChiffres(t("3 produits", "3 products"))}</span>
+              <span>{texteAvecChiffres(t("4 et plus", "4 or more"))}</span>
             </div>
           </div>
 
@@ -64,32 +64,32 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Un seul produit connu", "Only one product known")}
               </span>
-              <span className="font-bold text-[#f59e0b]">291 clients · 75 %</span>
+              <span className="font-bold text-[#f59e0b]">{texteAvecChiffres("291 clients · 75 %")}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Références par client", "Average SKUs per customer")}
               </span>
-              <span className="font-semibold">1,3 sur 32</span>
+              <span className="font-semibold">{texteAvecChiffres("1,3 sur 32")}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
-                {t("Valeur d'un client à 1 produit", "Value of a 1-product client")}
+                {texteAvecChiffres(t("Valeur d'un client à 1 produit", "Value of a 1-product client"))}
               </span>
-              <span className="font-semibold">19 200F</span>
+              <span className="font-semibold font-figures">19 200F</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
-                {t("Valeur d'un client à 3 produits", "Value of a 3-product client")}
+                {texteAvecChiffres(t("Valeur d'un client à 3 produits", "Value of a 3-product client"))}
               </span>
-              <span className="font-bold text-[#10b981]">62 400F</span>
+              <span className="font-bold font-figures text-[#10b981]">62 400F</span>
             </div>
             <div className="flex justify-between border-t border-[var(--dashboard-text)]/10 pt-1.5">
               <span className="text-[var(--dashboard-text)]/55">
-                {t("Taux de départ d'un client à 1 produit", "Churn rate for 1-product client")}
+                {texteAvecChiffres(t("Taux de départ d'un client à 1 produit", "Churn rate for 1-product client"))}
               </span>
               <span className="font-bold text-[#f43f5e]">
-                {t("4 fois plus élevé", "4x higher")}
+                {texteAvecChiffres(t("4 fois plus élevé", "4x higher"))}
               </span>
             </div>
           </div>
@@ -98,16 +98,16 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
         {/* Encart analytique */}
         <div className="mt-4 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)]/40 p-3">
           <h4 className="text-xs font-bold text-[var(--dashboard-text)]">
-            {t(
+            {texteAvecChiffres(t(
               "Trois quarts de vos clients ne connaissent qu'un seul de vos trente-deux produits",
               "Three quarters of your shoppers only know one of your 32 catalog items"
-            )}
+            ))}
           </h4>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--dashboard-text)]/55">
-            {t(
+            {texteAvecChiffres(t(
               "Un client qui a acheté trois références vaut plus de trois fois celui qui n'en connaît qu'une, et part quatre fois moins. Ce n'est pas seulement l'effet du nombre d'achats : connaître plusieurs produits crée une habitude, une raison de revenir voir. Faire découvrir un deuxième produit est l'action de fidélisation la moins chère qui existe — elle ne demande ni remise ni publicité, seulement de le mentionner au bon moment.",
               "A customer who orders 3 SKUs yields over 3x more lifetime value and churns 4x less frequently. Cross-catalog discovery builds genuine buying habits and store loyalty. Introducing a second product is the most cost-effective retention lever available — requiring no promo code or ad spend, simply timely follow-up recommendations."
-            )}
+            ))}
           </p>
         </div>
       </div>
@@ -223,7 +223,7 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
                 <g>
                   <circle cx={14} cy={88} r={3.5} fill="#38bdf8" />
                   <circle cx={14} cy={88} r={1.8} fill="#ffffff" />
-                  <text x={14} y={78} textAnchor="start" className="fill-[#38bdf8] text-[8.5px] font-mono font-bold">
+                  <text x={14} y={78} textAnchor="start" className="fill-[#38bdf8] text-[8.5px] font-figures font-bold">
                     198
                   </text>
                 </g>
@@ -243,7 +243,7 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
                   {/* Badge PIC 219 */}
                   <g transform="translate(330, 12)">
                     <rect x={-24} y={-8} width={48} height={15} rx={3} fill="#10b981" />
-                    <text x={0} y={3} textAnchor="middle" fill="#ffffff" className="text-[8.5px] font-mono font-bold select-none">
+                    <text x={0} y={3} textAnchor="middle" fill="#ffffff" className="text-[8.5px] font-figures font-bold select-none">
                       PIC · 219
                     </text>
                   </g>
@@ -253,18 +253,18 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
                 <g>
                   <circle cx={484} cy={58} r={3.5} fill="#f59e0b" />
                   <circle cx={484} cy={58} r={1.8} fill="#ffffff" />
-                  <text x={484} y={50} textAnchor="end" className="fill-[#f59e0b] text-[8.5px] font-mono font-bold">
+                  <text x={484} y={50} textAnchor="end" className="fill-[#f59e0b] text-[8.5px] font-figures font-bold">
                     209
                   </text>
                 </g>
               </svg>
 
               {/* Repères horizontaux temporels alignés */}
-              <div className="mt-2 flex justify-between text-[9.5px] font-mono text-[var(--dashboard-text)]/50 px-1">
+              <div className="mt-2 flex justify-between text-[9.5px] text-[var(--dashboard-text)]/50 px-1">
                 <span className="text-[#38bdf8] font-bold">{t("Auj.", "Today")}</span>
-                <span>+3 mois</span>
-                <span className="text-[#10b981] font-bold">+6 mois</span>
-                <span className="text-[#f59e0b] font-bold">+12 mois</span>
+                <span className="font-figures">+3 mois</span>
+                <span className="text-[#10b981] font-bold font-figures">+6 mois</span>
+                <span className="text-[#f59e0b] font-bold font-figures">+12 mois</span>
               </div>
             </div>
           </div>
@@ -275,31 +275,31 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Clients actifs aujourd'hui", "Active clients today")}
               </span>
-              <span className="font-bold">198</span>
+              <span className="font-bold font-figures">198</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
-                {t("Dans six mois", "In 6 months")}
+                {texteAvecChiffres(t("Dans six mois", "In 6 months"))}
               </span>
-              <span className="font-bold text-[#10b981]">219</span>
+              <span className="font-bold font-figures text-[#10b981]">219</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
-                {t("Dans douze mois", "In 12 months")}
+                {texteAvecChiffres(t("Dans douze mois", "In 12 months"))}
               </span>
-              <span className="font-bold text-[#f59e0b]">209</span>
+              <span className="font-bold font-figures text-[#f59e0b]">209</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
-                {t("Départs attendus sur 90 jours", "Expected churn over 90 days")}
+                {texteAvecChiffres(t("Départs attendus sur 90 jours", "Expected churn over 90 days"))}
               </span>
-              <span className="font-bold text-[#f43f5e]">34</span>
+              <span className="font-bold font-figures text-[#f43f5e]">34</span>
             </div>
             <div className="flex justify-between border-t border-[var(--dashboard-text)]/10 pt-1.5">
               <span className="text-[var(--dashboard-text)]/70 font-medium">
                 {t("Valeur restante du portefeuille", "Remaining portfolio equity")}
               </span>
-              <span className="font-bold">2 455 200F</span>
+              <span className="font-bold font-figures">2 455 200F</span>
             </div>
           </div>
         </div>
@@ -310,10 +310,10 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
             {t("La courbe monte, puis redescend", "The curve climbs, then gently erodes")}
           </h4>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--dashboard-text)]/55">
-            {t(
+            {texteAvecChiffres(t(
               "Avec dix-huit pour cent de réachat, chaque nouveau client compense à peine un départ passé le sixième mois : le portefeuille plafonne vers deux cent vingt puis s'érode. À vingt-quatre pour cent, la moyenne du réseau, la même publicité donnerait une courbe qui ne redescend jamais. C'est la démonstration la plus claire que la fidélisation n'est pas un supplément d'âme mais la condition de la croissance : sans elle, il faut recruter toujours plus vite pour rester au même endroit.",
               "With an 18% repeat rate, fresh acquisitions barely offset churn past month 6: your customer base plateaus near 220 then slowly erodes. At the 24% network average, that same ad budget yields a curve that steadily compounds upward. Retention is not an optional bonus — it is the fundamental prerequisite of scalable growth: without it, you must acquire ever faster just to stand still."
-            )}
+            ))}
           </p>
         </div>
       </div>

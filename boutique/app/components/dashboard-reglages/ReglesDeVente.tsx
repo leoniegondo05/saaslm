@@ -127,7 +127,7 @@ export default function ReglesDeVente({ first = false }: { first?: boolean }) {
           <div className="mt-3 flex flex-wrap items-center gap-4 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-4 py-3.5">
             <div className="shrink-0">
               <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Délai laissé au client", "Window given to the customer")}</p>
-              <p className="mt-0.5 text-lg font-bold tracking-tight text-[var(--dashboard-text)]">{delaiHeures} h</p>
+              <p className="mt-0.5 text-lg font-bold tracking-tight text-[var(--dashboard-text)] font-figures">{delaiHeures} h</p>
             </div>
 
             <div className="min-w-[220px] flex-1">

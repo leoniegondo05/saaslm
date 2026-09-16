@@ -229,7 +229,7 @@ export default function CreerCollaborateur({
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <div className="flex flex-col gap-4">
           {/* Bloc 1 — Qui */}
-          <div id="bloc-qui" className="scroll-mt-24 rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] sm:p-5">
+          <div id="bloc-qui" className="scroll-mt-24 rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] sm:p-5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
                 {t("1 · Qui est cette personne", "1 · Who is this person")}
@@ -286,7 +286,7 @@ export default function CreerCollaborateur({
           </div>
 
           {/* Bloc 2 — Son rôle */}
-          <div id="bloc-role" className="scroll-mt-24 rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] sm:p-5">
+          <div id="bloc-role" className="scroll-mt-24 rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] sm:p-5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{t("2 · Son rôle", "2 · Their role")}</p>
               <Tag tone="neutral">{t("Quatre rôles, pas un de plus", "Four roles, not one more")}</Tag>
@@ -372,7 +372,7 @@ export default function CreerCollaborateur({
 
         <div className="flex flex-col gap-4">
           {/* Bloc 3 — Combien de temps */}
-          <div id="bloc-duree" className="scroll-mt-24 rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] sm:p-5">
+          <div id="bloc-duree" className="scroll-mt-24 rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] sm:p-5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{t("3 · Combien de temps", "3 · How long")}</p>
               <Tag tone="pink">{t(DUREES.find((d) => d.key === duree)!.label, DUREES.find((d) => d.key === duree)!.labelEn)}</Tag>
@@ -429,7 +429,7 @@ export default function CreerCollaborateur({
           </div>
 
           {/* Bloc 4 — Ses accès */}
-          <div id="bloc-acces" className="scroll-mt-24 rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] sm:p-5">
+          <div id="bloc-acces" className="scroll-mt-24 rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] sm:p-5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{t("4 · Ses accès", "4 · Their access")}</p>
               <Tag tone="ok">{t("Générés", "Generated")}</Tag>
@@ -497,7 +497,7 @@ export default function CreerCollaborateur({
         </div>
       </div>
 
-      <div className="sticky bottom-4 mt-4 flex flex-wrap items-center justify-end gap-2.5 rounded-2xl card-tint p-3.5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+      <div className="sticky bottom-4 mt-4 flex flex-wrap items-center justify-end gap-2.5 rounded-2xl card-tint p-3.5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         <button
           type="button"
           onClick={onAnnuler}

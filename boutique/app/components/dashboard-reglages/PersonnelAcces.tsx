@@ -184,7 +184,7 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
       <div className="grid items-start gap-4 min-[1100px]:grid-cols-[320px_1fr]">
         {/* Colonne 1 : créer un collaborateur */}
         <div>
-          <div className="rounded-2xl card-tint p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+          <div className="rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink">
               <PersonPlusIcon large />
             </span>
@@ -220,7 +220,7 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
               return (
                 <div
                   key={c.nom}
-                  className={`overflow-hidden rounded-2xl card-tint shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] transition ${
+                  className={`overflow-hidden rounded-2xl card-tint shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] transition ${
                     open ? "ring-1 ring-brand-pink/30" : ""
                   }`}
                 >
@@ -315,7 +315,7 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
 
 function DetailTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl card-tint p-3 text-center shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+    <div className="rounded-2xl card-tint p-3 text-center shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
       <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
       <p className="mt-1.5 text-sm font-bold">{value}</p>
     </div>

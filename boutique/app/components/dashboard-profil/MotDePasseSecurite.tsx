@@ -88,7 +88,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
       />
 
       {/* ── Niveau de protection ── */}
-      <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] sm:p-6">
+      <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] sm:p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
@@ -120,7 +120,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* ── Mot de passe ── */}
-        <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+        <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-purple/10 text-brand-purple">
@@ -198,7 +198,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
         </div>
 
         {/* ── Double vérification ── */}
-        <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+        <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#dcf5e3] text-[#178a3f]">
@@ -247,7 +247,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
         </div>
 
         {/* ── Codes de secours ── */}
-        <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+        <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fff1d6] text-[#a8690a]">
@@ -258,7 +258,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
                 <p className="text-xs text-[var(--dashboard-text)]/45">{t("Pour le jour où le téléphone manque", "For the day your phone is missing")}</p>
               </div>
             </div>
-            <p className="shrink-0 text-sm font-bold text-[var(--dashboard-text)]">
+            <p className="shrink-0 text-sm font-bold text-[var(--dashboard-text)] font-figures">
               {codesRestants} {t("sur", "of")} {CODES_TOTAL}
             </p>
           </div>
@@ -307,7 +307,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
         </div>
 
         {/* ── M'alerter ── */}
-        <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+        <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#dbeafe] text-[#1d4ed8]">

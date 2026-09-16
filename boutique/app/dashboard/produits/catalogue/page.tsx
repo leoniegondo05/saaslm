@@ -16,7 +16,7 @@ export default function CatalogueDropPage() {
         <DashboardSidebar />
 
         <div className="min-w-0 flex-1 lg:px-6">
-          <DashboardHeader />
+          <DashboardHeader activeAccueilTab="Produits" />
           <CatalogueDrop />
         </div>
       </div>

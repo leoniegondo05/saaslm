@@ -24,7 +24,7 @@ export default async function FicheProduitPage({ params }: { params: Promise<{ s
         <DashboardSidebar />
 
         <div className="min-w-0 flex-1">
-          <DashboardHeader />
+          <DashboardHeader activeAccueilTab="Produits" />
           <FicheProduitDrop produit={produit} />
         </div>
       </div>

@@ -3,7 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import { TAB_LABELS_EN, type AccueilTab } from "./AccueilNav";
-import { ASSISTANCE_QUESTIONS, getAssistanceBrief } from "./assistanceQuestions";
+import { REGLAGES_TABS, type ReglagesTab } from "../dashboard-reglages/ReglagesNav";
+import {
+  ASSISTANCE_QUESTIONS,
+  getAssistanceBrief,
+  REGLAGES_ASSISTANCE_QUESTIONS,
+  getReglagesAssistanceBrief,
+  type AssistanceQuestion,
+} from "./assistanceQuestions";
 
 /*
   Panneau ouvert par le bouton "solution LM" (DashboardHeader.tsx, badge
@@ -22,6 +29,20 @@ import { ASSISTANCE_QUESTIONS, getAssistanceBrief } from "./assistanceQuestions"
   - null ("Tout", ou toute page du dashboard hors Accueil qui n'a pas de
     notion de section) → briefing condensé des 7 sections
     (getAssistanceBrief : 2 exemples les plus importants par section).
+
+  `activeReglagesTab` vient de app/dashboard/reglages/page.tsx (état du
+  même ReglagesNav) et prime sur `activeTab` quand il est défini (`!==
+  undefined`, même sur "Tout" → null) : mêmes règles que ci-dessus mais
+  sur les 6 fiches Réglages (REGLAGES_ASSISTANCE_QUESTIONS /
+  getReglagesAssistanceBrief). Reste `undefined` sur toute page qui ne le
+  passe pas explicitement, pour ne jamais s'activer par accident ailleurs.
+
+  `pageQuestions`/`pageLabel` : pour une page sans onglet (Demandes,
+  Partenaire agréé — voir DashboardHeader.tsx) qui a sa propre liste de
+  questions groundées, plutôt que retomber sur le briefing des 7 sections
+  Accueil (retour utilisateur du 2026-09-16, cf. assistanceQuestions.ts).
+  Prime sur `activeTab`/brief mais pas sur `activeReglagesTab` (aucune page
+  ne passe les deux).
 
   Aucune vraie API assistant n'existe encore (rien dans lib/api/services
   ne répond à une question libre) : la réponse envoyée est un message
@@ -42,9 +63,15 @@ const MOCK_REPLY_DELAY_MS = 500;
 
 export default function AssistanceLMModal({
   activeTab,
+  activeReglagesTab,
+  pageQuestions,
+  pageLabel,
   onFermer,
 }: {
   activeTab: AccueilTab | null;
+  activeReglagesTab?: ReglagesTab | null;
+  pageQuestions?: AssistanceQuestion[];
+  pageLabel?: { fr: string; en: string };
   onFermer: () => void;
 }) {
   const { t } = useDashboardLangue();
@@ -84,11 +111,25 @@ export default function AssistanceLMModal({
     pendingReplies.current.push(id);
   };
 
-  const brief = activeTab === null ? getAssistanceBrief() : null;
-  const questions = activeTab !== null ? ASSISTANCE_QUESTIONS[activeTab] : null;
+  const isReglages = activeReglagesTab !== undefined;
+  const isPage = !isReglages && pageQuestions !== undefined;
+  const brief = !isReglages && !isPage && activeTab === null ? getAssistanceBrief() : null;
+  const questions = !isReglages && !isPage && activeTab !== null ? ASSISTANCE_QUESTIONS[activeTab] : null;
+  const reglagesBrief = isReglages && activeReglagesTab === null ? getReglagesAssistanceBrief() : null;
+  const reglagesQuestions =
+    isReglages && activeReglagesTab !== null ? REGLAGES_ASSISTANCE_QUESTIONS[activeReglagesTab] : null;
+  const exampleQuestions = questions ?? reglagesQuestions ?? (isPage ? pageQuestions! : null);
   // Libellé déjà localisé (FR/EN) du tab actif, calculé une fois — évite un
   // t() imbriqué dans le texte du sous-titre ci-dessous.
-  const tabLabel = activeTab !== null ? t(activeTab, TAB_LABELS_EN[activeTab]) : "";
+  const reglagesTabMeta =
+    isReglages && activeReglagesTab !== null ? REGLAGES_TABS.find((tab) => tab.key === activeReglagesTab) : undefined;
+  const tabLabel = activeTab !== null
+    ? t(activeTab, TAB_LABELS_EN[activeTab])
+    : reglagesTabMeta
+      ? t(reglagesTabMeta.label, reglagesTabMeta.labelEn)
+      : isPage && pageLabel
+        ? t(pageLabel.fr, pageLabel.en)
+        : "";
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/45 p-4 pt-16 sm:pt-24" onClick={onFermer}>
@@ -107,9 +148,11 @@ export default function AssistanceLMModal({
             <div>
               <h2 className="text-sm font-bold tracking-tight sm:text-base">{t("solution LM", "LM solution")}</h2>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">
-                {questions
+                {exampleQuestions
                   ? t(`Posez une question sur « ${tabLabel} »`, `Ask a question about “${tabLabel}”`)
-                  : t("Posez une question sur tout votre Accueil", "Ask a question about your whole Home tab")}
+                  : isReglages
+                    ? t("Posez une question sur tous vos Réglages", "Ask a question about all your Settings")
+                    : t("Posez une question sur tout votre Accueil", "Ask a question about your whole Home tab")}
               </p>
             </div>
           </div>
@@ -132,9 +175,9 @@ export default function AssistanceLMModal({
         <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
           {t("Par exemple", "For example")}
         </p>
-        {questions ? (
+        {exampleQuestions ? (
           <div className="mt-2 flex max-h-24 flex-wrap gap-1.5 overflow-y-auto pr-1">
-            {questions.map(({ fr, en }) => (
+            {exampleQuestions.map(({ fr, en }) => (
               <button
                 key={fr}
                 type="button"
@@ -145,9 +188,9 @@ export default function AssistanceLMModal({
               </button>
             ))}
           </div>
-        ) : (
+        ) : brief ? (
           <div className="mt-2 flex max-h-24 flex-wrap gap-1.5 overflow-y-auto pr-1">
-            {brief!.flatMap(({ tab, questions: qs }) =>
+            {brief.flatMap(({ tab, questions: qs }) =>
               qs.map(({ fr, en }) => (
                 <button
                   key={fr}
@@ -160,6 +203,23 @@ export default function AssistanceLMModal({
                 </button>
               ))
             )}
+          </div>
+        ) : (
+          <div className="mt-2 flex max-h-24 flex-wrap gap-1.5 overflow-y-auto pr-1">
+            {reglagesBrief!.flatMap(({ tab, questions: qs }) => {
+              const meta = REGLAGES_TABS.find((r) => r.key === tab)!;
+              return qs.map(({ fr, en }) => (
+                <button
+                  key={fr}
+                  type="button"
+                  onClick={() => sendMessage(t(fr, en))}
+                  title={t(meta.label, meta.labelEn)}
+                  className="rounded-full bg-[var(--dashboard-surface-2)] px-3 py-1.5 text-left text-[11px] text-[var(--dashboard-text)]/70 transition hover:bg-[var(--dashboard-text)]/[0.08]"
+                >
+                  {t(fr, en)}
+                </button>
+              ));
+            })}
           </div>
         )}
 

@@ -140,7 +140,7 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
               >
                 <p className="text-xs font-semibold">{t(cat.nom, cat.nomEn)}</p>
                 {cat.nouveautes && <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t(`${cat.nouveautes} nouveautés`, `${cat.nouveautes} new`)}</p>}
-                <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-lg font-bold ${active ? "text-brand-pink" : "text-[var(--dashboard-text)]/25"}`}>
+                <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-lg font-bold font-figures ${active ? "text-brand-pink" : "text-[var(--dashboard-text)]/25"}`}>
                   {cat.count}
                 </span>
               </button>

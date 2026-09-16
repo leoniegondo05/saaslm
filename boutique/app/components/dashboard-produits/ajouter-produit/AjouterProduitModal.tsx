@@ -312,7 +312,7 @@ export default function AjouterProduitModal({
         </div>
       )}
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 rounded-[28px] bg-[var(--dashboard-card-bg)] p-4 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+      <div className="mt-3 flex flex-wrap items-center gap-2 rounded-[28px] bg-[var(--dashboard-card-bg)] p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         <p className="flex-1 text-[10px] text-[var(--dashboard-text)]/40">
           {modeEdition
             ? t("Les modifications s'appliquent à la ligne existante du tableau.", "Changes apply to the existing row in the table.")

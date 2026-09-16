@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { DashboardThemeProvider, STORAGE_KEY } from "../components/DashboardThemeProvider";
 import { DashboardLanguageProvider, LANG_STORAGE_KEY, type Langue } from "../components/DashboardLanguageProvider";
 import { DashboardBoutiqueLogoProvider } from "../components/DashboardBoutiqueLogoProvider";
+import ScrollToTop from "../components/ScrollToTop";
 
 /*
   Layout partagé par toutes les pages du dashboard ("Ma journée",
@@ -53,7 +54,14 @@ export default async function DashboardLayout({
       <DashboardLanguageProvider initialLangue={initialLangue}>
         <DashboardBoutiqueLogoProvider>
           <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
-          {children}
+          {/* display:contents : ce div n'existe que pour donner un
+              sélecteur CSS au scope "chiffres du dashboard" (voir
+              ".dashboard-figures-scope" dans globals.css) — il ne doit rien
+              changer à la mise en page (flex/grid) des écrans qu'il entoure. */}
+          <div className="dashboard-figures-scope" style={{ display: "contents" }}>
+            {children}
+          </div>
+          <ScrollToTop />
         </DashboardBoutiqueLogoProvider>
       </DashboardLanguageProvider>
     </DashboardThemeProvider>

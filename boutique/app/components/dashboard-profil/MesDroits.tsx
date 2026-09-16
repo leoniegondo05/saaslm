@@ -108,7 +108,7 @@ export default function MesDroits() {
         layout="inline"
       />
 
-      <div className="overflow-hidden rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)] sm:p-6">
+      <div className="overflow-hidden rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] sm:p-6">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] border-collapse text-left">
             <thead>

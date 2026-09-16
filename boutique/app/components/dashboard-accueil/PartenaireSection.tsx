@@ -160,7 +160,7 @@ function DonutChart({
         className="absolute inset-[14%] flex flex-col items-center justify-center rounded-full text-center"
         style={{ background: "var(--dashboard-glass)" }}
       >
-        <p className="text-base font-bold leading-tight">{centerValue}</p>
+        <p className="text-base font-bold leading-tight font-figures">{centerValue}</p>
         <p className="text-[8px] leading-tight text-[var(--dashboard-text)]/45">{centerLabel}</p>
       </div>
     </div>
@@ -280,7 +280,7 @@ function SiteCard({
   return (
     <div className="rounded-2xl border p-3" style={{ background: bg, borderColor: border }}>
       <p className="text-xs font-semibold">{name}</p>
-      <p className="mt-1 text-lg font-bold tracking-tight">{delay}</p>
+      <p className="mt-1 text-lg font-bold tracking-tight font-figures">{delay}</p>
       <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{casse}</p>
       <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">{detail}</p>
     </div>
@@ -759,7 +759,7 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Note de l'entreprise agréée", "Approved partner rating")}
                 </p>
-                <p className="mt-1 text-base font-bold">
+                <p className="mt-1 text-base font-bold font-figures">
                   {formatDecimal(noteEntreprise)}<span className="text-[var(--dashboard-text)]/40">/10</span>
                 </p>
                 <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t(`moyenne de ses ${boutiquesAffiliees} boutiques`, `average of its ${boutiquesAffiliees} shops`)}</p>
@@ -768,7 +768,7 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Votre dernière évaluation", "Your last rating")}
                 </p>
-                <p className="mt-1 text-base font-bold text-[#178a3f]">
+                <p className="mt-1 text-base font-bold text-[#178a3f] font-figures">
                   {formatNote(votreNote)}<span className="text-[var(--dashboard-text)]/40">/10</span>
                 </p>
                 <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t("donnée le 1er septembre", "given September 1st")}</p>
@@ -777,14 +777,14 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Boutiques affiliées", "Affiliated shops")}
                 </p>
-                <p className="mt-1 text-base font-bold">{boutiquesAffiliees}</p>
+                <p className="mt-1 text-base font-bold font-figures">{boutiquesAffiliees}</p>
                 <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t(`dont ${boutiquesZone} dans votre zone`, `${boutiquesZone} of them in your area`)}</p>
               </div>
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Sites de stockage", "Storage sites")}
                 </p>
-                <p className="mt-1 text-base font-bold">3</p>
+                <p className="mt-1 text-base font-bold font-figures">3</p>
                 <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">Cocody · Yopougon · Bouaké</p>
               </div>
               <div>
@@ -798,7 +798,7 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Engagements tenus", "Commitments kept")}
                 </p>
-                <p className="mt-1 text-base font-bold text-[#a8690a]">{t("4 sur 6", "4 of 6")}</p>
+                <p className="mt-1 text-base font-bold text-[#a8690a] font-figures">{t("4 sur 6", "4 of 6")}</p>
                 <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t("sur la période", "over the period")}</p>
               </div>
             </div>
@@ -877,20 +877,20 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
             <Divider />
             <div className="flex items-center justify-between text-sm">
               <span className="font-semibold">{t("Total sur la période", "Total for the period")}</span>
-              <span className="text-base font-bold">{groupFr(totalGrille)} F</span>
+              <span className="text-base font-bold font-figures">{groupFr(totalGrille)} F</span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Coût par commande livrée", "Cost per delivered order")}
                 </p>
-                <p className="mt-0.5 text-sm font-bold">{groupFr(coutParCommande)} F</p>
+                <p className="mt-0.5 text-sm font-bold font-figures">{groupFr(coutParCommande)} F</p>
               </div>
               <div>
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Part de votre chiffre d'affaires", "Share of your revenue")}
                 </p>
-                <p className="mt-0.5 text-sm font-bold">{formatDecimal(partCA)} %</p>
+                <p className="mt-0.5 text-sm font-bold font-figures">{formatDecimal(partCA)} %</p>
               </div>
               <div>
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
@@ -1091,19 +1091,19 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 <div className="grid items-center gap-2 sm:grid-cols-[1fr_auto_1fr_auto_1fr]">
                   <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
                     <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Ce que vous lui versez", "What you pay it")}</p>
-                    <p className="mt-2 text-xl font-bold">{groupFr(totalGrille)}F</p>
+                    <p className="mt-2 text-xl font-bold font-figures">{groupFr(totalGrille)}F</p>
                     <p className="mt-1 text-[10px] leading-snug text-[var(--dashboard-text)]/40">{t("Sa grille, appliquée à votre volume du mois.", "Its rate card, applied to your volume this month.")}</p>
                   </div>
                   <div className="hidden text-center text-lg text-[var(--dashboard-text)]/25 sm:block">+</div>
                   <div className="rounded-2xl border p-3" style={{ background: "linear-gradient(135deg, rgba(200,38,45,.12), rgba(236,12,140,.06))", borderColor: "rgba(255,122,128,.35)" }}>
                     <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#c8262d]/70">{t("Ce que ses manquements vous coûtent", "What its shortfalls cost you")}</p>
-                    <p className="mt-2 text-xl font-bold text-[#c8262d]">{groupFr(manquements)}F</p>
+                    <p className="mt-2 text-xl font-bold text-[#c8262d] font-figures">{groupFr(manquements)}F</p>
                     <p className="mt-1 text-[10px] leading-snug text-[var(--dashboard-text)]/40">{t("Litiges à sa charge, casse au-delà du seuil, marchandise non couverte.", "Its share of disputes, breakage beyond the threshold, uncovered goods.")}</p>
                   </div>
                   <div className="hidden text-center text-lg text-[var(--dashboard-text)]/25 sm:block">=</div>
                   <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
                     <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Coût réel de la relation", "Real cost of the relationship")}</p>
-                    <p className="mt-2 text-xl font-bold">{groupFr(coutReel)}F</p>
+                    <p className="mt-2 text-xl font-bold font-figures">{groupFr(coutReel)}F</p>
                     <p className="mt-1 text-[10px] leading-snug text-[var(--dashboard-text)]/40">{t(`Soit ${groupFr(coutParCommandeReel)} F par commande livrée, et non ${groupFr(coutParCommande)} F.`, `That's ${groupFr(coutParCommandeReel)} F per delivered order, not ${groupFr(coutParCommande)} F.`)}</p>
                   </div>
                 </div>
@@ -1112,7 +1112,7 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
                     <p className="text-[11px] font-semibold">{t("Litiges dont elle est responsable", "Disputes it's responsible for")}</p>
-                    <p className="mt-1 text-base font-bold" style={{ color: "#c8262d" }}>{groupFr(litigesCost)}F</p>
+                    <p className="mt-1 text-base font-bold font-figures" style={{ color: "#c8262d" }}>{groupFr(litigesCost)}F</p>
                     <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("20 litiges sur 26 depuis l'ouverture, ramenés au mois", "20 of 26 disputes since opening, brought back to a month")}</p>
                   </div>
                   <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
@@ -1122,7 +1122,7 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                         S
                       </span>
                     </p>
-                    <p className="mt-1 text-base font-bold" style={{ color: "#c8262d" }}>{groupFr(casseCost)}F</p>
+                    <p className="mt-1 text-base font-bold font-figures" style={{ color: "#c8262d" }}>{groupFr(casseCost)}F</p>
                     <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t(`${formatDecimal(realizedCasse5)} % constaté pour 1 % engagé`, `${formatDecimal(realizedCasse5)}% observed against 1% committed`)}</p>
                   </div>
                 </div>

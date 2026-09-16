@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
 import { ACTIONS_AUJOURDHUI, TypeAchat } from "./clientsData";
+import { texteAvecChiffres } from "../shared";
 
 // Libellé "fait" par bouton d'origine — même principe que le bouton
 // "Relancer" de PartenaireSection.tsx (disabled + texte changé au clic),
@@ -44,9 +45,11 @@ export default function ClientsActionsToday({ typeAchat }: { typeAchat: TypeAcha
           </p>
         </div>
         <span className="rounded-full border border-[#f59e0b]/30 bg-[#f59e0b]/10 px-2.5 py-1 text-[10px] font-bold text-[#f59e0b]">
-          {typeAchat === "les-deux"
-            ? t("8 actions · 523 clients", "8 actions · 523 clients")
-            : t(`${actions.length} actions`, `${actions.length} actions`)}
+          {texteAvecChiffres(
+            typeAchat === "les-deux"
+              ? t("8 actions · 523 clients", "8 actions · 523 clients")
+              : t(`${actions.length} actions`, `${actions.length} actions`)
+          )}
         </span>
       </div>
 
@@ -84,7 +87,7 @@ export default function ClientsActionsToday({ typeAchat }: { typeAchat: TypeAcha
                 <div>
                   <div className="flex items-center gap-2">
                     <h4 className="text-xs font-bold text-[var(--dashboard-text)]">
-                      {t(action.titreFr, action.titreEn)}
+                      {texteAvecChiffres(t(action.titreFr, action.titreEn))}
                     </h4>
                     {action.tagD && (
                       <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#ec0c8c]/15 text-[8px] font-bold text-[#ec0c8c]">
@@ -93,7 +96,7 @@ export default function ClientsActionsToday({ typeAchat }: { typeAchat: TypeAcha
                     )}
                   </div>
                   <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/55 leading-relaxed sm:text-[11px]">
-                    {t(action.descriptionFr, action.descriptionEn)}
+                    {texteAvecChiffres(t(action.descriptionFr, action.descriptionEn))}
                   </p>
                 </div>
               </div>

@@ -146,7 +146,7 @@ export default function MonProfil() {
         layout="inline"
       />
 
-      <div className="overflow-hidden rounded-[32px] bg-[var(--dashboard-card-bg)] shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+      <div className="overflow-hidden rounded-[32px] bg-[var(--dashboard-card-bg)] shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         {/* ── Bannière + avatar ── */}
         <div
           className="relative h-40 overflow-hidden sm:h-48"
@@ -309,7 +309,7 @@ export default function MonProfil() {
       </div>
 
       {/* ── Détails du profil ── */}
-      <div className="mt-4 rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_8px_20px_-6px_rgba(20,18,32,0.18)]">
+      <div className="mt-4 rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-pink/10 text-brand-pink">

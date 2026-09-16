@@ -137,7 +137,7 @@ export default function ClientsPaymentImpact({ typeAchat }: { typeAchat: TypeAch
       {/* Bloc Highlight conversion */}
       <div className="mt-4 flex flex-col justify-between gap-3 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)]/35 p-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--dashboard-card-bg)] border border-[var(--dashboard-text)]/10 text-base font-bold text-[var(--dashboard-text)] shadow-xs">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--dashboard-card-bg)] border border-[var(--dashboard-text)]/10 text-base font-bold text-[var(--dashboard-text)] shadow-xs font-figures">
             28
           </div>
           <div>
@@ -157,7 +157,7 @@ export default function ClientsPaymentImpact({ typeAchat }: { typeAchat: TypeAch
         </div>
 
         <div className="flex items-center gap-2 sm:flex-col sm:items-end sm:text-right shrink-0">
-          <span className="text-xl font-bold text-[#10b981] sm:text-2xl">+92 %</span>
+          <span className="text-xl font-bold text-[#10b981] sm:text-2xl font-figures">+92 %</span>
           <span className="text-[10px] font-semibold text-[var(--dashboard-text)]/65">
             {t("de marge sur ces clients", "higher margin on these buyers")}
           </span>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AreaChart, Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, openBrandedReport, periodSeed, scaleForPeriod, SectionHeader, StatRow, Table, Tag } from "./shared";
+import { AreaChart, Bar, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, openBrandedReport, periodSeed, scaleForPeriod, SectionHeader, StatRow, Table, Tag, texteAvecChiffres } from "./shared";
 import RetentionCard from "./RetentionCard";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
@@ -154,10 +154,10 @@ function FunnelStep({
       >
         {step}
       </span>
-      <p className="mt-3 text-xl font-bold tracking-tight sm:text-2xl">{value}</p>
+      <p className="mt-3 text-xl font-bold tracking-tight sm:text-2xl font-figures">{value}</p>
       <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{label}</p>
       {rate && (
-        <p className="mt-1 text-[10px] font-semibold" style={{ color: rateColor }}>
+        <p className="mt-1 text-[10px] font-semibold font-figures" style={{ color: rateColor }}>
           {rate}
         </p>
       )}
@@ -182,7 +182,7 @@ function FunnelTrack() {
 function StatBar({ value, label, pct, color = "bg-brand-pink" }: { value: string; label: string; pct: number; color?: string }) {
   return (
     <div>
-      <p className="text-lg font-bold tracking-tight">{value}</p>
+      <p className="text-lg font-bold tracking-tight font-figures">{value}</p>
       <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{label}</p>
       <Bar pct={pct} color={color} />
     </div>
@@ -209,7 +209,7 @@ function MotifRow({
           <Nature code={code} />
           {label}
         </span>
-        <span className="font-semibold">{value}</span>
+        <span className="font-semibold font-figures">{value}</span>
       </div>
       <Bar pct={pct} color="bg-brand-pink" />
     </div>
@@ -235,9 +235,9 @@ function ZoneRow({ commune, pct, volume, delai, bad = false }: { commune: string
           style={{ width: `${Math.min(100, Math.max(0, pct))}%`, background: bad ? ZONE_GRADIENT_BAD : ZONE_GRADIENT_GOOD }}
         />
       </div>
-      <span className={`w-10 shrink-0 text-right font-bold ${bad ? "text-[#FFB020]" : ""}`}>{pct} %</span>
-      <span className="w-14 shrink-0 text-right text-[var(--dashboard-text)]/40">{volume}</span>
-      <span className="w-16 shrink-0 text-right text-[var(--dashboard-text)]/40">{delai}</span>
+      <span className={`w-10 shrink-0 text-right font-bold font-figures ${bad ? "text-[#FFB020]" : ""}`}>{pct} %</span>
+      <span className="w-14 shrink-0 text-right text-[var(--dashboard-text)]/40 font-figures">{volume}</span>
+      <span className="w-16 shrink-0 text-right text-[var(--dashboard-text)]/40 font-figures">{delai}</span>
     </div>
   );
 }
@@ -271,9 +271,9 @@ function BenchRow({
       <BenchBar youPct={youPct} networkPct={networkPct} />
       <div className="mt-1.5 grid grid-cols-[1fr_auto_auto_auto] items-baseline gap-3 text-xs">
         <span className="text-[var(--dashboard-text)]/50">{label}</span>
-        <span className="font-semibold text-[#178a3f]">{you}</span>
-        <span className="text-[var(--dashboard-text)]/40">{network}</span>
-        <span className="text-[10px] font-semibold text-[#178a3f]">{delta}</span>
+        <span className="font-semibold text-[#178a3f] font-figures">{you}</span>
+        <span className="text-[var(--dashboard-text)]/40 font-figures">{network}</span>
+        <span className="text-[10px] font-semibold text-[#178a3f] font-figures">{delta}</span>
       </div>
     </div>
   );
@@ -286,9 +286,9 @@ function DisputeReasonRow({ code, label, note, pct }: { code: "S" | "D" | "B"; l
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs font-semibold">{label}</p>
-          <p className="text-xs font-bold">{pct} %</p>
+          <p className="text-xs font-bold font-figures">{pct} %</p>
         </div>
-        <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{note}</p>
+        <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(note)}</p>
       </div>
     </div>
   );
@@ -302,7 +302,7 @@ function DisputeReasonRow({ code, label, note, pct }: { code: "S" | "D" | "B"; l
 // [[dashboard-mock-data-pending-laravel-api]]) — un lien filtré donnerait
 // "aucun résultat", donc on renvoie sur la liste plutôt que sur un filtre
 // qui mentirait.
-function Signal({ tone, title, desc, cta, href }: { tone: "ko" | "warn" | "info"; title: string; desc: string; cta: string; href: string }) {
+function Signal({ tone, title, desc, cta, href }: { tone: "ko" | "warn" | "info"; title: React.ReactNode; desc: React.ReactNode; cta: string; href: string }) {
   const dot = tone === "ko" ? "bg-[#FF5A62] text-white" : tone === "warn" ? "bg-[#FFB020] text-white" : "bg-brand-purple/15 text-brand-purple";
   const border = tone === "ko" ? "border-[#FF5A62]/25" : "border-[var(--dashboard-text)]/10";
   return (
@@ -352,11 +352,11 @@ function LiveOrderRow({
   return (
     <div className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${dispute ? "bg-[#FFB0200D]" : ""}`}>
       <Nature code={code} />
-      <span className="w-16 shrink-0 text-xs font-semibold">{id}</span>
+      <span className="w-16 shrink-0 text-xs font-semibold font-figures">{id}</span>
       <span className="min-w-0 flex-1 truncate text-xs text-[var(--dashboard-text)]/60">{label}</span>
       <span className={`shrink-0 rounded-full px-2.5 py-1 text-[9px] font-semibold ${STATUS_TONE[statusKey]}`}>{status}</span>
-      <span className="w-16 shrink-0 text-right text-[10px] text-[var(--dashboard-text)]/40">{since}</span>
-      <span className="w-20 shrink-0 text-right text-xs font-semibold">{amount}</span>
+      <span className="w-16 shrink-0 text-right text-[10px] text-[var(--dashboard-text)]/40 font-figures">{since}</span>
+      <span className="w-20 shrink-0 text-right text-xs font-semibold font-figures">{amount}</span>
     </div>
   );
 }
@@ -459,31 +459,31 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Card className="!bg-[var(--dashboard-glass)]">
           <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Commandes reçues", "Orders received")}</p>
-          <p className="mt-1 text-2xl font-bold tracking-tight">{scaleForPeriod(148, seed, 14)}</p>
+          <p className="mt-1 text-2xl font-bold tracking-tight font-figures">{scaleForPeriod(148, seed, 14)}</p>
           <p className="mt-1 text-[10px] font-semibold text-[#178a3f]">{t("+22 % vs période précédente", "+22% vs previous period")}</p>
           {compare && <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">{t("Période précédente", "Previous period")} : {scaleForPeriod(121, seed, 20)}</p>}
         </Card>
         <Card className="!bg-[var(--dashboard-glass)]">
           <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Confirmées à l'appel", "Confirmed by phone")}</p>
-          <p className="mt-1 text-2xl font-bold tracking-tight">{scaleForPeriod(134, seed, 15)}</p>
+          <p className="mt-1 text-2xl font-bold tracking-tight font-figures">{scaleForPeriod(134, seed, 15)}</p>
           <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("90,5 % des reçues", "90.5% of orders received")}</p>
           {compare && <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">{t("Période précédente", "Previous period")} : {scaleForPeriod(110, seed, 21)}</p>}
         </Card>
         <Card className="!bg-[var(--dashboard-glass)]">
           <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Livrées et payées", "Delivered and paid")}</p>
-          <p className="mt-1 text-2xl font-bold tracking-tight text-[#178a3f]">{scaleForPeriod(119, seed, 16)}</p>
+          <p className="mt-1 text-2xl font-bold tracking-tight text-[#178a3f] font-figures">{scaleForPeriod(119, seed, 16)}</p>
           <p className="mt-1 text-[10px] font-semibold text-[#178a3f]">{t("80,4 % des reçues", "80.4% of orders received")}</p>
           {compare && <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">{t("Période précédente", "Previous period")} : {scaleForPeriod(97, seed, 22)}</p>}
         </Card>
         <Card className="!bg-[var(--dashboard-glass)]">
           <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Refusées", "Refused")}</p>
-          <p className="mt-1 text-2xl font-bold tracking-tight text-[#c8262d]">{scaleForPeriod(23, seed, 18)}</p>
+          <p className="mt-1 text-2xl font-bold tracking-tight text-[#c8262d] font-figures">{scaleForPeriod(23, seed, 18)}</p>
           <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("14 à l'appel · 9 à la porte", "14 by phone · 9 at the door")}</p>
           {compare && <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">{t("Période précédente", "Previous period")} : {scaleForPeriod(27, seed, 23)}</p>}
         </Card>
         <Card className="!bg-[var(--dashboard-glass)]">
           <p className="text-[10px] text-[var(--dashboard-text)]/40">{t("En cours", "In progress")}</p>
-          <p className="mt-1 text-2xl font-bold tracking-tight">{scaleForPeriod(6, seed, 19)}</p>
+          <p className="mt-1 text-2xl font-bold tracking-tight font-figures">{scaleForPeriod(6, seed, 19)}</p>
           <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("dont 2 en litige", "incl. 2 in dispute")}</p>
           {compare && <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">{t("Période précédente", "Previous period")} : {scaleForPeriod(5, seed, 24)}</p>}
         </Card>
@@ -550,11 +550,11 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
             <StatBar value={`${scaleForPeriod(97, seed, 10)}`} label={t("Stockage · 65,5 %", "Warehousing · 65.5%")} pct={65.5} color="bg-[#5AA9FF]" />
             <StatBar value={`${scaleForPeriod(51, seed, 11)}`} label={t("Dropshipping · 34,5 %", "Drop-shipping · 34.5%")} pct={34.5} />
             <div>
-              <p className="text-lg font-bold tracking-tight">{scaleForPeriod(8, seed, 12)}</p>
+              <p className="text-lg font-bold tracking-tight font-figures">{scaleForPeriod(8, seed, 12)}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Meilleur jour · samedi 23 août", "Best day · Sat Aug 23")}</p>
             </div>
             <div>
-              <p className="text-lg font-bold tracking-tight">4,9</p>
+              <p className="text-lg font-bold tracking-tight font-figures">4,9</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Moyenne par jour · 30 jours", "Average per day · 30 days")}</p>
             </div>
           </div>
@@ -562,14 +562,14 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
 
         <Card title={t("Le cycle du mois", "The monthly cycle")} titleTab titleAlign="left" className="!bg-[var(--dashboard-surface-2)]" badge={<Tag tone="warn">{t("Zone de paie", "Payday window")}</Tag>}>
           <AreaChart values={MONTH_BUCKETS.map((b) => b.pct)} color="#EC0C8C" markers={[0, 8]} />
-          <div className="mt-1.5 flex justify-between text-[9px] text-[var(--dashboard-text)]/40">
+          <div className="mt-1.5 flex justify-between text-[9px] text-[var(--dashboard-text)]/40 font-figures">
             <span>1</span>
             <span>10</span>
             <span>20</span>
             <span>31</span>
           </div>
           <Divider />
-          <p className="text-xs font-semibold">{t("41 % de vos commandes tombent entre le 25 et le 5", "41% of your orders fall between the 25th and the 5th")}</p>
+          <p className="text-xs font-semibold">{texteAvecChiffres(t("41 % de vos commandes tombent entre le 25 et le 5", "41% of your orders fall between the 25th and the 5th"))}</p>
           <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
             {t(
               "C'est la fenêtre des salaires. Concentrer la publicité sur cette fenêtre, et garder du stock pour elle, vaut mieux que lisser la dépense sur trente jours. Un réapprovisionnement livré le 26 arrive trop tard pour la vague.",
@@ -585,7 +585,7 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-sm font-semibold">{t("Le travail du centre d'appel", "The call center's work")}</p>
-              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("143 commandes appelées, 1,9 tentative en moyenne", "143 orders called, 1.9 attempts on average")}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(t("143 commandes appelées, 1,9 tentative en moyenne", "143 orders called, 1.9 attempts on average"))}</p>
             </div>
             <Nature code="B" />
           </div>
@@ -598,20 +598,20 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
             ]}
           />
           <div className="mt-3 space-y-2 text-xs">
-            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#4FE0AE]" />{t("Joint au premier appel", "Reached on the first call")}</span><span className="font-semibold">{scaleForPeriod(78, seed, 25)} · 55 %</span></div>
-            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#38BDF8]" />{t("Joint au deuxième", "Reached on the second")}</span><span className="font-semibold">{scaleForPeriod(34, seed, 26)} · 24 %</span></div>
-            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#FFB020]" />{t("Joint au troisième", "Reached on the third")}</span><span className="font-semibold">{scaleForPeriod(22, seed, 27)} · 15 %</span></div>
-            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#FF5A62]" />{t("Jamais joint", "Never reached")}</span><span className="font-semibold">{scaleForPeriod(9, seed, 28)} · 6 %</span></div>
+            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#4FE0AE]" />{t("Joint au premier appel", "Reached on the first call")}</span><span className="font-semibold font-figures">{scaleForPeriod(78, seed, 25)} · 55 %</span></div>
+            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#38BDF8]" />{t("Joint au deuxième", "Reached on the second")}</span><span className="font-semibold font-figures">{scaleForPeriod(34, seed, 26)} · 24 %</span></div>
+            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#FFB020]" />{t("Joint au troisième", "Reached on the third")}</span><span className="font-semibold font-figures">{scaleForPeriod(22, seed, 27)} · 15 %</span></div>
+            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#FF5A62]" />{t("Jamais joint", "Never reached")}</span><span className="font-semibold font-figures">{scaleForPeriod(9, seed, 28)} · 6 %</span></div>
           </div>
           <Divider />
-          <StatRow label={t("Délai avant le premier appel", "Time to first call")} value="42 min" bold={false} />
-          <StatRow label={t("Durée moyenne d'un appel", "Average call length")} value="2 min 40" bold={false} />
-          <StatRow label={t("Confirmation au 1er appel", "Confirmation on 1st call")} value={<span className="text-[#178a3f]">94 %</span>} />
+          <StatRow label={t("Délai avant le premier appel", "Time to first call")} value={<span className="font-figures">42 min</span>} bold={false} />
+          <StatRow label={t("Durée moyenne d'un appel", "Average call length")} value={<span className="font-figures">2 min 40</span>} bold={false} />
+          <StatRow label={t("Confirmation au 1er appel", "Confirmation on 1st call")} value={<span className="text-[#178a3f] font-figures">94 %</span>} />
           <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/50">
-            {t(
+            {texteAvecChiffres(t(
               "Un client joint au premier appel confirme à 94 %. Au troisième, il ne confirme plus qu'à 68 % : le temps qui passe abîme l'envie autant que le doute. Chaque tranche de dix minutes gagnée sur le délai d'appel vaut environ un point de confirmation.",
               "A customer reached on the first call confirms at 94%. By the third, only 68%: time erodes desire as much as doubt. Every ten minutes saved on call delay is worth about a point of confirmation."
-            )}
+            ))}
           </p>
         </Card>
 
@@ -630,15 +630,15 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
             <StatBar value="7 %" label={t("Commandes en express", "Express orders")} pct={7} color="bg-brand-purple" />
           </div>
           <Divider />
-          <StatRow label={t("Délai de course, standard", "Delivery time, standard")} value="4 h 12" bold={false} />
-          <StatRow label={t("Délai de course, express", "Delivery time, express")} value={<span className="text-[#178a3f]">1 h 48</span>} />
-          <StatRow label={t("Taux de livraison en express", "Delivery rate, express")} value={<span className="text-[#178a3f]">93 %</span>} />
-          <StatRow label={t("Reprogrammations qui n'aboutissent pas", "Reschedules that don't go through")} value={<span className="text-[#c8262d]">{scaleForPeriod(3, seed, 29)} sur {scaleForPeriod(16, seed, 30)}</span>} />
+          <StatRow label={t("Délai de course, standard", "Delivery time, standard")} value={<span className="font-figures">4 h 12</span>} bold={false} />
+          <StatRow label={t("Délai de course, express", "Delivery time, express")} value={<span className="text-[#178a3f] font-figures">1 h 48</span>} />
+          <StatRow label={t("Taux de livraison en express", "Delivery rate, express")} value={<span className="text-[#178a3f] font-figures">93 %</span>} />
+          <StatRow label={t("Reprogrammations qui n'aboutissent pas", "Reschedules that don't go through")} value={<span className="text-[#c8262d] font-figures">{scaleForPeriod(3, seed, 29)} sur {scaleForPeriod(16, seed, 30)}</span>} />
           <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/50">
-            {t(
+            {texteAvecChiffres(t(
               "L'express se livre treize points au-dessus du standard. Sur les paniers de plus de 50 000 F, où le refus atteint 42 %, le proposer d'office coûterait 2 000 F et sauverait bien plus.",
               "Express delivers thirteen points above standard. On baskets over 50 000 F, where refusal reaches 42%, offering it by default would cost 2 000 F and save far more."
-            )}
+            ))}
           </p>
         </Card>
       </div>
@@ -744,7 +744,7 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
                 />
               ))}
             </div>
-            <div className="mt-1.5 flex gap-2 text-[9px] text-[var(--dashboard-text)]/40">
+            <div className="mt-1.5 flex gap-2 text-[9px] text-[var(--dashboard-text)]/40 font-figures">
               {BASKET_LABELS.map((label) => (
                 <span key={label} className="flex-1 text-center">{label}</span>
               ))}
@@ -779,10 +779,10 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
                     const deliveredColor = delivered >= 85 ? "#178a3f" : delivered >= 60 ? "#a8690a" : "#c8262d";
                     return (
                       <tr key={bracket} className={`border-b border-[var(--dashboard-text)]/[0.05] last:border-0 ${worst ? "bg-[#c8262d0d]" : ""}`}>
-                        <td className="py-2 pr-3"><span className="font-semibold">{bracket}</span></td>
-                        <td className="py-2 pr-3">{cmd}</td>
-                        <td className="py-2 pr-3" style={{ color: deliveredColor }}>{delivered} %</td>
-                        <td className="py-2 pr-3">{margin}</td>
+                        <td className="py-2 pr-3"><span className="font-semibold font-figures">{bracket}</span></td>
+                        <td className="py-2 pr-3 font-figures">{cmd}</td>
+                        <td className="py-2 pr-3 font-figures" style={{ color: deliveredColor }}>{delivered} %</td>
+                        <td className="py-2 pr-3 font-figures">{margin}</td>
                       </tr>
                     );
                   })}
@@ -791,9 +791,9 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
             </div>
             <Divider />
             <div className="flex flex-col gap-2">
-              <StatRow label={t("Articles par commande", "Items per order")} value="1,4" bold={false} />
-              <StatRow label={t("Commandes à plusieurs articles", "Multi-item orders")} value="27 %" bold={false} />
-              <StatRow label={t("Panier moyen d'une commande multiple", "Average basket, multi-item order")} value={<span className="text-[#178a3f]">{scaleForPeriod(31700, seed, 50).toLocaleString("fr-FR")} F</span>} />
+              <StatRow label={t("Articles par commande", "Items per order")} value={<span className="font-figures">1,4</span>} bold={false} />
+              <StatRow label={t("Commandes à plusieurs articles", "Multi-item orders")} value={<span className="font-figures">27 %</span>} bold={false} />
+              <StatRow label={t("Panier moyen d'une commande multiple", "Average basket, multi-item order")} value={<span className="text-[#178a3f] font-figures">{scaleForPeriod(31700, seed, 50).toLocaleString("fr-FR")} F</span>} />
             </div>
           </div>
         </div>
@@ -826,15 +826,15 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
             ]}
           />
           <div className="mt-3 space-y-2 text-xs">
-            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#8A90A6]" />{t("Reçue, en attente d'appel", "Received, awaiting call")}</span><span className="font-semibold">42 min</span></div>
-            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#B79BFF]" />{t("Appel du centre, jusqu'à confirmation", "Call center, to confirmation")}</span><span className="font-semibold">1 h 12</span></div>
-            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#5AA9FF]" />{t("Confirmée, jusqu'au colis prêt", "Confirmed, to parcel ready")}</span><span className="font-semibold">2 h 05</span></div>
-            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#FF7CB8]" />{t("Colis prêt, jusqu'à la livraison", "Parcel ready, to delivery")}</span><span className="font-semibold">4 h 12</span></div>
+            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#8A90A6]" />{t("Reçue, en attente d'appel", "Received, awaiting call")}</span><span className="font-semibold font-figures">42 min</span></div>
+            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#B79BFF]" />{t("Appel du centre, jusqu'à confirmation", "Call center, to confirmation")}</span><span className="font-semibold font-figures">1 h 12</span></div>
+            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#5AA9FF]" />{t("Confirmée, jusqu'au colis prêt", "Confirmed, to parcel ready")}</span><span className="font-semibold font-figures">2 h 05</span></div>
+            <div className="flex items-center justify-between"><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#FF7CB8]" />{t("Colis prêt, jusqu'à la livraison", "Parcel ready, to delivery")}</span><span className="font-semibold font-figures">4 h 12</span></div>
           </div>
           <Divider />
-          <StatRow label={t("Total en heures ouvrées", "Total in business hours")} value="8 h 11" bold={false} />
-          <StatRow label={t("Total réel, nuits comprises", "Real total, nights included")} value="26 h" bold={false} />
-          <StatRow label={t("Moyenne du réseau", "Network average")} value={<span className="text-[#178a3f]">{t("31 h · vous êtes devant", "31 h · you're ahead")}</span>} />
+          <StatRow label={t("Total en heures ouvrées", "Total in business hours")} value={<span className="font-figures">8 h 11</span>} bold={false} />
+          <StatRow label={t("Total réel, nuits comprises", "Real total, nights included")} value={<span className="font-figures">26 h</span>} bold={false} />
+          <StatRow label={t("Moyenne du réseau", "Network average")} value={<span className="text-[#178a3f] font-figures">{t("31 h · vous êtes devant", "31 h · you're ahead")}</span>} />
           <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/50">
             {t(
               "Une commande passée à vingt-deux heures attend le matin : c'est ce décalage qui creuse l'écart entre huit heures de travail et vingt-six heures d'attente pour le client.",
@@ -849,7 +849,7 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
               <p className="text-sm font-semibold">{t("Pourquoi les commandes n'aboutissent pas", "Why orders don't go through")}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Motif enregistré par le centre d'appel ou par le livreur", "Reason logged by the call center or the courier")}</p>
             </div>
-            <Tag tone="warn">{t(`${scaleForPeriod(23, seed, 18)} refus`, `${scaleForPeriod(23, seed, 18)} refusals`)}</Tag>
+            <Tag tone="warn"><span className="font-figures">{t(`${scaleForPeriod(23, seed, 18)} refus`, `${scaleForPeriod(23, seed, 18)} refusals`)}</span></Tag>
           </div>
           <div className="mt-3">
             <MotifRow code="B" label={t("Injoignable après trois appels", "Unreachable after three calls")} value={scaleForPeriod(9, seed, 31)} pct={100} />
@@ -895,10 +895,10 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
           <div className="mt-4 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
             <p className="text-xs font-semibold">{t("Vingt-huit points d'écart entre Cocody et Bouaké", "Twenty-eight points between Cocody and Bouaké")}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
-              {t(
+              {texteAvecChiffres(t(
                 "Bouaké représente 12 % de vos commandes et 26 % de vos refus. À 61 % de livraison et 11 h 30 de délai, chaque commande y rapporte moins qu'ailleurs une fois les refus payés. Deux réponses possibles : demander un acompte sur cette zone, ou ne plus y pousser de publicité.",
                 "Bouaké makes up 12% of your orders and 26% of your refusals. At 61% delivery and an 11h30 lead time, each order there earns less once refusals are paid for. Two options: ask for a deposit in that zone, or stop advertising there."
-              )}
+              ))}
             </p>
           </div>
         </Card>
@@ -935,18 +935,18 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
           <div className="grid grid-cols-3 gap-3">
             <div>
               <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">{t("Heure de pointe", "Peak hour")}</p>
-              <p className="mt-1 text-base font-bold tracking-tight">{t("20 h – 22 h", "8pm – 10pm")}</p>
-              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("31 % des commandes", "31% of orders")}</p>
+              <p className="mt-1 text-base font-bold tracking-tight font-figures">{t("20 h – 22 h", "8pm – 10pm")}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("31 % des commandes", "31% of orders"))}</p>
             </div>
             <div>
               <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">{t("Meilleur jour", "Best day")}</p>
               <p className="mt-1 text-base font-bold tracking-tight">{t("Samedi", "Saturday")}</p>
-              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("1,4 fois la moyenne", "1.4× the average")}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("1,4 fois la moyenne", "1.4× the average"))}</p>
             </div>
             <div>
               <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">{t("Taux de confirmation le soir", "Confirmation rate in the evening")}</p>
-              <p className="mt-1 text-base font-bold tracking-tight text-[#a8690a]">82 %</p>
-              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("contre 94 % le matin", "vs 94% in the morning")}</p>
+              <p className="mt-1 text-base font-bold tracking-tight text-[#a8690a] font-figures">82 %</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("contre 94 % le matin", "vs 94% in the morning"))}</p>
             </div>
           </div>
           <div className="mt-4 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
@@ -1011,17 +1011,19 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
             <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Ouverts pendant le délai de suspension que vous avez fixé", "Opened during the hold period you've set")}</p>
           </div>
           <Tag tone="warn" className="shrink-0">
-            {t(
-              `${scaleForPeriod(2, seed, 66)} en cours · ${scaleForPeriod(47480, seed, 67).toLocaleString("fr-FR")} F bloqués`,
-              `${scaleForPeriod(2, seed, 66)} in progress · ${scaleForPeriod(47480, seed, 67).toLocaleString("fr-FR")} F on hold`
-            )}
+            <span className="font-figures">
+              {t(
+                `${scaleForPeriod(2, seed, 66)} en cours · ${scaleForPeriod(47480, seed, 67).toLocaleString("fr-FR")} F bloqués`,
+                `${scaleForPeriod(2, seed, 66)} in progress · ${scaleForPeriod(47480, seed, 67).toLocaleString("fr-FR")} F on hold`
+              )}
+            </span>
           </Tag>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div><p className="text-lg font-bold tracking-tight">1,7 %</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Taux de litige · 2 sur 119 livrées", "Dispute rate · 2 of 119 delivered")}</p></div>
-          <div><p className="text-lg font-bold tracking-tight">14 h</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Délai moyen de résolution", "Average resolution time")}</p></div>
-          <div><p className="text-lg font-bold tracking-tight">{t("Remplacement", "Replacement")}</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Issue la plus fréquente · 83 %", "Most common outcome · 83%")}</p></div>
-          <div><p className="text-lg font-bold tracking-tight text-[#c8262d]">{scaleForPeriod(3400, seed, 51).toLocaleString("fr-FR")} F</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Coût moyen d'un litige", "Average cost of a dispute")}</p></div>
+          <div><p className="text-lg font-bold tracking-tight font-figures">1,7 %</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(t("Taux de litige · 2 sur 119 livrées", "Dispute rate · 2 of 119 delivered"))}</p></div>
+          <div><p className="text-lg font-bold tracking-tight font-figures">14 h</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Délai moyen de résolution", "Average resolution time")}</p></div>
+          <div><p className="text-lg font-bold tracking-tight">{t("Remplacement", "Replacement")}</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(t("Issue la plus fréquente · 83 %", "Most common outcome · 83%"))}</p></div>
+          <div><p className="text-lg font-bold tracking-tight text-[#c8262d] font-figures">{scaleForPeriod(3400, seed, 51).toLocaleString("fr-FR")} F</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Coût moyen d'un litige", "Average cost of a dispute")}</p></div>
         </div>
         <Divider />
         <DisputeReasonRow code="S" label={t("Produit abîmé à l'arrivée", "Product damaged on arrival")} note={t("14 cas sur 26 depuis le début · emballage ou manutention", "14 of 26 cases so far · packaging or handling")} pct={54} />
@@ -1045,40 +1047,52 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
               <p className="text-sm font-semibold">{t("À regarder aujourd'hui", "To look at today")}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Ce que la plateforme a repéré et que personne n'a encore traité", "What the platform has flagged that no one has handled yet")}</p>
             </div>
-            <Tag tone="warn" className="shrink-0">{t("5 signaux", "5 signals")}</Tag>
+            <Tag tone="warn" className="shrink-0"><span className="font-figures">{t("5 signaux", "5 signals")}</span></Tag>
           </div>
           <div className="mt-3">
             <Signal
               tone="ko"
-              title={t("2 commandes bloquées depuis plus de 6 heures", "2 orders stuck for over 6 hours")}
-              desc={t("C-4828 et C-4829 attendent une confirmation. Au-delà de six heures, elles ne se confirment plus qu'à 61 %.", "C-4828 and C-4829 are awaiting confirmation. Past six hours, confirmation drops to 61%.")}
+              title={texteAvecChiffres(t("2 commandes bloquées depuis plus de 6 heures", "2 orders stuck for over 6 hours"))}
+              desc={
+                <>
+                  <span className="font-figures">C-4828</span>
+                  {t(" et ", " and ")}
+                  <span className="font-figures">C-4829</span>
+                  {t(
+                    " attendent une confirmation. Au-delà de six heures, elles ne se confirment plus qu'à ",
+                    " are awaiting confirmation. Past six hours, confirmation drops to "
+                  )}
+                  <span className="font-figures">61</span>
+                  {t(" %.", "%.")}
+                </>
+              }
               cta={t("Voir", "View")}
               href="/dashboard/commandes?tab=commandes"
             />
             <Signal
               tone="warn"
-              title={t("Un même numéro, 4 commandes refusées", "Same number, 4 refused orders")}
+              title={texteAvecChiffres(t("Un même numéro, 4 commandes refusées", "Same number, 4 refused orders"))}
               desc={t("Toutes annulées à l'appel en douze jours. À mettre en liste d'attente avant de relancer une course.", "All cancelled by phone within twelve days. Hold before sending another courier.")}
               cta={t("Voir", "View")}
               href="/dashboard/commandes?tab=commandes"
             />
             <Signal
               tone="warn"
-              title={t("3 adresses identiques, clients différents", "3 identical addresses, different customers")}
+              title={texteAvecChiffres(t("3 adresses identiques, clients différents", "3 identical addresses, different customers"))}
               desc={t("Même repère, trois noms. Souvent un point de retrait informel, parfois autre chose.", "Same landmark, three names. Often an informal pickup point, sometimes something else.")}
               cta={t("Voir", "View")}
               href="/dashboard/commandes?tab=commandes"
             />
             <Signal
               tone="info"
-              title={t("Sérum éclat : 8 commandes, 4 jours de stock", "Radiance serum: 8 orders, 4 days of stock")}
-              desc={t("Au rythme actuel, rupture le 12 septembre. Le réapprovisionnement met 4 jours.", "At the current pace, stockout on Sept. 12. Restocking takes 4 days.")}
+              title={texteAvecChiffres(t("Sérum éclat : 8 commandes, 4 jours de stock", "Radiance serum: 8 orders, 4 days of stock"))}
+              desc={texteAvecChiffres(t("Au rythme actuel, rupture le 12 septembre. Le réapprovisionnement met 4 jours.", "At the current pace, stockout on Sept. 12. Restocking takes 4 days."))}
               cta={t("Voir", "View")}
               href={`/dashboard/produits?q=${encodeURIComponent(t("Sérum éclat", "Radiance serum"))}`}
             />
             <Signal
               tone="info"
-              title={t("Bouaké : 61 % de livraison sur 18 commandes", "Bouaké: 61% delivery on 18 orders")}
+              title={texteAvecChiffres(t("Bouaké : 61 % de livraison sur 18 commandes", "Bouaké: 61% delivery on 18 orders"))}
               desc={t("Vingt points sous votre moyenne. Le volume commence à peser sur le résultat.", "Twenty points below your average. Volume is starting to weigh on results.")}
               cta={t("Voir", "View")}
               href="/dashboard/commandes?tab=commandes"
@@ -1101,10 +1115,10 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
             ))}
           </div>
           <Divider />
-          <StatRow label={t("Commandes attendues", "Expected orders")} value={scaleForPeriod(52, seed, 52)} bold={false} />
-          <StatRow label={t("Dont livrées, au taux actuel", "Of which delivered, at current rate")} value={scaleForPeriod(42, seed, 53)} bold={false} />
-          <StatRow label={t("Chiffre d'affaires attendu", "Expected revenue")} value={<span className="text-[#178a3f]">{scaleForPeriod(817500, seed, 54).toLocaleString("fr-FR")} F</span>} />
-          <StatRow label={t("Références en rupture avant dimanche", "References out of stock before Sunday")} value={<span className="text-[#a8690a]">{scaleForPeriod(2, seed, 55)}</span>} />
+          <StatRow label={t("Commandes attendues", "Expected orders")} value={<span className="font-figures">{scaleForPeriod(52, seed, 52)}</span>} bold={false} />
+          <StatRow label={t("Dont livrées, au taux actuel", "Of which delivered, at current rate")} value={<span className="font-figures">{scaleForPeriod(42, seed, 53)}</span>} bold={false} />
+          <StatRow label={t("Chiffre d'affaires attendu", "Expected revenue")} value={<span className="text-[#178a3f] font-figures">{scaleForPeriod(817500, seed, 54).toLocaleString("fr-FR")} F</span>} />
+          <StatRow label={t("Références en rupture avant dimanche", "References out of stock before Sunday")} value={<span className="text-[#a8690a] font-figures">{scaleForPeriod(2, seed, 55)}</span>} />
           <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/50">
             {t(
               "Le pic de samedi tombe pendant la fenêtre des salaires. Deux références manqueront avant : les commander aujourd'hui les fait arriver à temps.",
@@ -1131,20 +1145,20 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
             >
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--dashboard-card-bg)] text-center">
                 <div>
-                  <p className="text-sm font-bold leading-none">18,2 %</p>
+                  <p className="text-sm font-bold leading-none font-figures">18,2 %</p>
                   <p className="mt-0.5 text-[8px] text-[var(--dashboard-text)]/40">{t("reviennent", "return")}</p>
                 </div>
               </div>
             </div>
             <div className="flex-1 space-y-1.5">
-              <StatRow label={t("Clients servis", "Customers served")} value={scaleForPeriod(121, seed, 56)} bold={false} />
-              <StatRow label={t("Dont déjà venus", "Of which returning")} value={<span className="text-[#178a3f]">{scaleForPeriod(22, seed, 57)}</span>} />
+              <StatRow label={t("Clients servis", "Customers served")} value={<span className="font-figures">{scaleForPeriod(121, seed, 56)}</span>} bold={false} />
+              <StatRow label={t("Dont déjà venus", "Of which returning")} value={<span className="text-[#178a3f] font-figures">{scaleForPeriod(22, seed, 57)}</span>} />
             </div>
           </div>
           <Divider />
-          <StatRow label={t("Panier d'un nouveau client", "New customer basket")} value={`${scaleForPeriod(18400, seed, 58).toLocaleString("fr-FR")} F`} bold={false} />
-          <StatRow label={t("Panier d'un client qui revient", "Returning customer basket")} value={<span className="text-[#178a3f]">{scaleForPeriod(24300, seed, 59).toLocaleString("fr-FR")} F</span>} />
-          <StatRow label={t("Taux de livraison d'un revenant", "Returning customer delivery rate")} value={<span className="text-[#178a3f]">96 %</span>} />
+          <StatRow label={t("Panier d'un nouveau client", "New customer basket")} value={<span className="font-figures">{`${scaleForPeriod(18400, seed, 58).toLocaleString("fr-FR")} F`}</span>} bold={false} />
+          <StatRow label={t("Panier d'un client qui revient", "Returning customer basket")} value={<span className="text-[#178a3f] font-figures">{scaleForPeriod(24300, seed, 59).toLocaleString("fr-FR")} F</span>} />
+          <StatRow label={t("Taux de livraison d'un revenant", "Returning customer delivery rate")} value={<span className="text-[#178a3f] font-figures">96 %</span>} />
           <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/50">
             {t(
               "Il commande un tiers plus cher, se livre à quatre-vingt-seize pour cent au lieu de quatre-vingts, et ne coûte aucune publicité. Chaque point gagné sur ce taux rapporte davantage qu'un point de transformation.",
