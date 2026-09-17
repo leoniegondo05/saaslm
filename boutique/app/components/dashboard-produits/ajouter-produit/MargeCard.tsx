@@ -1,6 +1,7 @@
 "use client";
 
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
+import { texteAvecChiffres } from "../../dashboard-accueil/shared";
 import { libelleCombinaison } from "./combinaisons";
 import type { Attribut, Combinaison } from "./types";
 
@@ -66,10 +67,10 @@ export default function MargeCard({
       </div>
 
       <div className="mt-2.5 flex items-end justify-between gap-2">
-        <p className={`text-3xl font-bold tracking-tight font-figures ${venteAPerte ? "text-[#c8262d]" : ""}`}>{marge !== null ? F(marge) : "—"}</p>
+        <p className={`text-3xl tracking-tight font-figures-bold ${venteAPerte ? "text-[#c8262d]" : ""}`}>{marge !== null ? F(marge) : "—"}</p>
         {margePct !== null && (
           <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${venteAPerte ? "bg-[#ffe1e2] text-[#c8262d]" : "bg-black/[0.05] text-[var(--dashboard-text)]/60 dark:bg-white/[0.08]"}`}>
-            {t("Marge", "Margin")} {margePct}%
+            {texteAvecChiffres(t(`Marge ${margePct}%`, `Margin ${margePct}%`))}
           </span>
         )}
       </div>
@@ -90,18 +91,18 @@ export default function MargeCard({
 
       <div className="flex items-center justify-between text-xs">
         <span className="font-semibold">{t("Il vous reste", "You keep")}</span>
-        <span className={`text-base font-bold font-figures ${venteAPerte ? "text-[#c8262d]" : ""}`}>{marge !== null ? F(marge) : "—"}</span>
+        <span className={`text-base font-figures-bold ${venteAPerte ? "text-[#c8262d]" : ""}`}>{marge !== null ? F(marge) : "—"}</span>
       </div>
 
       {(venteAPerte || combinaisonMiseEnAvant) && (
-        <p className="mt-3 text-[9px] leading-snug text-[var(--dashboard-text)]/35">
+        <p className="mt-3 text-[9px] leading-snug text-[var(--dashboard-text)]/40">
           {venteAPerte
             ? t("Le prix de revente ne couvre pas le prix d'achat : vente à perte.", "The resale price doesn't cover the cost price: selling at a loss.")
             : combinaisonMiseEnAvant
-              ? t(
+              ? texteAvecChiffres(t(
                   `Calcul fait sur la combinaison ${libelleCombinaison(combinaisonMiseEnAvant, attributs)}, celle qui est mise en avant dans la liste des variantes. Choisissez-en une autre et le calcul suit.`,
                   `Calculated on the ${libelleCombinaison(combinaisonMiseEnAvant, attributs)} combination, the one featured in the variants list. Pick another one and the calculation follows.`
-                )
+                ))
               : null}
         </p>
       )}
@@ -127,7 +128,7 @@ function LigneMontant({
         {couleur && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: couleur }} />}
         {label}
       </span>
-      <span className={accent ? "font-semibold" : ""}>{valeur}</span>
+      <span className={accent ? "font-figures-bold" : "font-figures"}>{valeur}</span>
     </div>
   );
 }

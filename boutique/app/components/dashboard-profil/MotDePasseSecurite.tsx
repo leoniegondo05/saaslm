@@ -128,7 +128,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
               </span>
               <div>
                 <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("Mot de passe", "Password")}</p>
-                <p className="text-xs text-[var(--dashboard-text)]/45">{t("Changé il y a 2 mois", "Changed 2 months ago")}</p>
+                <p className="text-xs text-[var(--dashboard-text)]/40">{t("Changé il y a 2 mois", "Changed 2 months ago")}</p>
               </div>
             </div>
             <Tag tone="ok">{t("Solide", "Strong")}</Tag>
@@ -206,7 +206,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
               </span>
               <div>
                 <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("Double vérification", "Two-factor verification")}</p>
-                <p className="text-xs text-[var(--dashboard-text)]/45">{t("Un code de six chiffres sur tout appareil nouveau", "A six-digit code on every new device")}</p>
+                <p className="text-xs text-[var(--dashboard-text)]/40">{t("Un code de six chiffres sur tout appareil nouveau", "A six-digit code on every new device")}</p>
               </div>
             </div>
             <ToggleSwitch
@@ -255,10 +255,10 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
               </span>
               <div>
                 <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("Codes de secours", "Backup codes")}</p>
-                <p className="text-xs text-[var(--dashboard-text)]/45">{t("Pour le jour où le téléphone manque", "For the day your phone is missing")}</p>
+                <p className="text-xs text-[var(--dashboard-text)]/40">{t("Pour le jour où le téléphone manque", "For the day your phone is missing")}</p>
               </div>
             </div>
-            <p className="shrink-0 text-sm font-bold text-[var(--dashboard-text)] font-figures">
+            <p className="shrink-0 text-sm text-[var(--dashboard-text)] font-figures-bold">
               {codesRestants} {t("sur", "of")} {CODES_TOTAL}
             </p>
           </div>
@@ -315,7 +315,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
               </span>
               <div>
                 <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("M'alerter", "Alert me")}</p>
-                <p className="text-xs text-[var(--dashboard-text)]/45">{t("Dès qu'un appareil inconnu ouvre le compte", "As soon as an unknown device opens the account")}</p>
+                <p className="text-xs text-[var(--dashboard-text)]/40">{t("Dès qu'un appareil inconnu ouvre le compte", "As soon as an unknown device opens the account")}</p>
               </div>
             </div>
             <ToggleSwitch
@@ -324,7 +324,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
               label={t("M'alerter", "Alert me")}
             />
           </div>
-          <p className="mt-3 text-xs leading-snug text-[var(--dashboard-text)]/45">
+          <p className="mt-3 text-xs leading-snug text-[var(--dashboard-text)]/40">
             {t(
               "Un message part avec la ville et l'heure. C'est ce qui prévient d'un mot de passe volé avant qu'il serve.",
               "A message is sent with the city and time. This is what warns of a stolen password before it's used."

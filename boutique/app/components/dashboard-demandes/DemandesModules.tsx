@@ -410,10 +410,10 @@ function StatRow4({ stats }: { stats: { valeur: string; label: string; couleur?:
     <div className="mt-4 grid grid-cols-2 gap-3 border-y border-[var(--dashboard-text)]/10 py-4 sm:grid-cols-4">
       {stats.map((s, i) => (
         <div key={i}>
-          <p className="text-lg font-bold tracking-tight font-figures" style={s.couleur ? { color: s.couleur } : undefined}>
+          <p className="text-lg tracking-tight font-figures-bold" style={s.couleur ? { color: s.couleur } : undefined}>
             {s.valeur}
           </p>
-          <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/45">{s.label}</p>
+          <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{s.label}</p>
         </div>
       ))}
     </div>

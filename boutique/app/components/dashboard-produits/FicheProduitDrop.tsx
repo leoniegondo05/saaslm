@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { Card, ProduitCarousel, Tag } from "../dashboard-accueil/shared";
+import { useRef, useState } from "react";
+import { Card, ProduitCarousel, Tag, texteAvecChiffres } from "../dashboard-accueil/shared";
 import type { DropProduit } from "./dropCatalogue";
 import { getCategoryLabelEn } from "./dropCatalogue";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
@@ -26,6 +26,10 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
   const { t, langue } = useDashboardLangue();
   const F = (n: number) => `${Math.round(n).toLocaleString(langue === "EN" ? "en-US" : "fr-FR")} F`;
   const [monPrix, setMonPrix] = useState(produit.prixVenteActuel ?? produit.prixConseille ?? produit.prixDrop ?? 0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoProgressPct, setVideoProgressPct] = useState(0);
+  const [produitChoisi, setProduitChoisi] = useState(false);
+  const [misDeCote, setMisDeCote] = useState(false);
   const commission = Math.round(monPrix * TAUX_COMMISSION);
   const ilReste = monPrix - (produit.prixDrop ?? 0) - FRAIS_LOGISTIQUES - commission;
 
@@ -50,27 +54,49 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
       </Link>
 
       <div className="relative mt-4 flex min-h-[280px] flex-col justify-end overflow-hidden rounded-3xl bg-[var(--dashboard-card-bg)] p-6 text-white">
-        <ProduitCarousel images={produit.images ?? []} />
-        {/* Dégradé produit : fondu vers le noir pour la lisibilité du texte.
-            Vide tant que le produit n'a pas de photos, cf.
+        {/* Vidéo produit en arrière-plan (upload partenaire, cf.
+            ajouter-produit/MediaProduit.tsx). Aucune pour l'instant, cf.
+            [[dashboard-mock-data-pending-laravel-api]] : la carte reste alors
+            juste le dégradé, comme avant. */}
+        {produit.videoUrl && (
+          <video
+            ref={videoRef}
+            src={produit.videoUrl}
+            className="absolute inset-0 h-full w-full object-cover"
+            muted
+            loop
+            autoPlay
+            playsInline
+            onTimeUpdate={(e) => {
+              const v = e.currentTarget;
+              setVideoProgressPct(v.duration ? (v.currentTime / v.duration) * 100 : 0);
+            }}
+          />
+        )}
+        {/* Photo produit devant la vidéo (carousel, cf. shared.tsx). Vide tant
+            que le produit n'a pas de photos, cf.
             [[dashboard-mock-data-pending-laravel-api]]. */}
+        <ProduitCarousel images={produit.images ?? []} />
+        {/* Dégradé produit : fondu vers le noir pour la lisibilité du texte. */}
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(217,217,217,0)_40%,#000000_92%)]" />
-        {/* Barre de progression (vidéo en lecture en arrière-plan) : blanche,
-            avec un segment rose figurant la portion déjà lue. */}
-        <div className="pointer-events-none absolute inset-x-4 bottom-0 h-[3px] overflow-hidden rounded-full bg-white/90">
-          <span className="absolute inset-y-0 left-0 w-[38%] rounded-full bg-brand-pink" />
-        </div>
+        {produit.videoUrl && (
+          <div className="pointer-events-none absolute inset-x-4 bottom-0 h-[3px] overflow-hidden rounded-full bg-white/90">
+            <span className="absolute inset-y-0 left-0 rounded-full bg-brand-pink" style={{ width: `${videoProgressPct}%` }} />
+          </div>
+        )}
         <div className="relative">
           <div className="mb-2.5 flex flex-wrap gap-1.5">
             <Tag tone="pink">{produit.source === "L" ? t("Drop LM", "LM drop") : t("Partenaire", "Partner")}</Tag>
             {produit.unitesDisponibles !== undefined && (
-              <Tag tone="neutral">{t("Disponible", "Available")} · {t(`${produit.unitesDisponibles} unités`, `${produit.unitesDisponibles} units`)}</Tag>
+              <Tag tone="neutral">
+                <span>{t("Disponible", "Available")} · {texteAvecChiffres(t(`${produit.unitesDisponibles} unités`, `${produit.unitesDisponibles} units`))}</span>
+              </Tag>
             )}
             <Tag tone="neutral">{t("Réf.", "Ref.")} {produit.slug.slice(0, 8).toUpperCase()}</Tag>
           </div>
-          <p className="text-3xl font-semibold tracking-tight">{t(produit.nom, produit.nomEn ?? produit.nom)}</p>
+          <p className="text-3xl font-semibold tracking-tight">{texteAvecChiffres(t(produit.nom, produit.nomEn ?? produit.nom))}</p>
           <p className="mt-1 text-xs text-white/60">
-            {[categorieLabel, conditionnementLabel, produit.contenance].filter(Boolean).join(" · ")}
+            {texteAvecChiffres([categorieLabel, conditionnementLabel, produit.contenance].filter(Boolean).join(" · "))}
           </p>
         </div>
       </div>
@@ -82,7 +108,7 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
             <Tag tone="dark">{t("Sur ce partenaire", "From this partner")}</Tag>
           </div>
           <div className="mt-1.5 flex items-center justify-between gap-2">
-            <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-2xl font-bold tracking-tight text-white font-figures">
+            <p className="-ml-4 inline-block rounded-r-xl bg-brand-purple py-2 pl-4 pr-4 text-2xl tracking-tight text-white font-figures-bold">
               {F(produit.prixDrop ?? 0)}
             </p>
             <Tag tone="neutral">{t("Prix drop", "Drop price")}</Tag>
@@ -90,15 +116,15 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
           <div className="my-3 h-px bg-[var(--dashboard-text)]/10" />
           <div className="flex items-center justify-between text-xs">
             <span className="text-[var(--dashboard-text)]/50">{t("Prix moyen de revente", "Average resale price")}</span>
-            <span className="font-semibold">{produit.prixMoyenReseau ? F(produit.prixMoyenReseau) : "—"}</span>
+            <span className="font-figures-bold">{produit.prixMoyenReseau ? F(produit.prixMoyenReseau) : "—"}</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
             <span className="text-[var(--dashboard-text)]/50">{t("Le plus bas pratiqué", "Lowest seen")}</span>
-            <span className="font-semibold">{produit.prixBasReseau ? F(produit.prixBasReseau) : "—"}</span>
+            <span className="font-figures-bold">{produit.prixBasReseau ? F(produit.prixBasReseau) : "—"}</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
             <span className="text-[var(--dashboard-text)]/50">{t("Le plus haut pratiqué", "Highest seen")}</span>
-            <span className="font-semibold">{produit.prixHautReseau ? F(produit.prixHautReseau) : "—"}</span>
+            <span className="font-figures-bold">{produit.prixHautReseau ? F(produit.prixHautReseau) : "—"}</span>
           </div>
           {produit.prixBasReseau && produit.prixHautReseau && (
             <>
@@ -109,9 +135,9 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
                 />
               </div>
               <div className="mt-1.5 flex justify-between text-[9px] text-[var(--dashboard-text)]/40">
-                <span>{F(produit.prixBasReseau)}</span>
-                <span className="font-semibold text-[var(--dashboard-text)]">{t("Vous", "You")} : {F(monPrix)}</span>
-                <span>{F(produit.prixHautReseau)}</span>
+                <span className="font-figures">{F(produit.prixBasReseau)}</span>
+                <span className="font-semibold text-[var(--dashboard-text)]">{t("Vous", "You")} : {texteAvecChiffres(F(monPrix))}</span>
+                <span className="font-figures">{F(produit.prixHautReseau)}</span>
               </div>
             </>
           )}
@@ -120,13 +146,13 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
         <Card title={t("Description", "Description")} titleTab className="!bg-[var(--dashboard-card-bg)]">
           <p className="mt-2.5 text-xs text-[var(--dashboard-text)]/70">{produit.description ? t(produit.description, produit.descriptionEn ?? produit.description) : "—"}</p>
           <div className="my-3 h-px bg-[var(--dashboard-text)]/10" />
-          {produit.conditionnement && <Row label={t("Conditionnement", "Packaging")} value={conditionnementLabel!} />}
-          {produit.contenance && <Row label={t("Contenance", "Volume")} value={produit.contenance} />}
-          {produit.poidsEmballe && <Row label={t("Poids emballé", "Packaged weight")} value={produit.poidsEmballe} />}
-          {produit.venduParBoutiques !== undefined && <Row label={t("Vendu par", "Sold by")} value={t(`${produit.venduParBoutiques} boutiques du réseau`, `${produit.venduParBoutiques} shops in the network`)} />}
-          {produit.ventesReseau30j !== undefined && <Row label={t("Ventes du réseau · 30 j", "Network sales · 30 days")} value={String(produit.ventesReseau30j)} />}
-          {produit.vosVentes30j !== undefined && <Row label={t("Vos ventes · 30 j", "Your sales · 30 days")} value={String(produit.vosVentes30j)} />}
-          {produit.tauxLitigePct !== undefined && <Row label={t("Taux de litige", "Dispute rate")} value={`${produit.tauxLitigePct} %`} />}
+          {produit.conditionnement && <Row label={t("Conditionnement", "Packaging")} value={texteAvecChiffres(conditionnementLabel!)} />}
+          {produit.contenance && <Row label={t("Contenance", "Volume")} value={texteAvecChiffres(produit.contenance)} />}
+          {produit.poidsEmballe && <Row label={t("Poids emballé", "Packaged weight")} value={texteAvecChiffres(produit.poidsEmballe)} />}
+          {produit.venduParBoutiques !== undefined && <Row label={t("Vendu par", "Sold by")} value={texteAvecChiffres(t(`${produit.venduParBoutiques} boutiques du réseau`, `${produit.venduParBoutiques} shops in the network`))} />}
+          {produit.ventesReseau30j !== undefined && <Row label={texteAvecChiffres(t("Ventes du réseau · 30 j", "Network sales · 30 days"))} value={texteAvecChiffres(String(produit.ventesReseau30j))} />}
+          {produit.vosVentes30j !== undefined && <Row label={texteAvecChiffres(t("Vos ventes · 30 j", "Your sales · 30 days"))} value={texteAvecChiffres(String(produit.vosVentes30j))} />}
+          {produit.tauxLitigePct !== undefined && <Row label={t("Taux de litige", "Dispute rate")} value={texteAvecChiffres(`${produit.tauxLitigePct} %`)} />}
         </Card>
 
         <div>
@@ -138,32 +164,48 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
                 type="number"
                 value={monPrix}
                 onChange={(e) => setMonPrix(Number(e.target.value) || 0)}
-                className="w-full bg-transparent text-lg font-bold tabular-nums outline-none font-figures"
+                className="w-full bg-transparent text-lg tabular-nums outline-none font-figures-bold"
               />
             </div>
             <div className="mt-3 flex items-center justify-between text-xs text-white/55">
               <span>− {t("Prix du produit", "Product price")}</span>
-              <span className="text-white/80">{F(produit.prixDrop ?? 0)}</span>
+              <span className="font-figures text-white/80">{F(produit.prixDrop ?? 0)}</span>
             </div>
             <div className="mt-1.5 flex items-center justify-between text-xs text-white/55">
               <span>− {t("Frais logistiques", "Logistics fees")}</span>
-              <span className="text-white/80">{F(FRAIS_LOGISTIQUES)}</span>
+              <span className="font-figures text-white/80">{F(FRAIS_LOGISTIQUES)}</span>
             </div>
             <div className="mt-1.5 flex items-center justify-between text-xs text-white/55">
               <span>− {t("Commission et paiement", "Commission & payment")}</span>
-              <span className="text-white/80">{F(commission)}</span>
+              <span className="font-figures text-white/80">{F(commission)}</span>
             </div>
             <div className="my-3 h-px bg-white/15" />
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold">{t("Il vous reste", "You're left with")}</span>
-              <span className={`text-lg font-bold font-figures ${ilReste < 0 ? "text-red-300" : "text-brand-pink"}`}>{F(ilReste)}</span>
+              <span className={`text-lg font-figures-bold ${ilReste < 0 ? "text-red-300" : "text-brand-pink"}`}>{F(ilReste)}</span>
             </div>
           </div>
-          <button type="button" className="mt-3 w-full rounded-full bg-[var(--dashboard-card-bg)] px-4 py-2.5 text-center text-xs font-semibold shadow-[0_2px_10px_rgba(20,18,32,0.08)]">
-            {t("Choisir le produit", "Choose this product")}
+          <button
+            type="button"
+            onClick={() => setProduitChoisi(true)}
+            disabled={produitChoisi}
+            aria-pressed={produitChoisi}
+            className={`mt-3 w-full rounded-full px-4 py-2.5 text-center text-xs font-semibold shadow-[0_2px_10px_rgba(20,18,32,0.08)] transition ${
+              produitChoisi ? "bg-brand-pink text-white" : "bg-[var(--dashboard-card-bg)] hover:brightness-95"
+            }`}
+          >
+            {produitChoisi ? t("Produit choisi", "Product chosen") : t("Choisir le produit", "Choose this product")}
           </button>
-          <button type="button" className="mt-2 w-full rounded-full bg-[#141220] px-4 py-2.5 text-center text-xs font-semibold text-white dark:bg-brand-pink">
-            {t("Mettre de côté", "Set aside")}
+          <button
+            type="button"
+            onClick={() => setMisDeCote(true)}
+            disabled={misDeCote}
+            aria-pressed={misDeCote}
+            className={`mt-2 w-full rounded-full px-4 py-2.5 text-center text-xs font-semibold text-white transition ${
+              misDeCote ? "bg-[#141220]/60 dark:bg-brand-pink/60" : "bg-[#141220] dark:bg-brand-pink hover:brightness-95"
+            }`}
+          >
+            {misDeCote ? t("Mis de côté", "Saved for later") : t("Mettre de côté", "Set aside")}
           </button>
         </div>
       </div>
@@ -171,7 +213,7 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: React.ReactNode; value: React.ReactNode }) {
   return (
     <div className="mt-2 flex items-center justify-between text-xs">
       <span className="text-[var(--dashboard-text)]/50">{label}</span>

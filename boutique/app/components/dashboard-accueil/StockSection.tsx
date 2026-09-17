@@ -70,14 +70,14 @@ function KpiCard({ label, value, valueColor, note, noteColor, previous }: { labe
   return (
     <Card className="!bg-[var(--dashboard-glass)]">
       <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
-      <p className="mt-1 text-2xl font-bold tracking-tight font-figures" style={valueColor ? { color: valueColor } : undefined}>
+      <p className="mt-1 text-2xl tracking-tight font-figures-bold" style={valueColor ? { color: valueColor } : undefined}>
         {value}
       </p>
       <p className="mt-1 text-[10px]" style={noteColor ? { color: noteColor } : undefined}>
         <span className={noteColor ? "" : "text-[var(--dashboard-text)]/40"}>{texteAvecChiffres(note)}</span>
       </p>
       {previous && (
-        <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">
+        <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">
           {t("Période précédente", "Previous period")} : <span className="font-figures">{previous}</span>
         </p>
       )}
@@ -555,7 +555,7 @@ export default function StockSection({ first = true, activeDate }: { first?: boo
       />
 
       {/* Légende : quelle couleur renvoie à quelle façon de vendre */}
-      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-2xl bg-[var(--dashboard-glass)] px-4 py-3 text-[10px] text-[var(--dashboard-text)]/50">
+      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-glass)] px-4 py-3 text-[10px] text-[var(--dashboard-text)]/50 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         <span className="flex items-center gap-1.5"><Nature code="S" /> {t("Stockage management", "Warehousing")}</span>
         <span className="flex items-center gap-1.5"><Nature code="D" /> {t("Dropshipping", "Drop-shipping")}</span>
         <span className="flex items-center gap-1.5"><Nature code="B" /> {t("Les deux", "Both")}</span>
@@ -622,11 +622,11 @@ export default function StockSection({ first = true, activeDate }: { first?: boo
         </div>
         <Divider />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Déposé", "Deposited")}</p><p className="mt-0.5 text-base font-bold font-figures" style={{ color: "#178a3f" }}>{N(depositedUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("en 2 dépôts", "in 2 deposits"))}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Vendu", "Sold")}</p><p className="mt-0.5 text-base font-bold font-figures">{N(soldUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("4,1 par jour", "4.1 per day"))}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Revenu", "Returned")}</p><p className="mt-0.5 text-base font-bold font-figures" style={{ color: "#c8262d" }}>{N(returnedUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("après refus", "after refusal")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Écarts constatés", "Discrepancies found")}</p><p className="mt-0.5 text-base font-bold font-figures" style={{ color: "#a8690a" }}>{N(discrepancyUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("casse ou manquant", "breakage or missing")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Prochain dépôt", "Next deposit")}</p><p className="mt-0.5 text-base font-bold font-figures">{texteAvecChiffres(t("Jeudi 11", "Thursday 11"))}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("déjà planifié", "already planned")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Déposé", "Deposited")}</p><p className="mt-0.5 text-base font-figures-bold" style={{ color: "#178a3f" }}>{N(depositedUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("en 2 dépôts", "in 2 deposits"))}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Vendu", "Sold")}</p><p className="mt-0.5 text-base font-figures-bold">{N(soldUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("4,1 par jour", "4.1 per day"))}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Revenu", "Returned")}</p><p className="mt-0.5 text-base font-figures-bold" style={{ color: "#c8262d" }}>{N(returnedUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("après refus", "after refusal")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Écarts constatés", "Discrepancies found")}</p><p className="mt-0.5 text-base font-figures-bold" style={{ color: "#a8690a" }}>{N(discrepancyUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("casse ou manquant", "breakage or missing")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Prochain dépôt", "Next deposit")}</p><p className="mt-0.5 text-base font-figures-bold">{texteAvecChiffres(t("Jeudi 11", "Thursday 11"))}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("déjà planifié", "already planned")}</p></div>
         </div>
         <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
           {t(
@@ -714,7 +714,7 @@ export default function StockSection({ first = true, activeDate }: { first?: boo
               size={100}
               className="sm:ml-28"
             >
-              <span className="text-lg font-bold font-figures">{N(sitesTotal)}</span>
+              <span className="text-lg font-figures-bold">{N(sitesTotal)}</span>
               <span className="text-[8px] text-[var(--dashboard-text)]/40">{t("unités", "units")}</span>
             </Ring>
             <div className="w-full space-y-1.5 text-[10px]">
@@ -724,7 +724,7 @@ export default function StockSection({ first = true, activeDate }: { first?: boo
             </div>
           </div>
           <div>
-            <div className="grid grid-cols-[1.2fr_0.6fr_1fr_0.8fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+            <div className="grid grid-cols-[1.2fr_0.6fr_1fr_0.8fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
               <span>{t("Site", "Site")}</span><span>{t("Unités", "Units")}</span><span>{t("Cmd. servies", "Orders served")}</span><span className="text-right">{t("Délai moyen", "Avg. time")}</span>
             </div>
             <div className="divide-y divide-[var(--dashboard-text)]/[0.05]">
@@ -763,7 +763,7 @@ export default function StockSection({ first = true, activeDate }: { first?: boo
             { days: null, tone: "none" },
           ]}
         />
-        <div className="mt-3 grid grid-cols-[1.6fr_0.5fr_1fr_0.9fr_1fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+        <div className="mt-3 grid grid-cols-[1.6fr_0.5fr_1fr_0.9fr_1fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
           <span>{t("Référence et lot", "Item and batch")}</span><span>{t("Unités", "Units")}</span><span>{t("Date limite", "Deadline")}</span><span>{t("Valeur", "Value")}</span><span className="text-right">{t("Reste", "Remaining")}</span>
         </div>
         <div className="max-h-[340px] divide-y divide-[var(--dashboard-text)]/[0.05] overflow-y-auto pr-1">
@@ -796,19 +796,19 @@ export default function StockSection({ first = true, activeDate }: { first?: boo
           </div>
           <div className="mt-3 flex items-center gap-2 text-center">
             <div className="flex-1 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
-              <p className="text-lg font-bold font-figures">{dec1(qualityReception)} %</p>
+              <p className="text-lg font-figures-bold">{dec1(qualityReception)} %</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Conformes à la réception", "Compliant on receipt")}</p>
               <p className="mt-1 text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("11 écarts sur 486", "11 discrepancies out of 486"))}</p>
             </div>
             <span className="shrink-0 text-[var(--dashboard-text)]/25">→</span>
             <div className="flex-1 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
-              <p className="text-lg font-bold font-figures">{dec1(qualityDelivery)} %</p>
+              <p className="text-lg font-figures-bold">{dec1(qualityDelivery)} %</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Intacts à la livraison", "Intact on delivery")}</p>
               <p className="mt-1 text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("2 litiges pour produit abîmé", "2 disputes for damaged goods"))}</p>
             </div>
             <span className="shrink-0 text-[var(--dashboard-text)]/25">→</span>
             <div className="flex-1 rounded-xl p-3" style={{ background: "rgba(255,90,98,.1)" }}>
-              <p className="text-lg font-bold font-figures" style={{ color: "#c8262d" }}>{N(returnsResellable)} %</p>
+              <p className="text-lg font-figures-bold" style={{ color: "#c8262d" }}>{N(returnsResellable)} %</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Revendables après un retour", "Resellable after a return")}</p>
               <p className="mt-1 text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("5 sur 19 abîmées au voyage", "5 of 19 damaged in transit"))}</p>
             </div>
@@ -841,19 +841,19 @@ export default function StockSection({ first = true, activeDate }: { first?: boo
           </div>
           <div className="mt-3 space-y-2">
             <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: "rgba(79,224,174,.08)" }}>
-              <span className="w-7 shrink-0 text-center text-lg font-bold font-figures" style={{ color: "#178a3f" }}>{N(returnIntactCount)}</span>
+              <span className="w-7 shrink-0 text-center text-lg font-figures-bold" style={{ color: "#178a3f" }}>{N(returnIntactCount)}</span>
               <div className="min-w-0 flex-1"><p className="text-xs font-semibold">{t("Intactes, remises en vente", "Intact, back on sale")}</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Refus sans ouverture du colis. Aucune perte.", "Refused unopened. No loss.")}</p></div>
-              <span className="shrink-0 text-xs font-bold font-figures">{F(returnIntactValue)}</span>
+              <span className="shrink-0 text-xs font-figures-bold">{F(returnIntactValue)}</span>
             </div>
             <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: "rgba(255,184,77,.08)" }}>
-              <span className="w-7 shrink-0 text-center text-lg font-bold font-figures" style={{ color: "#a8690a" }}>{N(returnDamagedCount)}</span>
+              <span className="w-7 shrink-0 text-center text-lg font-figures-bold" style={{ color: "#a8690a" }}>{N(returnDamagedCount)}</span>
               <div className="min-w-0 flex-1"><p className="text-xs font-semibold">{t("Abîmées pendant le voyage", "Damaged in transit")}</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Emballage ouvert ou écrasé. À solder ou à jeter.", "Open or crushed packaging. Clear or discard.")}</p></div>
-              <span className="shrink-0 text-xs font-bold font-figures">{F(returnDamagedValue)}</span>
+              <span className="shrink-0 text-xs font-figures-bold">{F(returnDamagedValue)}</span>
             </div>
             <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: "rgba(255,90,98,.08)" }}>
-              <span className="w-7 shrink-0 text-center text-lg font-bold font-figures" style={{ color: "#c8262d" }}>{N(returnDefectCount)}</span>
+              <span className="w-7 shrink-0 text-center text-lg font-figures-bold" style={{ color: "#c8262d" }}>{N(returnDefectCount)}</span>
               <div className="min-w-0 flex-1"><p className="text-xs font-semibold">{t("Défaut de fabrication", "Manufacturing defect")}</p><p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Le client avait raison. À réclamer au fournisseur.", "The customer was right. Claimable from the supplier.")}</p></div>
-              <span className="shrink-0 text-xs font-bold font-figures">{F(returnDefectValue)}</span>
+              <span className="shrink-0 text-xs font-figures-bold">{F(returnDefectValue)}</span>
             </div>
           </div>
           <Divider />
@@ -888,26 +888,26 @@ export default function StockSection({ first = true, activeDate }: { first?: boo
         </div>
         <Divider />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Demande estimée", "Estimated demand")}</p><p className="mt-0.5 text-base font-bold font-figures">{N(demandEstimated)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("unités sur la période", "units this period")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Vendu", "Sold")}</p><p className="mt-0.5 text-base font-bold font-figures">{N(soldUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("91 % de la demande", "91% of demand"))}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Perdu sur rupture", "Lost to stockout")}</p><p className="mt-0.5 text-base font-bold font-figures" style={{ color: "#c8262d" }}>{N(demandLost)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("214 000 F de chiffre", "214 000 F in revenue"))}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Marge perdue", "Margin lost")}</p><p className="mt-0.5 text-base font-bold font-figures" style={{ color: "#c8262d" }}>{F(marginLost)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("sur 3 références", "on 3 items"))}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Taux de service", "Service rate")}</p><p className="mt-0.5 text-base font-bold font-figures" style={{ color: "#a8690a" }}>{N(demandServiceRate)} %</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("cible du réseau : 95 %", "network target: 95%"))}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Demande estimée", "Estimated demand")}</p><p className="mt-0.5 text-base font-figures-bold">{N(demandEstimated)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{t("unités sur la période", "units this period")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Vendu", "Sold")}</p><p className="mt-0.5 text-base font-figures-bold">{N(soldUnits)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("91 % de la demande", "91% of demand"))}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Perdu sur rupture", "Lost to stockout")}</p><p className="mt-0.5 text-base font-figures-bold" style={{ color: "#c8262d" }}>{N(demandLost)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("214 000 F de chiffre", "214 000 F in revenue"))}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Marge perdue", "Margin lost")}</p><p className="mt-0.5 text-base font-figures-bold" style={{ color: "#c8262d" }}>{F(marginLost)}</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("sur 3 références", "on 3 items"))}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Taux de service", "Service rate")}</p><p className="mt-0.5 text-base font-figures-bold" style={{ color: "#a8690a" }}>{N(demandServiceRate)} %</p><p className="text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("cible du réseau : 95 %", "network target: 95%"))}</p></div>
         </div>
         <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
           <div className="rounded-xl p-3" style={{ background: "rgba(79,224,174,.08)" }}>
             <p className="text-xs font-semibold">{texteAvecChiffres(t("Sérum éclat 30 ml", "Radiance serum 30 ml"))}</p>
-            <p className="mt-0.5 text-sm font-bold font-figures" style={{ color: "#178a3f" }}>+{N(trendSerum)} %</p>
+            <p className="mt-0.5 text-sm font-figures-bold" style={{ color: "#178a3f" }}>+{N(trendSerum)} %</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("La demande accélère depuis trois semaines. C'est aussi la référence en rupture dans quatre jours.", "Demand has accelerated for three weeks. It's also the item running out in four days.")}</p>
           </div>
           <div className="rounded-xl p-3" style={{ background: "rgba(255,184,77,.08)" }}>
             <p className="text-xs font-semibold">{texteAvecChiffres(t("Beurre de karité 200 g", "Shea butter 200 g"))}</p>
-            <p className="mt-0.5 text-sm font-bold font-figures" style={{ color: "#a8690a" }}>+{N(trendKarite)} %</p>
+            <p className="mt-0.5 text-sm font-figures-bold" style={{ color: "#a8690a" }}>+{N(trendKarite)} %</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Demande stable. Le stock suit, mais la date limite approche.", "Demand stable. Stock keeps pace, but the deadline is near.")}</p>
           </div>
           <div className="rounded-xl p-3" style={{ background: "rgba(255,90,98,.08)" }}>
             <p className="text-xs font-semibold">{texteAvecChiffres(t("Sandales tressées", "Woven sandals"))}</p>
-            <p className="mt-0.5 text-sm font-bold font-figures" style={{ color: "#c8262d" }}>−{N(trendSandales)} %</p>
+            <p className="mt-0.5 text-sm font-figures-bold" style={{ color: "#c8262d" }}>−{N(trendSandales)} %</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("La demande recule depuis un mois, et il reste vingt-six jours de couverture.", "Demand has fallen for a month, and twenty-six days of coverage remain.")}</p>
           </div>
         </div>
@@ -1008,7 +1008,7 @@ export default function StockSection({ first = true, activeDate }: { first?: boo
           </div>
           <div className="flex items-center gap-2"><Tag tone="pink">{texteAvecChiffres(`${t("Budget", "Budget")} ${F(replenBudget)}`)}</Tag><Tag tone="blue">S</Tag></div>
         </div>
-        <div className="mt-3 grid grid-cols-[1.4fr_0.6fr_0.8fr_0.6fr_1fr_1fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+        <div className="mt-3 grid grid-cols-[1.4fr_0.6fr_0.8fr_0.6fr_1fr_1fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
           <span>{t("Référence", "Item")}</span><span>{t("En stock", "In stock")}</span><span>{t("Couverture", "Coverage")}</span><span>{t("À déposer", "To deposit")}</span><span>{t("Coût", "Cost")}</span><span className="text-right">{t("État", "Status")}</span>
         </div>
         <div className="max-h-[340px] divide-y divide-[var(--dashboard-text)]/[0.05] overflow-y-auto pr-1">
@@ -1048,22 +1048,22 @@ export default function StockSection({ first = true, activeDate }: { first?: boo
         </div>
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
           <div className="rounded-xl bg-[var(--dashboard-surface-2)] p-3">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--dashboard-text)]/10 text-[10px] font-bold font-figures">1</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--dashboard-text)]/10 text-[10px] font-figures-bold">1</span>
             <p className="mt-2 text-xs font-semibold">{t("Ce qui part pendant le délai", "What sells during the lead time")}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Vos ventes par jour, multipliées par les quatre jours que met le dépôt à arriver.", "Your daily sales, times the four days the deposit takes to arrive.")}</p>
           </div>
           <div className="rounded-xl bg-[var(--dashboard-surface-2)] p-3">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--dashboard-text)]/10 text-[10px] font-bold font-figures">2</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--dashboard-text)]/10 text-[10px] font-figures-bold">2</span>
             <p className="mt-2 text-xs font-semibold">{t("Une réserve de sécurité", "A safety reserve")}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("De quoi tenir si les ventes s'accélèrent ou si le dépôt prend du retard. Ici, cinq jours.", "Enough to hold if sales speed up or the deposit runs late. Here, five days.")}</p>
           </div>
           <div className="rounded-xl p-3" style={{ background: "rgba(232,32,126,.1)" }}>
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-pink/20 text-[10px] font-bold font-figures text-brand-pink">3</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-pink/20 text-[10px] font-figures-bold text-brand-pink">3</span>
             <p className="mt-2 text-xs font-semibold">{t("Le point de commande", "The reorder point")}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Quand le stock descend à ce niveau, on redépose. Sans attendre, sans réfléchir.", "When stock drops to this level, restock. No waiting, no second-guessing.")}</p>
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-[1.4fr_0.7fr_0.9fr_0.6fr_0.9fr_0.6fr_1fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+        <div className="mt-4 grid grid-cols-[1.4fr_0.7fr_0.9fr_0.6fr_0.9fr_0.6fr_1fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
           <span>{t("Référence", "Item")}</span><span>{t("Ventes/j", "Sales/day")}</span><span>{t("Conso. 4 j", "4-day use")}</span><span>{t("Réserve", "Reserve")}</span><span>{t("Pt commande", "Reorder pt")}</span><span>{t("En stock", "In stock")}</span><span className="text-right">{t("État", "Status")}</span>
         </div>
         <div className="max-h-[340px] divide-y divide-[var(--dashboard-text)]/[0.05] overflow-y-auto pr-1">

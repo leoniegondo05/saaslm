@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { SectionHeader, Tag } from "../dashboard-accueil/shared";
+import { SectionHeader, Tag, texteAvecChiffres } from "../dashboard-accueil/shared";
 import { CATEGORIES, DROP_PRODUITS } from "./dropCatalogue";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
@@ -93,9 +93,9 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
               </span>
 
               <div className="relative z-10">
-                <h3 className="text-base font-bold text-white">{t(preview.nom, preview.nomEn ?? preview.nom)}</h3>
+                <h3 className="text-base font-bold text-white">{texteAvecChiffres(t(preview.nom, preview.nomEn ?? preview.nom))}</h3>
                 <p className="mt-1 text-[11px] text-white/70">
-                  {t("Vous payez", "You pay")} {F(preview.prixDrop!)} · {t("conseillé", "suggested")} {F(preview.prixConseille!)}
+                  {t("Vous payez", "You pay")} <span className="font-figures-bold text-white">{F(preview.prixDrop!)}</span> · {t("conseillé", "suggested")} <span className="font-figures-bold text-white">{F(preview.prixConseille!)}</span>
                 </p>
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <Link
@@ -139,8 +139,8 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
                 }`}
               >
                 <p className="text-xs font-semibold">{t(cat.nom, cat.nomEn)}</p>
-                {cat.nouveautes && <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t(`${cat.nouveautes} nouveautés`, `${cat.nouveautes} new`)}</p>}
-                <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-lg font-bold font-figures ${active ? "text-brand-pink" : "text-[var(--dashboard-text)]/25"}`}>
+                {cat.nouveautes && <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t(`${cat.nouveautes} nouveautés`, `${cat.nouveautes} new`))}</p>}
+                <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-lg font-figures-bold ${active ? "text-brand-pink" : "text-[var(--dashboard-text)]/25"}`}>
                   {cat.count}
                 </span>
               </button>
@@ -152,7 +152,7 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
       <div>
         <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
-            {t(categorie, categorieActive?.nomEn ?? categorie)} · {t(`${produits.length} produits`, `${produits.length} products`)}
+            {t(categorie, categorieActive?.nomEn ?? categorie)} · {texteAvecChiffres(t(`${produits.length} produits`, `${produits.length} products`))}
           </p>
           <div className="flex gap-1.5">
             <Tag tone="neutral">{t("Trier", "Sort")}</Tag>
@@ -195,13 +195,13 @@ export default function CatalogueDrop({ first = true }: { first?: boolean }) {
                     </span>
                   </div>
                   <div className="relative z-10 -mt-6 mx-2 rounded-2xl bg-[var(--dashboard-card-bg)] p-2 shadow-[0_4px_16px_rgba(20,18,32,0.1)]">
-                    <p className="truncate text-[11px] font-bold">{t(p.nom, p.nomEn ?? p.nom)}</p>
+                    <p className="truncate text-[11px] font-bold">{texteAvecChiffres(t(p.nom, p.nomEn ?? p.nom))}</p>
                     {p.source === "AVENIR" ? (
-                      <p className="mt-0.5 truncate text-[9px] text-[var(--dashboard-text)]/50">{t("Prix à l'arrivée", "Price on arrival")} · {t(p.arriveeLe ?? "", p.arriveeLeEn ?? p.arriveeLe ?? "")}</p>
+                      <p className="mt-0.5 truncate text-[9px] text-[var(--dashboard-text)]/50">{t("Prix à l'arrivée", "Price on arrival")} · {texteAvecChiffres(t(p.arriveeLe ?? "", p.arriveeLeEn ?? p.arriveeLe ?? ""))}</p>
                     ) : (
                       <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                        <span className="rounded-full bg-brand-purple px-2 py-0.5 text-[9px] font-bold text-white">{F(p.prixDrop!)}</span>
-                        <span className="truncate text-[9px] text-[var(--dashboard-text)]/70">{t("conseillé", "suggested")} {F(p.prixConseille!)}</span>
+                        <span className="rounded-full bg-brand-purple px-2 py-0.5 text-[9px] font-figures-bold text-white">{F(p.prixDrop!)}</span>
+                        <span className="truncate text-[9px] text-[var(--dashboard-text)]/70">{t("conseillé", "suggested")} <span className="font-figures-bold">{F(p.prixConseille!)}</span></span>
                       </div>
                     )}
                   </div>

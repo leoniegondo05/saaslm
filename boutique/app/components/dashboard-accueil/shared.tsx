@@ -241,7 +241,7 @@ export function SectionHeader({
           {badge}
           <span className="text-lg font-light text-[var(--dashboard-text)]/20">/</span>
           <div className="min-w-0">
-            <h2 className="text-xs font-bold tracking-tight sm:text-sm">{title}</h2>
+            <h2 className="text-sm font-bold tracking-tight sm:text-base">{title}</h2>
             {subtitle && <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/50">{subtitle}</p>}
           </div>
         </div>
@@ -598,8 +598,8 @@ export function MiniStat({
   return (
     <div>
       <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
-      <p className={`mt-0.5 text-base font-bold font-figures ${tone === "pink" ? "text-brand-pink" : ""}`}>{value}</p>
-      {previous && <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/35">{previousLabel} : {previous}</p>}
+      <p className={`mt-0.5 text-base font-figures-bold ${tone === "pink" ? "text-brand-pink" : ""}`}>{value}</p>
+      {previous && <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{previousLabel} : {previous}</p>}
     </div>
   );
 }
@@ -609,7 +609,7 @@ export function MiniTile({ label, value, note }: { label: string; value: string;
     <div className="flex h-full flex-col rounded-2xl card-tint p-3 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
       <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
       <p className="mt-0.5 text-sm font-bold">{value}</p>
-      <p className="mt-auto pt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{note}</p>
+      <p className="mt-auto pt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{note}</p>
     </div>
   );
 }
@@ -819,13 +819,13 @@ export function ProductSelector({
         aria-label={t("Produit précédent", "Previous product")}
         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full disabled:opacity-100 ${dark ? "bg-white/15 text-white" : "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)]/60"}`}
       >
-        <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
+        <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
           <path d="m14.5 5-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
       <span className="min-w-0 flex-1 text-center leading-tight">
-        <span className={`block truncate text-[10px] font-semibold ${dark ? "text-white" : ""}`}>{name}</span>
-        <span className={`block text-[8px] ${dark ? "text-white/50" : "text-[var(--dashboard-text)]/40"}`}>{position}</span>
+        <span className={`block truncate text-[10px] font-semibold ${dark ? "text-white" : ""}`}>{texteAvecChiffres(name)}</span>
+        <span className={`block text-[8px] ${dark ? "text-white/50" : "text-[var(--dashboard-text)]/40"}`}>{texteAvecChiffres(position)}</span>
       </span>
       <button
         type="button"
@@ -834,7 +834,7 @@ export function ProductSelector({
         aria-label={t("Produit suivant", "Next product")}
         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full disabled:opacity-100 ${dark ? "bg-white/15 text-white" : "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)]/60"}`}
       >
-        <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
+        <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
           <path d="m9.5 5 7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
@@ -1327,7 +1327,7 @@ export function WaterfallChart({
               {b.label}
             </p>
             <p
-              className="mt-0.5 truncate text-[8.5px] font-bold sm:text-[10px] font-figures"
+              className="mt-0.5 truncate text-[8.5px] sm:text-[10px] font-figures-bold"
               style={{ color: b.kind === "delta" ? "#DC3A45" : i === 0 ? undefined : "#0E9F6E" }}
             >
               {b.display}
@@ -1438,12 +1438,12 @@ export function Table({
         <thead>
           <tr className="border-b border-[var(--dashboard-text)]/10">
             {head.map((h) => (
-              <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+              <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                 {h}
               </th>
             ))}
             {evolutions && (
-              <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+              <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                 {t("Évolution", "Trend")}
               </th>
             )}

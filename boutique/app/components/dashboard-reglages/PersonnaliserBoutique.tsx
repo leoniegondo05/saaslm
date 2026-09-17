@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import { useDashboardBoutiqueLogo } from "../DashboardBoutiqueLogoProvider";
+import { texteAvecChiffres } from "../dashboard-accueil/shared";
 import BoutiquePreview from "./personnaliser/BoutiquePreview";
 import ReglagesSection from "./personnaliser/ReglagesSection";
 import SectionsPanel from "./personnaliser/SectionsPanel";
@@ -105,7 +106,7 @@ export default function PersonnaliserBoutique() {
             <p className="truncate text-[13px] font-bold" style={{ fontFamily: "var(--font-sans)" }}>
               {t("Personnaliser ma boutique", "Customize my shop")}
             </p>
-            <p className="truncate text-[10.5px] text-[var(--dashboard-text)]/45">{NOM_BOUTIQUE}</p>
+            <p className="truncate text-[10.5px] text-[var(--dashboard-text)]/40">{NOM_BOUTIQUE}</p>
           </div>
 
           <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -149,7 +150,7 @@ export default function PersonnaliserBoutique() {
 
             {pending > 0 && (
               <span className="rounded-full bg-[#fff1d6] px-2.5 py-1 text-[10px] font-semibold text-[#a8690a]">
-                {t(`${pending} modification${pending > 1 ? "s" : ""} en attente`, `${pending} pending change${pending > 1 ? "s" : ""}`)}
+                {texteAvecChiffres(t(`${pending} modification${pending > 1 ? "s" : ""} en attente`, `${pending} pending change${pending > 1 ? "s" : ""}`))}
               </span>
             )}
 

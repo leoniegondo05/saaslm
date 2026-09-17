@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
-import { Nature, Tag } from "../dashboard-accueil/shared";
+import { Nature, Tag, texteAvecChiffres } from "../dashboard-accueil/shared";
 import type { Produit } from "../dashboard-accueil/ProduitsCatalogue";
 
 /*
@@ -242,14 +242,14 @@ export default function DeposerStockModal({
                   <div className="flex min-w-0 items-center gap-2.5">
                     <ProduitVignette produit={produit} />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{t(produit.nom, produit.nomEn)}</p>
-                      <p className="truncate text-[10px] text-[var(--dashboard-text)]/45">
-                        {t("Réf.", "Ref.")} {refSku.ref} · {refSku.sku} · {t(`Stock : ${produit.stock}`, `Stock: ${produit.stock}`)}
+                      <p className="truncate text-sm font-semibold">{texteAvecChiffres(t(produit.nom, produit.nomEn))}</p>
+                      <p className="truncate text-[10px] text-[var(--dashboard-text)]/40">
+                        {t("Réf.", "Ref.")} <span className="font-figures-bold">{refSku.ref}</span> · <span className="font-figures-bold">{refSku.sku}</span> · {texteAvecChiffres(t(`Stock : ${produit.stock}`, `Stock: ${produit.stock}`))}
                       </p>
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
-                    <span className="text-sm font-bold">{F(prixUnitaire)}</span>
+                    <span className="text-sm font-figures-bold">{F(prixUnitaire)}</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -288,10 +288,10 @@ export default function DeposerStockModal({
                           >
                             <ProduitVignette produit={p} size={32} />
                             <span className="min-w-0 flex-1">
-                              <span className="block truncate font-medium">{t(p.nom, p.nomEn)}</span>
-                              <span className="block truncate text-[10px] text-[var(--dashboard-text)]/40">{rs.ref} · {rs.sku}</span>
+                              <span className="block truncate font-medium">{texteAvecChiffres(t(p.nom, p.nomEn))}</span>
+                              <span className="block truncate text-[10px] text-[var(--dashboard-text)]/40"><span className="font-figures-bold">{rs.ref}</span> · <span className="font-figures-bold">{rs.sku}</span></span>
                             </span>
-                            <span className="shrink-0 font-bold text-[var(--dashboard-text)]/70">{F(p.achat ?? p.vente)}</span>
+                            <span className="shrink-0 font-figures-bold text-[var(--dashboard-text)]/70">{F(p.achat ?? p.vente)}</span>
                           </button>
                         );
                       })
@@ -313,7 +313,7 @@ export default function DeposerStockModal({
                   <input
                     readOnly
                     value={etape2Deverrouillee ? codeDepot : "—"}
-                    className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-text)]/[0.04] px-3 py-2 text-sm text-[var(--dashboard-text)]/60 outline-none"
+                    className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-text)]/[0.04] px-3 py-2 text-sm text-[var(--dashboard-text)]/60 outline-none font-figures"
                   />
                 </Champ>
                 <Champ label={t("Quantité", "Quantity")}>
@@ -323,7 +323,7 @@ export default function DeposerStockModal({
                     value={quantite}
                     onChange={(e) => setQuantite(Math.max(1, Number(e.target.value) || 1))}
                     disabled={!etape2Deverrouillee}
-                    className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2 text-sm outline-none focus:border-brand-pink disabled:opacity-50 dark:bg-white/[0.04]"
+                    className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2 text-sm outline-none focus:border-brand-pink disabled:opacity-50 dark:bg-white/[0.04] font-figures"
                   />
                 </Champ>
                 <Champ label={t("Date de dépôt", "Deposit date")}>
@@ -339,7 +339,7 @@ export default function DeposerStockModal({
                   <input
                     readOnly
                     value={etape2Deverrouillee ? F(valeurBase) : "—"}
-                    className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-text)]/[0.04] px-3 py-2 text-sm font-semibold outline-none"
+                    className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-text)]/[0.04] px-3 py-2 text-sm font-semibold outline-none font-figures"
                   />
                 </Champ>
               </div>
@@ -355,8 +355,8 @@ export default function DeposerStockModal({
               <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)] px-3 py-2.5">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold">{t("Protection du dépôt", "Deposit protection")}</p>
-                  <p className="text-[10px] text-[var(--dashboard-text)]/45">
-                    {t(`Frais de protection : ${TAUX_PROTECTION * 100}% de la valeur, ajoutés si activée`, `Protection fee: ${TAUX_PROTECTION * 100}% of the value, added if enabled`)}
+                  <p className="text-[10px] text-[var(--dashboard-text)]/40">
+                    {texteAvecChiffres(t(`Frais de protection : ${TAUX_PROTECTION * 100}% de la valeur, ajoutés si activée`, `Protection fee: ${TAUX_PROTECTION * 100}% of the value, added if enabled`))}
                   </p>
                 </div>
                 <ToggleSwitch
@@ -375,10 +375,10 @@ export default function DeposerStockModal({
                     )}
                     {" "}
                     <span className="font-semibold">
-                      {t(
+                      {texteAvecChiffres(t(
                         `Frais de protection (${TAUX_PROTECTION * 100}%) : ${F(fraisProtection)}, ajoutés à la valeur totale.`,
                         `Protection fee (${TAUX_PROTECTION * 100}%): ${F(fraisProtection)}, added to the total value.`
-                      )}
+                      ))}
                     </span>
                   </p>
                 </div>
@@ -462,7 +462,7 @@ export default function DeposerStockModal({
                         value={telephone}
                         onChange={(e) => setTelephone(e.target.value)}
                         placeholder="+225 07 00 00 00 00"
-                        className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04]"
+                        className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04] font-figures"
                       />
                     </Champ>
                   </div>
@@ -498,7 +498,7 @@ export default function DeposerStockModal({
                         {t("Capturer ma position", "Capture my location")}
                       </button>
                       {localisation && (
-                        <span className="text-[10px] text-[var(--dashboard-text)]/50">
+                        <span className="text-[10px] text-[var(--dashboard-text)]/50 font-figures">
                           {localisation.lat.toFixed(5)}, {localisation.lng.toFixed(5)}
                         </span>
                       )}
@@ -549,21 +549,21 @@ export default function DeposerStockModal({
 
             <div className="mt-3 space-y-3 text-xs">
               <RecapSection titre={t("Produit", "Product")}>
-                <RecapLigne label={t("Nom", "Name")} valeur={produit ? t(produit.nom, produit.nomEn) : "—"} />
-                <RecapLigne label={t("Référence", "Reference")} valeur={produit ? refSku.ref : "—"} />
-                <RecapLigne label="SKU" valeur={produit ? refSku.sku : "—"} />
-                <RecapLigne label={t("Prix unitaire", "Unit price")} valeur={produit ? F(prixUnitaire) : "—"} />
+                <RecapLigne label={t("Nom", "Name")} valeur={produit ? texteAvecChiffres(t(produit.nom, produit.nomEn)) : "—"} />
+                <RecapLigne label={t("Référence", "Reference")} valeur={produit ? <span className="font-figures-bold">{refSku.ref}</span> : "—"} />
+                <RecapLigne label="SKU" valeur={produit ? <span className="font-figures-bold">{refSku.sku}</span> : "—"} />
+                <RecapLigne label={t("Prix unitaire", "Unit price")} valeur={produit ? <span className="font-figures-bold">{F(prixUnitaire)}</span> : "—"} />
               </RecapSection>
 
               <RecapSection titre={t("Stock", "Stock")}>
-                <RecapLigne label={t("Code dépôt", "Deposit code")} valeur={etape2Deverrouillee ? codeDepot : "—"} />
-                <RecapLigne label={t("Quantité", "Quantity")} valeur={etape2Deverrouillee ? t(`${quantite} unités`, `${quantite} units`) : "—"} />
+                <RecapLigne label={t("Code dépôt", "Deposit code")} valeur={etape2Deverrouillee ? <span className="font-figures-bold">{codeDepot}</span> : "—"} />
+                <RecapLigne label={t("Quantité", "Quantity")} valeur={etape2Deverrouillee ? texteAvecChiffres(t(`${quantite} unités`, `${quantite} units`)) : "—"} />
               </RecapSection>
 
               {etape2Deverrouillee && (
                 <div className="flex items-center justify-between gap-2 rounded-xl bg-[var(--dashboard-text)]/[0.05] px-3 py-2.5">
                   <span className="text-xs font-semibold">{t("Valeur totale", "Total value")}</span>
-                  <span className="text-sm font-bold font-figures">{F(valeurTotale)}</span>
+                  <span className="text-sm font-figures-bold">{F(valeurTotale)}</span>
                 </div>
               )}
 
@@ -573,7 +573,7 @@ export default function DeposerStockModal({
                   valeur={<Tag tone={protectionActivee ? "ok" : "neutral"}>{protectionActivee ? t("Activée", "Enabled") : t("Non activée", "Not enabled")}</Tag>}
                 />
                 {protectionActivee && (
-                  <RecapLigne label={t(`Frais (${TAUX_PROTECTION * 100}%)`, `Fee (${TAUX_PROTECTION * 100}%)`)} valeur={F(fraisProtection)} />
+                  <RecapLigne label={texteAvecChiffres(t(`Frais (${TAUX_PROTECTION * 100}%)`, `Fee (${TAUX_PROTECTION * 100}%)`))} valeur={<span className="font-figures-bold">{F(fraisProtection)}</span>} />
                 )}
               </RecapSection>
 
@@ -591,10 +591,10 @@ export default function DeposerStockModal({
                 {modeDepot === "recuperation" && (
                   <>
                     <RecapLigne label={t("Contact", "Contact")} valeur={nomPrenom || "—"} />
-                    <RecapLigne label={t("Téléphone", "Phone")} valeur={telephone || "—"} />
+                    <RecapLigne label={t("Téléphone", "Phone")} valeur={telephone ? <span className="font-figures-bold">{telephone}</span> : "—"} />
                     <RecapLigne
                       label={t("Créneau", "Time slot")}
-                      valeur={heureDebut && heureFin ? `${heureDebut} – ${heureFin}` : "—"}
+                      valeur={heureDebut && heureFin ? <span className="font-figures-bold">{`${heureDebut} – ${heureFin}`}</span> : "—"}
                     />
                     <RecapLigne
                       label={t("Position", "Location")}
@@ -670,7 +670,7 @@ export default function DeposerStockModal({
         <div className="mb-10 mt-6 grid grid-cols-1 gap-4 md:grid-cols-[1.7fr_1fr] md:items-start">
           <div className="space-y-4">{colonneEtapes}</div>
           <div className="md:sticky md:top-6">
-            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
               <ScissorsIcon /> {t("Détacher · Talon récapitulatif", "Detach · Summary stub")}
             </p>
             <div className="rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
@@ -720,7 +720,7 @@ export default function DeposerStockModal({
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1.7fr_1fr]">
           <div className="min-h-0 space-y-4 overflow-y-auto p-5">{colonneEtapes}</div>
           <div className="flex min-h-0 flex-col overflow-y-auto border-t border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)] p-5 lg:border-t-0 lg:border-l">
-            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
               <ScissorsIcon /> {t("Détacher · Talon récapitulatif", "Detach · Summary stub")}
             </p>
             {colonneRecap}
@@ -765,7 +765,7 @@ function Etape({
     <div className={`rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] transition ${verrouillee ? "opacity-40" : ""}`}>
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#141220] text-[11px] font-bold text-white dark:bg-brand-pink">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#141220] text-[11px] font-figures-bold text-white dark:bg-brand-pink">
             {numero}
           </span>
           <p className="text-sm font-semibold">{titre}</p>
@@ -857,7 +857,7 @@ function CarteChoix({
         {icone}
       </span>
       <span className="text-xs font-semibold">{titre}</span>
-      <span className="text-[10px] leading-snug text-[var(--dashboard-text)]/45">{sousTitre}</span>
+      <span className="text-[10px] leading-snug text-[var(--dashboard-text)]/40">{sousTitre}</span>
       {tag && <span className="mt-0.5">{tag}</span>}
     </button>
   );
@@ -869,7 +869,7 @@ function CarteChoix({
 function RecapSection({ titre, children }: { titre: string; children: React.ReactNode }) {
   return (
     <div className="border-t border-dashed border-[var(--dashboard-text)]/15 pt-3 first:border-t-0 first:pt-0">
-      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--dashboard-text)]/35">{titre}</p>
+      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--dashboard-text)]/40">{titre}</p>
       <div className="space-y-1">{children}</div>
     </div>
   );
@@ -906,7 +906,7 @@ function ConseilLigne({ children }: { children: React.ReactNode }) {
   );
 }
 
-function RecapLigne({ label, valeur }: { label: string; valeur: React.ReactNode }) {
+function RecapLigne({ label, valeur }: { label: React.ReactNode; valeur: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-2">
       <span className="text-[var(--dashboard-text)]/50">{label}</span>

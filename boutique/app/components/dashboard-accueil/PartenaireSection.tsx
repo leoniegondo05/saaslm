@@ -15,6 +15,7 @@ import {
   SectionHeader,
   StatRow,
   Tag,
+  texteAvecChiffres,
 } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
@@ -160,8 +161,8 @@ function DonutChart({
         className="absolute inset-[14%] flex flex-col items-center justify-center rounded-full text-center"
         style={{ background: "var(--dashboard-glass)" }}
       >
-        <p className="text-base font-bold leading-tight font-figures">{centerValue}</p>
-        <p className="text-[8px] leading-tight text-[var(--dashboard-text)]/45">{centerLabel}</p>
+        <p className="text-base leading-tight font-figures-bold">{centerValue}</p>
+        <p className="text-[8px] leading-tight text-[var(--dashboard-text)]/40">{centerLabel}</p>
       </div>
     </div>
   );
@@ -206,14 +207,14 @@ function EngagementRow({
             {ok ? "✓" : "✕"}
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-semibold">{title}</p>
-            <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{detail}</p>
+            <p className="text-xs font-semibold">{texteAvecChiffres(title)}</p>
+            <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(detail)}</p>
           </div>
         </div>
         <div className="mr-3 w-24 shrink-0 sm:mr-6 sm:w-32">
           <Bar pct={Math.min(pct, 100)} background={ok ? "#4FE0AE" : "#FF7A80"} />
         </div>
-        <span className={`w-16 shrink-0 text-right text-[11px] font-semibold ${ok ? "text-[#178a3f]" : "text-[#c8262d]"}`}>
+        <span className={`w-16 shrink-0 text-right text-[11px] font-figures-bold ${ok ? "text-[#178a3f]" : "text-[#c8262d]"}`}>
           {realized} / {target}
         </span>
       </div>
@@ -280,9 +281,9 @@ function SiteCard({
   return (
     <div className="rounded-2xl border p-3" style={{ background: bg, borderColor: border }}>
       <p className="text-xs font-semibold">{name}</p>
-      <p className="mt-1 text-lg font-bold tracking-tight font-figures">{delay}</p>
-      <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{casse}</p>
-      <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">{detail}</p>
+      <p className="mt-1 text-lg tracking-tight font-figures-bold">{delay}</p>
+      <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(casse)}</p>
+      <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(detail)}</p>
     </div>
   );
 }
@@ -305,7 +306,7 @@ function TimelineItem({
   const dotColor = tone === "key" ? "#4FE0AE" : tone === "ok" ? "#4FE0AE" : "var(--dashboard-text)";
   return (
     <div className="grid grid-cols-[64px_16px_1fr] gap-0">
-      <div className="pr-2 pt-0.5 text-right text-[10px] font-semibold text-[var(--dashboard-text)]/60">{date}</div>
+      <div className="pr-2 pt-0.5 text-right text-[10px] font-semibold text-[var(--dashboard-text)]/60">{texteAvecChiffres(date)}</div>
       <div className="relative flex justify-center">
         {!last && <div className="absolute top-3 bottom-[-14px] w-px" style={{ background: "var(--dashboard-text)", opacity: 0.12 }} />}
         <span
@@ -318,7 +319,7 @@ function TimelineItem({
         <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">{detail}</p>
         {tag && (
           <span className="mt-1.5 inline-flex rounded-full bg-[var(--dashboard-text)]/[0.06] px-2 py-0.5 text-[9px] font-semibold text-[var(--dashboard-text)]/60">
-            {tag}
+            {texteAvecChiffres(tag)}
           </span>
         )}
       </div>
@@ -346,14 +347,14 @@ function ActionItem({
   return (
     <div className="flex items-start gap-3 rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
       <span
-        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-figures-bold"
         style={{ background: dot.bg, color: dot.color }}
       >
         {n}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold">{title}</p>
-        <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">{detail}</p>
+        <p className="text-xs font-semibold">{texteAvecChiffres(title)}</p>
+        <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">{texteAvecChiffres(detail)}</p>
       </div>
     </div>
   );
@@ -408,8 +409,8 @@ function PartenaireModal({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="text-sm font-bold tracking-tight sm:text-base">{title}</h2>
-            {subtitle && <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{subtitle}</p>}
+            <h2 className="text-sm font-bold tracking-tight sm:text-base">{texteAvecChiffres(title)}</h2>
+            {subtitle && <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(subtitle)}</p>}
           </div>
           <button
             type="button"
@@ -739,11 +740,11 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                   {t("Entreprise agréée", "Approved partner")}
                 </p>
                 <h3 className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">Groupe Logistique Ivoire</h3>
-                <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/45">
-                  {t(
+                <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">
+                  {texteAvecChiffres(t(
                     "Affiliée depuis le 12 mars 2026 · six mois · contrat reconduit tacitement chaque mois",
                     "Affiliated since March 12, 2026 · six months · contract tacitly renewed every month"
-                  )}
+                  ))}
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
@@ -759,32 +760,32 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Note de l'entreprise agréée", "Approved partner rating")}
                 </p>
-                <p className="mt-1 text-base font-bold font-figures">
+                <p className="mt-1 text-base font-figures-bold">
                   {formatDecimal(noteEntreprise)}<span className="text-[var(--dashboard-text)]/40">/10</span>
                 </p>
-                <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t(`moyenne de ses ${boutiquesAffiliees} boutiques`, `average of its ${boutiquesAffiliees} shops`)}</p>
+                <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t(`moyenne de ses ${boutiquesAffiliees} boutiques`, `average of its ${boutiquesAffiliees} shops`))}</p>
               </div>
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Votre dernière évaluation", "Your last rating")}
                 </p>
-                <p className="mt-1 text-base font-bold text-[#178a3f] font-figures">
+                <p className="mt-1 text-base text-[#178a3f] font-figures-bold">
                   {formatNote(votreNote)}<span className="text-[var(--dashboard-text)]/40">/10</span>
                 </p>
-                <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t("donnée le 1er septembre", "given September 1st")}</p>
+                <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("donnée le 1er septembre", "given September 1st"))}</p>
               </div>
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Boutiques affiliées", "Affiliated shops")}
                 </p>
-                <p className="mt-1 text-base font-bold font-figures">{boutiquesAffiliees}</p>
-                <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t(`dont ${boutiquesZone} dans votre zone`, `${boutiquesZone} of them in your area`)}</p>
+                <p className="mt-1 text-base font-figures-bold">{boutiquesAffiliees}</p>
+                <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t(`dont ${boutiquesZone} dans votre zone`, `${boutiquesZone} of them in your area`))}</p>
               </div>
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Sites de stockage", "Storage sites")}
                 </p>
-                <p className="mt-1 text-base font-bold font-figures">3</p>
+                <p className="mt-1 text-base font-figures-bold">3</p>
                 <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">Cocody · Yopougon · Bouaké</p>
               </div>
               <div>
@@ -798,7 +799,7 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Engagements tenus", "Commitments kept")}
                 </p>
-                <p className="mt-1 text-base font-bold text-[#a8690a] font-figures">{t("4 sur 6", "4 of 6")}</p>
+                <p className="mt-1 text-base text-[#a8690a] font-figures-bold">{t("4 sur 6", "4 of 6")}</p>
                 <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t("sur la période", "over the period")}</p>
               </div>
             </div>
@@ -866,31 +867,31 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                   <Nature code={row.nature} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate">{row.name}</span>
-                    <span className="block truncate text-[10px] text-[var(--dashboard-text)]/40">{row.detail}</span>
+                    <span className="block truncate text-[10px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(row.detail)}</span>
                   </span>
-                  <span className="w-16 shrink-0 text-right text-[10px] text-[var(--dashboard-text)]/40">{row.rate}</span>
-                  <span className="w-16 shrink-0 text-right text-[10px] text-[var(--dashboard-text)]/40">{row.qty}</span>
-                  <span className="w-20 shrink-0 text-right font-semibold">{row.amount}</span>
+                  <span className="w-16 shrink-0 text-right text-[10px] text-[var(--dashboard-text)]/40 font-figures">{row.rate}</span>
+                  <span className="w-16 shrink-0 text-right text-[10px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(row.qty)}</span>
+                  <span className="w-20 shrink-0 text-right font-figures-bold">{row.amount}</span>
                 </div>
               ))}
             </div>
             <Divider />
             <div className="flex items-center justify-between text-sm">
               <span className="font-semibold">{t("Total sur la période", "Total for the period")}</span>
-              <span className="text-base font-bold font-figures">{groupFr(totalGrille)} F</span>
+              <span className="text-base font-figures-bold">{groupFr(totalGrille)} F</span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Coût par commande livrée", "Cost per delivered order")}
                 </p>
-                <p className="mt-0.5 text-sm font-bold font-figures">{groupFr(coutParCommande)} F</p>
+                <p className="mt-0.5 text-sm font-figures-bold">{groupFr(coutParCommande)} F</p>
               </div>
               <div>
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Part de votre chiffre d'affaires", "Share of your revenue")}
                 </p>
-                <p className="mt-0.5 text-sm font-bold font-figures">{formatDecimal(partCA)} %</p>
+                <p className="mt-0.5 text-sm font-figures-bold">{formatDecimal(partCA)} %</p>
               </div>
               <div>
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
@@ -903,7 +904,7 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                   {t("Prochain enlèvement", "Next pickup")}
                 </p>
-                <p className="mt-0.5 text-sm font-bold">{t("Jeudi 11", "Thursday the 11th")}</p>
+                <p className="mt-0.5 text-sm font-bold">{texteAvecChiffres(t("Jeudi 11", "Thursday the 11th"))}</p>
               </div>
             </div>
           </Card>
@@ -922,7 +923,7 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                   )}
                 </p>
               </div>
-              <Tag tone="warn">{t("2 engagements non tenus", "2 commitments not kept")}</Tag>
+              <Tag tone="warn">{texteAvecChiffres(t("2 engagements non tenus", "2 commitments not kept"))}</Tag>
             </div>
 
             <div className="mt-3">
@@ -993,10 +994,10 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 )}
               </p>
               <p className="mt-1.5 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">
-                {t(
+                {texteAvecChiffres(t(
                   "La casse coûte de l'argent tout de suite : zéro virgule six point de dépassement sur votre stock, c'est environ dix-huit mille francs sur la période. Le délai de réponse, lui, ne coûte rien directement mais retarde tout le reste : un litige, une demande d'enlèvement supplémentaire, une correction de fiche. Les deux se portent dans la même conversation, mais seul le premier se chiffre.",
                   "Breakage costs money right away: 0.6 points of overrun on your stock is about eighteen thousand francs over the period. The response delay costs nothing directly but stalls everything else: a dispute, an extra pickup request, a listing fix. Both belong in the same conversation, but only the first one has a price tag."
-                )}
+                ))}
               </p>
             </div>
           </Card>
@@ -1031,8 +1032,8 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                   >
                     <span className="text-[var(--dashboard-text)]/60">{row.label}</span>
                     <span className="flex shrink-0 items-center gap-3">
-                      <span className="font-semibold">{formatDecimal(row.you)}</span>
-                      <span className="text-[var(--dashboard-text)]/35">{formatDecimal(row.net)}</span>
+                      <span className="font-figures-bold">{formatDecimal(row.you)}</span>
+                      <span className="text-[var(--dashboard-text)]/40 font-figures">{formatDecimal(row.net)}</span>
                     </span>
                   </div>
                 ))}
@@ -1080,7 +1081,7 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                         <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: r.color }} />
                         {r.label}
                       </span>
-                      <span className="shrink-0 font-semibold">{r.pct} %</span>
+                      <span className="shrink-0 font-figures-bold">{r.pct} %</span>
                     </div>
                   ))}
                 </div>
@@ -1091,20 +1092,20 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 <div className="grid items-center gap-2 sm:grid-cols-[1fr_auto_1fr_auto_1fr]">
                   <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
                     <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Ce que vous lui versez", "What you pay it")}</p>
-                    <p className="mt-2 text-xl font-bold font-figures">{groupFr(totalGrille)}F</p>
+                    <p className="mt-2 text-xl font-figures-bold">{groupFr(totalGrille)}F</p>
                     <p className="mt-1 text-[10px] leading-snug text-[var(--dashboard-text)]/40">{t("Sa grille, appliquée à votre volume du mois.", "Its rate card, applied to your volume this month.")}</p>
                   </div>
                   <div className="hidden text-center text-lg text-[var(--dashboard-text)]/25 sm:block">+</div>
                   <div className="rounded-2xl border p-3" style={{ background: "linear-gradient(135deg, rgba(200,38,45,.12), rgba(236,12,140,.06))", borderColor: "rgba(255,122,128,.35)" }}>
                     <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#c8262d]/70">{t("Ce que ses manquements vous coûtent", "What its shortfalls cost you")}</p>
-                    <p className="mt-2 text-xl font-bold text-[#c8262d] font-figures">{groupFr(manquements)}F</p>
+                    <p className="mt-2 text-xl text-[#c8262d] font-figures-bold">{groupFr(manquements)}F</p>
                     <p className="mt-1 text-[10px] leading-snug text-[var(--dashboard-text)]/40">{t("Litiges à sa charge, casse au-delà du seuil, marchandise non couverte.", "Its share of disputes, breakage beyond the threshold, uncovered goods.")}</p>
                   </div>
                   <div className="hidden text-center text-lg text-[var(--dashboard-text)]/25 sm:block">=</div>
                   <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
                     <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Coût réel de la relation", "Real cost of the relationship")}</p>
-                    <p className="mt-2 text-xl font-bold font-figures">{groupFr(coutReel)}F</p>
-                    <p className="mt-1 text-[10px] leading-snug text-[var(--dashboard-text)]/40">{t(`Soit ${groupFr(coutParCommandeReel)} F par commande livrée, et non ${groupFr(coutParCommande)} F.`, `That's ${groupFr(coutParCommandeReel)} F per delivered order, not ${groupFr(coutParCommande)} F.`)}</p>
+                    <p className="mt-2 text-xl font-figures-bold">{groupFr(coutReel)}F</p>
+                    <p className="mt-1 text-[10px] leading-snug text-[var(--dashboard-text)]/40">{texteAvecChiffres(t(`Soit ${groupFr(coutParCommandeReel)} F par commande livrée, et non ${groupFr(coutParCommande)} F.`, `That's ${groupFr(coutParCommandeReel)} F per delivered order, not ${groupFr(coutParCommande)} F.`))}</p>
                   </div>
                 </div>
 
@@ -1112,8 +1113,8 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
                     <p className="text-[11px] font-semibold">{t("Litiges dont elle est responsable", "Disputes it's responsible for")}</p>
-                    <p className="mt-1 text-base font-bold font-figures" style={{ color: "#c8262d" }}>{groupFr(litigesCost)}F</p>
-                    <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("20 litiges sur 26 depuis l'ouverture, ramenés au mois", "20 of 26 disputes since opening, brought back to a month")}</p>
+                    <p className="mt-1 text-base font-figures-bold" style={{ color: "#c8262d" }}>{groupFr(litigesCost)}F</p>
+                    <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("20 litiges sur 26 depuis l'ouverture, ramenés au mois", "20 of 26 disputes since opening, brought back to a month"))}</p>
                   </div>
                   <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
                     <p className="flex items-center gap-1.5 text-[11px] font-semibold">
@@ -1122,8 +1123,8 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                         S
                       </span>
                     </p>
-                    <p className="mt-1 text-base font-bold font-figures" style={{ color: "#c8262d" }}>{groupFr(casseCost)}F</p>
-                    <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t(`${formatDecimal(realizedCasse5)} % constaté pour 1 % engagé`, `${formatDecimal(realizedCasse5)}% observed against 1% committed`)}</p>
+                    <p className="mt-1 text-base font-figures-bold" style={{ color: "#c8262d" }}>{groupFr(casseCost)}F</p>
+                    <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t(`${formatDecimal(realizedCasse5)} % constaté pour 1 % engagé`, `${formatDecimal(realizedCasse5)}% observed against 1% committed`))}</p>
                   </div>
                 </div>
               </div>
@@ -1190,10 +1191,10 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 {t("Bouaké sert plus de commandes qu'il ne détient de stock", "Bouaké serves more orders than it holds stock for")}
               </p>
               <p className="mt-1.5 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">
-                {t(
+                {texteAvecChiffres(t(
                   "Dix-huit commandes pour quinze unités sur place : la différence part de Cocody, ce qui ajoute un transfert, donc deux manipulations et plusieurs heures. C'est la cause des onze heures trente de délai, des trois virgule deux pour cent de casse et du plus mauvais taux de livraison de vos six communes. La demande à formuler est simple et vérifiable : déposer directement à Bouaké la part destinée à cette zone. Elle le fait déjà pour d'autres boutiques de son réseau.",
                   "Eighteen orders for fifteen units on site: the difference is shipped from Cocody, which adds a transfer, so two handling steps and several hours. That's the cause of the eleven-hour-thirty delay, the 3.2% breakage, and the worst delivery rate of your six districts. The request to make is simple and verifiable: deposit directly at Bouaké the share meant for that area. The partner already does it for other shops in its network."
-                )}
+                ))}
               </p>
             </div>
           </Card>
@@ -1212,10 +1213,10 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
             </div>
             <Divider />
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatRow compact label={t("Au démarrage", "At the start")} value={`${formatDecimal(perfStart)} %`} />
-              <StatRow compact label={t("Aujourd'hui", "Today")} value={<span className="text-[#178a3f]">{formatDecimal(perfToday)} %</span>} />
-              <StatRow compact label={t("Progression", "Progress")} value={<span className="text-[#178a3f]">{perfProgress >= 0 ? "+" : ""}{formatDecimal(perfProgress)} pts</span>} />
-              <StatRow compact label={t("Trois derniers mois", "Last three months")} value={<span className="text-[#a8690a]">{perfLast3 >= 0 ? "+" : ""}{formatDecimal(perfLast3)} pt</span>} />
+              <StatRow compact label={t("Au démarrage", "At the start")} value={<span className="font-figures">{`${formatDecimal(perfStart)} %`}</span>} />
+              <StatRow compact label={t("Aujourd'hui", "Today")} value={<span className="text-[#178a3f] font-figures">{formatDecimal(perfToday)} %</span>} />
+              <StatRow compact label={t("Progression", "Progress")} value={<span className="text-[#178a3f] font-figures">{perfProgress >= 0 ? "+" : ""}{formatDecimal(perfProgress)} pts</span>} />
+              <StatRow compact label={t("Trois derniers mois", "Last three months")} value={<span className="text-[#a8690a] font-figures">{perfLast3 >= 0 ? "+" : ""}{formatDecimal(perfLast3)} pt</span>} />
             </div>
             <p className="mt-3 text-[10px] text-[var(--dashboard-text)]/40">
               {t(
@@ -1237,21 +1238,21 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
               </p>
               <div className="mt-3 space-y-2.5">
                 <div className="flex items-start gap-2.5">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-purple/15 text-[10px] font-bold text-brand-purple">1</span>
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-purple/15 text-[10px] font-figures-bold text-brand-purple">1</span>
                   <div>
-                    <p className="text-xs font-semibold">{t("Le message part le 1er du mois", "The message goes out on the 1st")}</p>
+                    <p className="text-xs font-semibold">{texteAvecChiffres(t("Le message part le 1er du mois", "The message goes out on the 1st"))}</p>
                     <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("À toutes les boutiques affiliées, en même temps.", "To all affiliated shops, at the same time.")}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-purple/15 text-[10px] font-bold text-brand-purple">2</span>
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-purple/15 text-[10px] font-figures-bold text-brand-purple">2</span>
                   <div>
                     <p className="text-xs font-semibold">{t("Chacune note six critères sur dix", "Each one rates six criteria out of ten")}</p>
                     <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Délai, fiabilité, qualité du colis, litiges, réactivité, rapport qualité-prix.", "Delay, reliability, parcel quality, disputes, responsiveness, value for money.")}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-purple/15 text-[10px] font-bold text-brand-purple">3</span>
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-purple/15 text-[10px] font-figures-bold text-brand-purple">3</span>
                   <div>
                     <p className="text-xs font-semibold">{t("La moyenne devient sa note", "The average becomes its rating")}</p>
                     <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Visible par toutes les boutiques du réseau, et par les entrepreneurs qui cherchent un partenaire.", "Visible to every shop in the network, and to entrepreneurs looking for a partner.")}</p>
@@ -1259,10 +1260,10 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 </div>
               </div>
               <Divider />
-              <StatRow label={t("Boutiques ayant répondu ce mois", "Shops that answered this month")} value={t(`${boutiquesRepondu} sur ${boutiquesAffiliees}`, `${boutiquesRepondu} of ${boutiquesAffiliees}`)} />
-              <StatRow label={t("Votre note", "Your rating")} value={<span className="text-[#178a3f]">{formatNote(votreNote)} / 10</span>} />
-              <StatRow label={t("Note collective du mois", "This month's collective rating")} value={`${formatDecimal(collectiveRatings[collectiveRatings.length - 1])} / 10`} />
-              <StatRow label={t("Votre première évaluation", "Your first rating")} value={t(`Avril · ${formatNote(yourRatingsInit[0])} / 10`, `April · ${formatNote(yourRatingsInit[0])} / 10`)} />
+              <StatRow label={t("Boutiques ayant répondu ce mois", "Shops that answered this month")} value={<span className="font-figures">{t(`${boutiquesRepondu} sur ${boutiquesAffiliees}`, `${boutiquesRepondu} of ${boutiquesAffiliees}`)}</span>} />
+              <StatRow label={t("Votre note", "Your rating")} value={<span className="text-[#178a3f] font-figures">{formatNote(votreNote)} / 10</span>} />
+              <StatRow label={t("Note collective du mois", "This month's collective rating")} value={<span className="font-figures">{`${formatDecimal(collectiveRatings[collectiveRatings.length - 1])} / 10`}</span>} />
+              <StatRow label={t("Votre première évaluation", "Your first rating")} value={<span className="font-figures">{t(`Avril · ${formatNote(yourRatingsInit[0])} / 10`, `April · ${formatNote(yourRatingsInit[0])} / 10`)}</span>} />
             </Card>
 
             <Card className="!bg-[var(--dashboard-glass)]">
@@ -1297,7 +1298,7 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                   <h3 className="text-sm font-bold tracking-tight sm:text-base">{t("Vos échanges en cours", "Your ongoing exchanges")}</h3>
                   <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("Trois demandes attendent une réponse", "Three requests are waiting for a reply")}</p>
                 </div>
-                <Tag tone="warn">{t(`Réponse moyenne : ${realizedReponse6} h`, `Average reply: ${realizedReponse6} h`)}</Tag>
+                <Tag tone="warn">{texteAvecChiffres(t(`Réponse moyenne : ${realizedReponse6} h`, `Average reply: ${realizedReponse6} h`))}</Tag>
               </div>
               <div className="mt-3 space-y-2">
                 {echanges.map((row) => (
@@ -1306,12 +1307,12 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                     className={`flex items-start gap-3 rounded-2xl p-3 ${row.tone === "bad" ? "bg-[#ffe1e2]/50" : row.tone === "warn" ? "bg-[#fff1d6]/60" : ""}`}
                     style={row.tone === "neutral" ? { background: "var(--dashboard-surface-2)" } : undefined}
                   >
-                    <span className="mt-0.5 shrink-0 text-[10px] font-semibold text-[var(--dashboard-text)]/45">{row.wait}</span>
+                    <span className="mt-0.5 shrink-0 text-[10px] font-figures-bold text-[var(--dashboard-text)]/40">{row.wait}</span>
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-1.5 text-xs font-semibold">
-                        {row.title} <Nature code={row.nature} />
+                        <span>{texteAvecChiffres(row.title)}</span> <Nature code={row.nature} />
                       </p>
-                      <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">{row.detail}</p>
+                      <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">{texteAvecChiffres(row.detail)}</p>
                     </div>
                     <HeaderActionBtn
                       disabled={echangesRelances.includes(row.id)}
@@ -1325,9 +1326,9 @@ export default function PartenaireSection({ first = true, activeDate }: { first?
                 ))}
               </div>
               <Divider />
-              <StatRow label={t("Demandes envoyées depuis l'affiliation", "Requests sent since affiliation")} value={String(demandesTotal)} />
-              <StatRow label={t("Traitées favorablement", "Handled favorably")} value={<span className="text-[#178a3f]">{demandesTraitees} · {demandesTraiteesPct} %</span>} />
-              <StatRow label={t("Sans réponse au-delà de 48 h", "No reply after 48 h")} value={<span className="text-[#c8262d]">{demandesSansReponse}</span>} />
+              <StatRow label={t("Demandes envoyées depuis l'affiliation", "Requests sent since affiliation")} value={<span className="font-figures">{demandesTotal}</span>} />
+              <StatRow label={t("Traitées favorablement", "Handled favorably")} value={<span className="text-[#178a3f] font-figures">{demandesTraitees} · {demandesTraiteesPct} %</span>} />
+              <StatRow label={texteAvecChiffres(t("Sans réponse au-delà de 48 h", "No reply after 48 h"))} value={<span className="text-[#c8262d] font-figures">{demandesSansReponse}</span>} />
               <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">
                 {t(
                   "Trois demandes sur quatre aboutissent : la relation fonctionne quand elle répond. Le problème n'est pas le refus, c'est le silence.",

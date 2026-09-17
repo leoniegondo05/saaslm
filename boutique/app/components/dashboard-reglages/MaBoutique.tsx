@@ -114,7 +114,7 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
           type="button"
           onClick={() => trigger()}
           disabled={saving}
-          className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
+          className="rounded-full bg-[#141220] px-4 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
         >
           {saving ? t("Enregistrement…", "Saving…") : done ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
         </button>
@@ -221,6 +221,7 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
               label={t("Téléphone d'enlèvement", "Pickup phone number")}
               value={enlevement.telephone}
               onChange={(telephone) => setEnlevement((e) => ({ ...e, telephone }))}
+              numeric
             />
             <Champ
               label={t("Personne à contacter", "Contact person")}
@@ -248,6 +249,7 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
               value={visiblePublic.telephone}
               placeholder={t("Non renseigné", "Not provided")}
               onChange={(telephone) => setVisiblePublic((v) => ({ ...v, telephone }))}
+              numeric
             />
             <Champ
               label={t("Adresse email", "Email address")}
@@ -300,12 +302,14 @@ function Champ({
   onChange,
   multiline = false,
   placeholder,
+  numeric = false,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   multiline?: boolean;
   placeholder?: string;
+  numeric?: boolean;
 }) {
   return (
     <div>
@@ -324,7 +328,7 @@ function Champ({
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
-          className={champBoxClasses}
+          className={numeric ? `${champBoxClasses} font-figures` : champBoxClasses}
         />
       )}
     </div>
@@ -335,7 +339,7 @@ function ChampLectureSeule({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{label}</p>
-      <p className={`${champBoxClasses} flex items-center text-[var(--dashboard-text)]/60`}>{value}</p>
+      <p className={`${champBoxClasses} flex items-center text-[var(--dashboard-text)]/60 font-figures`}>{value}</p>
     </div>
   );
 }

@@ -94,14 +94,14 @@ function KpiCard({ label, value, valueColor, note, noteColor, previous }: { labe
   return (
     <Card className="!bg-[var(--dashboard-glass)]">
       <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
-      <p className="mt-1 text-2xl font-bold tracking-tight font-figures" style={valueColor ? { color: valueColor } : undefined}>
+      <p className="mt-1 text-2xl tracking-tight font-figures-bold" style={valueColor ? { color: valueColor } : undefined}>
         {value}
       </p>
       <p className="mt-1 text-[10px]" style={noteColor ? { color: noteColor } : undefined}>
         <span className={noteColor ? "" : "text-[var(--dashboard-text)]/40"}>{texteAvecChiffres(note)}</span>
       </p>
       {previous && (
-        <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">
+        <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">
           {t("Période précédente", "Previous period")} : <span className="font-figures">{previous}</span>
         </p>
       )}
@@ -200,7 +200,7 @@ function LifeItem({ code, name, values, kind, age }: { code: "S" | "D"; name: st
       <LifeSpark values={values} color={tone.color} />
       <span className="w-28 shrink-0 text-right">
         <span className="block text-[10px] font-semibold" style={{ color: tone.color }}>{t(tone.fr, tone.en)}</span>
-        <span className="block text-[9px] text-[var(--dashboard-text)]/35">{texteAvecChiffres(age)}</span>
+        <span className="block text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(age)}</span>
       </span>
     </div>
   );
@@ -522,7 +522,7 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
       />
 
       {/* Légende : quelle couleur renvoie à quelle façon de vendre */}
-      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-2xl bg-[var(--dashboard-glass)] px-4 py-3 text-[10px] text-[var(--dashboard-text)]/50">
+      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-glass)] px-4 py-3 text-[10px] text-[var(--dashboard-text)]/50 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         <span className="flex items-center gap-1.5"><Nature code="S" /> {t("Stockage management", "Warehousing")}</span>
         <span className="flex items-center gap-1.5"><Nature code="D" /> {t("Dropshipping", "Drop-shipping")}</span>
         <span className="flex items-center gap-1.5"><Nature code="B" /> {t("Les deux", "Both")}</span>
@@ -595,7 +595,7 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
                 }}
               />
             ))}
-            <p className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[9px] text-[var(--dashboard-text)]/35">{t("Unités vendues par jour →", "Units sold per day →")}</p>
+            <p className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[9px] text-[var(--dashboard-text)]/40">{t("Unités vendues par jour →", "Units sold per day →")}</p>
           </div>
         </div>
 
@@ -669,7 +669,7 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
               ]}
               size={100}
             >
-              <span className="text-lg font-bold font-figures">{totalRefs}</span>
+              <span className="text-lg font-figures-bold">{totalRefs}</span>
               <span className="text-[8px] text-[var(--dashboard-text)]/40">{t("références", "items")}</span>
             </Ring>
             <div className="w-full space-y-1.5 text-[10px]">
@@ -717,7 +717,7 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
         </div>
         <div className="mt-3 overflow-x-auto">
           <div className="min-w-[720px]">
-            <div className="grid grid-cols-[1.6fr_0.5fr_0.9fr_0.6fr_0.6fr_0.6fr_0.5fr_0.5fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+            <div className="grid grid-cols-[1.6fr_0.5fr_0.9fr_0.6fr_0.6fr_0.6fr_0.5fr_0.5fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
               <span>{t("Référence", "Item")}</span><span>{t("Unités", "Units")}</span><span>{t("Chiffre d'affaires", "Revenue")}</span><span>{t("Marge", "Margin")}</span><span>{t("Ventes/j", "Sales/day")}</span><span>{t("Couverture", "Coverage")}</span><span>{t("Refus", "Refusals")}</span><span className="text-right">{t("Litiges", "Disputes")}</span>
             </div>
             <div className="divide-y divide-[var(--dashboard-text)]/[0.05]">
@@ -872,7 +872,7 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
                   {r.values.map((v, i) => (
                     <div
                       key={i}
-                      className="flex h-9 flex-1 items-center justify-center rounded-lg text-[11px] font-bold font-figures"
+                      className="flex h-9 flex-1 items-center justify-center rounded-lg text-[11px] font-figures-bold"
                       style={{ background: `rgba(139,92,246,${0.08 + (v / comboMax) * 0.75})`, color: v / comboMax > 0.5 ? "#fff" : "var(--dashboard-text)" }}
                     >
                       {v > 0 ? v : ""}
@@ -884,10 +884,10 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Taille la plus vendue", "Best-selling size")}</p><p className="mt-0.5 text-base font-bold">L</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{texteAvecChiffres(t(`${bestSizeUnits} unités sur ${bestSizeTotal}`, `${bestSizeUnits} units out of ${bestSizeTotal}`))}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Couleur la plus vendue", "Best-selling color")}</p><p className="mt-0.5 text-base font-bold">{t("Noir", "Black")}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{texteAvecChiffres(t(`${bestColorUnits} unités`, `${bestColorUnits} units`))}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Combinaisons qui n'ont rien vendu", "Combinations with zero sales")}</p><p className="mt-0.5 text-base font-bold font-figures" style={{ color: "#a8690a" }}>{t(`${zeroComboCount} sur 20`, `${zeroComboCount} of 20`)}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t("dont tout le rouge", "including all of the red")}</p></div>
-          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Stock immobilisé dessus", "Stock tied up in them")}</p><p className="mt-0.5 text-base font-bold font-figures">{fmtAmount(comboStockTied)}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/35">{t("jamais commandé", "never ordered")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Taille la plus vendue", "Best-selling size")}</p><p className="mt-0.5 text-base font-bold">L</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t(`${bestSizeUnits} unités sur ${bestSizeTotal}`, `${bestSizeUnits} units out of ${bestSizeTotal}`))}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Couleur la plus vendue", "Best-selling color")}</p><p className="mt-0.5 text-base font-bold">{t("Noir", "Black")}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t(`${bestColorUnits} unités`, `${bestColorUnits} units`))}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Combinaisons qui n'ont rien vendu", "Combinations with zero sales")}</p><p className="mt-0.5 text-base font-figures-bold" style={{ color: "#a8690a" }}>{t(`${zeroComboCount} sur 20`, `${zeroComboCount} of 20`)}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t("dont tout le rouge", "including all of the red")}</p></div>
+          <div><p className="text-[10px] text-[var(--dashboard-text)]/40">{t("Stock immobilisé dessus", "Stock tied up in them")}</p><p className="mt-0.5 text-base font-figures-bold">{fmtAmount(comboStockTied)}</p><p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{t("jamais commandé", "never ordered")}</p></div>
         </div>
         <div className="mt-3 rounded-xl bg-[var(--dashboard-surface-2)] p-3">
           <p className="text-xs font-semibold">{t("Le rouge et le XL ne partent pas", "Red and XL don't move")}</p>
@@ -937,7 +937,7 @@ export default function ProduitsSection({ first = true, activeDate }: { first?: 
           </div>
           <div className="mt-3 overflow-x-auto">
             <div className="min-w-[420px]">
-              <div className="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.7fr_0.6fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+              <div className="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.7fr_0.6fr] gap-2 border-b border-[var(--dashboard-text)]/10 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                 <span>{t("Référence", "Item")}</span><span>{t("Votre prix", "Your price")}</span><span>{t("Réseau", "Network")}</span><span>{t("Écart", "Gap")}</span><span className="text-right">{t("Refus", "Refusals")}</span>
               </div>
               <div className="divide-y divide-[var(--dashboard-text)]/[0.05]">

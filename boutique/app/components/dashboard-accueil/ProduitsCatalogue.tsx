@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Btn, Card, Divider, HeaderActionBtn, Nature, ProductSelector, SectionHeader, StatRow, Tag, Trend } from "./shared";
+import { Btn, Card, Divider, HeaderActionBtn, Nature, ProductSelector, SectionHeader, StatRow, Tag, texteAvecChiffres, Trend } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import CreerCategorieModal from "../dashboard-produits/CreerCategorieModal";
 import type { DepotValide } from "../dashboard-produits/DeposerStockModal";
@@ -413,7 +413,7 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
                             <div className="min-w-0">
                               <p className="flex items-center gap-1.5">
                                 <Nature code={p.nature} />
-                                <span className="truncate text-[13px] font-semibold">{t(p.nom, p.nomEn)}</span>
+                                <span className="truncate text-[13px] font-semibold">{texteAvecChiffres(t(p.nom, p.nomEn))}</span>
                               </p>
                               <div className="mt-1 flex items-center gap-1.5">
                                 <span className="flex items-center gap-1 text-[10px] text-[var(--dashboard-text)]/50 font-figures">
@@ -451,7 +451,7 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
                           />
                         </td>
                         <td className="py-2.5 pr-2">
-                          <div className="flex items-center justify-end gap-1 text-[var(--dashboard-text)]/45">
+                          <div className="flex items-center justify-end gap-1 text-[var(--dashboard-text)]/40">
                             <IconBtn title={t("Modifier", "Edit")} onClick={() => setSelected(i)}>
                               <PencilIcon />
                             </IconBtn>
@@ -521,7 +521,7 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
           <div className="mt-3 flex items-center justify-between">
             <span className="flex items-center gap-2">
               <Nature code={produit.nature} />
-              <span className="text-xs font-semibold">{t(produit.nom, produit.nomEn)}</span>
+              <span className="text-xs font-semibold">{texteAvecChiffres(t(produit.nom, produit.nomEn))}</span>
             </span>
             <Tag tone={produit.etat.tone}>{t(produit.etat.label, produit.etat.labelEn)}</Tag>
           </div>
@@ -601,7 +601,7 @@ function StatCell({
           <span className="h-2 w-2 rounded-full" style={{ background: dot }} />
         </span>
       </div>
-      <p className={`mt-3 text-2xl font-bold tracking-tight font-figures ${accent ? "text-brand-pink" : ""}`}>{value}</p>
+      <p className={`mt-3 text-2xl tracking-tight font-figures-bold ${accent ? "text-brand-pink" : ""}`}>{value}</p>
       {note && <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{note}</p>}
       {wave && wave.length > 1 && <MarginWave values={wave} color={dot} />}
     </div>

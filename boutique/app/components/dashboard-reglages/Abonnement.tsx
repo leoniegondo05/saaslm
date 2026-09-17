@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, SectionHeader, Tag, useMockSave } from "../dashboard-accueil/shared";
+import { Card, SectionHeader, Tag, texteAvecChiffres, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -41,7 +41,7 @@ export default function Abonnement({ first = false }: { first?: boolean }) {
           type="button"
           onClick={() => trigger()}
           disabled={saving}
-          className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
+          className="rounded-full bg-[#141220] px-4 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
         >
           {saving ? t("Enregistrement…", "Saving…") : done ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
         </button>
@@ -53,7 +53,7 @@ export default function Abonnement({ first = false }: { first?: boolean }) {
             <div>
               <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Votre abonnement", "Your subscription")}</p>
               <p className="mt-1.5 text-[28px] font-bold tracking-tight text-[var(--dashboard-text)]">
-                25 000<span className="ml-1 text-base font-semibold text-[var(--dashboard-text)]/50">F</span>
+                <span className="font-figures-bold">25 000</span><span className="ml-1 text-base font-semibold text-[var(--dashboard-text)]/50">F</span>
                 <span className="ml-2 text-xs font-normal text-[var(--dashboard-text)]/50">{t("par mois", "per month")}</span>
               </p>
               <p className="mt-1.5 text-xs text-[var(--dashboard-text)]/50">
@@ -62,8 +62,8 @@ export default function Abonnement({ first = false }: { first?: boolean }) {
             </div>
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Prochaine échéance", "Next due date")}</p>
-              <p className="mt-1.5 text-base font-bold text-[var(--dashboard-text)]">{t("14 sept.", "Sept. 14")}</p>
-              <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/50">{t("dans 8 jours", "in 8 days")}</p>
+              <p className="mt-1.5 text-base font-bold text-[var(--dashboard-text)]">{texteAvecChiffres(t("14 sept.", "Sept. 14"))}</p>
+              <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(t("dans 8 jours", "in 8 days"))}</p>
             </div>
           </div>
           <div className="my-4 h-px bg-[var(--dashboard-text)]/10" />
@@ -110,12 +110,12 @@ export default function Abonnement({ first = false }: { first?: boolean }) {
                   <CalendarIcon />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-[var(--dashboard-text)]">{date}</p>
+                  <p className="text-xs font-bold text-[var(--dashboard-text)]">{texteAvecChiffres(date)}</p>
                   <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/50">
                     {t("Abonnement mensuel · Groupe Logistique Ivoire", "Monthly subscription · Groupe Logistique Ivoire")}
                   </p>
                 </div>
-                <p className="text-xs font-bold text-[var(--dashboard-text)]">25 000 F</p>
+                <p className="text-xs font-figures-bold text-[var(--dashboard-text)]">25 000 F</p>
                 <Tag tone="ok">{t("Payée", "Paid")}</Tag>
                 <button
                   type="button"
@@ -168,7 +168,7 @@ export default function Abonnement({ first = false }: { first?: boolean }) {
 function EtapeRow({ numero, texte }: { numero: number; texte: string }) {
   return (
     <div className="flex items-start gap-2.5 text-xs text-[var(--dashboard-text)]/60">
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#c8262d]/10 text-[10px] font-bold text-[#c8262d]">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#c8262d]/10 text-[10px] font-figures-bold text-[#c8262d]">
         {numero}
       </span>
       <p className="leading-relaxed">{texte}</p>

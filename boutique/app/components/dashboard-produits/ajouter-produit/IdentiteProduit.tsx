@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
+import { texteAvecChiffres } from "../../dashboard-accueil/shared";
 import type { Categorie } from "./types";
 
 /*
@@ -77,7 +78,7 @@ export default function IdentiteProduit({
                 : "bg-black/[0.03] text-[var(--dashboard-text)]/50 hover:bg-black/[0.06]"
             }`}
           >
-            {t(c.nom, c.nomEn)}
+            {texteAvecChiffres(t(c.nom, c.nomEn))}
           </button>
         ))}
 
@@ -115,7 +116,7 @@ export default function IdentiteProduit({
         placeholder={t("Ce que le client lira sur votre page de commande.", "What the customer will read on your order page.")}
         className="mt-1.5 w-full resize-none rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2.5 text-xs outline-none focus:border-brand-pink dark:bg-white/[0.04]"
       />
-      <p className="mt-1 text-right text-[9px] text-[var(--dashboard-text)]/30">{description.length}/{DESCRIPTION_MAX}</p>
+      <p className="mt-1 text-right text-[9px] text-[var(--dashboard-text)]/30 font-figures">{description.length}/{DESCRIPTION_MAX}</p>
     </div>
   );
 }

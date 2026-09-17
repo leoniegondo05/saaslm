@@ -228,7 +228,7 @@ export default function AssistanceLMModal({
         {/* Fil de discussion */}
         <div ref={threadRef} className="flex max-h-[40vh] min-h-[8rem] flex-col gap-2 overflow-y-auto pr-1">
           {messages.length === 0 ? (
-            <p className="my-auto text-center text-[11px] text-[var(--dashboard-text)]/35">
+            <p className="my-auto text-center text-[11px] text-[var(--dashboard-text)]/40">
               {t("Tapez votre question ci-dessous, ou choisissez un exemple au-dessus.", "Type your question below, or pick an example above.")}
             </p>
           ) : (

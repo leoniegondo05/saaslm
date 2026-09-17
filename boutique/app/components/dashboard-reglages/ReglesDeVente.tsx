@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, SectionHeader, Tag, useMockSave } from "../dashboard-accueil/shared";
+import { Card, SectionHeader, Tag, texteAvecChiffres, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -54,7 +54,7 @@ export default function ReglesDeVente({ first = false }: { first?: boolean }) {
           type="button"
           onClick={() => trigger()}
           disabled={saving}
-          className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
+          className="rounded-full bg-[#141220] px-4 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
         >
           {saving ? t("Enregistrement…", "Saving…") : done ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
         </button>
@@ -76,7 +76,7 @@ export default function ReglesDeVente({ first = false }: { first?: boolean }) {
         <Card
           title={t("Ce qu'un produit doit avoir pour être publié", "What a product needs to be published")}
           titleTab
-          badge={<Tag tone="pink">{t("3 règles", "3 rules")}</Tag>}
+          badge={<Tag tone="pink">{texteAvecChiffres(t("3 règles", "3 rules"))}</Tag>}
           className="!bg-[var(--dashboard-card-bg)]"
         >
           <p className="text-xs text-[var(--dashboard-text)]/50">
@@ -127,7 +127,7 @@ export default function ReglesDeVente({ first = false }: { first?: boolean }) {
           <div className="mt-3 flex flex-wrap items-center gap-4 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-4 py-3.5">
             <div className="shrink-0">
               <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Délai laissé au client", "Window given to the customer")}</p>
-              <p className="mt-0.5 text-lg font-bold tracking-tight text-[var(--dashboard-text)] font-figures">{delaiHeures} h</p>
+              <p className="mt-0.5 text-lg tracking-tight text-[var(--dashboard-text)] font-figures-bold">{delaiHeures} h</p>
             </div>
 
             <div className="min-w-[220px] flex-1">
@@ -156,8 +156,8 @@ export default function ReglesDeVente({ first = false }: { first?: boolean }) {
                 />
               </div>
               <div className="mt-1.5 flex justify-between text-[10px] text-[var(--dashboard-text)]/40">
-                <span>{t("24 h · minimum imposé", "24 h · minimum required")}</span>
-                <span>{t("7 jours", "7 days")}</span>
+                <span>{texteAvecChiffres(t("24 h · minimum imposé", "24 h · minimum required"))}</span>
+                <span>{texteAvecChiffres(t("7 jours", "7 days"))}</span>
               </div>
             </div>
           </div>
@@ -175,7 +175,7 @@ export default function ReglesDeVente({ first = false }: { first?: boolean }) {
                     : "border border-[var(--dashboard-text)]/15 text-[var(--dashboard-text)]/60 hover:bg-[var(--dashboard-text)]/[0.05]"
                 }`}
               >
-                {t(label, labelEn)}
+                {texteAvecChiffres(t(label, labelEn))}
               </button>
             ))}
           </div>
@@ -209,8 +209,8 @@ function ReglaRow({
   return (
     <div className="flex items-center gap-3 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5">
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-bold text-[var(--dashboard-text)]">{titre}</p>
-        <p className="mt-0.5 text-[11px] leading-snug text-[var(--dashboard-text)]/50">{note}</p>
+        <p className="text-xs font-bold text-[var(--dashboard-text)]">{texteAvecChiffres(titre)}</p>
+        <p className="mt-0.5 text-[11px] leading-snug text-[var(--dashboard-text)]/50">{texteAvecChiffres(note)}</p>
       </div>
       <ToggleSwitch checked={checked} onChange={onChange} label={titre} />
     </div>

@@ -47,7 +47,7 @@ export default function ClientsStockVsDrop({ typeAchat }: { typeAchat: TypeAchat
               {texteAvecChiffres(t("97 CLIENTS", "97 CUSTOMERS"))}
             </span>
           </div>
-          <p className="text-[10px] text-[var(--dashboard-text)]/45">
+          <p className="text-[10px] text-[var(--dashboard-text)]/40">
             {t("Votre marchandise, que vous avez vue et emballée.", "Your goods, inspected and packed under your standard.")}
           </p>
 
@@ -56,25 +56,25 @@ export default function ClientsStockVsDrop({ typeAchat }: { typeAchat: TypeAchat
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Panier moyen", "Average basket value")}
               </span>
-              <span className="font-bold font-figures">20 295F</span>
+              <span className="font-figures-bold">20 295F</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Taux de livraison", "Delivery success rate")}
               </span>
-              <span className="font-bold font-figures text-[#10b981]">80 %</span>
+              <span className="font-figures-bold text-[#10b981]">80 %</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Litige pour produit non conforme", "Disputes for non-compliant item")}
               </span>
-              <span className="font-bold font-figures text-[#10b981]">0</span>
+              <span className="font-figures-bold text-[#10b981]">0</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Reviennent acheter", "Repeat buyers")}
               </span>
-              <span className="font-bold font-figures text-[#10b981]">23 %</span>
+              <span className="font-figures-bold text-[#10b981]">23 %</span>
             </div>
             <div className="flex justify-between border-t border-[var(--dashboard-text)]/10 pt-1.5 font-bold">
               <span className="text-[var(--dashboard-text)]/75">
@@ -99,7 +99,7 @@ export default function ClientsStockVsDrop({ typeAchat }: { typeAchat: TypeAchat
               {texteAvecChiffres(t("51 CLIENTS", "51 CUSTOMERS"))}
             </span>
           </div>
-          <p className="text-[10px] text-[var(--dashboard-text)]/45">
+          <p className="text-[10px] text-[var(--dashboard-text)]/40">
             {t("La marchandise du partenaire, décrite par sa fiche.", "Partner catalog items, fulfilled directly by supplier.")}
           </p>
 
@@ -108,7 +108,7 @@ export default function ClientsStockVsDrop({ typeAchat }: { typeAchat: TypeAchat
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Panier moyen", "Average basket value")}
               </span>
-              <span className="font-bold font-figures">17 888F</span>
+              <span className="font-figures-bold">17 888F</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
@@ -120,13 +120,13 @@ export default function ClientsStockVsDrop({ typeAchat }: { typeAchat: TypeAchat
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Litige pour produit non conforme", "Disputes for non-compliant item")}
               </span>
-              <span className="font-bold font-figures text-[#f43f5e]">7</span>
+              <span className="font-figures-bold text-[#f43f5e]">7</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Reviennent acheter", "Repeat buyers")}
               </span>
-              <span className="font-bold font-figures text-[#f43f5e]">9 %</span>
+              <span className="font-figures-bold text-[#f43f5e]">9 %</span>
             </div>
             <div className="flex justify-between border-t border-[var(--dashboard-text)]/10 pt-1.5 font-bold">
               <span className="text-[var(--dashboard-text)]/75">

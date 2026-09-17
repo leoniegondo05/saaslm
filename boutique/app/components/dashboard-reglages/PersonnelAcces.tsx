@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Card, Divider, SectionHeader, Tag } from "../dashboard-accueil/shared";
+import { Card, Divider, SectionHeader, Tag, texteAvecChiffres } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -210,7 +210,7 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
         <div>
           <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
-              {t("Personnel de la boutique", "Shop staff")} · {t(`${actifs} comptes actifs`, `${actifs} active accounts`)}
+              {t("Personnel de la boutique", "Shop staff")} · {texteAvecChiffres(t(`${actifs} comptes actifs`, `${actifs} active accounts`))}
             </p>
           </div>
 
@@ -241,12 +241,12 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
                         {c.email && ` · ${c.email}`}
                       </span>
                     </span>
-                    <Tag tone={c.statut.tone}>{t(c.statut.label, c.statut.labelEn)}</Tag>
+                    <Tag tone={c.statut.tone}>{texteAvecChiffres(t(c.statut.label, c.statut.labelEn))}</Tag>
                     <span className="hidden text-right sm:block">
                       <span className="block text-[9px] text-[var(--dashboard-text)]/40">
                         {c.statut.tone === "ko" ? "" : t("Expire le", "Expires on")}
                       </span>
-                      <span className="block text-xs font-semibold">{t(c.expire, c.expireEn)}</span>
+                      <span className="block text-xs font-semibold">{texteAvecChiffres(t(c.expire, c.expireEn))}</span>
                     </span>
                     <svg
                       viewBox="0 0 24 24"
@@ -300,7 +300,7 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
               {ETAPES.map((e) => (
                 <div key={e.titre}>
                   <p className="inline-block rounded-md px-3 py-1.5 text-[10px] font-semibold" style={{ background: "var(--dashboard-surface-2)" }}>
-                    {t(e.titre, e.titreEn)}
+                    {texteAvecChiffres(t(e.titre, e.titreEn))}
                   </p>
                   <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/70">{t(e.note, e.noteEn)}</p>
                 </div>
@@ -317,7 +317,7 @@ function DetailTile({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl card-tint p-3 text-center shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
       <p className="text-[10px] text-[var(--dashboard-text)]/40">{label}</p>
-      <p className="mt-1.5 text-sm font-bold">{value}</p>
+      <p className="mt-1.5 text-sm font-bold">{texteAvecChiffres(value)}</p>
     </div>
   );
 }

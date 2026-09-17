@@ -84,19 +84,19 @@ export default function LireUneLigne({ first = false, activeDate }: { first?: bo
 
             <div className="mt-3.5 flex items-end justify-between gap-3">
               <div>
-                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">{t("Payé", "Paid")}</p>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Payé", "Paid")}</p>
                 <p className="mt-0.5 text-sm font-semibold text-[var(--dashboard-text)]">{formatCfa(EXEMPLE.montantPaye)}</p>
               </div>
               <div className="text-right">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">{t("Net", "Net")}</p>
-                <p className="mt-0.5 flex items-center justify-end gap-1 text-lg font-bold tracking-tight text-[#178a3f] font-figures">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Net", "Net")}</p>
+                <p className="mt-0.5 flex items-center justify-end gap-1 text-lg tracking-tight text-[#178a3f] font-figures-bold">
                   <TriangleIcon filled />
                   {formatCfa(net)}
                 </p>
               </div>
             </div>
 
-            <p className="mt-2.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">{t("Retenues", "Deductions")}</p>
+            <p className="mt-2.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Retenues", "Deductions")}</p>
             <div className="mt-0.5 flex items-center gap-3 text-[10.5px] font-semibold text-[#c8262d]">
               <span className="flex items-center gap-1">
                 <TriangleIcon filled className="rotate-180" />-{formatCfa(EXEMPLE.retenueLogistique)}
@@ -207,7 +207,7 @@ export default function LireUneLigne({ first = false, activeDate }: { first?: bo
                 <span className="h-2.5 w-2.5 rounded-full bg-[#178a3f]" />
               </span>
               <p className="text-[10px] font-bold text-[#178a3f]">{t("Disponible", "Available")}</p>
-              <p className="max-w-[90px] text-[9px] leading-snug text-[var(--dashboard-text)]/45">{t("L'argent peut être retiré", "The money can be withdrawn")}</p>
+              <p className="max-w-[90px] text-[9px] leading-snug text-[var(--dashboard-text)]/40">{t("L'argent peut être retiré", "The money can be withdrawn")}</p>
             </div>
           </div>
         </div>
@@ -328,30 +328,30 @@ export default function LireUneLigne({ first = false, activeDate }: { first?: bo
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <p className="text-xs font-bold text-[var(--dashboard-text)]">{t(JOUR_RESUME.date, JOUR_RESUME.dateEn)}</p>
               <span className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-[var(--dashboard-text)] font-figures">{JOUR_RESUME.commandes.length}</span>
-                <span className="text-[10px] text-[var(--dashboard-text)]/45">{t("reçues", "received")}</span>
+                <span className="text-sm text-[var(--dashboard-text)] font-figures-bold">{JOUR_RESUME.commandes.length}</span>
+                <span className="text-[10px] text-[var(--dashboard-text)]/40">{t("reçues", "received")}</span>
               </span>
             </div>
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
               <span className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-[#178a3f] font-figures">{livreesResume}</span>
-                <span className="text-[10px] text-[var(--dashboard-text)]/45">{t("livrée", "delivered")}</span>
+                <span className="text-sm text-[#178a3f] font-figures-bold">{livreesResume}</span>
+                <span className="text-[10px] text-[var(--dashboard-text)]/40">{t("livrée", "delivered")}</span>
               </span>
               <span className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-[#c8262d] font-figures">{refuseesResume}</span>
-                <span className="text-[10px] text-[var(--dashboard-text)]/45">{t("refusée", "refused")}</span>
+                <span className="text-sm text-[#c8262d] font-figures-bold">{refuseesResume}</span>
+                <span className="text-[10px] text-[var(--dashboard-text)]/40">{t("refusée", "refused")}</span>
               </span>
               <span className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-[#a8690a] font-figures">{litigesResume}</span>
-                <span className="text-[10px] text-[var(--dashboard-text)]/45">{t("en litige", "disputed")}</span>
+                <span className="text-sm text-[#a8690a] font-figures-bold">{litigesResume}</span>
+                <span className="text-[10px] text-[var(--dashboard-text)]/40">{t("en litige", "disputed")}</span>
               </span>
               <span className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-[#3a1d8a] font-figures">{relanceesResume}</span>
-                <span className="text-[10px] text-[var(--dashboard-text)]/45">{t("relancée", "relaunched")}</span>
+                <span className="text-sm text-[#3a1d8a] font-figures-bold">{relanceesResume}</span>
+                <span className="text-[10px] text-[var(--dashboard-text)]/40">{t("relancée", "relaunched")}</span>
               </span>
               <div className="text-right">
                 <p className="text-[9px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Encaissé", "Collected")}</p>
-                <p className="text-sm font-bold text-[#178a3f] font-figures">{formatCfa(encaisseResume)}</p>
+                <p className="text-sm text-[#178a3f] font-figures-bold">{formatCfa(encaisseResume)}</p>
               </div>
             </div>
           </div>
@@ -374,7 +374,7 @@ export default function LireUneLigne({ first = false, activeDate }: { first?: bo
             <thead>
               <tr className="border-b border-[var(--dashboard-text)]/10">
                 {[t("Devise", "Currency"), t("Payé", "Paid"), t("Logistique", "Logistics"), t("Opération", "Operations"), t("Net", "Net")].map((h) => (
-                  <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+                  <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                     {h}
                   </th>
                 ))}
@@ -387,7 +387,7 @@ export default function LireUneLigne({ first = false, activeDate }: { first?: bo
                   <td className="py-2 pr-3 font-semibold">{formatDevise(EXEMPLE.montantPaye, d.key)}</td>
                   <td className="py-2 pr-3 text-[#c8262d]">-{formatDevise(EXEMPLE.retenueLogistique, d.key)}</td>
                   <td className="py-2 pr-3 text-[#c8262d]">-{formatDevise(EXEMPLE.retenueOperation, d.key)}</td>
-                  <td className="py-2 pr-3 text-sm font-bold text-[#178a3f] font-figures">{formatDevise(net, d.key)}</td>
+                  <td className="py-2 pr-3 text-sm text-[#178a3f] font-figures-bold">{formatDevise(net, d.key)}</td>
                 </tr>
               ))}
             </tbody>
@@ -434,7 +434,7 @@ function Palier({ heures, label, note }: { heures: number; label: string; note: 
   return (
     <div className="flex flex-col items-center gap-1.5 text-center">
       <AnneauCompteARebours heuresRestantes={heures} etiquette={label} size={40} />
-      <p className="max-w-[90px] text-[9px] leading-snug text-[var(--dashboard-text)]/45">{note}</p>
+      <p className="max-w-[90px] text-[9px] leading-snug text-[var(--dashboard-text)]/40">{note}</p>
     </div>
   );
 }

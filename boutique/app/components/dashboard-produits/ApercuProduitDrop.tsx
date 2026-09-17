@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ProduitCarousel, Tag } from "../dashboard-accueil/shared";
+import { ProduitCarousel, Tag, texteAvecChiffres } from "../dashboard-accueil/shared";
 import type { DropProduit } from "./dropCatalogue";
 import { getCategoryLabelEn } from "./dropCatalogue";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
@@ -11,14 +11,13 @@ import { useDashboardLangue } from "../DashboardLanguageProvider";
   Aperçu produit atteint depuis le bouton "Voir la fiche" de l'aperçu en
   avant du catalogue drop (Écran 05, CatalogueDrop.tsx) — différent de la
   fiche complète (Écran 06, FicheProduitDrop.tsx, atteinte elle depuis une
-  tuile) : juste les photos en grand et un bouton "Précommander" (mock, cf.
+  tuile) : juste les photos en grand et un bouton "Je suis intéressé" (mock, cf.
   [[dashboard-mock-data-pending-laravel-api]] : pas de vraie commande tant
   que le backend n'existe pas). Pas de prix détaillé, description ni
   simulateur ici.
 */
 export default function ApercuProduitDrop({ produit }: { produit: DropProduit }) {
   const { t } = useDashboardLangue();
-  const [precommande, setPrecommande] = useState(false);
   const [interesse, setInteresse] = useState(false);
 
   const categorieLabel = t(produit.categorie, getCategoryLabelEn(produit.categorie));
@@ -46,39 +45,30 @@ export default function ApercuProduitDrop({ produit }: { produit: DropProduit })
           <div className="mb-2.5 flex flex-wrap gap-1.5">
             <Tag tone="pink">{produit.source === "L" ? t("Drop LM", "LM drop") : t("Partenaire", "Partner")}</Tag>
             {produit.unitesDisponibles !== undefined && (
-              <Tag tone="neutral">{t("Disponible", "Available")} · {t(`${produit.unitesDisponibles} unités`, `${produit.unitesDisponibles} units`)}</Tag>
+              <Tag tone="neutral">
+                <span>{t("Disponible", "Available")} · {texteAvecChiffres(t(`${produit.unitesDisponibles} unités`, `${produit.unitesDisponibles} units`))}</span>
+              </Tag>
             )}
           </div>
-          <p className="text-3xl font-semibold tracking-tight">{t(produit.nom, produit.nomEn ?? produit.nom)}</p>
+          <p className="text-3xl font-semibold tracking-tight">{texteAvecChiffres(t(produit.nom, produit.nomEn ?? produit.nom))}</p>
           <p className="mt-1 text-xs text-white/60">
-            {[categorieLabel, conditionnementLabel, produit.contenance].filter(Boolean).join(" · ")}
+            {texteAvecChiffres([categorieLabel, conditionnementLabel, produit.contenance].filter(Boolean).join(" · "))}
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setPrecommande(true)}
-              disabled={precommande}
-              aria-pressed={precommande}
-              className={`rounded-full px-5 py-3 text-sm font-semibold transition ${
-                precommande ? "bg-white/15 text-white" : "bg-white text-[#141220] hover:brightness-95"
-              }`}
-            >
-              {precommande ? t("Précommande enregistrée", "Preorder saved") : t("Précommander", "Preorder")}
-            </button>
             <button
               type="button"
               onClick={() => setInteresse(true)}
               disabled={interesse}
               aria-pressed={interesse}
-              className={`rounded-full border px-5 py-3 text-sm font-semibold transition ${
-                interesse ? "border-white/15 bg-white/15 text-white" : "border-white/30 text-white hover:bg-white/10"
+              className={`rounded-full px-5 py-3 text-sm font-semibold transition ${
+                interesse ? "bg-white/15 text-white" : "bg-white text-[#141220] hover:brightness-95"
               }`}
             >
               {interesse ? t("Intérêt enregistré", "Interest saved") : t("Je suis intéressé", "I'm interested")}
             </button>
           </div>
           <p className="mt-2 text-[11px] text-white/50">
-            {t("Ce sont des articles à venir : précommandez ou dites que ça vous intéresse.", "These are upcoming products: preorder or let us know you're interested.")}
+            {t("Ce sont des articles à venir : dites que ça vous intéresse.", "These are upcoming products: let us know you're interested.")}
           </p>
         </div>
       </div>

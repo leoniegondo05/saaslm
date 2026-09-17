@@ -52,7 +52,7 @@ export default function TarificationProduit({
           value={prixAchat ?? ""}
           onChange={(e) => onPrixAchatChange(e.target.value === "" ? null : parseMontant(e.target.value))}
           placeholder="8500"
-          className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2.5 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04]"
+          className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2.5 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04] font-figures"
         />
       </Champ>
 
@@ -71,7 +71,7 @@ export default function TarificationProduit({
             value={prixVente || ""}
             onChange={(e) => onPrixVenteChange(parseMontant(e.target.value))}
             placeholder="19900"
-            className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2.5 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04]"
+            className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2.5 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04] font-figures"
           />
         </Champ>
       </div>
@@ -84,7 +84,7 @@ function Champ({ label, aide, children }: { label: string; aide?: string; childr
     <div>
       <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">{label}</p>
       <div className="mt-1.5">{children}</div>
-      {aide && <p className="mt-1 text-[9px] text-[var(--dashboard-text)]/35">{aide}</p>}
+      {aide && <p className="mt-1 text-[9px] text-[var(--dashboard-text)]/40">{aide}</p>}
     </div>
   );
 }

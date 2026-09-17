@@ -114,10 +114,10 @@ export default function ClientsRfMatrix({ typeAchat }: { typeAchat: TypeAchat })
         </div>
 
         {/* Légendes discrètes des axes */}
-        <div className="pointer-events-none absolute bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-medium tracking-wide text-[var(--dashboard-text)]/35">
+        <div className="pointer-events-none absolute bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-medium tracking-wide text-[var(--dashboard-text)]/40">
           {t("Achat récent →", "Recent purchase →")}
         </div>
-        <div className="pointer-events-none absolute left-1.5 top-1/2 -translate-y-1/2 -rotate-90 text-[9px] font-medium tracking-wide text-[var(--dashboard-text)]/35">
+        <div className="pointer-events-none absolute left-1.5 top-1/2 -translate-y-1/2 -rotate-90 text-[9px] font-medium tracking-wide text-[var(--dashboard-text)]/40">
           {t("← Nombre d'achats", "← Purchase count")}
         </div>
       </div>
@@ -147,7 +147,7 @@ export default function ClientsRfMatrix({ typeAchat }: { typeAchat: TypeAchat })
                     style={{ backgroundColor: segment.color }}
                   />
                 </div>
-                <div className="mt-1 text-lg font-bold tracking-tight text-[var(--dashboard-text)] sm:text-xl font-figures">
+                <div className="mt-1 text-lg tracking-tight text-[var(--dashboard-text)] sm:text-xl font-figures-bold">
                   {segment.count}
                 </div>
                 {segment.partChiffreFr && (

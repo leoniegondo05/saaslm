@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Card, ProduitCarousel, SectionHeader, StatRow, Tag } from "../dashboard-accueil/shared";
+import { Card, ProduitCarousel, SectionHeader, StatRow, Tag, texteAvecChiffres } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -87,14 +87,14 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
             <div className="my-3 h-px bg-[var(--dashboard-text)]/10" />
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold tracking-tight text-[var(--dashboard-text)]">{t("Note du réseau", "Network rating")}</p>
-                <p className="text-base font-bold font-figures">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/60">{t("Note du réseau", "Network rating")}</p>
+                <p className="text-lg font-figures-bold">
                   {PARTENAIRE.note.toLocaleString("fr-FR")} <span className="text-xs font-normal text-[var(--dashboard-text)]/50">/ 10</span>
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xs font-bold tracking-tight text-[var(--dashboard-text)]">{t("Affiliée depuis", "Partner since")}</p>
-                <p className="text-sm font-semibold">{t(PARTENAIRE.affilieeDepuis, PARTENAIRE.affilieeDepuisEn)}</p>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/60">{t("Affiliée depuis", "Partner since")}</p>
+                <p className="text-sm font-semibold">{texteAvecChiffres(t(PARTENAIRE.affilieeDepuis, PARTENAIRE.affilieeDepuisEn))}</p>
               </div>
             </div>
             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -110,7 +110,7 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
               style={{ maxHeight: infosOuvertes ? PARTENAIRE.infos.length * 32 : INFOS_VISIBLES * 32 }}
             >
               {PARTENAIRE.infos.map((row) => (
-                <StatRow key={row.label} label={t(row.label, row.labelEn)} value={t(row.value, row.valueEn ?? row.value)} bold={false} />
+                <StatRow key={row.label} label={t(row.label, row.labelEn)} value={texteAvecChiffres(t(row.value, row.valueEn ?? row.value))} bold={false} />
               ))}
             </div>
 
@@ -119,10 +119,10 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
                 <button
                   type="button"
                   onClick={() => setInfosOuvertes(true)}
-                  className="pointer-events-auto flex items-center gap-1 rounded-full border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/60 shadow-[0_2px_10px_rgba(20,18,32,0.08)]"
+                  className="pointer-events-auto flex items-center gap-1 rounded-full border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] px-3 py-1.5 text-[9px] font-semibold text-[var(--dashboard-text)]/60 shadow-[0_2px_10px_rgba(20,18,32,0.08)]"
                 >
                   {t("Dérouler", "Expand")}
-                  <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
+                  <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
                     <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
@@ -143,7 +143,7 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
           {/* Dégradé produit : image du produit visible en haut, fondu vers le noir en bas pour la lisibilité du texte. */}
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(217,217,217,0)_40%,#000000_92%)]" />
           <div className="relative">
-            <Tag tone="pink">{t(`Arrive le ${PROCHAIN_PRODUIT.arriveeLe}`, `Arriving ${PROCHAIN_PRODUIT.arriveeLeEn}`)}</Tag>
+            <Tag tone="pink">{texteAvecChiffres(t(`Arrive le ${PROCHAIN_PRODUIT.arriveeLe}`, `Arriving ${PROCHAIN_PRODUIT.arriveeLeEn}`))}</Tag>
             <p className="mt-2.5 text-3xl font-semibold tracking-tight">{t(PROCHAIN_PRODUIT.nom, PROCHAIN_PRODUIT.nomEn)}</p>
             <p className="mt-1 max-w-md text-xs text-white/60">{t(PROCHAIN_PRODUIT.note, PROCHAIN_PRODUIT.noteEn)}</p>
             <Link

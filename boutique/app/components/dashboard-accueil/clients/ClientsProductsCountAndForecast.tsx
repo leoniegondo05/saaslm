@@ -20,7 +20,7 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
               <h3 className="text-xs font-bold tracking-tight text-[var(--dashboard-text)] sm:text-sm">
                 {t("Combien de vos produits chaque client connaît", "How many of your products each customer knows")}
               </h3>
-              <p className="text-[10px] text-[var(--dashboard-text)]/45">
+              <p className="text-[10px] text-[var(--dashboard-text)]/40">
                 {t(
                   "Nombre de références différentes achetées, par client",
                   "Number of unique SKUs ordered per customer"
@@ -35,22 +35,22 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
             <div className="flex h-12 items-center gap-2">
               {/* 1 produit : 75% */}
               <div className="flex h-full flex-[75] flex-col justify-center rounded-lg border border-[var(--dashboard-text)]/15 bg-[var(--dashboard-surface-2)]/60 px-2.5">
-                <span className="text-[10px] font-bold font-figures text-[var(--dashboard-text)]">75 %</span>
+                <span className="text-[10px] font-figures-bold text-[var(--dashboard-text)]">75 %</span>
               </div>
               {/* 2 produits : 17% */}
               <div className="flex h-full flex-[17] flex-col justify-center rounded-lg border border-[#38bdf8]/30 bg-[#38bdf8]/20 px-2">
-                <span className="text-[10px] font-bold font-figures text-[#38bdf8]">17 %</span>
+                <span className="text-[10px] font-figures-bold text-[#38bdf8]">17 %</span>
               </div>
               {/* 3 produits : 6% */}
               <div className="flex h-full flex-[6] flex-col justify-center rounded-lg border border-[#a78bfa]/30 bg-[#a78bfa]/20 px-1 text-center">
-                <span className="text-[9px] font-bold font-figures text-[#a78bfa]">6%</span>
+                <span className="text-[9px] font-figures-bold text-[#a78bfa]">6%</span>
               </div>
               {/* 4+ : 2% */}
               <div className="flex h-full flex-[2] flex-col justify-center rounded-lg border border-[#34d399]/30 bg-[#34d399]/20 text-center">
-                <span className="text-[8px] font-bold font-figures text-[#34d399]">2</span>
+                <span className="text-[8px] font-figures-bold text-[#34d399]">2</span>
               </div>
             </div>
-            <div className="mt-1.5 flex justify-between text-[9px] text-[var(--dashboard-text)]/45">
+            <div className="mt-1.5 flex justify-between text-[9px] text-[var(--dashboard-text)]/40">
               <span>{texteAvecChiffres(t("1 produit", "1 product"))}</span>
               <span className="-translate-x-6">{texteAvecChiffres(t("2 produits", "2 products"))}</span>
               <span>{texteAvecChiffres(t("3 produits", "3 products"))}</span>
@@ -82,7 +82,7 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
               <span className="text-[var(--dashboard-text)]/55">
                 {texteAvecChiffres(t("Valeur d'un client à 3 produits", "Value of a 3-product client"))}
               </span>
-              <span className="font-bold font-figures text-[#10b981]">62 400F</span>
+              <span className="font-figures-bold text-[#10b981]">62 400F</span>
             </div>
             <div className="flex justify-between border-t border-[var(--dashboard-text)]/10 pt-1.5">
               <span className="text-[var(--dashboard-text)]/55">
@@ -120,7 +120,7 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
               <h3 className="text-xs font-bold tracking-tight text-[var(--dashboard-text)] sm:text-sm">
                 {t("Votre portefeuille dans un an", "Your active portfolio in one year")}
               </h3>
-              <p className="text-[10px] text-[var(--dashboard-text)]/45">
+              <p className="text-[10px] text-[var(--dashboard-text)]/40">
                 {t(
                   "Clients actifs attendus, au rythme actuel de recrutement et de départs",
                   "Projected active buyers at current acquisition vs churn velocity"
@@ -223,7 +223,7 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
                 <g>
                   <circle cx={14} cy={88} r={3.5} fill="#38bdf8" />
                   <circle cx={14} cy={88} r={1.8} fill="#ffffff" />
-                  <text x={14} y={78} textAnchor="start" className="fill-[#38bdf8] text-[8.5px] font-figures font-bold">
+                  <text x={14} y={78} textAnchor="start" className="fill-[#38bdf8] text-[8.5px] font-figures-bold">
                     198
                   </text>
                 </g>
@@ -243,7 +243,7 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
                   {/* Badge PIC 219 */}
                   <g transform="translate(330, 12)">
                     <rect x={-24} y={-8} width={48} height={15} rx={3} fill="#10b981" />
-                    <text x={0} y={3} textAnchor="middle" fill="#ffffff" className="text-[8.5px] font-figures font-bold select-none">
+                    <text x={0} y={3} textAnchor="middle" fill="#ffffff" className="text-[8.5px] font-figures-bold select-none">
                       PIC · 219
                     </text>
                   </g>
@@ -253,7 +253,7 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
                 <g>
                   <circle cx={484} cy={58} r={3.5} fill="#f59e0b" />
                   <circle cx={484} cy={58} r={1.8} fill="#ffffff" />
-                  <text x={484} y={50} textAnchor="end" className="fill-[#f59e0b] text-[8.5px] font-figures font-bold">
+                  <text x={484} y={50} textAnchor="end" className="fill-[#f59e0b] text-[8.5px] font-figures-bold">
                     209
                   </text>
                 </g>
@@ -263,8 +263,8 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
               <div className="mt-2 flex justify-between text-[9.5px] text-[var(--dashboard-text)]/50 px-1">
                 <span className="text-[#38bdf8] font-bold">{t("Auj.", "Today")}</span>
                 <span className="font-figures">+3 mois</span>
-                <span className="text-[#10b981] font-bold font-figures">+6 mois</span>
-                <span className="text-[#f59e0b] font-bold font-figures">+12 mois</span>
+                <span className="text-[#10b981] font-figures-bold">+6 mois</span>
+                <span className="text-[#f59e0b] font-figures-bold">+12 mois</span>
               </div>
             </div>
           </div>
@@ -275,31 +275,31 @@ export default function ClientsProductsCountAndForecast({ typeAchat }: { typeAch
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Clients actifs aujourd'hui", "Active clients today")}
               </span>
-              <span className="font-bold font-figures">198</span>
+              <span className="font-figures-bold">198</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {texteAvecChiffres(t("Dans six mois", "In 6 months"))}
               </span>
-              <span className="font-bold font-figures text-[#10b981]">219</span>
+              <span className="font-figures-bold text-[#10b981]">219</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {texteAvecChiffres(t("Dans douze mois", "In 12 months"))}
               </span>
-              <span className="font-bold font-figures text-[#f59e0b]">209</span>
+              <span className="font-figures-bold text-[#f59e0b]">209</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
                 {texteAvecChiffres(t("Départs attendus sur 90 jours", "Expected churn over 90 days"))}
               </span>
-              <span className="font-bold font-figures text-[#f43f5e]">34</span>
+              <span className="font-figures-bold text-[#f43f5e]">34</span>
             </div>
             <div className="flex justify-between border-t border-[var(--dashboard-text)]/10 pt-1.5">
               <span className="text-[var(--dashboard-text)]/70 font-medium">
                 {t("Valeur restante du portefeuille", "Remaining portfolio equity")}
               </span>
-              <span className="font-bold font-figures">2 455 200F</span>
+              <span className="font-figures-bold">2 455 200F</span>
             </div>
           </div>
         </div>
