@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Card, Divider, SectionHeader, Tag, texteAvecChiffres } from "../dashboard-accueil/shared";
+import { Divider, MiniTile, SectionHeader, Tag, texteAvecChiffres } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -38,10 +38,15 @@ type Collaborateur = {
   expire: string;
   expireEn: string;
   couleur: string;
+  /** Part de la période de validité qui reste (0-100) : porte la barre sous chaque carte, absente pour un accès révoqué. */
+  validitePct?: number;
   details?: {
     creeLe: string;
+    creeLeEn: string;
     premiereConnexion: string;
+    premiereConnexionEn: string;
     derniereConnexion: string;
+    derniereConnexionEn: string;
     motDePasseChange: string;
     motDePasseChangeEn: string;
     codeRenouvele: string;
@@ -61,10 +66,14 @@ const COLLABORATEURS: Collaborateur[] = [
     expire: "12 sept.",
     expireEn: "Sep 12",
     couleur: "linear-gradient(140deg,#3ED8A5,#0B6B4F)",
+    validitePct: 62,
     details: {
       creeLe: "2 avril 2026",
+      creeLeEn: "April 2, 2026",
       premiereConnexion: "2 avril · 14 h 20",
+      premiereConnexionEn: "April 2 · 14:20",
       derniereConnexion: "Hier · 17 h 05",
+      derniereConnexionEn: "Yesterday · 17:05",
       motDePasseChange: "Oui",
       motDePasseChangeEn: "Yes",
       codeRenouvele: "1 fois",
@@ -82,10 +91,14 @@ const COLLABORATEURS: Collaborateur[] = [
     expire: "30 sept.",
     expireEn: "Sep 30",
     couleur: "linear-gradient(140deg,#2F6BE0,#011847)",
+    validitePct: 74,
     details: {
       creeLe: "20 janv. 2026",
+      creeLeEn: "Jan 20, 2026",
       premiereConnexion: "20 janv. · 9 h 10",
+      premiereConnexionEn: "Jan 20 · 9:10",
       derniereConnexion: "Aujourd'hui · 8 h 42",
+      derniereConnexionEn: "Today · 8:42",
       motDePasseChange: "Oui",
       motDePasseChangeEn: "Yes",
       codeRenouvele: "2 fois",
@@ -103,10 +116,14 @@ const COLLABORATEURS: Collaborateur[] = [
     expire: "2 sept.",
     expireEn: "Sep 2",
     couleur: "linear-gradient(140deg,#FFB020,#8A5A00)",
+    validitePct: 6,
     details: {
       creeLe: "5 juin 2026",
+      creeLeEn: "June 5, 2026",
       premiereConnexion: "5 juin · 11 h 30",
+      premiereConnexionEn: "June 5 · 11:30",
       derniereConnexion: "Hier · 19 h 15",
+      derniereConnexionEn: "Yesterday · 19:15",
       motDePasseChange: "Oui",
       motDePasseChangeEn: "Yes",
       codeRenouvele: "Aucune",
@@ -124,10 +141,14 @@ const COLLABORATEURS: Collaborateur[] = [
     expire: "20 sept.",
     expireEn: "Sep 20",
     couleur: "linear-gradient(140deg,#A279FF,#2A1466)",
+    validitePct: 35,
     details: {
       creeLe: "20 août 2026",
+      creeLeEn: "Aug 20, 2026",
       premiereConnexion: "Jamais",
+      premiereConnexionEn: "Never",
       derniereConnexion: "Jamais",
+      derniereConnexionEn: "Never",
       motDePasseChange: "Non",
       motDePasseChangeEn: "No",
       codeRenouvele: "Aucune",
@@ -147,8 +168,11 @@ const COLLABORATEURS: Collaborateur[] = [
     couleur: "",
     details: {
       creeLe: "3 févr. 2026",
+      creeLeEn: "Feb 3, 2026",
       premiereConnexion: "3 févr. · 10 h 05",
+      premiereConnexionEn: "Feb 3 · 10:05",
       derniereConnexion: "17 août · 16 h 40",
+      derniereConnexionEn: "Aug 17 · 16:40",
       motDePasseChange: "Oui",
       motDePasseChangeEn: "Yes",
       codeRenouvele: "1 fois",
@@ -170,6 +194,8 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
   const { t } = useDashboardLangue();
   const [ouvert, setOuvert] = useState(0);
   const actifs = COLLABORATEURS.filter((c) => c.statut.tone !== "ko").length;
+  const bientot = COLLABORATEURS.filter((c) => c.statut.tone === "warn").length;
+  const revoques = COLLABORATEURS.filter((c) => c.statut.tone === "ko").length;
 
   return (
     <>
@@ -181,54 +207,104 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
         layout="inline"
       />
 
-      <div className="grid items-start gap-4 min-[1100px]:grid-cols-[320px_1fr]">
-        {/* Colonne 1 : créer un collaborateur */}
-        <div>
-          <div className="rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink">
+      {/* Vue d'ensemble : mêmes chiffres que la liste en dessous, juste lus d'un coup d'œil */}
+      <div className="grid grid-cols-3 gap-2.5">
+        <MiniTile
+          label={t("Comptes actifs", "Active accounts")}
+          value={String(actifs)}
+          note={t(`sur ${COLLABORATEURS.length} au total`, `of ${COLLABORATEURS.length} total`)}
+        />
+        <MiniTile
+          label={t("Expirent bientôt", "Expiring soon")}
+          value={String(bientot)}
+          note={t("accès à renouveler", "access to renew")}
+        />
+        <MiniTile
+          label={t("Accès révoqués", "Revoked access")}
+          value={String(revoques)}
+          note={t("compte(s) retiré(s)", "account(s) removed")}
+        />
+      </div>
+
+      <div className="mt-4 grid items-start gap-4 min-[1100px]:grid-cols-[320px_1fr]">
+        {/* Colonne 1 : créer un collaborateur + comment ça marche */}
+        <div className="flex flex-col gap-3">
+          <Link
+            href="/dashboard/reglages/creer"
+            className="group flex flex-col items-center gap-2.5 rounded-2xl border-2 border-dashed border-brand-pink/30 bg-brand-pink/[0.04] p-6 text-center transition hover:border-brand-pink/50 hover:bg-brand-pink/[0.08]"
+          >
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink transition group-hover:scale-105">
               <PersonPlusIcon large />
             </span>
-            <p className="mt-3.5 text-base font-bold tracking-tight">{t("Créer un collaborateur", "Create a team member")}</p>
-            <p className="mt-1.5 text-xs leading-relaxed text-[var(--dashboard-text)]/60">
+            <p className="text-base font-bold tracking-tight">{t("Créer un collaborateur", "Create a team member")}</p>
+            <p className="text-xs leading-relaxed text-[var(--dashboard-text)]/60">
               {t(
                 "Nom, rôle, pages accessibles et date d'expiration : ses accès partent tout seuls dès la création.",
                 "Name, role, accessible pages and expiry date: their access is sent automatically as soon as the account is created."
               )}
             </p>
-            <Divider />
-            <Link
-              href="/dashboard/reglages/creer"
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-[#141220] px-4 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
-            >
+            <span className="mt-1 flex items-center gap-2 rounded-full bg-[#141220] px-4 py-2.5 text-xs font-semibold text-white transition group-hover:brightness-110 dark:bg-brand-pink">
               <PersonPlusIcon />
-              {t("Créer un collaborateur", "Create a team member")}
-            </Link>
+              {t("Nouveau badge d'accès", "New access badge")}
+            </span>
+          </Link>
+
+          <div className="rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
+              {t("Comment se passe l'arrivée d'un collaborateur", "How a team member's arrival works")}
+            </p>
+            <div className="mt-3.5 flex flex-col">
+              {ETAPES.map((e, i) => (
+                <div key={e.titre} className="relative flex gap-3 pb-4 last:pb-0">
+                  {i < ETAPES.length - 1 && (
+                    <span className="absolute left-[11px] top-6 h-[calc(100%-12px)] w-px bg-[var(--dashboard-text)]/10" />
+                  )}
+                  <span className="z-10 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-brand-pink text-[10px] font-bold text-white">
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0 pt-0.5">
+                    <p className="text-xs font-semibold">{t(e.titre.replace(/^\d+\s*·\s*/, ""), e.titreEn.replace(/^\d+\s*·\s*/, ""))}</p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-[var(--dashboard-text)]/60">{t(e.note, e.noteEn)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Colonne 2 : liste du personnel */}
+        {/* Colonne 2 : liste du personnel, une carte "badge" par collaborateur */}
         <div>
-          <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
-              {t("Personnel de la boutique", "Shop staff")} · {texteAvecChiffres(t(`${actifs} comptes actifs`, `${actifs} active accounts`))}
-            </p>
-          </div>
+          <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
+            {t("Personnel de la boutique", "Shop staff")}
+          </p>
 
           <div className="flex flex-col gap-2.5">
             {COLLABORATEURS.map((c, i) => {
               const open = ouvert === i && !!c.details;
+              const revoque = c.statut.tone === "ko";
               return (
                 <div
                   key={c.nom}
-                  className={`overflow-hidden rounded-2xl card-tint shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] transition ${
+                  className={`relative overflow-hidden rounded-2xl card-tint shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] transition ${
                     open ? "ring-1 ring-brand-pink/30" : ""
-                  }`}
+                  } ${revoque ? "opacity-70" : ""}`}
                 >
+                  {/* Liseré couleur du collaborateur — même teinte que son avatar, façon tranche de badge d'accès */}
+                  <span
+                    aria-hidden
+                    className="absolute inset-y-0 left-0 w-1"
+                    style={{
+                      background: revoque
+                        ? "repeating-linear-gradient(45deg, color-mix(in srgb, var(--dashboard-text) 25%, transparent) 0 4px, transparent 4px 8px)"
+                        : c.couleur || "color-mix(in srgb, var(--dashboard-text) 20%, transparent)",
+                    }}
+                  />
+
                   <button
                     type="button"
                     onClick={() => c.details && setOuvert(open ? -1 : i)}
                     disabled={!c.details}
-                    className="flex w-full items-center gap-3 p-3.5 text-left disabled:cursor-default"
+                    className="flex w-full items-center gap-3 py-3.5 pl-5 pr-3.5 text-left disabled:cursor-default"
                   >
                     <span
                       className="h-9 w-9 shrink-0 rounded-full"
@@ -244,7 +320,7 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
                     <Tag tone={c.statut.tone}>{texteAvecChiffres(t(c.statut.label, c.statut.labelEn))}</Tag>
                     <span className="hidden text-right sm:block">
                       <span className="block text-[9px] text-[var(--dashboard-text)]/40">
-                        {c.statut.tone === "ko" ? "" : t("Expire le", "Expires on")}
+                        {revoque ? "" : t("Expire le", "Expires on")}
                       </span>
                       <span className="block text-xs font-semibold">{texteAvecChiffres(t(c.expire, c.expireEn))}</span>
                     </span>
@@ -257,12 +333,19 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
                     </svg>
                   </button>
 
+                  {/* Validité restante avant expiration — jauge, pas juste une date en texte */}
+                  {!revoque && typeof c.validitePct === "number" && (
+                    <div className="ml-5 mr-3.5 mb-3.5 -mt-1.5 h-[3px] overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]">
+                      <div className="h-full rounded-full" style={{ width: `${c.validitePct}%`, background: c.couleur }} />
+                    </div>
+                  )}
+
                   {open && c.details && (
                     <div className="border-t border-[var(--dashboard-text)]/[0.06] bg-[color-mix(in_srgb,var(--dashboard-text)_2%,transparent)] p-3.5">
                       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 min-[1360px]:grid-cols-5">
-                        <DetailTile label={t("Compte créé le", "Account created on")} value={c.details.creeLe} />
-                        <DetailTile label={t("Première connexion", "First login")} value={c.details.premiereConnexion} />
-                        <DetailTile label={t("Dernière connexion", "Last login")} value={c.details.derniereConnexion} />
+                        <DetailTile label={t("Compte créé le", "Account created on")} value={t(c.details.creeLe, c.details.creeLeEn)} />
+                        <DetailTile label={t("Première connexion", "First login")} value={t(c.details.premiereConnexion, c.details.premiereConnexionEn)} />
+                        <DetailTile label={t("Dernière connexion", "Last login")} value={t(c.details.derniereConnexion, c.details.derniereConnexionEn)} />
                         <DetailTile label={t("Mot de passe changé", "Password changed")} value={t(c.details.motDePasseChange, c.details.motDePasseChangeEn)} />
                         <DetailTile label={t("Code renouvelé", "Code renewed")} value={t(c.details.codeRenouvele, c.details.codeRenouveleEn)} />
                       </div>
@@ -294,19 +377,6 @@ export default function PersonnelAcces({ first = true }: { first?: boolean }) {
               );
             })}
           </div>
-
-          <Card title={t("Comment se passe l'arrivée d'un collaborateur", "How a team member's arrival works")} titleTab className="mt-3">
-            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {ETAPES.map((e) => (
-                <div key={e.titre}>
-                  <p className="inline-block rounded-md px-3 py-1.5 text-[10px] font-semibold" style={{ background: "var(--dashboard-surface-2)" }}>
-                    {texteAvecChiffres(t(e.titre, e.titreEn))}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/70">{t(e.note, e.noteEn)}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
         </div>
       </div>
     </>

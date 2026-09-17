@@ -332,7 +332,7 @@ export default function DeposerStockModal({
                     value={dateDepot}
                     onChange={(e) => setDateDepot(e.target.value)}
                     disabled={!etape2Deverrouillee}
-                    className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2 text-sm outline-none focus:border-brand-pink disabled:opacity-50 dark:bg-white/[0.04]"
+                    className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2 text-sm outline-none focus:border-brand-pink disabled:opacity-50 dark:bg-white/[0.04] font-figures"
                   />
                 </Champ>
                 <Champ label={t("Valeur totale", "Total value")}>
@@ -472,7 +472,7 @@ export default function DeposerStockModal({
                         type="time"
                         value={heureDebut}
                         onChange={(e) => setHeureDebut(e.target.value)}
-                        className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04]"
+                        className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04] font-figures"
                       />
                     </Champ>
                     <Champ label={t("Jusqu'à", "Until")}>
@@ -480,7 +480,7 @@ export default function DeposerStockModal({
                         type="time"
                         value={heureFin}
                         onChange={(e) => setHeureFin(e.target.value)}
-                        className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04]"
+                        className="w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04] font-figures"
                       />
                     </Champ>
                   </div>

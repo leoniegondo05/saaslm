@@ -8,8 +8,8 @@ import { texteAvecChiffres } from "../dashboard-accueil/shared";
 import BoutiquePreview from "./personnaliser/BoutiquePreview";
 import ReglagesSection from "./personnaliser/ReglagesSection";
 import SectionsPanel from "./personnaliser/SectionsPanel";
-import { ETAT_DEFAUT } from "./personnaliser/types";
-import type { EditeurState, SectionId } from "./personnaliser/types";
+import { ETAT_DEFAUT, SECTIONS_DEFAUT } from "./personnaliser/types";
+import type { EditeurState, PageId, SectionId } from "./personnaliser/types";
 
 /*
   Écran "Personnaliser ma boutique" — ouvert depuis le bouton en bas de la
@@ -43,9 +43,28 @@ export default function PersonnaliserBoutique() {
   const [future, setFuture] = useState<EditeurState[]>([]);
 
   const [device, setDevice] = useState<"phone" | "desktop">("phone");
+  // "accueil" par défaut, comme U.page:'home' dans la maquette — c'est la
+  // page qu'un visiteur voit en premier, avant même la fiche produit.
+  const [page, setPage] = useState<PageId>("accueil");
   const [onglet, setOnglet] = useState<"sections" | "style">("sections");
-  const [sectionChoisie, setSectionChoisie] = useState<SectionId>("infos");
+  const [sectionChoisie, setSectionChoisie] = useState<SectionId>("grande-image");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "done">("idle");
+  // Œil "aperçu" de la maquette : ouvre la vitrine en plein écran, sans
+  // aucun contour de sélection ni panneau, telle qu'un client la verrait.
+  const [apercuOuvert, setApercuOuvert] = useState(false);
+
+  // Section par défaut à afficher à droite quand on bascule de page, si la
+  // section choisie jusque-là n'existe pas sur l'autre page (bandeau,
+  // en-tête, avis, faq et pied de page restent valables sur les deux).
+  const SECTION_PAR_DEFAUT: Record<PageId, SectionId> = { accueil: "grande-image", commande: "infos" };
+  const choisirPage = (p: PageId) => {
+    setPage(p);
+    setSectionChoisie((cur) => {
+      const def = SECTIONS_DEFAUT.find((d) => d.id === cur);
+      if (def && (def.page === "les-deux" || def.page === p)) return cur;
+      return SECTION_PAR_DEFAUT[p];
+    });
+  };
 
   const setState = (updater: (s: EditeurState) => EditeurState) => {
     setStateRaw((s) => {
@@ -97,19 +116,36 @@ export default function PersonnaliserBoutique() {
         {/* Barre d'outils */}
         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] px-4 py-3">
           <Link
-            href="/dashboard/reglages?tab=ma-boutique"
+            href="/dashboard/ma-boutique"
             className="flex items-center gap-1.5 rounded-full border border-[var(--dashboard-text)]/12 px-3 py-1.5 text-[11px] font-semibold text-[var(--dashboard-text)]/70 transition hover:bg-[var(--dashboard-text)]/[0.05]"
           >
-            <FlecheIcon /> {t("Réglages", "Settings")} › {t("Ma boutique", "My shop")}
+            <FlecheIcon /> {t("Ma boutique", "My shop")}
           </Link>
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-bold" style={{ fontFamily: "var(--font-sans)" }}>
+            <p className="truncate text-[13px] font-bold" style={{ fontFamily: "var(--font-bricolage)" }}>
               {t("Personnaliser ma boutique", "Customize my shop")}
             </p>
             <p className="truncate text-[10.5px] text-[var(--dashboard-text)]/40">{NOM_BOUTIQUE}</p>
           </div>
 
           <div className="ml-auto flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1 rounded-full bg-[var(--dashboard-text)]/[0.06] p-1">
+              <button
+                type="button"
+                onClick={() => choisirPage("accueil")}
+                className={`rounded-full px-3 py-1.5 text-[10.5px] font-semibold transition ${page === "accueil" ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-sm" : "text-[var(--dashboard-text)]/50"}`}
+              >
+                {t("Accueil", "Home")}
+              </button>
+              <button
+                type="button"
+                onClick={() => choisirPage("commande")}
+                className={`rounded-full px-3 py-1.5 text-[10.5px] font-semibold transition ${page === "commande" ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-sm" : "text-[var(--dashboard-text)]/50"}`}
+              >
+                {t("Page de commande", "Order page")}
+              </button>
+            </div>
+
             <div className="flex items-center gap-1 rounded-full bg-[var(--dashboard-text)]/[0.06] p-1">
               <button
                 type="button"
@@ -148,7 +184,11 @@ export default function PersonnaliserBoutique() {
               </button>
             </div>
 
-            {pending > 0 && (
+            {pending === 0 ? (
+              <span className="rounded-full bg-[#dcf5e3] px-2.5 py-1 text-[10px] font-semibold text-[#178a3f]">
+                {t("Tout est enregistré", "All saved")}
+              </span>
+            ) : (
               <span className="rounded-full bg-[#fff1d6] px-2.5 py-1 text-[10px] font-semibold text-[#a8690a]">
                 {texteAvecChiffres(t(`${pending} modification${pending > 1 ? "s" : ""} en attente`, `${pending} pending change${pending > 1 ? "s" : ""}`))}
               </span>
@@ -156,10 +196,18 @@ export default function PersonnaliserBoutique() {
 
             <button
               type="button"
+              onClick={() => setApercuOuvert(true)}
+              className="flex items-center gap-1.5 rounded-full border border-[var(--dashboard-text)]/12 px-3 py-1.5 text-[10.5px] font-semibold text-[var(--dashboard-text)]/70 transition hover:bg-[var(--dashboard-text)]/[0.05]"
+            >
+              <OeilIcon /> {t("Aperçu", "Preview")}
+            </button>
+
+            <button
+              type="button"
               onClick={annuler}
               disabled={pending === 0}
               aria-label={t("Annuler les modifications", "Discard changes")}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-[#ff5a62]/40 bg-[#ff5a62]/10 text-[#ff5a62] transition hover:brightness-95 disabled:opacity-30"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#ff5a62]/40 bg-[#ff5a62]/10 text-[#ff5a62] transition hover:brightness-95 disabled:opacity-30"
             >
               <CroixIcon />
             </button>
@@ -167,18 +215,12 @@ export default function PersonnaliserBoutique() {
               type="button"
               onClick={enregistrer}
               disabled={saveStatus === "saving"}
-              className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[11.5px] font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70"
+              aria-label={saveStatus === "saving" ? t("Enregistrement…", "Saving…") : t("Enregistrer", "Save")}
+              title={saveStatus === "saving" ? t("Enregistrement…", "Saving…") : t("Enregistrer", "Save")}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70"
               style={{ background: "linear-gradient(150deg,#FF5AA3,#EC0C8C 55%,#3A1D8A)" }}
             >
-              {saveStatus === "saving" ? (
-                t("Enregistrement…", "Saving…")
-              ) : saveStatus === "done" ? (
-                t("✓ Enregistré", "✓ Saved")
-              ) : (
-                <>
-                  <CheckIcon /> {t("Enregistrer", "Save")}
-                </>
-              )}
+              <CheckIcon />
             </button>
           </div>
         </div>
@@ -189,6 +231,7 @@ export default function PersonnaliserBoutique() {
             <SectionsPanel
               state={state}
               setState={setState}
+              page={page}
               onglet={onglet}
               setOnglet={setOnglet}
               sectionChoisie={sectionChoisie}
@@ -197,7 +240,15 @@ export default function PersonnaliserBoutique() {
           </div>
 
           <div className="flex items-start justify-center overflow-y-auto rounded-2xl border border-dashed border-[var(--dashboard-text)]/10 bg-[radial-gradient(circle_at_50%_0%,rgba(236,12,140,0.06),transparent_60%)] p-5 lg:h-[calc(100vh-160px)]">
-            <BoutiquePreview state={state} device={device} boutiqueNom={NOM_BOUTIQUE} logo={logo} />
+            <BoutiquePreview
+              state={state}
+              device={device}
+              page={page}
+              boutiqueNom={NOM_BOUTIQUE}
+              logo={logo}
+              sectionChoisie={sectionChoisie}
+              onChoisirSection={setSectionChoisie}
+            />
           </div>
 
           <div className="lg:h-[calc(100vh-160px)]">
@@ -205,6 +256,66 @@ export default function PersonnaliserBoutique() {
           </div>
         </div>
       </div>
+
+      {apercuOuvert && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-[var(--dashboard-bg)]">
+          <div className="flex items-center gap-3 border-b border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] px-4 py-3 sm:px-6">
+            <button
+              type="button"
+              onClick={() => setApercuOuvert(false)}
+              aria-label={t("Fermer l'aperçu", "Close preview")}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--dashboard-text)]/12 text-[var(--dashboard-text)]/60 transition hover:bg-[var(--dashboard-text)]/[0.05]"
+            >
+              <CroixIcon />
+            </button>
+            <div className="min-w-0">
+              <p className="truncate text-[13px] font-bold" style={{ fontFamily: "var(--font-bricolage)" }}>
+                {t("Aperçu", "Preview")}
+              </p>
+              <p className="truncate text-[10.5px] text-[var(--dashboard-text)]/40">{NOM_BOUTIQUE}</p>
+            </div>
+
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 rounded-full bg-[var(--dashboard-text)]/[0.06] p-1">
+                <button
+                  type="button"
+                  onClick={() => choisirPage("accueil")}
+                  className={`rounded-full px-3 py-1.5 text-[10.5px] font-semibold transition ${page === "accueil" ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-sm" : "text-[var(--dashboard-text)]/50"}`}
+                >
+                  {t("Accueil", "Home")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => choisirPage("commande")}
+                  className={`rounded-full px-3 py-1.5 text-[10.5px] font-semibold transition ${page === "commande" ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-sm" : "text-[var(--dashboard-text)]/50"}`}
+                >
+                  {t("Page de commande", "Order page")}
+                </button>
+              </div>
+              <div className="flex items-center gap-1 rounded-full bg-[var(--dashboard-text)]/[0.06] p-1">
+                <button
+                  type="button"
+                  onClick={() => setDevice("phone")}
+                  className={`rounded-full px-3 py-1.5 text-[10.5px] font-semibold transition ${device === "phone" ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-sm" : "text-[var(--dashboard-text)]/50"}`}
+                >
+                  {t("Téléphone", "Phone")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDevice("desktop")}
+                  className={`rounded-full px-3 py-1.5 text-[10.5px] font-semibold transition ${device === "desktop" ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-sm" : "text-[var(--dashboard-text)]/50"}`}
+                >
+                  {t("Ordinateur", "Computer")}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-1 items-start justify-center overflow-y-auto p-6">
+            <BoutiquePreview state={state} device={device} page={page} boutiqueNom={NOM_BOUTIQUE} logo={logo} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -222,6 +333,15 @@ function UndoIcon({ miroir = false }: { miroir?: boolean }) {
     <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" style={miroir ? { transform: "scaleX(-1)" } : undefined} aria-hidden>
       <path d="M9 5.5 4.5 10 9 14.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M4.5 10H14a5 5 0 0 1 0 10h-3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function OeilIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden>
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
     </svg>
   );
 }

@@ -94,7 +94,7 @@ export default function Abonnement({ first = false }: { first?: boolean }) {
           </div>
         </Card>
 
-        <Card title={t("Historique des abonnements", "Subscription history")} titleTab className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Historique des abonnements", "Subscription history")} titleTab titleUppercase={false} titleFont="inter" className="!bg-[var(--dashboard-card-bg)]">
           <div className="flex items-center justify-end">
             <button
               type="button"

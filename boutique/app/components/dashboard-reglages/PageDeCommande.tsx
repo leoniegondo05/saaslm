@@ -79,7 +79,7 @@ export default function PageDeCommande({ first = false }: { first?: boolean }) {
       </div>
 
       <div className="grid gap-3">
-        <Card title={t("Le lien de commande", "The order link")} titleTab className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Le lien de commande", "The order link")} titleTab titleUppercase={false} titleFont="inter" className="!bg-[var(--dashboard-card-bg)]">
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-xs">
             <span className="text-[var(--dashboard-text)]/40">awa-beaute.liivremoi.com/</span>
             <span className="font-figures-bold text-[var(--dashboard-text)]">{EXEMPLES_LIEN[format]}</span>
@@ -108,7 +108,7 @@ export default function PageDeCommande({ first = false }: { first?: boolean }) {
           </div>
         </Card>
 
-        <Card title={t("Ce qui s'affiche toujours", "What's always shown")} titleTab badge={<Tag tone="warn">{t("Non modifiable", "Not editable")}</Tag>} className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Ce qui s'affiche toujours", "What's always shown")} titleTab titleUppercase={false} titleFont="inter" badge={<Tag tone="warn">{t("Non modifiable", "Not editable")}</Tag>} className="!bg-[var(--dashboard-card-bg)]">
           <p className="text-xs text-[var(--dashboard-text)]/50">
             {t(
               "Fixé par la plateforme, sur toutes les pages de commande du réseau. Le client doit savoir quand il sera livré avant de payer.",
@@ -133,7 +133,7 @@ export default function PageDeCommande({ first = false }: { first?: boolean }) {
           </div>
         </Card>
 
-        <Card title={t("Moyens de paiement proposés", "Payment methods offered")} titleTab className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Moyens de paiement proposés", "Payment methods offered")} titleTab titleUppercase={false} titleFont="inter" className="!bg-[var(--dashboard-card-bg)]">
           <div className="divide-y divide-[var(--dashboard-text)]/10">
             {moyens.map((m) => (
               <div key={m.key} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">

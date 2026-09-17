@@ -10,7 +10,6 @@ import { SectionSkeleton } from "../../components/dashboard-accueil/shared";
 import Abonnement from "../../components/dashboard-reglages/Abonnement";
 import Confidentialite from "../../components/dashboard-reglages/Confidentialite";
 import FinancesReglements from "../../components/dashboard-reglages/FinancesReglements";
-import MaBoutique from "../../components/dashboard-reglages/MaBoutique";
 import PageDeCommande from "../../components/dashboard-reglages/PageDeCommande";
 import ReglagesNav, { ReglagesTab } from "../../components/dashboard-reglages/ReglagesNav";
 import ReglesDeVente from "../../components/dashboard-reglages/ReglesDeVente";
@@ -22,19 +21,19 @@ import { useDashboardLangue } from "../../components/DashboardLanguageProvider";
   (voir app/dashboard/produits/page.tsx) : tab null → tout empilé, tab
   choisi → une seule fiche, via ReglagesNav.
 
-  "Personnel et accès" (dans le profil) et "Le partenaire agréé" (son
-  propre onglet sous Produits) ne sont pas des fiches d'ici — l'ancien
-  écran "Personnel et accès" de cette page a été retiré, redondant avec
-  /dashboard/profil/droits.
+  "Personnel et accès" (dans le profil), "Le partenaire agréé" (son
+  propre onglet sous Produits) et "Ma boutique" (sa propre page,
+  /dashboard/ma-boutique, accessible via le logo boutique du header — voir
+  DashboardHeader.tsx, retour utilisateur du 2026-09-17) ne sont pas des
+  fiches d'ici — l'ancien écran "Personnel et accès" de cette page a été
+  retiré, redondant avec /dashboard/profil/droits.
 
-  Seule "Ma boutique" est construite en détail pour l'instant ; les cinq
-  autres fiches sont des reprises de la fiche de référence (six fiches
-  Réglages) réduites à leur intitulé et à ce qu'elles contiendront, en
-  attendant d'être construites une par une.
+  Les cinq fiches restantes sont des reprises de la fiche de référence
+  (six fiches Réglages) réduites à leur intitulé et à ce qu'elles
+  contiendront, en attendant d'être construites une par une.
 */
 
 const SECTIONS: Record<ReglagesTab, React.ComponentType<{ first?: boolean }>> = {
-  "ma-boutique": MaBoutique,
   commande: PageDeCommande,
   finances: FinancesReglements,
   "regles-vente": ReglesDeVente,
@@ -43,7 +42,6 @@ const SECTIONS: Record<ReglagesTab, React.ComponentType<{ first?: boolean }>> = 
 };
 
 const TAB_ORDER: ReglagesTab[] = [
-  "ma-boutique",
   "commande",
   "finances",
   "regles-vente",

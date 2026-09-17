@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Card, SectionHeader } from "../dashboard-accueil/shared";
+import { Card, SectionHeader, texteAvecChiffres } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import { RetourPastille } from "./shared";
 
@@ -61,38 +61,42 @@ type LitigeRow = {
   id: string;
   ref: string;
   produit: string;
+  produitEn: string;
   qte?: number;
   qui: Qui;
   montant: string;
   statut: LitigeStatut;
   date: string;
+  dateEn: string;
   tranche: boolean;
 };
 
 const LITIGES_EN_COURS: LitigeRow[] = [
-  { id: "D-208", ref: "C-4819", produit: "Sac cabas en raphia", qui: "client", montant: "19 140 F", statut: "cree", date: "29 août · 09:12", tranche: false },
-  { id: "D-207", ref: "C-4816", produit: "Sandales tressées", qte: 2, qui: "partenaire", montant: "28 340 F", statut: "en-traitement", date: "28 août · 14:20", tranche: false },
+  { id: "D-208", ref: "C-4819", produit: "Sac cabas en raphia", produitEn: "Raffia tote bag", qui: "client", montant: "19 140 F", statut: "cree", date: "29 août · 09:12", dateEn: "August 29 · 09:12", tranche: false },
+  { id: "D-207", ref: "C-4816", produit: "Sandales tressées", produitEn: "Woven sandals", qte: 2, qui: "partenaire", montant: "28 340 F", statut: "en-traitement", date: "28 août · 14:20", dateEn: "August 28 · 14:20", tranche: false },
 ];
 
 const LITIGES_TRANCHES: LitigeRow[] = [
-  { id: "D-205", ref: "C-4812", produit: "Sac cabas en raphia", qui: "vous", montant: "19 140 F", statut: "changement-colis", date: "27 août · 10:40", tranche: true },
-  { id: "D-202", ref: "C-4811", produit: "Foulard en soie", qui: "client", montant: "8 300 F", statut: "retour-fonds", date: "26 août · 17:05", tranche: true },
-  { id: "D-199", ref: "C-4810", produit: "Sandales tressées", qte: 2, qui: "vous", montant: "28 340 F", statut: "gain-cause", date: "26 août · 08:15", tranche: true },
+  { id: "D-205", ref: "C-4812", produit: "Sac cabas en raphia", produitEn: "Raffia tote bag", qui: "vous", montant: "19 140 F", statut: "changement-colis", date: "27 août · 10:40", dateEn: "August 27 · 10:40", tranche: true },
+  { id: "D-202", ref: "C-4811", produit: "Foulard en soie", produitEn: "Silk scarf", qui: "client", montant: "8 300 F", statut: "retour-fonds", date: "26 août · 17:05", dateEn: "August 26 · 17:05", tranche: true },
+  { id: "D-199", ref: "C-4810", produit: "Sandales tressées", produitEn: "Woven sandals", qte: 2, qui: "vous", montant: "28 340 F", statut: "gain-cause", date: "26 août · 08:15", dateEn: "August 26 · 08:15", tranche: true },
 ];
 const LITIGES_TRANCHES_TOTAL = 24; // la maquette n'en liste que 3 sur 24 — même chose ici
 
 type QuestionRow = {
   id: string;
   sujet: string;
+  sujetEn: string;
   statut: "en-cours" | "repondue";
   date: string;
+  dateEn: string;
 };
 
 const QUESTIONS: QuestionRow[] = [
-  { id: "D-206", sujet: "Frais logistiques du 26 août · calcul incompris", statut: "en-cours", date: "29 août · 08:40" },
-  { id: "D-204", sujet: "Enlèvement du 30 août · créneau du matin possible ?", statut: "repondue", date: "26 août · 11:20" },
-  { id: "D-201", sujet: "Versement du 24 août · date de virement", statut: "repondue", date: "25 août · 09:50" },
-  { id: "D-197", sujet: "Livraison à Bouaké · délai à annoncer aux clients", statut: "repondue", date: "22 août · 15:30" },
+  { id: "D-206", sujet: "Frais logistiques du 26 août · calcul incompris", sujetEn: "Logistics fees from August 26 · calculation unclear", statut: "en-cours", date: "29 août · 08:40", dateEn: "August 29 · 08:40" },
+  { id: "D-204", sujet: "Enlèvement du 30 août · créneau du matin possible ?", sujetEn: "Pickup on August 30 · morning slot possible?", statut: "repondue", date: "26 août · 11:20", dateEn: "August 26 · 11:20" },
+  { id: "D-201", sujet: "Versement du 24 août · date de virement", sujetEn: "Payout from August 24 · transfer date", statut: "repondue", date: "25 août · 09:50", dateEn: "August 25 · 09:50" },
+  { id: "D-197", sujet: "Livraison à Bouaké · délai à annoncer aux clients", sujetEn: "Delivery to Bouaké · lead time to announce to customers", statut: "repondue", date: "22 août · 15:30", dateEn: "August 22 · 15:30" },
 ];
 // La maquette n'en liste que 14/13 — même chose ici que LITIGES_TRANCHES_TOTAL : QUESTIONS ne montre qu'un échantillon.
 const QUESTIONS_TOTAL = 14;
@@ -101,15 +105,17 @@ const QUESTIONS_REPONDUES_TOTAL = 13;
 type SignalementRow = {
   id: string;
   sujet: string;
+  sujetEn: string;
   statut: "en-cours" | "corrige";
   date: string;
+  dateEn: string;
 };
 
 const SIGNALEMENTS: SignalementRow[] = [
-  { id: "D-203", sujet: "Page de commande · la vidéo ne se lance pas sur téléphone", statut: "en-cours", date: "29 août · 07:15" },
-  { id: "D-200", sujet: "Export du tableau des ventes · fichier vide", statut: "corrige", date: "25 août · 16:40" },
-  { id: "D-196", sujet: "Accès d'un collaborateur · code refusé après changement", statut: "corrige", date: "21 août · 10:05" },
-  { id: "D-191", sujet: "Photos d'un produit · téléversement bloqué à 80 %", statut: "corrige", date: "18 août · 13:25" },
+  { id: "D-203", sujet: "Page de commande · la vidéo ne se lance pas sur téléphone", sujetEn: "Order page · video won't play on phone", statut: "en-cours", date: "29 août · 07:15", dateEn: "August 29 · 07:15" },
+  { id: "D-200", sujet: "Export du tableau des ventes · fichier vide", sujetEn: "Sales table export · empty file", statut: "corrige", date: "25 août · 16:40", dateEn: "August 25 · 16:40" },
+  { id: "D-196", sujet: "Accès d'un collaborateur · code refusé après changement", sujetEn: "Collaborator access · code rejected after change", statut: "corrige", date: "21 août · 10:05", dateEn: "August 21 · 10:05" },
+  { id: "D-191", sujet: "Photos d'un produit · téléversement bloqué à 80 %", sujetEn: "Product photos · upload stuck at 80%", statut: "corrige", date: "18 août · 13:25", dateEn: "August 18 · 13:25" },
 ];
 // Comme LITIGES_TRANCHES_TOTAL : la maquette n'affiche que les 3 derniers
 // signalements corrigés, mais le compteur ("6 déjà corrigés") porte sur le
@@ -306,14 +312,14 @@ export default function DemandesModules({ first = true }: { first?: boolean }) {
             <ul>
               {questionsEnCours.length === 0 && <VideRow texte={t("Aucune question en cours.", "No question in progress.")} />}
               {questionsEnCours.map((q) => (
-                <SimpleLigne key={q.id} id={q.id} sujet={q.sujet} date={q.date} etat={t("En traitement", "In progress")} couleur={COULEUR.questions} />
+                <SimpleLigne key={q.id} id={q.id} sujet={q.sujet} sujetEn={q.sujetEn} date={q.date} dateEn={q.dateEn} etat={t("En traitement", "In progress")} couleur={COULEUR.questions} />
               ))}
             </ul>
 
             <GroupTitre label={t("Répondues", "Answered")} count={QUESTIONS_REPONDUES_TOTAL} />
             <ul>
               {questionsRepondues.map((q) => (
-                <SimpleLigne key={q.id} id={q.id} sujet={q.sujet} date={q.date} etat={t("Répondue", "Answered")} couleur="#178a3f" resolue />
+                <SimpleLigne key={q.id} id={q.id} sujet={q.sujet} sujetEn={q.sujetEn} date={q.date} dateEn={q.dateEn} etat={t("Répondue", "Answered")} couleur="#178a3f" resolue />
               ))}
             </ul>
           </Card>
@@ -355,14 +361,14 @@ export default function DemandesModules({ first = true }: { first?: boolean }) {
             <ul>
               {signalementsEnCours.length === 0 && <VideRow texte={t("Aucun signalement en cours.", "No report in progress.")} />}
               {signalementsEnCours.map((s) => (
-                <SimpleLigne key={s.id} id={s.id} sujet={s.sujet} date={s.date} etat={t("En traitement", "In progress")} couleur={COULEUR.support} />
+                <SimpleLigne key={s.id} id={s.id} sujet={s.sujet} sujetEn={s.sujetEn} date={s.date} dateEn={s.dateEn} etat={t("En traitement", "In progress")} couleur={COULEUR.support} />
               ))}
             </ul>
 
             <GroupTitre label={t("Corrigés", "Fixed")} count={SIGNALEMENTS_CORRIGES_TOTAL} />
             <ul>
               {signalementsCorriges.map((s) => (
-                <SimpleLigne key={s.id} id={s.id} sujet={s.sujet} date={s.date} etat={t("Corrigé", "Fixed")} couleur="#178a3f" resolue />
+                <SimpleLigne key={s.id} id={s.id} sujet={s.sujet} sujetEn={s.sujetEn} date={s.date} dateEn={s.dateEn} etat={t("Corrigé", "Fixed")} couleur="#178a3f" resolue />
               ))}
             </ul>
           </Card>
@@ -528,7 +534,7 @@ function LitigeLigne({ row }: { row: LitigeRow }) {
     <li className="flex flex-wrap items-center gap-3 border-b border-[var(--dashboard-text)]/[0.06] py-3 text-xs last:border-0">
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold">
-          {row.id} <span className="font-normal text-[var(--dashboard-text)]/50">· {row.ref} · {row.produit}{row.qte ? ` ×${row.qte}` : ""}</span>
+          {row.id} <span className="font-normal text-[var(--dashboard-text)]/50">· {row.ref} · {t(row.produit, row.produitEn)}{row.qte ? ` ×${row.qte}` : ""}</span>
         </p>
       </div>
       <i className="hidden h-px flex-1 bg-[var(--dashboard-text)]/10 sm:block" />
@@ -542,7 +548,7 @@ function LitigeLigne({ row }: { row: LitigeRow }) {
         </StatutIcone>
         <div className="min-w-0">
           <p className="truncate text-[11px] font-semibold" style={{ color: meta.couleur }}>{t(meta.label, meta.labelEn)}</p>
-          <p className="text-[10px] text-[var(--dashboard-text)]/40">{row.date}</p>
+          <p className="text-[10px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t(row.date, row.dateEn))}</p>
         </div>
       </div>
       {row.tranche && <VoirBtn label={t("Voir", "View")} />}
@@ -553,14 +559,18 @@ function LitigeLigne({ row }: { row: LitigeRow }) {
 function SimpleLigne({
   id,
   sujet,
+  sujetEn,
   date,
+  dateEn,
   etat,
   couleur,
   resolue,
 }: {
   id: string;
   sujet: string;
+  sujetEn: string;
   date: string;
+  dateEn: string;
   etat: string;
   couleur: string;
   /** Affiche le bouton "Voir" — réservé aux lignes déjà closes (répondue/corrigé). */
@@ -571,9 +581,9 @@ function SimpleLigne({
     <li className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--dashboard-text)]/[0.06] py-3 text-xs last:border-0">
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold">
-          {id} <span className="font-normal text-[var(--dashboard-text)]/50">· {sujet}</span>
+          {id} <span className="font-normal text-[var(--dashboard-text)]/50">· {t(sujet, sujetEn)}</span>
         </p>
-        <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{date}</p>
+        <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t(date, dateEn))}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <StatutIcone couleur={couleur}>{resolue ? <IconeCheck /> : <IconeEnTraitement />}</StatutIcone>

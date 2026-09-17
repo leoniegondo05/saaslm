@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, SectionHeader, Tag } from "../dashboard-accueil/shared";
+import { Card, SectionHeader, Tag, texteAvecChiffres } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import {
   AnneauCompteARebours,
@@ -37,6 +37,7 @@ const EXEMPLE: Commande = {
   retenueOperation: 800,
   statut: { type: "livree", heuresRestantes: 69 },
 };
+const EXEMPLE_PRODUIT_EN = "Two-piece linen set";
 
 const JOUR_RESUME_BASE = JOURS[1]; // "Hier" — contient un peu de tout : livrée, disponible, litiges, refusée
 
@@ -80,7 +81,7 @@ export default function LireUneLigne({ first = false, activeDate }: { first?: bo
             <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-[#178a3f]" />
 
             <p className="text-[15px] font-bold tracking-tight text-[var(--dashboard-text)]">{EXEMPLE.id}</p>
-            <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/55">{EXEMPLE.produit}</p>
+            <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/55">{t(EXEMPLE.produit, EXEMPLE_PRODUIT_EN)}</p>
 
             <div className="mt-3.5 flex items-end justify-between gap-3">
               <div>
@@ -326,7 +327,7 @@ export default function LireUneLigne({ first = false, activeDate }: { first?: bo
         <div className="mt-3.5 rounded-xl bg-[var(--dashboard-text)]/[0.04] px-3.5 py-2.5">
           <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <p className="text-xs font-bold text-[var(--dashboard-text)]">{t(JOUR_RESUME.date, JOUR_RESUME.dateEn)}</p>
+              <p className="text-xs font-bold text-[var(--dashboard-text)]">{texteAvecChiffres(t(JOUR_RESUME.date, JOUR_RESUME.dateEn))}</p>
               <span className="flex items-baseline gap-1">
                 <span className="text-sm text-[var(--dashboard-text)] font-figures-bold">{JOUR_RESUME.commandes.length}</span>
                 <span className="text-[10px] text-[var(--dashboard-text)]/40">{t("reçues", "received")}</span>
@@ -433,7 +434,9 @@ function Taille({ titre, note, couleur }: { titre: string; note: string; couleur
 function Palier({ heures, label, note }: { heures: number; label: string; note: string }) {
   return (
     <div className="flex flex-col items-center gap-1.5 text-center">
-      <AnneauCompteARebours heuresRestantes={heures} etiquette={label} size={40} />
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--dashboard-card-bg)]">
+        <AnneauCompteARebours heuresRestantes={heures} etiquette={label} size={40} />
+      </div>
       <p className="max-w-[90px] text-[9px] leading-snug text-[var(--dashboard-text)]/40">{note}</p>
     </div>
   );

@@ -3,7 +3,7 @@
 import { Tag, texteAvecChiffres } from "../../dashboard-accueil/shared";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
 import { SECTIONS_DEFAUT } from "./types";
-import type { EditeurState, FaqItem, SectionId } from "./types";
+import type { EditeurState, FaqItem, MenuLien, SectionId, SectionState } from "./types";
 
 /*
   Colonne de droite : réglages de la section choisie dans SectionsPanel.tsx.
@@ -23,6 +23,9 @@ export default function ReglagesSection({
 }) {
   const { t } = useDashboardLangue();
   const def = SECTIONS_DEFAUT.find((d) => d.id === sectionId)!;
+  const sectionState = state.sections.find((s) => s.id === sectionId);
+  const majSection = (patch: Partial<SectionState>) =>
+    setState((s) => ({ ...s, sections: s.sections.map((sec) => (sec.id === sectionId ? { ...sec, ...patch } : sec)) }));
 
   return (
     <div className="flex h-full flex-col rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-3.5">
@@ -30,8 +33,51 @@ export default function ReglagesSection({
         <p className="text-[12.5px] font-bold text-[var(--dashboard-text)]">{t(def.label, def.labelEn)}</p>
         {def.verrouillee && <Tag tone="neutral">{t("Toujours présente", "Always shown")}</Tag>}
       </div>
-      <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto pr-0.5">
+      <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-0.5">
         <Corps sectionId={sectionId} state={state} setState={setState} t={t} />
+        {!def.verrouillee && sectionState && (
+          <>
+            <GroupeTitre label={t("Pour cette section", "For this section")} />
+            <Segmente
+              label={t("Largeur", "Width")}
+              value={sectionState.largeur}
+              options={[
+                { value: "page", label: t("Page", "Boxed") },
+                { value: "pleine", label: t("Pleine", "Full width") },
+              ]}
+              onChange={(v) => majSection({ largeur: v as SectionState["largeur"] })}
+            />
+            <Segmente
+              label={t("Marges", "Margins")}
+              value={sectionState.marges}
+              options={[
+                { value: "petites", label: t("Petites", "Small") },
+                { value: "moyennes", label: t("Moyennes", "Medium") },
+                { value: "grandes", label: t("Grandes", "Large") },
+              ]}
+              onChange={(v) => majSection({ marges: v as SectionState["marges"] })}
+            />
+            <Segmente
+              label={t("Couleurs", "Colors")}
+              value={sectionState.couleurs}
+              options={[
+                { value: "claires", label: t("Claires", "Light") },
+                { value: "douces", label: t("Douces", "Soft") },
+                { value: "nuit", label: t("Nuit", "Night") },
+              ]}
+              onChange={(v) => majSection({ couleurs: v as SectionState["couleurs"] })}
+            />
+            <Ligne label={t("Visible sur téléphone", "Visible on phone")}>
+              <Interrupteur checked={sectionState.visibleTelephone} onChange={(v) => majSection({ visibleTelephone: v })} />
+            </Ligne>
+            <Ligne label={t("Visible sur ordinateur", "Visible on computer")}>
+              <Interrupteur checked={sectionState.visibleOrdinateur} onChange={(v) => majSection({ visibleOrdinateur: v })} />
+            </Ligne>
+            <Ligne label={t("Afficher la section", "Show this section")}>
+              <Interrupteur checked={sectionState.visible} onChange={(v) => majSection({ visible: v })} />
+            </Ligne>
+          </>
+        )}
       </div>
     </div>
   );
@@ -49,17 +95,64 @@ function Corps({
   t: (fr: string, en: string) => string;
 }) {
   switch (sectionId) {
-    case "bandeau":
+    case "bandeau": {
+      const b = state.bandeau;
       return (
         <>
-          <Champ
-            label={t("Message", "Message")}
-            value={state.bandeau.message}
-            onChange={(v) => setState((s) => ({ ...s, bandeau: { ...s.bandeau, message: v } }))}
-          />
+          <GroupeTitre label={t("Contenu", "Content")} />
+          {b.messages.length > 1 && (
+            <Segmente
+              label={t("Message affiché", "Message shown")}
+              value={String(b.messageActif)}
+              options={b.messages.map((_, i) => ({ value: String(i), label: t(`Message ${i + 1}`, `Message ${i + 1}`) }))}
+              onChange={(v) => setState((s) => ({ ...s, bandeau: { ...s.bandeau, messageActif: Number(v) } }))}
+            />
+          )}
+          <div className="space-y-2">
+            {b.messages.map((msg, i) => (
+              <div key={i} className="rounded-xl border border-[var(--dashboard-text)]/10 p-2.5">
+                <Champ
+                  label={t(`Message ${i + 1}`, `Message ${i + 1}`)}
+                  value={msg}
+                  onChange={(v) =>
+                    setState((s) => ({ ...s, bandeau: { ...s.bandeau, messages: s.bandeau.messages.map((m, j) => (j === i ? v : m)) } }))
+                  }
+                />
+                {b.messages.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setState((s) => {
+                        const messages = s.bandeau.messages.filter((_, j) => j !== i);
+                        return { ...s, bandeau: { ...s.bandeau, messages, messageActif: Math.min(s.bandeau.messageActif, messages.length - 1) } };
+                      })
+                    }
+                    className="mt-1.5 text-[10px] font-semibold text-[var(--dashboard-text)]/40 hover:text-[#c8262d]"
+                  >
+                    {t("Supprimer", "Delete")}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setState((s) => ({ ...s, bandeau: { ...s.bandeau, messages: [...s.bandeau.messages, t("Nouveau message", "New message")] } }))}
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-brand-pink/40 px-3.5 py-1.5 text-[10px] font-semibold text-brand-pink"
+          >
+            + {t("Ajouter un message", "Add a message")}
+          </button>
+          <Ligne label={t("Icône devant le message", "Icon before the message")}>
+            <Interrupteur checked={b.iconeDevantMessage} onChange={(v) => setState((s) => ({ ...s, bandeau: { ...s.bandeau, iconeDevantMessage: v } }))} />
+          </Ligne>
+          <Ligne label={t("Compte à rebours", "Countdown")}>
+            <Interrupteur checked={b.compteARebours} onChange={(v) => setState((s) => ({ ...s, bandeau: { ...s.bandeau, compteARebours: v } }))} />
+          </Ligne>
+
+          <GroupeTitre label={t("Affichage", "Display")} />
           <Segmente
             label={t("Défilement", "Scrolling")}
-            value={state.bandeau.defilement}
+            value={b.defilement}
             options={[
               { value: "fixe", label: t("Fixe", "Fixed") },
               { value: "tour-a-tour", label: t("Tour à tour", "One at a time") },
@@ -67,31 +160,339 @@ function Corps({
             ]}
             onChange={(v) => setState((s) => ({ ...s, bandeau: { ...s.bandeau, defilement: v as typeof s.bandeau.defilement } }))}
           />
+          <Segmente
+            label={t("Couleurs", "Colors")}
+            value={b.couleur}
+            options={[
+              { value: "nuit", label: t("Nuit", "Night") },
+              { value: "principale", label: t("Principale", "Brand") },
+              { value: "claire", label: t("Claire", "Light") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, bandeau: { ...s.bandeau, couleur: v as typeof s.bandeau.couleur } }))}
+          />
+          <Ligne label={t("Le client peut le fermer", "The customer can close it")}>
+            <Interrupteur checked={b.fermable} onChange={(v) => setState((s) => ({ ...s, bandeau: { ...s.bandeau, fermable: v } }))} />
+          </Ligne>
+          <Ligne label={t("Sur toutes les pages", "On every page")}>
+            <Interrupteur checked={b.surToutesLesPages} onChange={(v) => setState((s) => ({ ...s, bandeau: { ...s.bandeau, surToutesLesPages: v } }))} />
+          </Ligne>
+          <Ligne label={t("Reste visible en défilant", "Stays visible while scrolling")}>
+            <Interrupteur checked={b.resteVisibleEnDefilant} onChange={(v) => setState((s) => ({ ...s, bandeau: { ...s.bandeau, resteVisibleEnDefilant: v } }))} />
+          </Ligne>
         </>
       );
+    }
 
     case "entete":
       return (
         <>
-          <Ligne label={t("Nom à côté du logo", "Name next to the logo")}>
-            <Interrupteur checked={state.entete.nomAvecLogo} onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, nomAvecLogo: v } }))} />
-          </Ligne>
+          <GroupeTitre label={t("Disposition", "Layout")} />
           <Segmente
-            label={t("Position du logo", "Logo position")}
+            label={t("Sur ordinateur", "On computer")}
             value={state.entete.positionLogo}
             options={[
-              { value: "gauche", label: t("Gauche", "Left") },
-              { value: "centre", label: t("Centre", "Center") },
+              { value: "gauche", label: t("Logo à gauche", "Logo on the left") },
+              { value: "centre", label: t("Logo au centre", "Logo centered") },
             ]}
             onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, positionLogo: v as typeof s.entete.positionLogo } }))}
           />
-          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Icônes", "Icons")}</p>
+          <Segmente
+            label={t("Logo sur téléphone", "Logo on phone")}
+            value={state.entete.positionLogoMobile}
+            options={[
+              { value: "centre", label: t("Au centre", "Centered") },
+              { value: "gauche", label: t("À gauche", "Left") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, positionLogoMobile: v as typeof s.entete.positionLogoMobile } }))}
+          />
+          <Segmente
+            label={t("Taille du logo", "Logo size")}
+            value={state.entete.tailleLogo}
+            options={[
+              { value: "s", label: t("Petite", "Small") },
+              { value: "m", label: t("Moyenne", "Medium") },
+              { value: "l", label: t("Grande", "Large") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, tailleLogo: v as typeof s.entete.tailleLogo } }))}
+          />
+          <Ligne label={t("Nom à côté du logo", "Name next to the logo")}>
+            <Interrupteur checked={state.entete.nomAvecLogo} onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, nomAvecLogo: v } }))} />
+          </Ligne>
+          <Ligne label={t("Transparent sur la grande image", "Transparent over the hero image")} note={t("Accueil seulement", "Home only")}>
+            <Interrupteur checked={state.entete.transparentSurHero} onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, transparentSurHero: v } }))} />
+          </Ligne>
+
+          <GroupeTitre label={t("Éléments", "Elements")} />
+          <Segmente
+            label={t("Recherche", "Search")}
+            value={state.entete.rechercheStyle}
+            options={[
+              { value: "barre", label: t("Barre", "Bar") },
+              { value: "icone", label: t("Icône", "Icon") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, rechercheStyle: v as typeof s.entete.rechercheStyle } }))}
+          />
+          <Segmente
+            label={t("Icône du panier", "Cart icon")}
+            value={state.entete.panierStyle}
+            options={[
+              { value: "sac", label: t("Sac", "Bag") },
+              { value: "chariot", label: t("Chariot", "Cart") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, panierStyle: v as typeof s.entete.panierStyle } }))}
+          />
+          <Ligne label={t("Compte client", "Customer account")}>
+            <Interrupteur checked={state.entete.compte} onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, compte: v } }))} />
+          </Ligne>
+          <Ligne label={t('Bouton « Nous écrire »', 'Button "Message us"')}>
+            <Interrupteur checked={state.entete.nousEcrire} onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, nousEcrire: v } }))} />
+          </Ligne>
+          <Ligne label={t("Grand menu avec images", "Large menu with images")}>
+            <Interrupteur checked={state.entete.grandMenuAvecImages} onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, grandMenuAvecImages: v } }))} />
+          </Ligne>
+
+          <GroupeTitre label={t("Comportement", "Behavior")} />
+          <Segmente
+            label={t("Reste visible", "Stays visible")}
+            value={state.entete.resteVisible}
+            options={[
+              { value: "non", label: t("Non", "No") },
+              { value: "toujours", label: t("Toujours", "Always") },
+              { value: "en-remontant", label: t("En remontant", "On scroll up") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, resteVisible: v as typeof s.entete.resteVisible } }))}
+          />
+
+          <p className="text-[10px] font-medium text-[var(--dashboard-text)]/50">{t("Menu", "Menu")}</p>
           <div className="flex flex-wrap gap-1.5">
-            <Puce active={state.entete.recherche} label={t("Recherche", "Search")} onClick={() => setState((s) => ({ ...s, entete: { ...s.entete, recherche: !s.entete.recherche } }))} />
-            <Puce active={state.entete.panier} label={t("Panier", "Cart")} onClick={() => setState((s) => ({ ...s, entete: { ...s.entete, panier: !s.entete.panier } }))} />
-            <Puce active={state.entete.compte} label={t("Compte", "Account")} onClick={() => setState((s) => ({ ...s, entete: { ...s.entete, compte: !s.entete.compte } }))} />
+            {state.entete.menuLiens.map((lien, i) => (
+              <span key={i} className="flex items-center gap-1 rounded-full bg-[var(--dashboard-text)]/[0.06] py-1 pl-2.5 pr-1">
+                <input
+                  value={lien.label}
+                  onChange={(ev) =>
+                    setState((s) => ({ ...s, entete: { ...s.entete, menuLiens: patchLien(s.entete.menuLiens, i, { label: ev.target.value }) } }))
+                  }
+                  style={{ width: `${Math.max(lien.label.length, 3)}ch` }}
+                  className="bg-transparent text-[10px] font-medium text-[var(--dashboard-text)] outline-none"
+                />
+                {lien.compteur !== undefined && <span className="text-[9px] text-[var(--dashboard-text)]/40">· {lien.compteur}</span>}
+                <button
+                  type="button"
+                  aria-label={t("Retirer ce lien", "Remove this link")}
+                  onClick={() => setState((s) => ({ ...s, entete: { ...s.entete, menuLiens: s.entete.menuLiens.filter((_, j) => j !== i) } }))}
+                  className="flex h-4 w-4 items-center justify-center rounded-full text-[10px] leading-none text-[var(--dashboard-text)]/30 hover:bg-[#c8262d]/10 hover:text-[#c8262d]"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setState((s) => ({ ...s, entete: { ...s.entete, menuLiens: [...s.entete.menuLiens, { label: t("Nouveau lien", "New link") }] } }))}
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-brand-pink/40 px-3.5 py-1.5 text-[10px] font-semibold text-brand-pink"
+          >
+            + {t("Ajouter un lien", "Add a link")}
+          </button>
+        </>
+      );
+
+    case "grande-image": {
+      const h = state.grandeImage;
+      return (
+        <>
+          <GroupeTitre label={t("Disposition", "Layout")} />
+          <Segmente
+            label={t("Image", "Image")}
+            value={h.imagePosition}
+            options={[
+              { value: "droite", label: t("À droite", "On the right") },
+              { value: "gauche", label: t("À gauche", "On the left") },
+              { value: "centre", label: t("Centrée", "Centered") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, imagePosition: v as typeof s.grandeImage.imagePosition } }))}
+          />
+          <Segmente
+            label={t("Hauteur", "Height")}
+            value={h.hauteur}
+            options={[
+              { value: "s", label: t("Petite", "Small") },
+              { value: "m", label: t("Moyenne", "Medium") },
+              { value: "l", label: t("Grande", "Large") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, hauteur: v as typeof s.grandeImage.hauteur } }))}
+          />
+          <Segmente
+            label={t("Texte", "Text")}
+            value={h.texteAlign}
+            options={[
+              { value: "gauche", label: t("À gauche", "On the left") },
+              { value: "centre", label: t("Centrée", "Centered") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, texteAlign: v as typeof s.grandeImage.texteAlign } }))}
+          />
+          <Segmente
+            label={t("Boutons", "Buttons")}
+            value={String(h.boutons)}
+            options={[
+              { value: "1", label: t("Un", "One") },
+              { value: "2", label: t("Deux", "Two") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, boutons: Number(v) as 1 | 2 } }))}
+          />
+
+          <GroupeTitre label={t("Fond", "Background")} />
+          <Segmente
+            label={t("Type de fond", "Background type")}
+            value={h.typeFond}
+            options={[
+              { value: "degrade", label: t("Dégradé", "Gradient") },
+              { value: "uni", label: t("Uni", "Solid") },
+              { value: "photo", label: t("Photo", "Photo") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, typeFond: v as typeof s.grandeImage.typeFond } }))}
+          />
+          <Ligne label={t("Courbes lumineuses", "Light curves")}>
+            <Interrupteur checked={h.courbesLumineuses} onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, courbesLumineuses: v } }))} />
+          </Ligne>
+          <Ligne label={t("Image différente sur téléphone", "Different image on phone")}>
+            <Interrupteur
+              checked={h.imageDifferenteSurTelephone}
+              onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, imageDifferenteSurTelephone: v } }))}
+            />
+          </Ligne>
+
+          <GroupeTitre label={t("Détails", "Details")} />
+          <Ligne label={t("Pastille ronde de la remise", "Round discount badge")}>
+            <Interrupteur checked={h.badge} onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, badge: v } }))} />
+          </Ligne>
+          <Ligne label={t("Carte des avis", "Rating card")}>
+            <Interrupteur checked={h.note} onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, note: v } }))} />
+          </Ligne>
+          <Champ
+            label={t("Petit texte", "Small text")}
+            value={h.petitTexte}
+            onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, petitTexte: v } }))}
+          />
+          <Champ label={t("Titre", "Title")} value={h.titre} onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, titre: v } }))} />
+          <Champ
+            label={t("Mot mis en valeur", "Highlighted word")}
+            value={h.motValorise}
+            onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, motValorise: v } }))}
+          />
+          <Champ
+            label={t("Bouton 1", "Button 1")}
+            value={h.bouton1Texte}
+            onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, bouton1Texte: v } }))}
+          />
+          <Champ
+            label={t("Bouton 2", "Button 2")}
+            value={h.bouton2Texte}
+            onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, bouton2Texte: v } }))}
+          />
+        </>
+      );
+    }
+
+    case "confiance":
+      return (
+        <Segmente
+          label={t("Nombre d'atouts", "Number of highlights")}
+          value={String(state.confiance.nombre)}
+          options={[
+            { value: "3", label: t("Trois", "Three") },
+            { value: "4", label: t("Quatre", "Four") },
+          ]}
+          onChange={(v) => setState((s) => ({ ...s, confiance: { ...s.confiance, nombre: Number(v) as 3 | 4 } }))}
+        />
+      );
+
+    case "categories":
+      return (
+        <div>
+          <p className="mb-1 flex items-center justify-between text-[10.5px] font-medium text-[var(--dashboard-text)]">
+            <span>{t("Colonnes", "Columns")}</span>
+            <span className="text-[var(--dashboard-text)]/50 font-figures">{state.categories.colonnes}</span>
+          </p>
+          <input
+            type="range"
+            min={3}
+            max={6}
+            value={state.categories.colonnes}
+            onChange={(e) => setState((s) => ({ ...s, categories: { ...s.categories, colonnes: Number(e.target.value) } }))}
+            className="w-full accent-brand-pink"
+          />
+        </div>
+      );
+
+    case "promo":
+      return (
+        <>
+          <Segmente
+            label={t("Côté de l'illustration", "Illustration side")}
+            value={state.promo.cote}
+            options={[
+              { value: "gauche", label: t("Gauche", "Left") },
+              { value: "droite", label: t("Droite", "Right") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, promo: { ...s.promo, cote: v as typeof s.promo.cote } }))}
+          />
+          <Ligne label={t("Compte à rebours", "Countdown")}>
+            <Interrupteur checked={state.promo.compteur} onChange={(v) => setState((s) => ({ ...s, promo: { ...s.promo, compteur: v } }))} />
+          </Ligne>
+        </>
+      );
+
+    case "grille":
+      return (
+        <>
+          <div>
+            <p className="mb-1 flex items-center justify-between text-[10.5px] font-medium text-[var(--dashboard-text)]">
+              <span>{t("Colonnes", "Columns")}</span>
+              <span className="text-[var(--dashboard-text)]/50 font-figures">{state.grille.colonnes}</span>
+            </p>
+            <input
+              type="range"
+              min={3}
+              max={5}
+              value={state.grille.colonnes}
+              onChange={(e) => setState((s) => ({ ...s, grille: { ...s.grille, colonnes: Number(e.target.value) } }))}
+              className="w-full accent-brand-pink"
+            />
+          </div>
+          <div>
+            <p className="mb-1 flex items-center justify-between text-[10.5px] font-medium text-[var(--dashboard-text)]">
+              <span>{t("Produits affichés", "Products shown")}</span>
+              <span className="text-[var(--dashboard-text)]/50 font-figures">{state.grille.nombre}</span>
+            </p>
+            <input
+              type="range"
+              min={2}
+              max={6}
+              value={state.grille.nombre}
+              onChange={(e) => setState((s) => ({ ...s, grille: { ...s.grille, nombre: Number(e.target.value) } }))}
+              className="w-full accent-brand-pink"
+            />
           </div>
         </>
+      );
+
+    case "engagements":
+      return (
+        <div>
+          <p className="mb-1 flex items-center justify-between text-[10.5px] font-medium text-[var(--dashboard-text)]">
+            <span>{t("Nombre d'engagements", "Number of commitments")}</span>
+            <span className="text-[var(--dashboard-text)]/50 font-figures">{state.engagements.nombre}</span>
+          </p>
+          <input
+            type="range"
+            min={2}
+            max={4}
+            value={state.engagements.nombre}
+            onChange={(e) => setState((s) => ({ ...s, engagements: { ...s.engagements, nombre: Number(e.target.value) } }))}
+            className="w-full accent-brand-pink"
+          />
+        </div>
       );
 
     case "galerie":
@@ -377,6 +778,10 @@ function patchFaq(items: FaqItem[], index: number, patch: Partial<FaqItem>): Faq
   return items.map((it, i) => (i === index ? { ...it, ...patch } : it));
 }
 
+function patchLien(liens: MenuLien[], index: number, patch: Partial<MenuLien>): MenuLien[] {
+  return liens.map((l, i) => (i === index ? { ...l, ...patch } : l));
+}
+
 const champBoxClasses =
   "mt-1 w-full rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-2.5 py-2 text-[11px] font-medium text-[var(--dashboard-text)] outline-none transition focus:border-brand-pink/50 focus:bg-brand-pink/5";
 
@@ -435,7 +840,7 @@ function Segmente({
             key={o.value}
             type="button"
             onClick={() => onChange(o.value)}
-            className={`truncate rounded-lg py-1.5 text-[10px] font-semibold transition ${
+            className={`truncate rounded-lg py-1 text-[10px] font-semibold transition ${
               value === o.value ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-sm" : "text-[var(--dashboard-text)]/50"
             }`}
           >
@@ -447,17 +852,11 @@ function Segmente({
   );
 }
 
-function Puce({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
+function GroupeTitre({ label }: { label: string }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full px-2.5 py-1 text-[10px] font-semibold transition ${
-        active ? "bg-brand-pink/12 text-brand-pink" : "bg-[var(--dashboard-text)]/[0.05] text-[var(--dashboard-text)]/50"
-      }`}
-    >
+    <p className="border-t border-[var(--dashboard-text)]/10 pt-2.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40 first:border-t-0 first:pt-0">
       {label}
-    </button>
+    </p>
   );
 }
 

@@ -73,7 +73,7 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
       </div>
 
       <div className="grid gap-3">
-        <Card title={t("Devise de référence", "Reference currency")} titleTab className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Devise de référence", "Reference currency")} titleTab titleUppercase={false} titleFont="inter" className="!bg-[var(--dashboard-card-bg)]">
           <div className="flex flex-wrap gap-2">
             {DEVISES.map(({ key, label, labelEn }) => (
               <button
@@ -99,7 +99,7 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
           </p>
         </Card>
 
-        <Card title={t("Vos portefeuilles", "Your wallets")} titleTab badge={<Tag tone="warn">{t("Lecture seule", "Read only")}</Tag>} className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Vos portefeuilles", "Your wallets")} titleTab titleUppercase={false} titleFont="inter" badge={<Tag tone="warn">{t("Lecture seule", "Read only")}</Tag>} className="!bg-[var(--dashboard-card-bg)]">
           <div className="divide-y divide-[var(--dashboard-text)]/10">
             {PORTEFEUILLES.map(({ label }) => (
               <div key={label} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
@@ -126,7 +126,7 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
           </p>
         </Card>
 
-        <Card title={t("Votre carte de prélèvement", "Your payment card")} titleTab className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Votre carte de prélèvement", "Your payment card")} titleTab titleUppercase={false} titleFont="inter" className="!bg-[var(--dashboard-card-bg)]">
           <div className="flex items-center gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/60">
               <CardIcon />
@@ -161,7 +161,7 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
           </p>
         </Card>
 
-        <Card title={t("Documents comptables", "Accounting documents")} titleTab className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Documents comptables", "Accounting documents")} titleTab titleUppercase={false} titleFont="inter" className="!bg-[var(--dashboard-card-bg)]">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Champ label={t("Raison sociale", "Legal business name")} value={raisonSociale} onChange={setRaisonSociale} />
             <Champ

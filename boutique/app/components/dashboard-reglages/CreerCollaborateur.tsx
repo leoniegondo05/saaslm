@@ -404,7 +404,7 @@ export default function CreerCollaborateur({
                     setDuree("precises");
                     setDebut(e.target.value);
                   }}
-                  className="w-full min-w-0 bg-transparent text-xs font-semibold text-[var(--dashboard-text)] outline-none"
+                  className="w-full min-w-0 bg-transparent text-xs font-figures-bold text-[var(--dashboard-text)] outline-none"
                 />
               </Field>
               <Field label={t("Jusqu'au", "Until")}>
@@ -415,7 +415,7 @@ export default function CreerCollaborateur({
                     setDuree("precises");
                     setFin(e.target.value);
                   }}
-                  className="w-full min-w-0 bg-transparent text-xs font-semibold text-[var(--dashboard-text)] outline-none"
+                  className="w-full min-w-0 bg-transparent text-xs font-figures-bold text-[var(--dashboard-text)] outline-none"
                 />
               </Field>
             </div>

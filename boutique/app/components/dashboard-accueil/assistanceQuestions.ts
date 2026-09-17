@@ -146,14 +146,23 @@ export function getAssistanceBrief(): { tab: AccueilTab; questions: AssistanceQu
   Abonnement.tsx, Confidentialite.tsx), aucune donnée inventée, même règle
   que le reste du dashboard, cf. [[dashboard-mock-data-pending-laravel-api]].
 */
+/*
+  "Ma boutique" n'est plus une fiche de l'onglet Réglages (retour
+  utilisateur du 2026-09-17 : accessible uniquement via le logo boutique du
+  header, voir app/dashboard/ma-boutique/page.tsx) — questions sorties de
+  REGLAGES_ASSISTANCE_QUESTIONS vers sa propre liste, même mécanique que
+  DEMANDES_ASSISTANCE_QUESTIONS / PARTENAIRE_AGREE_ASSISTANCE_QUESTIONS
+  ci-dessous (page sans onglet → `pageQuestions`/`pageLabel`).
+*/
+export const MA_BOUTIQUE_ASSISTANCE_QUESTIONS: AssistanceQuestion[] = [
+  { fr: "Qui fixe les jours et heures de passage du livreur ?", en: "Who sets the courier's pickup days and times?" },
+  { fr: "À quoi sert l'adresse d'enlèvement ?", en: "What's the pickup address used for?" },
+  { fr: "Où s'affiche le logo de ma boutique une fois déposé ?", en: "Where does my shop logo show up once uploaded?" },
+  { fr: "Quel est mon secteur d'activité principal ?", en: "What's my main business sector?" },
+  { fr: "Ma boutique est-elle actuellement ouverte aux clients ?", en: "Is my shop currently open to customers?" },
+];
+
 export const REGLAGES_ASSISTANCE_QUESTIONS: Record<ReglagesTab, AssistanceQuestion[]> = {
-  "ma-boutique": [
-    { fr: "Qui fixe les jours et heures de passage du livreur ?", en: "Who sets the courier's pickup days and times?" },
-    { fr: "À quoi sert l'adresse d'enlèvement ?", en: "What's the pickup address used for?" },
-    { fr: "Où s'affiche le logo de ma boutique une fois déposé ?", en: "Where does my shop logo show up once uploaded?" },
-    { fr: "Quel est mon secteur d'activité principal ?", en: "What's my main business sector?" },
-    { fr: "Ma boutique est-elle actuellement ouverte aux clients ?", en: "Is my shop currently open to customers?" },
-  ],
   commande: [
     { fr: "Quels formats puis-je choisir pour le lien de ma page de commande ?", en: "Which formats can I pick for my order page link?" },
     { fr: "Quel délai de livraison s'affiche toujours sur ma page, et puis-je le changer ?", en: "What delivery time always shows on my page, and can I change it?" },

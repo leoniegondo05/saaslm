@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useDashboardLangue } from "./DashboardLanguageProvider";
+import { texteAvecChiffres } from "./dashboard-accueil/shared";
 import { useDashboardBoutiqueLogo } from "./DashboardBoutiqueLogoProvider";
 import type { AccueilTab } from "./dashboard-accueil/AccueilNav";
 import type { ReglagesTab } from "./dashboard-reglages/ReglagesNav";
@@ -18,12 +19,12 @@ import type { AssistanceQuestion } from "./dashboard-accueil/assistanceQuestions
 */
 type CategorieNotif = "commandes" | "litiges" | "argent" | "stock";
 
-const NOTIF_TABS: { key: "tout" | CategorieNotif; label: string }[] = [
-  { key: "tout", label: "Tout" },
-  { key: "commandes", label: "Commandes" },
-  { key: "litiges", label: "Litiges" },
-  { key: "argent", label: "Argent" },
-  { key: "stock", label: "Stock" },
+const NOTIF_TABS: { key: "tout" | CategorieNotif; label: string; labelEn: string }[] = [
+  { key: "tout", label: "Tout", labelEn: "All" },
+  { key: "commandes", label: "Commandes", labelEn: "Orders" },
+  { key: "litiges", label: "Litiges", labelEn: "Disputes" },
+  { key: "argent", label: "Argent", labelEn: "Money" },
+  { key: "stock", label: "Stock", labelEn: "Stock" },
 ];
 
 const NOTIF_COULEURS: Record<CategorieNotif, string> = {
@@ -38,48 +39,66 @@ const NOTIFICATIONS_INIT = [
     id: "n1",
     categorie: "litiges" as CategorieNotif,
     titre: "Litige ouvert",
+    titreEn: "Dispute opened",
     sousTitre: "C-4819 · Sac cabas en raphia",
+    sousTitreEn: "C-4819 · Raffia tote bag",
     temps: "il y a 12 min",
+    tempsEn: "12 min ago",
     lue: false,
   },
   {
     id: "n2",
     categorie: "argent" as CategorieNotif,
     titre: "Règlement effectué",
+    titreEn: "Payout completed",
     sousTitre: "214 000 F vers Orange Money",
+    sousTitreEn: "214,000 F to Orange Money",
     temps: "il y a 2 h",
+    tempsEn: "2 h ago",
     lue: false,
   },
   {
     id: "n3",
     categorie: "stock" as CategorieNotif,
     titre: "Dépôt contrôlé",
+    titreEn: "Drop-off inspected",
     sousTitre: "Beurre de karité · 200 reçus, 0 endommagé",
+    sousTitreEn: "Shea butter · 200 received, 0 damaged",
     temps: "il y a 5 h",
+    tempsEn: "5 h ago",
     lue: false,
   },
   {
     id: "n4",
     categorie: "stock" as CategorieNotif,
     titre: "Stock bas",
+    titreEn: "Low stock",
     sousTitre: "Huile de ricin 100 ml · 2 unités restantes",
+    sousTitreEn: "Castor oil 100 ml · 2 units left",
     temps: "hier",
+    tempsEn: "yesterday",
     lue: true,
   },
   {
     id: "n5",
     categorie: "commandes" as CategorieNotif,
     titre: "Évaluation du mois",
+    titreEn: "Monthly review",
     sousTitre: "À donner avant le 5 septembre",
+    sousTitreEn: "Due before September 5",
     temps: "hier",
+    tempsEn: "yesterday",
     lue: true,
   },
   {
     id: "n6",
     categorie: "commandes" as CategorieNotif,
     titre: "Commande livrée",
+    titreEn: "Order delivered",
     sousTitre: "C-4816 · Sandales tressées",
+    sousTitreEn: "C-4816 · Woven sandals",
     temps: "hier",
+    tempsEn: "yesterday",
     lue: true,
   },
 ];
@@ -443,9 +462,11 @@ export default function DashboardHeader({
             >
               <div className="flex items-center justify-between gap-3 p-4">
                 <div>
-                  <p className="text-sm font-bold text-[var(--dashboard-text)]">Notifications</p>
+                  <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("Notifications", "Notifications")}</p>
                   <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/40">
-                    {nbNonLues > 0 ? `${nbNonLues} non lue${nbNonLues > 1 ? "s" : ""}` : "Tout est lu"}
+                    {nbNonLues > 0
+                      ? t(`${nbNonLues} non lue${nbNonLues > 1 ? "s" : ""}`, `${nbNonLues} unread`)
+                      : t("Tout est lu", "All read")}
                   </p>
                 </div>
                 <button
@@ -453,12 +474,12 @@ export default function DashboardHeader({
                   onClick={marquerToutLu}
                   className="shrink-0 rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[11px] font-semibold text-[var(--dashboard-text)] transition hover:bg-[#141220]/[0.05] dark:hover:bg-white/5"
                 >
-                  Tout marquer comme lu
+                  {t("Tout marquer comme lu", "Mark all as read")}
                 </button>
               </div>
 
               <div className="flex flex-wrap gap-1.5 px-4 pb-3">
-                {NOTIF_TABS.map(({ key, label }) => (
+                {NOTIF_TABS.map(({ key, label, labelEn }) => (
                   <button
                     key={key}
                     type="button"
@@ -470,7 +491,7 @@ export default function DashboardHeader({
                         : "bg-[#141220]/[0.05] text-[var(--dashboard-text)]/50 hover:bg-[#141220]/10 dark:bg-white/10 dark:hover:bg-white/15"
                     }`}
                   >
-                    {label}
+                    {t(label, labelEn)}
                   </button>
                 ))}
               </div>
@@ -478,7 +499,7 @@ export default function DashboardHeader({
               <div className="max-h-[360px] overflow-y-auto border-t border-[#141220]/10 dark:border-white/10">
                 {notificationsFiltrees.length === 0 ? (
                   <p className="p-6 text-center text-xs text-[var(--dashboard-text)]/40">
-                    Rien à signaler dans cette catégorie.
+                    {t("Rien à signaler dans cette catégorie.", "Nothing to report in this category.")}
                   </p>
                 ) : (
                   notificationsFiltrees.map((n) => (
@@ -495,10 +516,10 @@ export default function DashboardHeader({
                         style={{ background: NOTIF_COULEURS[n.categorie] }}
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="block text-xs font-bold text-[var(--dashboard-text)]">{n.titre}</span>
-                        <span className="mt-0.5 block text-[11px] text-[var(--dashboard-text)]/50">{n.sousTitre}</span>
+                        <span className="block text-xs font-bold text-[var(--dashboard-text)]">{t(n.titre, n.titreEn)}</span>
+                        <span className="mt-0.5 block text-[11px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(t(n.sousTitre, n.sousTitreEn))}</span>
                       </span>
-                      <span className="shrink-0 text-[10px] text-[var(--dashboard-text)]/40">{n.temps}</span>
+                      <span className="shrink-0 text-[10px] text-[var(--dashboard-text)]/40">{t(n.temps, n.tempsEn)}</span>
                     </button>
                   ))
                 )}
@@ -508,7 +529,7 @@ export default function DashboardHeader({
                 type="button"
                 className="w-full p-3.5 text-center text-xs font-semibold text-[var(--dashboard-text)]/60 transition hover:bg-[#141220]/[0.03] dark:hover:bg-white/5"
               >
-                Voir tout l&apos;historique
+                {t("Voir tout l'historique", "View full history")}
               </button>
             </div>
           )}
@@ -527,15 +548,16 @@ export default function DashboardHeader({
           </span>
         </Link>
 
-        {/* Logo de la boutique connectée : accès direct à la fiche "Ma
-            boutique" (Réglages), où il est déposé — voir MaBoutique.tsx et
-            DashboardBoutiqueLogoProvider.tsx. Pas encore de logo déposé
-            (mock, aucun endpoint Laravel) : repli sur l'icône générique
-            ShopIcon. Le bouton de compte (avatar, menu
+        {/* Logo de la boutique connectée : accès direct à la page "Ma
+            boutique" (/dashboard/ma-boutique, plus une fiche Réglages —
+            retour utilisateur du 2026-09-17), où il est déposé — voir
+            MaBoutique.tsx et DashboardBoutiqueLogoProvider.tsx. Pas encore
+            de logo déposé (mock, aucun endpoint Laravel) : repli sur
+            l'icône générique ShopIcon. Le bouton de compte (avatar, menu
             profil/sécurité/déconnexion…) a été déplacé dans le rail de nav,
             sous l'icône Réglages — voir DashboardSidebar.tsx. */}
         <Link
-          href="/dashboard/reglages?tab=ma-boutique"
+          href="/dashboard/ma-boutique"
           aria-label={t("Ma boutique", "My shop")}
           className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/70 shadow-[0_2px_10px_rgba(20,18,32,0.06)] transition hover:bg-white dark:bg-white/10 dark:hover:bg-white/15"
         >

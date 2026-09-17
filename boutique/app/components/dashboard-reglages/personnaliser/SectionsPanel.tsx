@@ -2,18 +2,24 @@
 
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
 import { MODELES, SECTIONS_DEFAUT } from "./types";
-import type { EditeurState, ModeleId, SectionId } from "./types";
+import type { EditeurState, ModeleId, PageId, SectionId } from "./types";
 
 /*
   Colonne de gauche de l'éditeur : onglet "Sections" (ordre, visibilité,
   section choisie) et onglet "Style" (modèle de départ, couleurs, boutons —
   vaut pour toute la boutique, pas seulement cette page). Panneau de droite
   correspondant : ReglagesSection.tsx.
+
+  "Sections" ne montre que celles de la page active (`page`, venue de
+  PersonnaliserBoutique.tsx) — même `state.sections` pour les deux pages
+  (cf. commentaire de SECTIONS_DEFAUT dans types.ts), on filtre juste ce qui
+  nourrit la liste plutôt que dupliquer ce panneau.
 */
 
 export default function SectionsPanel({
   state,
   setState,
+  page,
   onglet,
   setOnglet,
   sectionChoisie,
@@ -21,6 +27,7 @@ export default function SectionsPanel({
 }: {
   state: EditeurState;
   setState: (updater: (s: EditeurState) => EditeurState) => void;
+  page: PageId;
   onglet: "sections" | "style";
   setOnglet: (o: "sections" | "style") => void;
   sectionChoisie: SectionId;
@@ -34,15 +41,32 @@ export default function SectionsPanel({
       sections: s.sections.map((sec) => (sec.id === id ? { ...sec, visible: !sec.visible } : sec)),
     }));
 
+  const appartientPage = (id: SectionId) => {
+    const def = SECTIONS_DEFAUT.find((d) => d.id === id)!;
+    return def.page === "les-deux" || def.page === page;
+  };
+
+  // Monte/descend au sein de la page active seulement : on retrouve les deux
+  // voisins dans la liste filtrée, puis on échange leurs positions dans le
+  // tableau complet (une section "les-deux" comme bandeau/avis partage sa
+  // position entre les deux pages, cf. types.ts — la déplacer depuis l'une
+  // la déplace aussi, logiquement, pour l'autre).
   const deplacer = (id: SectionId, sens: -1 | 1) =>
     setState((s) => {
-      const i = s.sections.findIndex((sec) => sec.id === id);
-      const j = i + sens;
-      if (j < 0 || j >= s.sections.length) return s;
+      const visibles = s.sections.filter((sec) => appartientPage(sec.id));
+      const vi = visibles.findIndex((sec) => sec.id === id);
+      const vj = vi + sens;
+      if (vi < 0 || vj < 0 || vj >= visibles.length) return s;
+      const idA = visibles[vi].id;
+      const idB = visibles[vj].id;
+      const iA = s.sections.findIndex((sec) => sec.id === idA);
+      const iB = s.sections.findIndex((sec) => sec.id === idB);
       const copie = [...s.sections];
-      [copie[i], copie[j]] = [copie[j], copie[i]];
+      [copie[iA], copie[iB]] = [copie[iB], copie[iA]];
       return { ...s, sections: copie };
     });
+
+  const sectionsPage = state.sections.filter((sec) => appartientPage(sec.id));
 
   return (
     <div className="flex h-full flex-col rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-3">
@@ -63,9 +87,9 @@ export default function SectionsPanel({
 
       {onglet === "sections" ? (
         <div className="min-h-0 flex-1 overflow-y-auto pr-0.5">
-          {state.sections.map((sec, i) => {
+          {sectionsPage.map((sec, i) => {
             const def = SECTIONS_DEFAUT.find((d) => d.id === sec.id)!;
-            const defPrecedent = i > 0 ? SECTIONS_DEFAUT.find((d) => d.id === state.sections[i - 1].id) : null;
+            const defPrecedent = i > 0 ? SECTIONS_DEFAUT.find((d) => d.id === sectionsPage[i - 1].id) : null;
             const nouveauGroupe = !defPrecedent || defPrecedent.groupe !== def.groupe;
             return (
               <div key={sec.id}>
@@ -100,7 +124,7 @@ export default function SectionsPanel({
                     </button>
                     <button
                       type="button"
-                      disabled={i === state.sections.length - 1}
+                      disabled={i === sectionsPage.length - 1}
                       onClick={() => deplacer(sec.id, 1)}
                       aria-label={t("Descendre", "Move down")}
                       className="flex h-5 w-5 items-center justify-center rounded text-[var(--dashboard-text)]/40 hover:text-[var(--dashboard-text)] disabled:opacity-0"

@@ -104,7 +104,7 @@ export default function PartenaireAgree({ first = true }: { first?: boolean }) {
             </div>
           </div>
 
-          <Card title={t("Informations du partenaire", "Partner details")} titleTab className="relative mt-3 overflow-hidden !bg-[var(--dashboard-card-bg)]">
+          <Card title={t("Informations du partenaire", "Partner details")} titleTab titleUppercase={false} titleFont="inter" className="relative mt-3 overflow-hidden !bg-[var(--dashboard-card-bg)]">
             <div
               className="transition-[max-height] duration-300"
               style={{ maxHeight: infosOuvertes ? PARTENAIRE.infos.length * 32 : INFOS_VISIBLES * 32 }}

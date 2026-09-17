@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Sora, Bricolage_Grotesque } from "next/font/google";
+import { Sora, Bricolage_Grotesque, Inter } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 
@@ -21,6 +21,15 @@ const sora = Sora({
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-bricolage",
+  display: "swap",
+});
+
+// Police "Inter" — demandée par l'utilisateur (2026-09-17) pour les entêtes
+// de card de la page Réglages, à la place de Sora. Hors charte graphique
+// (Sora + Bricolage Grotesque) — ajoutée sur instruction directe.
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -46,7 +55,7 @@ export default async function RootLayout({
   await headers();
 
   return (
-    <html lang="fr" className={`${sora.variable} ${bricolage.variable}`}>
+    <html lang="fr" className={`${sora.variable} ${bricolage.variable} ${inter.variable}`}>
       <body className="flex min-h-screen flex-col bg-brand-bg font-sans text-brand-white antialiased">
         {children}
       </body>
