@@ -60,7 +60,7 @@ export default function DashboardPage() {
 
               <LocalConditionsCard />
 
-              <div className="flex items-center gap-3 rounded-2xl card-tint p-3 pr-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
+              <div className="flex items-center gap-3 rounded-2xl card-tint border border-[var(--dashboard-text)]/10 p-3 pr-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink">
                   <WarningIcon />
                 </span>
@@ -86,7 +86,7 @@ export default function DashboardPage() {
 
             {/* Colonne droite : ventes + identité — une seule carte, les deux
                 sections sont liées (pas deux cartes séparées par un gap) */}
-            <div className="order-2 flex flex-col rounded-2xl card-tint shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] lg:order-none">
+            <div className="order-2 flex flex-col rounded-2xl card-tint border border-[var(--dashboard-text)]/10 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] lg:order-none">
               <div className="p-3">
                 <span className="inline-flex items-center gap-2 text-xs text-[var(--dashboard-text)]/50">
                   <TrendUpIcon />
@@ -98,7 +98,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-[var(--dashboard-text)]/50">
                       {t("Aujourd'hui", "Today")}
                     </p>
-                    <p className="mt-0.5 text-xl font-bold font-figures">48.300F</p>
+                    <p className="mt-0.5 text-xl font-figures-bold">48 300 F</p>
                     <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-brand-pink px-2.5 py-1 text-xs font-semibold text-white">
                       <ClockIcon />{texteAvecChiffres(t("5 commandes en cours", "5 orders in progress"))}
                     </span>
@@ -107,7 +107,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-[var(--dashboard-text)]/50">
                       {texteAvecChiffres(t("Hier. Ven . 29", "Yesterday. Fri. 29"))}
                     </p>
-                    <p className="mt-0.5 text-lg font-bold font-figures">118 400 F</p>
+                    <p className="mt-0.5 text-lg font-figures-bold">118 400 F</p>
                     <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/40">
                       {texteAvecChiffres(t("12 commandes", "12 orders"))}
                       <br />
@@ -121,14 +121,14 @@ export default function DashboardPage() {
                 <p className="mt-3 text-xs text-[var(--dashboard-text)]/50">
                   {t("Objectif demain soir", "Tomorrow evening's target")}
                 </p>
-                <p className="mt-0.5 text-2xl font-bold font-figures">142 000 F</p>
+                <p className="mt-0.5 text-2xl font-figures-bold">142 000 F</p>
 
                 <div className="mt-2">
                   <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]">
                     <div className="h-full w-[34%] rounded-full bg-[linear-gradient(90deg,var(--color-brand-pink),var(--color-brand-purple))]" />
                   </div>
                   <p className="mt-1.5 text-xs">
-                    <span className="font-semibold font-figures">34%</span>{" "}
+                    <span className="font-semibold font-figures">34 %</span>{" "}
                     <span className="text-[var(--dashboard-text)]/50">{t("du chemin fait", "of the way there")}</span>
                   </p>
                   <p className="text-xs text-[var(--dashboard-text)]/50">
@@ -378,7 +378,7 @@ function WeatherCard() {
       : null;
 
   return (
-    <div className="rounded-2xl card-tint p-3 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
+    <div className="rounded-2xl card-tint border border-[var(--dashboard-text)]/10 p-3 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
       <div className="flex items-start justify-between">
         <h2 className="text-base font-semibold">{t("Aujourd'hui", "Today")}</h2>
         {today && today.emoji === "☀️" ? (
@@ -472,7 +472,7 @@ function LocalConditionsCard() {
       <button
         type="button"
         onClick={() => setModalOpen(true)}
-        className="flex w-full items-center gap-3 rounded-2xl card-tint p-3 pr-4 text-left shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]"
+        className="flex w-full items-center gap-3 rounded-2xl card-tint border border-[var(--dashboard-text)]/10 p-3 pr-4 text-left shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]"
         aria-haspopup="dialog"
       >
         <span
@@ -579,7 +579,7 @@ function EventsCard() {
 
   if (upcoming.length === 0) {
     return (
-      <div className="rounded-2xl card-tint p-3 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
+      <div className="rounded-2xl card-tint border border-[var(--dashboard-text)]/10 p-3 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         <h3 className="text-sm font-semibold">{t("Événements à venir", "Upcoming events")}</h3>
         <p className="mt-1 text-xs text-[var(--dashboard-text)]/50">
           {texteAvecChiffres(t("Rien dans les 14 prochains jours.", "Nothing in the next 14 days."))}
@@ -589,7 +589,7 @@ function EventsCard() {
   }
 
   return (
-    <div className="rounded-2xl card-tint p-3 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
+    <div className="rounded-2xl card-tint border border-[var(--dashboard-text)]/10 p-3 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
       <h3 className="text-sm font-semibold">{t("Événements à venir", "Upcoming events")}</h3>
       <div className="mt-2 flex flex-col gap-2.5">
         {upcoming.map((holiday) => (

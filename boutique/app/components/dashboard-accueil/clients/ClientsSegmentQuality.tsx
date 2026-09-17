@@ -45,7 +45,7 @@ export default function ClientsSegmentQuality({ typeAchat }: { typeAchat: TypeAc
                 <td className="py-2.5 font-semibold text-[var(--dashboard-text)]">
                   {t(row.titreFr, row.titreEn)}
                 </td>
-                <td className={`py-2.5 text-center font-bold font-figures ${
+                <td className={`py-2.5 text-center font-figures-bold ${
                   row.decrocheTone === "ok" ? "text-[#10b981]" : row.decrocheTone === "danger" ? "text-[#f43f5e]" : row.decrocheTone === "warn" ? "text-[#f59e0b]" : ""
                 }`}>
                   {row.decroche}
@@ -53,17 +53,17 @@ export default function ClientsSegmentQuality({ typeAchat }: { typeAchat: TypeAc
                 <td className={`py-2.5 text-center font-semibold font-figures ${row.confirme === "—" ? "text-[var(--dashboard-text)]/30" : "text-[#10b981]"}`}>
                   {row.confirme}
                 </td>
-                <td className={`py-2.5 text-center font-bold font-figures ${
+                <td className={`py-2.5 text-center font-figures-bold ${
                   row.recoitTone === "ok" ? "text-[#10b981]" : row.recoitTone === "warn" ? "text-[#f59e0b]" : "text-[var(--dashboard-text)]/30"
                 }`}>
                   {row.recoit}
                 </td>
-                <td className={`py-2.5 text-center font-bold font-figures ${
+                <td className={`py-2.5 text-center font-figures-bold ${
                   row.litigeTone === "ok" ? "text-[#10b981]" : row.litigeTone === "danger" ? "text-[#f43f5e]" : "text-[var(--dashboard-text)]/70"
                 }`}>
                   {row.litige}
                 </td>
-                <td className={`py-2.5 text-center font-bold font-figures ${
+                <td className={`py-2.5 text-center font-figures-bold ${
                   row.paieAvanceTone === "ok" ? "text-[#10b981]" : row.paieAvanceTone === "warn" ? "text-[#f59e0b]" : "text-[var(--dashboard-text)]/70"
                 }`}>
                   {row.paieAvance}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
+import { texteAvecChiffres } from "../../dashboard-accueil/shared";
 import type { EditeurState, SectionId } from "./types";
 import { AVIS_APERCU, PRODUIT_APERCU } from "./types";
 
@@ -96,7 +97,7 @@ function SectionRendue({
     case "bandeau":
       return (
         <div className="px-4 py-2 text-center text-[10.5px] font-medium" style={{ background: "var(--ac)", color: "#fff" }}>
-          {state.bandeau.message}
+          {texteAvecChiffres(state.bandeau.message)}
         </div>
       );
 
@@ -132,7 +133,7 @@ function SectionRendue({
           </div>
           {state.galerie.lectureAuto && (
             <span className="absolute left-2.5 top-2.5 rounded-full bg-black/45 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur">
-              {state.galerie.badge}
+              {texteAvecChiffres(state.galerie.badge)}
             </span>
           )}
         </div>
@@ -145,25 +146,25 @@ function SectionRendue({
           <p className="text-[15px] font-bold leading-tight">{t(PRODUIT_APERCU.nom, PRODUIT_APERCU.nomEn)}</p>
           {state.infos.noteMoyenne && (
             <p className="mt-1 flex items-center gap-1 text-[10.5px]" style={{ color: "rgba(0,0,0,.45)" }}>
-              <Etoiles note={PRODUIT_APERCU.note} /> {PRODUIT_APERCU.note} · {PRODUIT_APERCU.avisCount} {t("avis", "reviews")}
+              <Etoiles note={PRODUIT_APERCU.note} /> <span className="font-figures">{PRODUIT_APERCU.note}</span> · <span className="font-figures">{PRODUIT_APERCU.avisCount}</span> {t("avis", "reviews")}
             </p>
           )}
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="text-[19px] font-bold">{PRODUIT_APERCU.prixVente.toLocaleString("fr-FR")} F</span>
+            <span className="text-[19px] font-figures-bold">{PRODUIT_APERCU.prixVente.toLocaleString("fr-FR")} F</span>
             {state.infos.ancienPrixBarre && (
-              <span className="text-[12px] line-through" style={{ color: "rgba(0,0,0,.4)" }}>
+              <span className="text-[12px] line-through font-figures" style={{ color: "rgba(0,0,0,.4)" }}>
                 {PRODUIT_APERCU.prixConseille.toLocaleString("fr-FR")} F
               </span>
             )}
             {state.infos.badgeRemise && (
-              <span className="rounded-full px-2 py-0.5 text-[9px] font-bold text-white" style={{ background: "#D8347E" }}>
+              <span className="rounded-full px-2 py-0.5 text-[9px] font-figures-bold text-white" style={{ background: "#D8347E" }}>
                 −{Math.round((1 - PRODUIT_APERCU.prixVente / PRODUIT_APERCU.prixConseille) * 100)} %
               </span>
             )}
           </div>
           {state.infos.stockRestant && (
             <p className="mt-1.5 text-[10px]" style={{ color: "rgba(0,0,0,.5)" }}>
-              {t(`Plus que ${PRODUIT_APERCU.unitesDisponibles} en stock`, `Only ${PRODUIT_APERCU.unitesDisponibles} left in stock`)}
+              {texteAvecChiffres(t(`Plus que ${PRODUIT_APERCU.unitesDisponibles} en stock`, `Only ${PRODUIT_APERCU.unitesDisponibles} left in stock`))}
             </p>
           )}
           {state.infos.variantes && (
@@ -171,7 +172,7 @@ function SectionRendue({
               {PRODUIT_APERCU.variantes.map((v, i) => (
                 <span
                   key={v}
-                  className="rounded-full border px-3 py-1 text-[10px] font-semibold"
+                  className="rounded-full border px-3 py-1 text-[10px] font-figures-bold"
                   style={i === 0 ? { borderColor: "var(--ac)", color: "var(--ac)", background: "color-mix(in srgb, var(--ac) 8%, transparent)" } : { borderColor: "rgba(0,0,0,.12)" }}
                 >
                   {v}
@@ -182,7 +183,7 @@ function SectionRendue({
           {state.infos.quantite && (
             <div className="mt-2.5 inline-flex items-center gap-3 rounded-full border px-3 py-1 text-[11px]" style={{ borderColor: "rgba(0,0,0,.12)" }}>
               <span>−</span>
-              <span className="font-bold">1</span>
+              <span className="font-figures-bold">1</span>
               <span>+</span>
             </div>
           )}
@@ -205,10 +206,10 @@ function SectionRendue({
                 style={p.badge ? { borderColor: "var(--ac)", background: "color-mix(in srgb, var(--ac) 6%, transparent)" } : { borderColor: "rgba(0,0,0,.1)" }}
               >
                 <span className="text-[11px] font-semibold">
-                  {p.unites} {p.unites > 1 ? t("flacons", "bottles") : t("flacon", "bottle")}
+                  <span className="font-figures">{p.unites}</span> {p.unites > 1 ? t("flacons", "bottles") : t("flacon", "bottle")}
                   {p.badge && <span className="ml-1.5 text-[9px] font-bold" style={{ color: "var(--ac)" }}>· {p.badge}</span>}
                 </span>
-                <span className="text-[11px] font-bold">{p.remisePct > 0 ? `−${p.remisePct} %` : t("Prix normal", "Regular price")}</span>
+                <span className={p.remisePct > 0 ? "text-[11px] font-figures-bold" : "text-[11px] font-bold"}>{p.remisePct > 0 ? `−${p.remisePct} %` : t("Prix normal", "Regular price")}</span>
               </div>
             ))}
           </div>
@@ -266,29 +267,29 @@ function SectionRendue({
               style={{ borderColor: "var(--ac)", background: "color-mix(in srgb, var(--ac) 6%, transparent)", borderRadius: "var(--rad)" }}
             >
               <span className="text-[11px] font-semibold">{t("Payer en ligne", "Pay online")}</span>
-              <span className="text-[11.5px] font-bold">
+              <span className="text-[11.5px] font-figures-bold">
                 {prixLigne.toLocaleString("fr-FR")} F
-                {remise > 0 && <span className="ml-1 text-[9px] font-normal line-through" style={{ color: "rgba(0,0,0,.4)" }}>{PRODUIT_APERCU.prixVente.toLocaleString("fr-FR")} F</span>}
+                {remise > 0 && <span className="ml-1 text-[9px] font-normal line-through font-figures" style={{ color: "rgba(0,0,0,.4)" }}>{PRODUIT_APERCU.prixVente.toLocaleString("fr-FR")} F</span>}
               </span>
             </button>
           )}
           {state.paiement.payerALaLivraison && (
             <div className="mb-2 flex items-center justify-between gap-2 rounded-xl border px-3.5 py-2.5" style={{ borderColor: "rgba(0,0,0,.12)" }}>
               <span className="text-[11px] font-semibold">{t("Payer à la livraison", "Pay on delivery")}</span>
-              <span className="text-[11.5px] font-bold">{PRODUIT_APERCU.prixVente.toLocaleString("fr-FR")} F</span>
+              <span className="text-[11.5px] font-figures-bold">{PRODUIT_APERCU.prixVente.toLocaleString("fr-FR")} F</span>
             </div>
           )}
           <div className="mb-2.5 flex items-center justify-between rounded-xl border px-3.5 py-2.5" style={{ borderColor: "rgba(0,0,0,.12)" }}>
             <div>
               <p className="text-[11px] font-semibold">{t("Livraison standard", "Standard delivery")}</p>
-              <p className="text-[9px]" style={{ color: "rgba(0,0,0,.4)" }}>{t("4 h en moyenne", "4 h on average")}</p>
+              <p className="text-[9px]" style={{ color: "rgba(0,0,0,.4)" }}>{texteAvecChiffres(t("4 h en moyenne", "4 h on average"))}</p>
             </div>
             <span className="text-[10.5px] font-semibold">{t("Incluse", "Included")}</span>
           </div>
           {state.paiement.livraisonExpress && (
             <div className="mb-2.5 flex items-center justify-between rounded-xl border px-3.5 py-2.5" style={{ borderColor: "rgba(0,0,0,.12)" }}>
               <p className="text-[11px] font-semibold">{t("Livraison express", "Express delivery")}</p>
-              <span className="text-[10.5px] font-semibold">+2 000 F</span>
+              <span className="text-[10.5px] font-figures-bold">+2 000 F</span>
             </div>
           )}
           <button
@@ -296,7 +297,7 @@ function SectionRendue({
             className="w-full py-3 text-center text-[12px] font-bold text-white"
             style={{ background: style_boutonBg(state), borderRadius: "var(--rad)" }}
           >
-            {t("Je commande", "I order")} · {(state.paiement.payerEnLigne ? prixLigne : PRODUIT_APERCU.prixVente).toLocaleString("fr-FR")} F
+            {t("Je commande", "I order")} · <span className="font-figures-bold">{(state.paiement.payerEnLigne ? prixLigne : PRODUIT_APERCU.prixVente).toLocaleString("fr-FR")} F</span>
           </button>
         </div>
       );
@@ -307,10 +308,10 @@ function SectionRendue({
         <div className="px-4 py-3.5">
           <p className="mb-2 text-[11px] font-bold">{t("Ce que disent nos clientes", "What our customers say")}</p>
           <div className="mb-2 flex items-center gap-3">
-            <span className="text-[22px] font-bold leading-none">{PRODUIT_APERCU.note}</span>
+            <span className="text-[22px] font-figures-bold leading-none">{PRODUIT_APERCU.note}</span>
             <div>
               <Etoiles note={PRODUIT_APERCU.note} taille={11} />
-              <p className="text-[9px]" style={{ color: "rgba(0,0,0,.4)" }}>{PRODUIT_APERCU.avisCount} {t("avis", "reviews")}</p>
+              <p className="text-[9px]" style={{ color: "rgba(0,0,0,.4)" }}><span className="font-figures">{PRODUIT_APERCU.avisCount}</span> {t("avis", "reviews")}</p>
             </div>
           </div>
           <div className={state.avis.disposition === "grille" ? "grid grid-cols-2 gap-2" : "flex flex-col gap-2"}>
@@ -352,10 +353,10 @@ function SectionRendue({
               return (
                 <div key={q.question} className="border-b py-2" style={{ borderColor: "rgba(0,0,0,.08)" }}>
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-[10.5px] font-semibold">{q.question}</p>
+                    <p className="text-[10.5px] font-semibold">{texteAvecChiffres(q.question)}</p>
                     <span className="shrink-0 text-[11px]" style={{ color: "rgba(0,0,0,.35)" }}>{ouverte ? "−" : "+"}</span>
                   </div>
-                  {ouverte && <p className="mt-1 text-[10px] leading-relaxed" style={{ color: "rgba(0,0,0,.5)" }}>{q.reponse}</p>}
+                  {ouverte && <p className="mt-1 text-[10px] leading-relaxed" style={{ color: "rgba(0,0,0,.5)" }}>{texteAvecChiffres(q.reponse)}</p>}
                 </div>
               );
             })}
@@ -399,7 +400,7 @@ function SectionRendue({
               ))}
             </div>
           )}
-          <p className="mt-2.5 text-[8.5px]" style={{ color: "rgba(255,255,255,.4)" }}>{state.piedDePage.mentionBas}</p>
+          <p className="mt-2.5 text-[8.5px]" style={{ color: "rgba(255,255,255,.4)" }}>{texteAvecChiffres(state.piedDePage.mentionBas)}</p>
         </div>
       );
 

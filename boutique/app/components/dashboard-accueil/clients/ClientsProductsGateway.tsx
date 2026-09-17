@@ -39,7 +39,7 @@ export default function ClientsProductsGateway({ typeAchat }: { typeAchat: TypeA
       <div className="mt-4 overflow-x-auto">
         <table className="w-full text-left text-[11px]">
           <thead>
-            <tr className="border-b border-[var(--dashboard-text)]/10 text-[9px] uppercase tracking-wider text-[var(--dashboard-text)]/45">
+            <tr className="border-b border-[var(--dashboard-text)]/10 text-[9px] uppercase tracking-wider text-[var(--dashboard-text)]/40">
               <th className="pb-2 font-semibold">{t("PRODUIT DU PREMIER ACHAT", "INITIAL PRODUCT PURCHASED")}</th>
               <th className="pb-2 text-right font-semibold sm:text-center">{t("CLIENTS ENTRÉS PAR LUI", "ACQUIRED VIA THIS")}</th>
               <th className="pb-2 text-right font-semibold">{t("REVIENNENT", "RETENTION")}</th>
@@ -82,14 +82,14 @@ export default function ClientsProductsGateway({ typeAchat }: { typeAchat: TypeA
                   </td>
 
                   {/* Taux de retour */}
-                  <td className={`py-2.5 text-right font-bold font-figures ${colorClass}`}>
+                  <td className={`py-2.5 text-right font-figures-bold ${colorClass}`}>
                     {item.tauxRetour} %
                   </td>
 
                   {/* Deuxième achat */}
                   <td className="py-2.5 pl-5">
                     {item.produitDeuxiemeAchatNom === "Aucun produit dominant" ? (
-                      <span className="text-[var(--dashboard-text)]/35 italic text-[10px]">
+                      <span className="text-[var(--dashboard-text)]/40 italic text-[10px]">
                         {t("Aucun produit dominant", "No dominant repeat product")}
                       </span>
                     ) : (

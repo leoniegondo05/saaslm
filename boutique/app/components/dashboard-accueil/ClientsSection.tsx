@@ -120,7 +120,7 @@ export default function ClientsSection({ first = true, activeDate }: { first?: b
           Les badges <Nature> posés à côté de chaque titre de sous-bloc
           ci-dessous (S/D/B) suivent ce code, sur la sélection du toggle
           au-dessus. */}
-      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-2xl bg-[var(--dashboard-glass)] px-4 py-3 text-[10px] text-[var(--dashboard-text)]/50">
+      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-glass)] px-4 py-3 text-[10px] text-[var(--dashboard-text)]/50 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         <span className="flex items-center gap-1.5"><Nature code="S" /> {t("Stockage management", "Warehousing")}</span>
         <span className="flex items-center gap-1.5"><Nature code="D" /> {t("Dropshipping", "Drop-shipping")}</span>
         <span className="flex items-center gap-1.5"><Nature code="B" /> {t("Les deux", "Both")}</span>
@@ -138,11 +138,11 @@ export default function ClientsSection({ first = true, activeDate }: { first?: b
               className="flex flex-col justify-between rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-3.5 shadow-[0_4px_12px_-4px_rgba(20,18,32,0.08)] transition-colors"
             >
               <div>
-                <span className="text-[9px] font-semibold uppercase tracking-wider text-[var(--dashboard-text)]/45">
+                <span className="text-[9px] font-semibold uppercase tracking-wider text-[var(--dashboard-text)]/40">
                   {t(kpi.labelFr, kpi.labelEn)}
                 </span>
                 <div
-                  className={`mt-1.5 text-xl font-bold tracking-tight sm:text-2xl font-figures ${
+                  className={`mt-1.5 text-xl tracking-tight sm:text-2xl font-figures-bold ${
                     kpi.id === "actifs" ? "text-[#10b981]" : ""
                   } ${kpi.id === "reviennent" || kpi.id === "a-relancer" ? "text-[#f59e0b]" : ""}`}
                 >
@@ -163,7 +163,7 @@ export default function ClientsSection({ first = true, activeDate }: { first?: b
                 )}
               </div>
               {compare && prevValeur && (
-                <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/35">
+                <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">
                   {t("Période précédente", "Previous period")} : <span className="font-figures">{prevValeur}</span>
                 </p>
               )}

@@ -47,6 +47,10 @@ export type DropProduit = {
    *  bon produit) plutôt que "pas encore de photo" — laissé vide en
    *  attendant les vraies photos, cf. [[dashboard-mock-data-pending-laravel-api]]. */
   images?: string[];
+  /** Vidéo produit (upload optionnel côté partenaire, cf. ajouter-produit/MediaProduit.tsx)
+   *  jouée en arrière-plan de la fiche (Écran 06), la photo du carousel devant. Aucune pour
+   *  l'instant, mêmes raisons que `images` : [[dashboard-mock-data-pending-laravel-api]]. */
+  videoUrl?: string;
 };
 
 export const CATEGORIES: { nom: string; nomEn: string; count: number; nouveautes?: number }[] = [

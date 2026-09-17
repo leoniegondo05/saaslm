@@ -444,7 +444,7 @@ export default function DashboardHeader({
               <div className="flex items-center justify-between gap-3 p-4">
                 <div>
                   <p className="text-sm font-bold text-[var(--dashboard-text)]">Notifications</p>
-                  <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/45">
+                  <p className="mt-0.5 text-xs text-[var(--dashboard-text)]/40">
                     {nbNonLues > 0 ? `${nbNonLues} non lue${nbNonLues > 1 ? "s" : ""}` : "Tout est lu"}
                   </p>
                 </div>

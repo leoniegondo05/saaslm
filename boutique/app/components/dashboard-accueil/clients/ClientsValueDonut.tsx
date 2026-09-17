@@ -34,7 +34,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
               <h3 className="text-xs font-bold tracking-tight text-[var(--dashboard-text)] sm:text-sm">
                 {t("Ce que vaut un client, ce qu'il coûte", "Customer value vs acquisition cost")}
               </h3>
-              <p className="text-[10px] text-[var(--dashboard-text)]/45">
+              <p className="text-[10px] text-[var(--dashboard-text)]/40">
                 {t("Sur toute la durée de la relation", "Over customer lifetime relationship")}
               </p>
             </div>
@@ -61,7 +61,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                   {t("Ce qu'il vous rapporte au total", "Total lifetime revenue")}
                 </span>
               </div>
-              <span className="font-bold font-figures">27 100F</span>
+              <span className="font-figures-bold">27 100F</span>
             </div>
 
             <div className="flex items-center justify-between text-[11px]">
@@ -71,7 +71,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                   {t("Ce qu'il a coûté à faire venir", "Acquisition cost spent")}
                 </span>
               </div>
-              <span className="font-bold font-figures">3 462F</span>
+              <span className="font-figures-bold">3 462F</span>
             </div>
           </div>
 
@@ -138,7 +138,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                   ···
                 </span>
               </div>
-              <p className="text-[10px] text-[var(--dashboard-text)]/45">
+              <p className="text-[10px] text-[var(--dashboard-text)]/40">
                 {texteAvecChiffres(t("Vos clients rangés par dix pour cent, du meilleur au moins bon", "Customers ranked in 10% deciles, from best to lowest"))}
               </p>
             </div>
@@ -345,7 +345,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                             y={3}
                             textAnchor="middle"
                             fill="#ffffff"
-                            className="text-[9px] font-bold font-figures select-none"
+                            className="text-[9px] font-figures-bold select-none"
                           >
                             {selectedPoint.d}
                           </text>
@@ -380,7 +380,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                                 <text x={7} y={2} className="fill-[var(--dashboard-text)]/65 text-[9px] font-medium select-none">
                                   Part CA
                                 </text>
-                                <text x={tipW - 16} y={2} textAnchor="end" className="fill-[var(--dashboard-text)] text-[9px] font-bold font-figures select-none">
+                                <text x={tipW - 16} y={2} textAnchor="end" className="fill-[var(--dashboard-text)] text-[9px] font-figures-bold select-none">
                                   {selectedPoint.pct}%
                                 </text>
                               </g>
@@ -391,7 +391,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                                 <text x={7} y={2} className="fill-[var(--dashboard-text)]/65 text-[9px] font-medium select-none">
                                   Panier
                                 </text>
-                                <text x={tipW - 16} y={2} textAnchor="end" className="fill-[var(--dashboard-text)] text-[9px] font-bold font-figures select-none">
+                                <text x={tipW - 16} y={2} textAnchor="end" className="fill-[var(--dashboard-text)] text-[9px] font-figures-bold select-none">
                                   {selectedPoint.panierNum}k
                                 </text>
                               </g>
@@ -402,7 +402,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
                                 <text x={7} y={2} className="fill-[var(--dashboard-text)]/65 text-[9px] font-medium select-none">
                                   Cumul
                                 </text>
-                                <text x={tipW - 16} y={2} textAnchor="end" className="fill-[var(--dashboard-text)] text-[9px] font-bold font-figures select-none">
+                                <text x={tipW - 16} y={2} textAnchor="end" className="fill-[var(--dashboard-text)] text-[9px] font-figures-bold select-none">
                                   {selectedPoint.cumul}%
                                 </text>
                               </g>
@@ -483,7 +483,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
               <span className="text-[var(--dashboard-text)]/55">
                 {texteAvecChiffres(t("Part faite par les 10 % meilleurs", "Share from top 10%"))}
               </span>
-              <span className="font-bold font-figures text-[#f05638]">34 %</span>
+              <span className="font-figures-bold text-[#f05638]">34 %</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
@@ -507,13 +507,13 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
               <span className="text-[var(--dashboard-text)]/55">
                 {texteAvecChiffres(t("Taux de livraison des 10 % meilleurs", "Top 10% delivery rate"))}
               </span>
-              <span className="font-bold font-figures text-[#10b981]">97 %</span>
+              <span className="font-figures-bold text-[#10b981]">97 %</span>
             </div>
           </div>
         </div>
 
         {/* Note de bas de carte */}
-        <p className="mt-3 text-[10px] leading-relaxed text-[var(--dashboard-text)]/45">
+        <p className="mt-3 text-[10px] leading-relaxed text-[var(--dashboard-text)]/40">
           {texteAvecChiffres(t(
             "Trente-neuf clients font un tiers de votre chiffre, avec un panier deux fois et demie plus gros et presque aucun refus. Ce sont les seuls à qui il vaut la peine de proposer une nouveauté avant tout le monde, ou l'express sans le facturer.",
             "Thirty-nine top customers generate one-third of all sales, with baskets 2.5x larger and virtually zero refusals. They are the only segment where offering preview access or free VIP express shipping makes immense economic sense."
@@ -528,7 +528,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
             <h3 className="text-xs font-bold tracking-tight text-[var(--dashboard-text)] sm:text-sm">
               {t("L'état du fichier", "Database status")}
             </h3>
-            <p className="text-[10px] text-[var(--dashboard-text)]/45">
+            <p className="text-[10px] text-[var(--dashboard-text)]/40">
               {t("Depuis quand chaque client n'a plus acheté", "Inactivity duration per customer")}
             </p>
           </div>
@@ -568,7 +568,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
               />
             </svg>
             <div className="pointer-events-none absolute flex flex-col items-center justify-center text-center">
-              <span className="text-base font-bold tracking-tight text-[var(--dashboard-text)] font-figures">{total}</span>
+              <span className="text-base tracking-tight text-[var(--dashboard-text)] font-figures-bold">{total}</span>
               <span className="text-[9px] text-[var(--dashboard-text)]/40">
                 {t("clients", "clients")}
               </span>
@@ -614,7 +614,7 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Valeur dormante récupérable", "Recoverable dormant value")}
               </span>
-              <span className="font-bold font-figures text-[#f59e0b]">1 240 000F</span>
+              <span className="font-figures-bold text-[#f59e0b]">1 240 000F</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--dashboard-text)]/55">
@@ -626,13 +626,13 @@ export default function ClientsValueDonut({ typeAchat }: { typeAchat: TypeAchat 
               <span className="text-[var(--dashboard-text)]/55">
                 {t("Chiffre attendu d'une relance", "Expected campaign revenue")}
               </span>
-              <span className="font-bold font-figures text-[#10b981]">136 400F</span>
+              <span className="font-figures-bold text-[#10b981]">136 400F</span>
             </div>
           </div>
         </div>
 
         {/* Note de synthèse */}
-        <p className="mt-3 text-[10px] leading-relaxed text-[var(--dashboard-text)]/45">
+        <p className="mt-3 text-[10px] leading-relaxed text-[var(--dashboard-text)]/40">
           {texteAvecChiffres(t(
             "Cent quatre dormants, onze pour cent qui reviennent quand on les relance : c'est onze clients et cent trente-six mille francs, pour le coût d'un message. Aucun canal publicitaire ne rend cela.",
             "104 dormant customers with an 11% reactivation rate: that means 11 recaptured buyers and 136,000 CFA francs for the simple cost of a broadcast SMS. No ad channel matches that ROI."

@@ -1,6 +1,6 @@
 "use client";
 
-import { Tag } from "../../dashboard-accueil/shared";
+import { Tag, texteAvecChiffres } from "../../dashboard-accueil/shared";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
 import { SECTIONS_DEFAUT } from "./types";
 import type { EditeurState, FaqItem, SectionId } from "./types";
@@ -85,7 +85,7 @@ function Corps({
             ]}
             onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, positionLogo: v as typeof s.entete.positionLogo } }))}
           />
-          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">{t("Icônes", "Icons")}</p>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Icônes", "Icons")}</p>
           <div className="flex flex-wrap gap-1.5">
             <Puce active={state.entete.recherche} label={t("Recherche", "Search")} onClick={() => setState((s) => ({ ...s, entete: { ...s.entete, recherche: !s.entete.recherche } }))} />
             <Puce active={state.entete.panier} label={t("Panier", "Cart")} onClick={() => setState((s) => ({ ...s, entete: { ...s.entete, panier: !s.entete.panier } }))} />
@@ -152,7 +152,7 @@ function Corps({
               {state.offres.paliers.map((p, i) => (
                 <div key={p.unites} className="flex items-center gap-2 rounded-xl border border-[var(--dashboard-text)]/10 px-3 py-2">
                   <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-[var(--dashboard-text)]">
-                    {p.unites} {p.unites > 1 ? t("flacons", "bottles") : t("flacon", "bottle")}
+                    <span className="font-figures">{p.unites}</span> {p.unites > 1 ? t("flacons", "bottles") : t("flacon", "bottle")}
                     {p.badge && <span className="ml-1 text-[9px] font-normal text-brand-pink">· {p.badge}</span>}
                   </span>
                   <input
@@ -169,7 +169,7 @@ function Corps({
                         },
                       }))
                     }
-                    className="w-14 rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-2 py-1 text-right text-[11px] font-semibold text-[var(--dashboard-text)] outline-none focus:border-brand-pink/50"
+                    className="w-14 rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-2 py-1 text-right text-[11px] font-semibold text-[var(--dashboard-text)] outline-none focus:border-brand-pink/50 font-figures"
                   />
                   <span className="text-[10px] text-[var(--dashboard-text)]/40">%</span>
                 </div>
@@ -183,7 +183,7 @@ function Corps({
       return (
         <>
           <div>
-            <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+            <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
               {t("Champs obligatoires", "Required fields")}
             </p>
             <div className="space-y-1">
@@ -234,7 +234,7 @@ function Corps({
                 max={90}
                 value={state.paiement.remiseEnLignePct}
                 onChange={(e) => setState((s) => ({ ...s, paiement: { ...s.paiement, remiseEnLignePct: Number(e.target.value) } }))}
-                className="w-14 rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-2 py-1 text-right text-[11px] font-semibold text-[var(--dashboard-text)] outline-none focus:border-brand-pink/50"
+                className="w-14 rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-2 py-1 text-right text-[11px] font-semibold text-[var(--dashboard-text)] outline-none focus:border-brand-pink/50 font-figures"
               />
               <span className="text-[10px] text-[var(--dashboard-text)]/40">%</span>
             </div>
@@ -242,7 +242,7 @@ function Corps({
           <Ligne label={t("Payer à la livraison", "Pay on delivery")}>
             <Interrupteur checked={state.paiement.payerALaLivraison} onChange={(v) => setState((s) => ({ ...s, paiement: { ...s.paiement, payerALaLivraison: v } }))} />
           </Ligne>
-          <Ligne label={t("Livraison express", "Express delivery")} note={t("+2 000 F, fixé par le partenaire agréé", "+2,000 F, set by the approved partner")}>
+          <Ligne label={t("Livraison express", "Express delivery")} note={texteAvecChiffres(t("+2 000 F, fixé par le partenaire agréé", "+2,000 F, set by the approved partner"))}>
             <Interrupteur checked={state.paiement.livraisonExpress} onChange={(v) => setState((s) => ({ ...s, paiement: { ...s.paiement, livraisonExpress: v } }))} />
           </Ligne>
           <a
@@ -270,7 +270,7 @@ function Corps({
           <div>
             <p className="mb-1 flex items-center justify-between text-[10.5px] font-medium text-[var(--dashboard-text)]">
               <span>{t("Avis affichés", "Reviews shown")}</span>
-              <span className="text-[var(--dashboard-text)]/50">{state.avis.nombreAffiches}</span>
+              <span className="text-[var(--dashboard-text)]/50 font-figures">{state.avis.nombreAffiches}</span>
             </p>
             <input
               type="range"
@@ -403,12 +403,12 @@ function Champ({
   );
 }
 
-function Ligne({ label, note, children }: { label: string; note?: string; children: React.ReactNode }) {
+function Ligne({ label, note, children }: { label: string; note?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0">
         <p className="text-[11px] font-medium text-[var(--dashboard-text)]">{label}</p>
-        {note && <p className="mt-0.5 text-[9.5px] text-[var(--dashboard-text)]/45">{note}</p>}
+        {note && <p className="mt-0.5 text-[9.5px] text-[var(--dashboard-text)]/40">{note}</p>}
       </div>
       {children}
     </div>

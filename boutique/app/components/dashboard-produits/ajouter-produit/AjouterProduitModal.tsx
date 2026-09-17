@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
+import { texteAvecChiffres } from "../../dashboard-accueil/shared";
 import MediaProduit from "./MediaProduit";
 import IdentiteProduit from "./IdentiteProduit";
 import TarificationProduit from "./TarificationProduit";
@@ -108,7 +109,15 @@ export default function AjouterProduitModal({
 
   // Référence et date figées à l'ouverture du formulaire, pas recalculées
   // à chaque frappe (cf. maquette : "Elle ne change plus ensuite").
-  const reference = useMemo(genererReference, []);
+  // Générée côté client seulement (useEffect) : Math.random() dans un
+  // useMemo tournerait une fois au rendu serveur et une seconde fois au
+  // premier rendu client, avec deux valeurs différentes — erreur
+  // d'hydration React. Chaîne vide au tout premier rendu (identique
+  // serveur/client), remplie juste après montage.
+  const [reference, setReference] = useState("");
+  useEffect(() => {
+    setReference(genererReference());
+  }, []);
   const dateCreation = useMemo(
     () => new Date().toLocaleDateString(langue === "EN" ? "en-US" : "fr-FR", { day: "numeric", month: "long", year: "numeric" }),
     [langue]
@@ -228,7 +237,7 @@ export default function AjouterProduitModal({
           <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
             {ETAPES.map(({ titre, titreEn, texte, texteEn }) => (
               <div key={titre} className="rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-3">
-                <p className="text-[11px] font-semibold">{t(titre, titreEn)}</p>
+                <p className="text-[11px] font-semibold">{texteAvecChiffres(t(titre, titreEn))}</p>
                 <p className="mt-0.5 text-[9px] leading-snug text-[var(--dashboard-text)]/40">{t(texte, texteEn)}</p>
               </div>
             ))}

@@ -240,7 +240,7 @@ export default function PaymentMethodCard() {
             <p className="mt-4 text-[10px] uppercase tracking-[0.16em] text-white/50">
               {t("Reversé sur ce compte", "Paid out to this account")}
             </p>
-            <p className="mt-1 text-3xl font-bold tracking-tight font-figures">318 000 F</p>
+            <p className="mt-1 text-3xl tracking-tight font-figures-bold">318 000 F</p>
 
             <div className="mt-12 flex items-center justify-between">
               <span className="text-xs tracking-[0.22em] text-white/70">•••• •••• •••• 4417</span>

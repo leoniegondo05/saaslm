@@ -22,7 +22,7 @@ export default function ClientsReliabilityRetention({ typeAchat }: { typeAchat: 
                   {t("Quand ils reviennent", "When they return")}
                 </h3>
               </div>
-              <p className="text-[10px] text-[var(--dashboard-text)]/45 mt-0.5">
+              <p className="text-[10px] text-[var(--dashboard-text)]/40 mt-0.5">
                 {texteAvecChiffres(t(
                   "Distribution temporelle des 2èmes achats après la 1ère commande",
                   "Second order distribution timeline after 1st order"
@@ -37,13 +37,13 @@ export default function ClientsReliabilityRetention({ typeAchat }: { typeAchat: 
           {/* Bandeau de cotation type S&P 500 / Rolex Market Index */}
           <div className="mt-3.5 flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--dashboard-text)]/10 pb-3">
             <div className="flex items-baseline gap-3">
-              <span className="text-2xl sm:text-3xl font-bold font-figures tracking-tight text-[var(--dashboard-text)]">
+              <span className="text-2xl sm:text-3xl font-figures-bold tracking-tight text-[var(--dashboard-text)]">
                 34 <span className="text-xs font-sans font-medium text-[var(--dashboard-text)]/50">{t("jours", "days")}</span>
               </span>
               <span className="inline-flex items-center gap-1 rounded-full bg-[#10b981]/15 px-2 py-0.5 text-[10px] font-bold text-[#10b981]">
                 <span className="font-figures">↑ 78,4 %</span> {t("en fenêtre utile", "in golden window")}
               </span>
-              <span className="text-[11px] text-[var(--dashboard-text)]/45 hidden sm:inline">
+              <span className="text-[11px] text-[var(--dashboard-text)]/40 hidden sm:inline">
                 {t("Délai moyen constaté", "Observed median")}
               </span>
             </div>
@@ -64,7 +64,7 @@ export default function ClientsReliabilityRetention({ typeAchat }: { typeAchat: 
               </button>
               <button
                 type="button"
-                className="rounded bg-[var(--dashboard-card-bg)] px-2 py-0.5 font-bold font-figures text-[var(--dashboard-text)] shadow-xs"
+                className="rounded bg-[var(--dashboard-card-bg)] px-2 py-0.5 font-figures-bold text-[var(--dashboard-text)] shadow-xs"
               >
                 J90
               </button>
@@ -102,7 +102,7 @@ export default function ClientsReliabilityRetention({ typeAchat }: { typeAchat: 
         </div>
 
         {/* Note stratégique */}
-        <p className="mt-3 text-[10px] leading-relaxed text-[var(--dashboard-text)]/45">
+        <p className="mt-3 text-[10px] leading-relaxed text-[var(--dashboard-text)]/40">
           {texteAvecChiffres(t(
             "La cloche est nette : presque tous les deuxièmes achats se font entre le vingtième et le cinquantième jour. Relancer au jour vingt-huit tombe juste avant le sommet, au moment où l'envie existe mais où le geste n'est pas encore fait. Relancer au jour soixante-quinze ne sert plus à rien.",
             "The bell curve is crystal clear: almost all repeat orders occur between day 20 and day 50. Triggering a campaign at day 28 hits the sweet spot right before the peak, while the desire is alive but the purchase has not yet been executed. Reaching out after day 75 has almost zero effectiveness."
@@ -118,7 +118,7 @@ export default function ClientsReliabilityRetention({ typeAchat }: { typeAchat: 
               <h3 className="text-xs font-bold tracking-tight text-[var(--dashboard-text)] sm:text-sm">
                 {t("La fiabilité de vos clients", "Customer delivery reliability")}
               </h3>
-              <p className="text-[10px] text-[var(--dashboard-text)]/45">
+              <p className="text-[10px] text-[var(--dashboard-text)]/40">
                 {t(
                   "Tous ne se comportent pas de la même façon au téléphone et à la porte",
                   "Customer behavior varies drastically at phone confirmation and delivery door"
@@ -133,12 +133,12 @@ export default function ClientsReliabilityRetention({ typeAchat }: { typeAchat: 
             {/* Clients déjà venus */}
             <div className="flex items-center justify-between rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)]/40 px-3 py-2.5">
               <div className="flex items-center gap-3">
-                <span className="text-xl font-bold text-[#10b981] sm:text-2xl font-figures">97 %</span>
+                <span className="text-xl text-[#10b981] sm:text-2xl font-figures-bold">97 %</span>
                 <div>
                   <h4 className="text-xs font-semibold text-[var(--dashboard-text)]">
                     {t("Clients déjà venus", "Returning customers")}
                   </h4>
-                  <p className="text-[10px] text-[var(--dashboard-text)]/45">
+                  <p className="text-[10px] text-[var(--dashboard-text)]/40">
                     {t("Taux de livraison. Ils savent que le colis arrive.", "Delivery success rate. They expect the parcel.")}
                   </p>
                 </div>
@@ -151,12 +151,12 @@ export default function ClientsReliabilityRetention({ typeAchat }: { typeAchat: 
             {/* Premier achat */}
             <div className="flex items-center justify-between rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)]/40 px-3 py-2.5">
               <div className="flex items-center gap-3">
-                <span className="text-xl font-bold text-[var(--dashboard-text)] sm:text-2xl font-figures">80 %</span>
+                <span className="text-xl text-[var(--dashboard-text)] sm:text-2xl font-figures-bold">80 %</span>
                 <div>
                   <h4 className="text-xs font-semibold text-[var(--dashboard-text)]">
                     {t("Premier achat", "First-time buyers")}
                   </h4>
-                  <p className="text-[10px] text-[var(--dashboard-text)]/45">
+                  <p className="text-[10px] text-[var(--dashboard-text)]/40">
                     {t("Taux de livraison. La moyenne de la boutique.", "Delivery rate. Storewide average benchmark.")}
                   </p>
                 </div>
@@ -169,12 +169,12 @@ export default function ClientsReliabilityRetention({ typeAchat }: { typeAchat: 
             {/* Clients à surveiller */}
             <div className="flex items-center justify-between rounded-xl border border-[#f43f5e]/20 bg-[#f43f5e]/5 px-3 py-2.5">
               <div className="flex items-center gap-3">
-                <span className="text-xl font-bold text-[#f43f5e] sm:text-2xl font-figures">34 %</span>
+                <span className="text-xl text-[#f43f5e] sm:text-2xl font-figures-bold">34 %</span>
                 <div>
                   <h4 className="text-xs font-semibold text-[#f43f5e]">
                     {t("Clients à surveiller", "High-risk accounts")}
                   </h4>
-                  <p className="text-[10px] text-[var(--dashboard-text)]/45">
+                  <p className="text-[10px] text-[var(--dashboard-text)]/40">
                     {t("Deux refus ou plus à leur actif.", "Two or more failed delivery refusals on record.")}
                   </p>
                 </div>
@@ -202,7 +202,7 @@ export default function ClientsReliabilityRetention({ typeAchat }: { typeAchat: 
                   <tr key={cli.numero}>
                     <td className="py-2 font-medium font-figures">{cli.numero}</td>
                     <td className="py-2 text-center font-semibold font-figures">{cli.commandes}</td>
-                    <td className="py-2 text-center font-bold font-figures text-[#f43f5e]">{cli.refus}</td>
+                    <td className="py-2 text-center font-figures-bold text-[#f43f5e]">{cli.refus}</td>
                     <td className="py-2 text-[10px] text-[var(--dashboard-text)]/55">
                       {t(cli.dernierMotifFr, cli.dernierMotifEn)}
                     </td>
@@ -388,7 +388,7 @@ function RetentionIndexChart() {
           x={(xWindowStart + xWindowEnd) / 2}
           y={padTop + 10}
           textAnchor="middle"
-          className="fill-[#10b981] text-[7.5px] font-figures font-bold tracking-wider uppercase select-none opacity-80"
+          className="fill-[#10b981] text-[7.5px] font-figures-bold tracking-wider uppercase select-none opacity-80"
         >
           {t("FENÊTRE D'OR (78% DES 2ES ACHATS)", "GOLDEN WINDOW (78% REPEAT)")}
         </text>
@@ -422,7 +422,7 @@ function RetentionIndexChart() {
           <circle cx={relancePoint.x} cy={relancePoint.y} r={3} fill="#10b981" />
           <g transform={`translate(${relancePoint.x - 28}, ${relancePoint.y - 12})`}>
             <rect x={0} y={-6} width={56} height={12} rx={3} fill="#10b981" fillOpacity={0.15} stroke="#10b981" strokeWidth={0.8} />
-            <text x={28} y={3} textAnchor="middle" fill="#10b981" className="text-[7px] font-figures font-bold select-none">
+            <text x={28} y={3} textAnchor="middle" fill="#10b981" className="text-[7px] font-figures-bold select-none">
               RELANCE J28
             </text>
           </g>
@@ -437,7 +437,7 @@ function RetentionIndexChart() {
           {/* Badge façon WatchCharts Rolex Market Index */}
           <g transform={`translate(${peakPoint.x + 8}, ${peakPoint.y - 8})`}>
             <rect x={0} y={-8} width={64} height={16} rx={3.5} fill="#10b981" className="shadow-md" />
-            <text x={32} y={3.5} textAnchor="middle" fill="#ffffff" className="text-[8px] font-figures font-bold select-none">
+            <text x={32} y={3.5} textAnchor="middle" fill="#ffffff" className="text-[8px] font-figures-bold select-none">
               PIC · 34j (44%)
             </text>
           </g>
@@ -488,7 +488,7 @@ function RetentionIndexChart() {
                       strokeWidth={1}
                       className="shadow-lg"
                     />
-                    <text x={8} y={14} className="fill-[var(--dashboard-text)] text-[9px] font-bold font-figures select-none">
+                    <text x={8} y={14} className="fill-[var(--dashboard-text)] text-[9px] font-figures-bold select-none">
                       Jour {activePoint.day} ({activePoint.pct}%)
                     </text>
                     <text x={8} y={28} className="fill-[var(--dashboard-text)]/60 text-[8px] font-sans select-none">

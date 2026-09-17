@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { Tag } from "../../dashboard-accueil/shared";
+import { Tag, texteAvecChiffres } from "../../dashboard-accueil/shared";
 
 /*
   Bloc "vidéo + photos + bandeau" du formulaire (Écran 08 de la maquette
@@ -231,25 +231,25 @@ export default function MediaProduit({
               {infos.categorieLabel && <Tag tone="pink">{infos.categorieLabel}</Tag>}
             </div>
             <p className="mt-1.5 truncate text-lg font-bold text-white sm:text-xl">
-              {infos.nom || t("Nom du produit à venir", "Product name to come")}
+              {infos.nom ? texteAvecChiffres(infos.nom) : t("Nom du produit à venir", "Product name to come")}
             </p>
           </div>
 
           <div className="flex shrink-0 flex-wrap items-end gap-x-4 gap-y-1.5 text-[10px] text-white/85">
-            <InfoColonne label={t("Référence", "Reference")} value={infos.reference} />
-            <InfoColonne label={t("Combinaisons", "Combinations")} value={String(infos.combinaisons)} />
-            <InfoColonne label={t("Créé le", "Created on")} value={infos.dateCreation} />
+            <InfoColonne label={t("Référence", "Reference")} value={<span className="font-figures-bold">{infos.reference}</span>} />
+            <InfoColonne label={t("Combinaisons", "Combinations")} value={<span className="font-figures-bold">{infos.combinaisons}</span>} />
+            <InfoColonne label={t("Créé le", "Created on")} value={texteAvecChiffres(infos.dateCreation)} />
             <InfoColonne label={t("État", "Status")} value={infos.brouillon ? t("Brouillon", "Draft") : t("Actif", "Active")} />
           </div>
         </div>
       </div>
 
-      {erreur && <p className="border-t border-white/10 p-3 text-[11px] text-[#FF8CA0]">{erreur}</p>}
+      {erreur && <p className="border-t border-white/10 p-3 text-[11px] text-[#FF8CA0]">{texteAvecChiffres(erreur)}</p>}
     </div>
   );
 }
 
-function InfoColonne({ label, value }: { label: string; value: string }) {
+function InfoColonne({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="text-right">
       <p className="text-[8px] uppercase tracking-[0.14em] text-white/50">{label}</p>

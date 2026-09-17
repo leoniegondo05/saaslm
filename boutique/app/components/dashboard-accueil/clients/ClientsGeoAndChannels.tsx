@@ -17,7 +17,7 @@ export default function ClientsGeoAndChannels({ typeAchat }: { typeAchat: TypeAc
               <h3 className="text-xs font-bold tracking-tight text-[var(--dashboard-text)] sm:text-sm">
                 {t("Où sont vos clients, et lesquels reviennent", "Where your customers are, and who returns")}
               </h3>
-              <p className="text-[10px] text-[var(--dashboard-text)]/45">
+              <p className="text-[10px] text-[var(--dashboard-text)]/40">
                 {t(
                   "Le réachat ne dépend pas seulement du produit, la zone compte autant",
                   "Repeat purchases depend not only on catalog, delivery geography matters equally"
@@ -57,7 +57,7 @@ export default function ClientsGeoAndChannels({ typeAchat }: { typeAchat: TypeAc
                         </div>
                       </td>
                       <td className="py-2.5 text-right font-medium font-figures text-[var(--dashboard-text)]/70">{c.clients}</td>
-                      <td className="py-2.5 text-right font-bold font-figures">{c.panier}</td>
+                      <td className="py-2.5 text-right font-figures-bold">{c.panier}</td>
                     </tr>
                   );
                 })}
@@ -88,7 +88,7 @@ export default function ClientsGeoAndChannels({ typeAchat }: { typeAchat: TypeAc
               <h3 className="text-xs font-bold tracking-tight text-[var(--dashboard-text)] sm:text-sm">
                 {t("Quel canal amène les meilleurs clients", "Which acquisition channel delivers the highest-value customers")}
               </h3>
-              <p className="text-[10px] text-[var(--dashboard-text)]/45">
+              <p className="text-[10px] text-[var(--dashboard-text)]/40">
                 {t("Attribué par les pixels. Le reste est rangé en organique.", "Tracked through marketing pixels. Non-pixel sales recorded as organic.")}
               </p>
             </div>
@@ -117,13 +117,13 @@ export default function ClientsGeoAndChannels({ typeAchat }: { typeAchat: TypeAc
                         {t(canal.nomFr, canal.nomEn)}
                       </td>
                       <td className="py-2.5 text-center font-semibold font-figures">{canal.clients}</td>
-                      <td className={`py-2.5 text-right font-medium font-figures ${canal.isOrganique ? "text-[#10b981] font-bold" : "text-[var(--dashboard-text)]/70"}`}>
+                      <td className={`py-2.5 text-right font-medium font-figures-bold ${canal.isOrganique ? "text-[#10b981]" : "text-[var(--dashboard-text)]/70"}`}>
                         {canal.coutClient}
                       </td>
-                      <td className={`py-2.5 text-right font-bold font-figures ${isGreen ? "text-[#10b981]" : "text-[#f59e0b]"}`}>
+                      <td className={`py-2.5 text-right font-figures-bold ${isGreen ? "text-[#10b981]" : "text-[#f59e0b]"}`}>
                         {canal.reviennent} %
                       </td>
-                      <td className={`py-2.5 text-right font-bold font-figures ${canal.isOrganique ? "text-[#10b981]" : ""}`}>
+                      <td className={`py-2.5 text-right font-figures-bold ${canal.isOrganique ? "text-[#10b981]" : ""}`}>
                         {canal.valeur}
                       </td>
                     </tr>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, SectionHeader, Tag, useMockSave } from "../dashboard-accueil/shared";
+import { Card, SectionHeader, Tag, texteAvecChiffres, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -72,7 +72,7 @@ export default function PageDeCommande({ first = false }: { first?: boolean }) {
           type="button"
           onClick={() => trigger()}
           disabled={saving}
-          className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
+          className="rounded-full bg-[#141220] px-4 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
         >
           {saving ? t("Enregistrement…", "Saving…") : done ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
         </button>
@@ -82,7 +82,7 @@ export default function PageDeCommande({ first = false }: { first?: boolean }) {
         <Card title={t("Le lien de commande", "The order link")} titleTab className="!bg-[var(--dashboard-card-bg)]">
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-xs">
             <span className="text-[var(--dashboard-text)]/40">awa-beaute.liivremoi.com/</span>
-            <span className="font-bold text-[var(--dashboard-text)]">{EXEMPLES_LIEN[format]}</span>
+            <span className="font-figures-bold text-[var(--dashboard-text)]">{EXEMPLES_LIEN[format]}</span>
             <button
               type="button"
               onClick={copier}
@@ -117,7 +117,7 @@ export default function PageDeCommande({ first = false }: { first?: boolean }) {
           </p>
           <div className="mt-3 space-y-2">
             <ImposeRow
-              titre={t("Le délai de livraison · 4 heures en moyenne", "Delivery time · 4 hours on average")}
+              titre={texteAvecChiffres(t("Le délai de livraison · 4 heures en moyenne", "Delivery time · 4 hours on average"))}
               note={t(
                 "Le même sur toutes les pages du réseau. Seules les livraisons express font exception.",
                 "The same on every page in the network. Only express deliveries are an exception."
@@ -171,7 +171,7 @@ function FormatChip({ label, active, onClick }: { label: string; active: boolean
   );
 }
 
-function ImposeRow({ titre, note }: { titre: string; note: string }) {
+function ImposeRow({ titre, note }: { titre: React.ReactNode; note: string }) {
   const { t } = useDashboardLangue();
   return (
     <div className="flex items-center gap-3 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5">

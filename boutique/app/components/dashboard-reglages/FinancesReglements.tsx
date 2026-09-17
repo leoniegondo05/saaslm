@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, SectionHeader, Tag, useMockSave } from "../dashboard-accueil/shared";
+import { Card, SectionHeader, Tag, texteAvecChiffres, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import ChangerCarteModal, { type Carte } from "./ChangerCarteModal";
 
@@ -66,7 +66,7 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
           type="button"
           onClick={() => trigger()}
           disabled={saving}
-          className="rounded-full bg-[#141220] px-4 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
+          className="rounded-full bg-[#141220] px-4 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
         >
           {saving ? t("Enregistrement…", "Saving…") : done ? t("✓ Enregistré", "✓ Saved") : t("Enregistrer", "Save")}
         </button>
@@ -132,8 +132,8 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
               <CardIcon />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-[var(--dashboard-text)]">{carte.marque} •••• {carte.derniers4}</p>
-              <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/50">{t("Prélevée le 14 de chaque mois", "Charged on the 14th of each month")}</p>
+              <p className="text-xs font-bold text-[var(--dashboard-text)]">{carte.marque} •••• <span className="font-figures">{carte.derniers4}</span></p>
+              <p className="mt-0.5 text-[11px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(t("Prélevée le 14 de chaque mois", "Charged on the 14th of each month"))}</p>
             </div>
             <Tag tone="ok" className="shrink-0">
               {t("Active", "Active")}
@@ -169,6 +169,7 @@ export default function FinancesReglements({ first = false }: { first?: boolean 
               value={contribuable}
               placeholder={t("Non renseigné", "Not provided")}
               onChange={setContribuable}
+              numeric
             />
           </div>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -221,11 +222,13 @@ function Champ({
   value,
   onChange,
   placeholder,
+  numeric = false,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  numeric?: boolean;
 }) {
   return (
     <div>
@@ -235,7 +238,7 @@ function Champ({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className={champBoxClasses}
+        className={numeric ? `${champBoxClasses} font-figures` : champBoxClasses}
       />
     </div>
   );

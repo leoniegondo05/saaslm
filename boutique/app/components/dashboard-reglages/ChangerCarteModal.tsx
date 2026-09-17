@@ -107,7 +107,7 @@ export default function ChangerCarteModal({
             value={numero}
             onChange={(e) => setNumero(formaterNumero(e.target.value))}
             placeholder="4417 0000 0000 0000"
-            className="mt-1.5 w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2.5 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04]"
+            className="mt-1.5 w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2.5 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04] font-figures"
           />
         </div>
 
@@ -119,7 +119,7 @@ export default function ChangerCarteModal({
               value={expiration}
               onChange={(e) => setExpiration(formaterExpiration(e.target.value))}
               placeholder="MM/AA"
-              className="mt-1.5 w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2.5 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04]"
+              className="mt-1.5 w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2.5 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04] font-figures"
             />
           </div>
           <div>
@@ -129,7 +129,7 @@ export default function ChangerCarteModal({
               value={cvc}
               onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
               placeholder="123"
-              className="mt-1.5 w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2.5 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04]"
+              className="mt-1.5 w-full rounded-xl border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-3 py-2.5 text-sm outline-none focus:border-brand-pink dark:bg-white/[0.04] font-figures"
             />
           </div>
         </div>

@@ -57,12 +57,12 @@ function CountBadge({ count, color, label }: { count: number; color: string; lab
   return (
     <div className="flex shrink-0 flex-col items-center gap-1">
       <span
-        className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold font-figures"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-figures-bold"
         style={{ background: `${color}1f`, color }}
       >
         {count}
       </span>
-      <span className="text-center text-[7px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{label}</span>
+      <span className="text-center text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{label}</span>
     </div>
   );
 }
@@ -95,7 +95,7 @@ function CompareRow({ label, value, pct, color, strong = false }: { label: strin
     <div className="mt-2.5 flex items-center justify-between gap-2 text-[11px] first:mt-0">
       <span className="text-[var(--dashboard-text)]/55">{label}</span>
       <span className="flex items-center gap-2">
-        <span className={`font-figures ${strong ? "font-bold" : "font-semibold"}`} style={strong ? { color } : undefined}>
+        <span className={`font-figures-bold ${strong ? "" : "font-semibold"}`} style={strong ? { color } : undefined}>
           {value}
         </span>
         <span className="w-20 shrink-0">
@@ -306,7 +306,7 @@ export default function FinancesSection({ first = true, activeDate }: { first?: 
           <h3 className="text-sm font-bold tracking-tight sm:text-base">{t("Solde de votre sous-compte", "Your sub-account balance")}</h3>
           <Nature code="B" />
         </div>
-        <p className="mt-2 text-2xl font-bold tracking-tight font-figures">{fmtF(soldeTotal)}</p>
+        <p className="mt-2 text-2xl font-bold tracking-tight font-figures-bold text-slate-950 dark:text-slate-50">{fmtF(soldeTotal)}</p>
         <div className="mt-3 flex h-2.5 w-full overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]">
           <span className="h-full" style={{ width: `${soldePctAvailable}%`, background: "linear-gradient(90deg,#4FE0AE,#38BDF8)" }} />
           <span className="h-full" style={{ width: `${soldePctSuspended}%`, background: "linear-gradient(90deg,#FFB84D,#FF9A3D)" }} />
@@ -425,16 +425,16 @@ export default function FinancesSection({ first = true, activeDate }: { first?: 
           </div>
           <div className="flex flex-wrap items-start gap-4 sm:gap-5">
             <div className="text-center">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge brute", "Gross margin")}</p>
-              <p className="mt-0.5 text-sm font-bold font-figures">{fmtPct1(prGrossMarginPct)}</p>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge brute", "Gross margin")}</p>
+              <p className="mt-0.5 text-sm font-figures-bold">{fmtPct1(prGrossMarginPct)}</p>
             </div>
             <div className="text-center">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge de contribution", "Contribution margin")}</p>
-              <p className="mt-0.5 text-sm font-bold font-figures" style={{ color: "#0C86BE" }}>{fmtPct1(prContributionMarginPct)}</p>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge de contribution", "Contribution margin")}</p>
+              <p className="mt-0.5 text-sm font-figures-bold" style={{ color: "#0C86BE" }}>{fmtPct1(prContributionMarginPct)}</p>
             </div>
             <div className="text-center">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge nette", "Net margin")}</p>
-              <p className="mt-0.5 text-sm font-bold font-figures" style={{ color: "#0E9F6E" }}>{fmtPct1(prNetMarginPct)}</p>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge nette", "Net margin")}</p>
+              <p className="mt-0.5 text-sm font-figures-bold" style={{ color: "#0E9F6E" }}>{fmtPct1(prNetMarginPct)}</p>
             </div>
             <Nature code="B" />
           </div>
@@ -488,20 +488,20 @@ export default function FinancesSection({ first = true, activeDate }: { first?: 
 
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <div className="rounded-2xl p-3" style={{ background: "var(--dashboard-surface-2)" }}>
-            <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge brute", "Gross margin")}</p>
-            <p className="mt-1 text-lg font-bold font-figures">{fmtF(prGrossMargin)}</p>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge brute", "Gross margin")}</p>
+            <p className="mt-1 text-lg font-figures-bold">{fmtF(prGrossMargin)}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Ce que laisse la marchandise, avant tout frais.", "What the goods leave, before any fees.")}</p>
           </div>
           <div className="rounded-2xl p-3" style={{ background: "rgba(56,189,248,.08)" }}>
-            <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge de contribution", "Contribution margin")}</p>
-            <p className="mt-1 text-lg font-bold font-figures" style={{ color: "#0C86BE" }}>{fmtF(prContributionMargin)}</p>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Marge de contribution", "Contribution margin")}</p>
+            <p className="mt-1 text-lg font-figures-bold" style={{ color: "#0C86BE" }}>{fmtF(prContributionMargin)}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
               {t("Après logistique et publicité. C'est le chiffre qui dit si le modèle tient : sous zéro, vendre plus fait perdre plus.", "After logistics and ads. This is the number that says if the model holds: below zero, selling more loses more.")}
             </p>
           </div>
           <div className="rounded-2xl p-3" style={{ background: "rgba(79,224,174,.14)" }}>
-            <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Résultat net", "Net result")}</p>
-            <p className="mt-1 text-lg font-bold font-figures" style={{ color: "#0E9F6E" }}>{fmtF(prNetResult)}</p>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Résultat net", "Net result")}</p>
+            <p className="mt-1 text-lg font-figures-bold" style={{ color: "#0E9F6E" }}>{fmtF(prNetResult)}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">{t("Après commission et abonnement. Ce qui reste vraiment.", "After commission and subscription. What's really left.")}</p>
           </div>
         </div>
@@ -523,7 +523,7 @@ export default function FinancesSection({ first = true, activeDate }: { first?: 
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("La même analyse, ramenée à une commande, de chaque côté", "The same analysis, brought down to one order, on each side")}</p>
           </div>
           <Ring pct={cmpRingPct} color={STOCKAGE_COLOR} trackColor={DROP_COLOR} size={72}>
-            <span className="text-xs font-bold font-figures">{cmpRingPct} %</span>
+            <span className="text-xs font-figures-bold">{cmpRingPct} %</span>
             <span className="text-[7px] text-[var(--dashboard-text)]/40">{t("stockage", "warehousing")}</span>
           </Ring>
         </div>
@@ -534,7 +534,7 @@ export default function FinancesSection({ first = true, activeDate }: { first?: 
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="text-[13px] font-bold">{t("Stockage management", "Warehousing")}</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-[var(--dashboard-text)]/45">
+                <p className="mt-0.5 text-[10px] leading-snug text-[var(--dashboard-text)]/40">
                   {t("Votre stock, déposé chez le partenaire. Vous avancez l'argent, vous gardez la marge.", "Your stock, held at the partner's. You front the cash, you keep the margin.")}
                 </p>
               </div>
@@ -550,12 +550,12 @@ export default function FinancesSection({ first = true, activeDate }: { first?: 
             <Divider />
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Taux de contribution", "Contribution rate")}</p>
-                <p className="mt-0.5 text-sm font-bold font-figures" style={{ color: STOCKAGE_COLOR }}>{fmtPct1(cmpStockageContributionRate)}</p>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Taux de contribution", "Contribution rate")}</p>
+                <p className="mt-0.5 text-sm font-figures-bold" style={{ color: STOCKAGE_COLOR }}>{fmtPct1(cmpStockageContributionRate)}</p>
               </div>
               <div className="text-right">
-                <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Argent avancé", "Cash advanced")}</p>
-                <p className="mt-0.5 text-sm font-bold font-figures">{fmtF(stockDeposited)}</p>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Argent avancé", "Cash advanced")}</p>
+                <p className="mt-0.5 text-sm font-figures-bold">{fmtF(stockDeposited)}</p>
               </div>
             </div>
           </div>
@@ -565,7 +565,7 @@ export default function FinancesSection({ first = true, activeDate }: { first?: 
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="text-[13px] font-bold">{t("Dropshipping", "Dropshipping")}</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-[var(--dashboard-text)]/45">
+                <p className="mt-0.5 text-[10px] leading-snug text-[var(--dashboard-text)]/40">
                   {t("Le stock du partenaire. Vous n'avancez rien, il retient son prix à chaque vente.", "The partner's stock. You front nothing, they keep their price on every sale.")}
                 </p>
               </div>
@@ -581,12 +581,12 @@ export default function FinancesSection({ first = true, activeDate }: { first?: 
             <Divider />
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Taux de contribution", "Contribution rate")}</p>
-                <p className="mt-0.5 text-sm font-bold font-figures" style={{ color: DROP_COLOR }}>{fmtPct1(cmpDropContributionRate)}</p>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Taux de contribution", "Contribution rate")}</p>
+                <p className="mt-0.5 text-sm font-figures-bold" style={{ color: DROP_COLOR }}>{fmtPct1(cmpDropContributionRate)}</p>
               </div>
               <div className="text-right">
-                <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Argent avancé", "Cash advanced")}</p>
-                <p className="mt-0.5 text-sm font-bold font-figures">0 F</p>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Argent avancé", "Cash advanced")}</p>
+                <p className="mt-0.5 text-sm font-figures-bold">0 F</p>
               </div>
             </div>
           </div>
@@ -665,7 +665,7 @@ export default function FinancesSection({ first = true, activeDate }: { first?: 
         <p className="mt-2 text-[10px] text-[var(--dashboard-text)]/40">{t("Un refus coûte selon le moment où il tombe", "A refusal costs depending on when it lands")}</p>
         <div className="mt-3 flex items-center gap-4">
           <Ring pct={refDeliveredPct} color="#4FE0AE">
-            <span className="text-sm font-bold font-figures">{fmtPct1(refDeliveredPct)}</span>
+            <span className="text-sm font-figures-bold">{fmtPct1(refDeliveredPct)}</span>
             <span className="text-[8px] text-[var(--dashboard-text)]/40">{t("Livrées", "Delivered")}</span>
           </Ring>
           <div className="flex-1 space-y-1.5 text-xs">
@@ -683,14 +683,14 @@ export default function FinancesSection({ first = true, activeDate }: { first?: 
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
               {t("Le centre d'appel annule depuis son interface avant que la course démarre. Aucun frais logistique, aucune marchandise sortie. Seule la publicité est perdue.", "The call center cancels from its interface before the run starts. No logistics fee, no goods out. Only the ad spend is lost.")}
             </p>
-            <p className="mt-1.5 text-xs font-bold font-figures" style={{ color: "#C07A0C" }}>{fmtF(refCostCall)}</p>
+            <p className="mt-1.5 text-xs font-figures-bold" style={{ color: "#C07A0C" }}>{fmtF(refCostCall)}</p>
           </div>
           <div className="rounded-xl p-2.5" style={{ background: "rgba(255,122,128,.1)" }}>
             <p className="text-[10px] font-semibold">{texteAvecChiffres(t(`Refusée à la porte · ${refRefusedDoor}`, `Refused at the door · ${refRefusedDoor}`))}</p>
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/50">
               {t("Le livreur a démarré sa course et marque la commande non livrée. La livraison est due, la récupération aussi, et la marchandise repart.", "The rider has started the run and marks the order not delivered. Delivery is due, so is the pickup, and the goods go back.")}
             </p>
-            <p className="mt-1.5 text-xs font-bold font-figures" style={{ color: "#DC3A45" }}>{fmtF(refCostDoor)}</p>
+            <p className="mt-1.5 text-xs font-figures-bold" style={{ color: "#DC3A45" }}>{fmtF(refCostDoor)}</p>
           </div>
         </div>
         <Divider />
@@ -754,8 +754,8 @@ export default function FinancesSection({ first = true, activeDate }: { first?: 
             <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{t("Ce qui est immobilisé et ne peut pas servir aujourd'hui", "What's tied up and can't be used today")}</p>
           </div>
           <div className="text-right">
-            <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Total immobilisé", "Total tied up")}</p>
-            <p className="mt-0.5 text-lg font-bold font-figures" style={{ color: "#C07A0C" }}>{fmtF(immTotal)}</p>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Total immobilisé", "Total tied up")}</p>
+            <p className="mt-0.5 text-lg font-figures-bold" style={{ color: "#C07A0C" }}>{fmtF(immTotal)}</p>
           </div>
         </div>
         <StackedBar segments={[{ pct: immPctStock, color: "#8B5CF6" }, { pct: immPctSuspended, color: "#FFB84D" }, { pct: immPctShipped, color: "#38BDF8" }, { pct: immPctRefused, color: "#FF7A80" }]} />
@@ -788,14 +788,14 @@ export default function FinancesSection({ first = true, activeDate }: { first?: 
           ].map((c, i) => (
             <div key={i} className="flex flex-1 items-center gap-2.5">
               <div className="min-w-0 flex-1 rounded-lg bg-[var(--dashboard-surface-2)] px-3 py-2.5">
-                <p className="text-xs font-bold font-figures">{c.v}</p>
+                <p className="text-xs font-figures-bold">{c.v}</p>
                 <p className="mt-0.5 text-[8px] leading-tight text-[var(--dashboard-text)]/40">{c.l}</p>
               </div>
               <span className="shrink-0 text-[var(--dashboard-text)]/25">{i === 3 ? "=" : "→"}</span>
             </div>
           ))}
           <div className="min-w-0 flex-1 rounded-lg px-3 py-2.5" style={{ background: "rgba(255,184,77,.15)" }}>
-            <p className="text-xs font-bold font-figures" style={{ color: "#C07A0C" }}>{fmtJours(cycleDaysTotal)}</p>
+            <p className="text-xs font-figures-bold" style={{ color: "#C07A0C" }}>{fmtJours(cycleDaysTotal)}</p>
             <p className="mt-0.5 text-[8px] leading-tight text-[var(--dashboard-text)]/40">{t("Du franc sorti au franc disponible", "From cash out to cash available")}</p>
           </div>
         </div>
@@ -906,7 +906,7 @@ export default function FinancesSection({ first = true, activeDate }: { first?: 
       />
 
       {/* Légende : quelle couleur renvoie à quelle façon de vendre */}
-      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-2xl bg-[var(--dashboard-glass)] px-4 py-3 text-[10px] text-[var(--dashboard-text)]/50">
+      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-glass)] px-4 py-3 text-[10px] text-[var(--dashboard-text)]/50 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         <span className="flex items-center gap-1.5"><Nature code="S" /> {t("Stockage management", "Warehousing")}</span>
         <span className="flex items-center gap-1.5"><Nature code="D" /> {t("Dropshipping", "Drop-shipping")}</span>
         <span className="flex items-center gap-1.5"><Nature code="B" /> {t("Les deux", "Both")}</span>

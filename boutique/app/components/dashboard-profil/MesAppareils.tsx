@@ -108,7 +108,7 @@ function AppareilCard({ appareil, onDeconnecter }: { appareil: Appareil; onDecon
       <p className="mt-4 text-lg font-bold text-[var(--dashboard-text)]">
         {appareil.type === "ordinateur" ? t("Ordinateur", "Computer") : t("Téléphone", "Phone")}
       </p>
-      <p className="mt-1 text-sm text-[var(--dashboard-text)]/45">
+      <p className="mt-1 text-sm text-[var(--dashboard-text)]/40">
         {appareil.lieu} · {t(appareil.quand, appareil.quandEn)}
       </p>
 
@@ -121,7 +121,7 @@ function AppareilCard({ appareil, onDeconnecter }: { appareil: Appareil; onDecon
           </span>
         )}
         {estActuel ? (
-          <span className="text-xs text-[var(--dashboard-text)]/35">{t("Ne peut pas se fermer", "Can't be closed")}</span>
+          <span className="text-xs text-[var(--dashboard-text)]/40">{t("Ne peut pas se fermer", "Can't be closed")}</span>
         ) : (
           <button
             type="button"

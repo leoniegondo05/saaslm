@@ -70,7 +70,7 @@ export default function SectionsPanel({
             return (
               <div key={sec.id}>
                 {nouveauGroupe && (
-                  <p className="mb-1.5 mt-3 px-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35 first:mt-0">
+                  <p className="mb-1.5 mt-3 px-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40 first:mt-0">
                     {t(def.groupe, def.groupeEn)}
                   </p>
                 )}
@@ -156,7 +156,7 @@ function StylePanel({
   return (
     <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-0.5">
       <div>
-        <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+        <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
           {t("Modèle de départ", "Starting theme")}
         </p>
         <div className="grid grid-cols-2 gap-1.5">
@@ -183,7 +183,7 @@ function StylePanel({
       <ChampCouleur label={t("Texte", "Text")} value={state.style.couleurTexte} onChange={(v) => set("couleurTexte", v)} />
 
       <div>
-        <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+        <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
           {t("Police", "Typeface")}
         </p>
         <div className="rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-[11px]">
@@ -195,7 +195,7 @@ function StylePanel({
       </div>
 
       <div>
-        <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+        <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
           {t("Forme des boutons", "Button shape")}
         </p>
         <div className="grid grid-cols-3 gap-1 rounded-xl bg-[var(--dashboard-text)]/[0.05] p-1">
@@ -215,7 +215,7 @@ function StylePanel({
       </div>
 
       <div>
-        <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+        <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
           {t("Remplissage des boutons", "Button fill")}
         </p>
         <div className="grid grid-cols-3 gap-1 rounded-xl bg-[var(--dashboard-text)]/[0.05] p-1">

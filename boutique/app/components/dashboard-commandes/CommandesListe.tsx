@@ -193,7 +193,7 @@ export default function CommandesListe({
                   <NombreEtMot nombre={relancees} mot={t("relancée", "relaunched")} couleur="#3a1d8a" />
                   <div className="text-right">
                     <p className="text-[9px] uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Encaissé", "Collected")}</p>
-                    <p className="text-sm font-bold text-[#178a3f] font-figures">{formatCfa(encaisseJour)}</p>
+                    <p className="text-sm text-[#178a3f] font-figures-bold">{formatCfa(encaisseJour)}</p>
                   </div>
                 </div>
               </div>
@@ -205,7 +205,7 @@ export default function CommandesListe({
                       {[t("Commande", "Order"), t("Payé", "Paid"), t("Retenues", "Withheld"), t("Net", "Net"), t("Statut", "Status")].map((h, i) => (
                         <p
                           key={h}
-                          className={`text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35 ${i > 0 ? "text-right" : ""} ${i === 4 ? "text-left" : ""}`}
+                          className={`text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40 ${i > 0 ? "text-right" : ""} ${i === 4 ? "text-left" : ""}`}
                         >
                           {h}
                         </p>
@@ -229,7 +229,7 @@ export default function CommandesListe({
         })}
 
         {joursFiltres.length === 0 && (
-          <p className="rounded-xl border border-[var(--dashboard-text)]/10 px-4 py-6 text-center text-xs text-[var(--dashboard-text)]/45">
+          <p className="rounded-xl border border-[var(--dashboard-text)]/10 px-4 py-6 text-center text-xs text-[var(--dashboard-text)]/40">
             {t("Aucune commande ne correspond à votre recherche.", "No order matches your search.")}
           </p>
         )}
@@ -261,7 +261,7 @@ function LigneCommande({
 
         <div className="min-w-0 pl-2">
           <div className="flex items-baseline gap-2">
-            <p className="text-[12.5px] font-bold text-[var(--dashboard-text)] font-figures">{commande.id}</p>
+            <p className="text-[12.5px] text-[var(--dashboard-text)] font-figures-bold">{commande.id}</p>
             {commande.quantite > 1 && (
               <span className="shrink-0 rounded-full bg-[var(--dashboard-text)]/[0.08] px-1.5 py-0.5 text-[9px] font-bold text-[var(--dashboard-text)]/60">
                 ×{commande.quantite}
@@ -283,9 +283,9 @@ function LigneCommande({
         </div>
 
         {suspendue ? (
-          <p className="text-right text-[13px] font-bold text-[var(--dashboard-text)]/35 line-through font-figures">{formatCfa(net)}</p>
+          <p className="text-right text-[13px] text-[var(--dashboard-text)]/40 line-through font-figures-bold">{formatCfa(net)}</p>
         ) : (
-          <p className="flex items-center justify-end gap-1 text-[15px] font-bold tracking-tight text-[#178a3f] font-figures">
+          <p className="flex items-center justify-end gap-1 text-sm tracking-tight text-[#178a3f] font-figures-bold">
             <TriangleIcon filled />
             {formatCfa(net)}
           </p>
@@ -400,10 +400,10 @@ function NombreEtMot({ nombre, mot, couleur }: { nombre: number; mot: string; co
   if (nombre === 0) return null;
   return (
     <span className="flex items-baseline gap-1">
-      <span className="text-sm font-bold font-figures" style={couleur ? { color: couleur } : undefined}>
+      <span className="text-sm font-figures-bold" style={couleur ? { color: couleur } : undefined}>
         {nombre}
       </span>
-      <span className="text-[10px] text-[var(--dashboard-text)]/45">{mot}</span>
+      <span className="text-[10px] text-[var(--dashboard-text)]/40">{mot}</span>
     </span>
   );
 }
@@ -429,7 +429,7 @@ function KpiTile({
           <span className="h-2 w-2 rounded-full" style={{ background: dot }} />
         </span>
       </div>
-      <p className={`mt-2 text-2xl font-bold tracking-tight font-figures ${valueClassName}`}>{value}</p>
+      <p className={`mt-2 text-2xl tracking-tight font-figures-bold ${valueClassName}`}>{value}</p>
       {note && <p className="mt-1 text-[10px] text-[var(--dashboard-text)]/40">{note}</p>}
     </div>
   );
@@ -447,7 +447,7 @@ function PayeEncaisseBarChart({ data }: { data: { label: string; paye: number; e
   const ticks = 4;
   return (
     <div className="mt-2">
-      <div className="flex items-center gap-4 text-[10px] text-[var(--dashboard-text)]/45">
+      <div className="flex items-center gap-4 text-[10px] text-[var(--dashboard-text)]/40">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-[#5AA9FF]" />
           {t("Payé", "Paid")}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Divider, Tag, useMockSave } from "../dashboard-accueil/shared";
+import { Divider, Tag, texteAvecChiffres, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -206,10 +206,10 @@ export default function CreerCollaborateur({
         </div>
         <nav className="flex flex-wrap gap-1.5">
           {[
-            { href: "#bloc-qui", label: t("1 · Qui", "1 · Who") },
-            { href: "#bloc-role", label: t("2 · Son rôle", "2 · Their role") },
-            { href: "#bloc-duree", label: t("3 · Combien de temps", "3 · How long") },
-            { href: "#bloc-acces", label: t("4 · Ses accès", "4 · Their access") },
+            { href: "#bloc-qui", label: texteAvecChiffres(t("1 · Qui", "1 · Who")) },
+            { href: "#bloc-role", label: texteAvecChiffres(t("2 · Son rôle", "2 · Their role")) },
+            { href: "#bloc-duree", label: texteAvecChiffres(t("3 · Combien de temps", "3 · How long")) },
+            { href: "#bloc-acces", label: texteAvecChiffres(t("4 · Ses accès", "4 · Their access")) },
           ].map((x) => (
             <a
               key={x.href}
@@ -232,7 +232,7 @@ export default function CreerCollaborateur({
           <div id="bloc-qui" className="scroll-mt-24 rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] sm:p-5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
-                {t("1 · Qui est cette personne", "1 · Who is this person")}
+                {texteAvecChiffres(t("1 · Qui est cette personne", "1 · Who is this person"))}
               </p>
               <Tag tone="ko">{t("Obligatoire", "Required")}</Tag>
             </div>
@@ -261,7 +261,7 @@ export default function CreerCollaborateur({
                   onChange={(e) => setTelephone(e.target.value)}
                   type="tel"
                   placeholder="+225 07 00 00 00 00"
-                  className="w-full min-w-0 bg-transparent text-xs font-semibold text-[var(--dashboard-text)] outline-none placeholder:font-normal placeholder:text-[var(--dashboard-text)]/30"
+                  className="w-full min-w-0 bg-transparent text-xs font-semibold text-[var(--dashboard-text)] outline-none placeholder:font-normal placeholder:text-[var(--dashboard-text)]/30 font-figures"
                 />
               </Field>
               <Field
@@ -288,7 +288,7 @@ export default function CreerCollaborateur({
           {/* Bloc 2 — Son rôle */}
           <div id="bloc-role" className="scroll-mt-24 rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] sm:p-5">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{t("2 · Son rôle", "2 · Their role")}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("2 · Son rôle", "2 · Their role"))}</p>
               <Tag tone="neutral">{t("Quatre rôles, pas un de plus", "Four roles, not one more")}</Tag>
             </div>
 
@@ -337,7 +337,7 @@ export default function CreerCollaborateur({
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
                 {t("Les pages que son rôle ouvre", "The pages their role opens")}
               </p>
-              <Tag tone="dark">{role ? `${pages.size} ${t("sur", "of")} ${PAGES.length}` : `0 ${t("sur", "of")} ${PAGES.length}`}</Tag>
+              <Tag tone="dark">{texteAvecChiffres(role ? `${pages.size} ${t("sur", "of")} ${PAGES.length}` : `0 ${t("sur", "of")} ${PAGES.length}`)}</Tag>
             </div>
             <div className="mt-2.5 flex flex-wrap gap-1.5">
               {PAGES.map((p) => {
@@ -352,7 +352,7 @@ export default function CreerCollaborateur({
                     className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold transition disabled:cursor-not-allowed ${
                       cochee
                         ? "bg-[#dcf5e3] text-[#178a3f]"
-                        : "bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/35"
+                        : "bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/40"
                     }`}
                   >
                     {cochee && <CheckIcon />}
@@ -374,8 +374,8 @@ export default function CreerCollaborateur({
           {/* Bloc 3 — Combien de temps */}
           <div id="bloc-duree" className="scroll-mt-24 rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] sm:p-5">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{t("3 · Combien de temps", "3 · How long")}</p>
-              <Tag tone="pink">{t(DUREES.find((d) => d.key === duree)!.label, DUREES.find((d) => d.key === duree)!.labelEn)}</Tag>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("3 · Combien de temps", "3 · How long"))}</p>
+              <Tag tone="pink">{texteAvecChiffres(t(DUREES.find((d) => d.key === duree)!.label, DUREES.find((d) => d.key === duree)!.labelEn))}</Tag>
             </div>
 
             <div className="mt-3.5 flex flex-wrap gap-1.5">
@@ -390,7 +390,7 @@ export default function CreerCollaborateur({
                       : "bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/60 hover:bg-[var(--dashboard-text)]/[0.1]"
                   }`}
                 >
-                  {t(d.label, d.labelEn)}
+                  {texteAvecChiffres(t(d.label, d.labelEn))}
                 </button>
               ))}
             </div>
@@ -421,17 +421,17 @@ export default function CreerCollaborateur({
             </div>
 
             <p className="mt-3 text-[11px] leading-relaxed text-[var(--dashboard-text)]/50">
-              {t(
+              {texteAvecChiffres(t(
                 `Avant la première date, le compte existe mais n'ouvre rien. Après la seconde, il se ferme tout seul et son code cesse d'être reconnu. Fin prévue : ${formatDateLongue(fin)}.`,
                 `Before the first date, the account exists but opens nothing. After the second, it closes itself and its code stops being recognized. Planned end: ${formatDateLongue(fin)}.`
-              )}
+              ))}
             </p>
           </div>
 
           {/* Bloc 4 — Ses accès */}
           <div id="bloc-acces" className="scroll-mt-24 rounded-2xl card-tint p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] sm:p-5">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{t("4 · Ses accès", "4 · Their access")}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("4 · Ses accès", "4 · Their access"))}</p>
               <Tag tone="ok">{t("Générés", "Generated")}</Tag>
             </div>
 

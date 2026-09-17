@@ -204,12 +204,12 @@ export default function OuvrirLitige({ first = true }: { first?: boolean }) {
                   >
                     <div className="min-w-0">
                       <p className="truncate text-xs font-semibold">{c.id}</p>
-                      <p className="mt-0.5 truncate text-[10px] text-[var(--dashboard-text)]/45">
+                      <p className="mt-0.5 truncate text-[10px] text-[var(--dashboard-text)]/40">
                         {c.produit} · {formatCfa(c.montantPaye)}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
-                      <span className="text-[10px] text-[var(--dashboard-text)]/45">
+                      <span className="text-[10px] text-[var(--dashboard-text)]/40">
                         {t("Reçu il y a", "Received")} {ecoule(c)[langue === "EN" ? "texteEn" : "texte"]}
                       </span>
                       <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${eligible ? "text-[#178a3f]" : "text-[var(--dashboard-text)]/30"}`}>
@@ -272,7 +272,7 @@ export default function OuvrirLitige({ first = true }: { first?: boolean }) {
                 <button
                   type="button"
                   onClick={() => fichierRef.current?.click()}
-                  className="flex aspect-square items-center justify-center rounded-xl border border-dashed border-[var(--dashboard-text)]/20 text-[var(--dashboard-text)]/35 transition hover:border-brand-pink/40 hover:text-brand-pink"
+                  className="flex aspect-square items-center justify-center rounded-xl border border-dashed border-[var(--dashboard-text)]/20 text-[var(--dashboard-text)]/40 transition hover:border-brand-pink/40 hover:text-brand-pink"
                   aria-label={t("Ajouter une preuve", "Add proof")}
                 >
                   <IconPlus />

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { Tag } from "../../dashboard-accueil/shared";
+import { Tag, texteAvecChiffres } from "../../dashboard-accueil/shared";
 import { libelleCombinaison } from "./combinaisons";
 import type { Attribut, Combinaison } from "./types";
 
@@ -137,12 +137,12 @@ export default function VariantesProduit({
           {attributs.map((attribut) => (
             <div key={attribut.id} className="rounded-2xl border border-[var(--dashboard-text)]/10 p-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-bold">{attribut.nom}</span>
+                <span className="text-sm font-bold">{texteAvecChiffres(attribut.nom)}</span>
                 <div className="flex shrink-0 items-center gap-2">
-                  <button type="button" onClick={() => retirerAttribut(attribut.id)} className="text-[9px] text-[var(--dashboard-text)]/35 hover:text-[#c8262d]">
+                  <button type="button" onClick={() => retirerAttribut(attribut.id)} className="text-[9px] text-[var(--dashboard-text)]/40 hover:text-[#c8262d]">
                     {t("Retirer", "Remove")}
                   </button>
-                  <Tag tone="neutral">{t(`${attribut.valeurs.length} valeurs`, `${attribut.valeurs.length} values`)}</Tag>
+                  <Tag tone="neutral">{texteAvecChiffres(t(`${attribut.valeurs.length} valeurs`, `${attribut.valeurs.length} values`))}</Tag>
                 </div>
               </div>
 
@@ -152,7 +152,7 @@ export default function VariantesProduit({
                     {attribut.valeurs.map((v) => (
                       <span key={v.id} className="flex items-center gap-1.5 rounded-full bg-black/[0.04] px-2.5 py-1.5 text-[10px] font-medium dark:bg-white/[0.06]">
                         <span className="h-2.5 w-2.5 rounded-full border border-black/10" style={{ background: v.couleurHex }} />
-                        {v.label}
+                        <span>{texteAvecChiffres(v.label)}</span>
                         <button type="button" onClick={() => retirerValeur(attribut.id, v.id)} aria-label={t("Retirer cette valeur", "Remove this value")} className="text-[var(--dashboard-text)]/40">
                           ×
                         </button>
@@ -169,7 +169,7 @@ export default function VariantesProduit({
                   {attribut.valeurs.map((v) => (
                     <div key={v.id} className="group relative">
                       <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--dashboard-text)]/15 bg-black/[0.03] text-[11px] font-semibold dark:bg-white/[0.06]">
-                        {v.label}
+                        {texteAvecChiffres(v.label)}
                       </span>
                       <button
                         type="button"
@@ -235,7 +235,7 @@ export default function VariantesProduit({
           ))}
           <NouvelAttributPersonnalise onValider={(nom) => ajouterAttribut(nom, "texte")} />
         </div>
-        <p className="mt-3 text-[9px] leading-snug text-[var(--dashboard-text)]/35">
+        <p className="mt-3 text-[9px] leading-snug text-[var(--dashboard-text)]/40">
           {t(
             "Ces types servent à tous vos produits : des tailles pour un vêtement, des pointures pour une chaussure, des contenances pour un flacon, une puissance pour un appareil. Un attribut que vous créez vous-même reste disponible pour vos produits suivants.",
             "These types apply to all your products: sizes for clothing, shoe sizes for footwear, capacities for a bottle, a power rating for an appliance. An attribute you create yourself stays available for your next products."
@@ -244,7 +244,7 @@ export default function VariantesProduit({
 
         <div className="my-3.5 h-px bg-[var(--dashboard-text)]/10" />
 
-        <p className="text-[9px] leading-snug text-[var(--dashboard-text)]/35">
+        <p className="text-[9px] leading-snug text-[var(--dashboard-text)]/40">
           {t(
             "Les valeurs se saisissent une par une, ou d'un coup en les séparant par une virgule. Une couleur se prend dans la palette, ou se trouve exactement à la roue.",
             "Values can be entered one by one, or all at once separated by a comma. A color can be picked from the palette, or found exactly with the wheel."
@@ -257,7 +257,7 @@ export default function VariantesProduit({
         <div className="flex items-center justify-between">
           <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">{t("Les combinaisons", "The combinations")}</p>
           <span className="rounded-full bg-brand-pink/10 px-2.5 py-1 text-[10px] font-semibold text-brand-pink">
-            {t(`${combinaisons.length} combinaisons`, `${combinaisons.length} combinations`)}
+            {texteAvecChiffres(t(`${combinaisons.length} combinaisons`, `${combinaisons.length} combinations`))}
           </span>
         </div>
 
@@ -267,19 +267,19 @@ export default function VariantesProduit({
           </p>
         ) : (
           <>
-          <p className="mt-1 text-[9px] text-[var(--dashboard-text)]/35">
+          <p className="mt-1 text-[9px] text-[var(--dashboard-text)]/40">
             {t("Cliquez une combinaison pour la mettre en avant : « Ce qui vous reste » se calcule sur elle.", "Click a combination to feature it: “What you keep” is calculated on it.")}
           </p>
           <div className="mt-2 overflow-x-auto">
             <table className="w-full min-w-[480px] border-collapse text-left text-xs">
               <thead>
                 <tr className="border-b border-[var(--dashboard-text)]/10">
-                  <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">{t("Combinaison", "Combination")}</th>
-                  <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">{t("Référence", "Reference")}</th>
-                  <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">{t("Achat", "Cost")}</th>
-                  <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">{t("Vente", "Price")}</th>
-                  <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">{t("Quantité", "Quantity")}</th>
-                  <th className="pb-2 text-right text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">{t("En vente", "For sale")}</th>
+                  <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Combinaison", "Combination")}</th>
+                  <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Référence", "Reference")}</th>
+                  <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Achat", "Cost")}</th>
+                  <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Vente", "Price")}</th>
+                  <th className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("Quantité", "Quantity")}</th>
+                  <th className="pb-2 text-right text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">{t("En vente", "For sale")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -293,11 +293,11 @@ export default function VariantesProduit({
                         title={t("Baser le calcul de marge sur cette combinaison", "Base the margin calculation on this combination")}
                         className="flex items-center gap-1.5 disabled:cursor-not-allowed"
                       >
-                        {libelleCombinaison(c, attributs)}
+                        <span>{texteAvecChiffres(libelleCombinaison(c, attributs))}</span>
                         {c.misEnAvant && <Tag tone="pink" className="!px-2 !py-0.5 !text-[8px]">{t("Mise en avant", "Featured")}</Tag>}
                       </button>
                     </td>
-                    <td className="py-2 pr-3 text-[var(--dashboard-text)]/50">{c.reference}</td>
+                    <td className="py-2 pr-3 text-[var(--dashboard-text)]/50"><span className="font-figures-bold">{c.reference}</span></td>
                     <td className="py-2 pr-3">
                       <input
                         type="number"
@@ -306,7 +306,7 @@ export default function VariantesProduit({
                         value={c.prixAchat ?? ""}
                         onChange={(e) => onCombinaisonChange(c.id, { prixAchat: parseMontant(e.target.value) })}
                         placeholder="—"
-                        className="w-20 rounded-lg border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-2 py-1 text-xs outline-none focus:border-brand-pink disabled:opacity-40 dark:bg-white/[0.04]"
+                        className="w-20 rounded-lg border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-2 py-1 text-xs outline-none focus:border-brand-pink disabled:opacity-40 dark:bg-white/[0.04] font-figures"
                       />
                     </td>
                     <td className="py-2 pr-3">
@@ -317,7 +317,7 @@ export default function VariantesProduit({
                         value={c.prixVente || ""}
                         onChange={(e) => onCombinaisonChange(c.id, { prixVente: parseMontant(e.target.value) ?? 0 })}
                         placeholder="—"
-                        className="w-20 rounded-lg border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-2 py-1 text-xs font-semibold outline-none focus:border-brand-pink disabled:opacity-40 dark:bg-white/[0.04]"
+                        className="w-20 rounded-lg border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-2 py-1 text-xs font-semibold outline-none focus:border-brand-pink disabled:opacity-40 dark:bg-white/[0.04] font-figures"
                       />
                     </td>
                     <td className="py-2 pr-3">
@@ -327,7 +327,7 @@ export default function VariantesProduit({
                         disabled={!c.active}
                         value={c.quantite}
                         onChange={(e) => onCombinaisonChange(c.id, { quantite: Math.max(0, Math.round(Number(e.target.value)) || 0) })}
-                        className="w-16 rounded-lg border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-2 py-1 text-xs outline-none focus:border-brand-pink disabled:opacity-40 dark:bg-white/[0.04]"
+                        className="w-16 rounded-lg border border-[var(--dashboard-text)]/15 bg-black/[0.02] px-2 py-1 text-xs outline-none focus:border-brand-pink disabled:opacity-40 dark:bg-white/[0.04] font-figures"
                       />
                     </td>
                     <td className="py-2 text-right">
@@ -354,7 +354,7 @@ export default function VariantesProduit({
             combinaison (celles déjà retouchées à la main sont aussi
             écrasées — c'est le but du bouton, pas un bug). */}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <p className="max-w-[58%] text-[9px] leading-snug text-[var(--dashboard-text)]/35">
+          <p className="max-w-[58%] text-[9px] leading-snug text-[var(--dashboard-text)]/40">
             {photoParCouleur
               ? t(
                   "Chaque couleur pourra recevoir sa propre photo une fois les photos ajoutées au produit.",

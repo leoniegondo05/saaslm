@@ -214,7 +214,7 @@ export default function SignalerProbleme({ first = true }: { first?: boolean }) 
                         <p className="text-xs font-semibold" style={{ color: on ? g.couleur : "var(--dashboard-text)" }}>
                           {t(g.label, g.labelEn)}
                         </p>
-                        <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/45">{t(g.note, g.noteEn)}</p>
+                        <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t(g.note, g.noteEn)}</p>
                       </span>
                     </button>
                   );
@@ -314,7 +314,7 @@ function DestinationBadge() {
       </span>
       <span className="leading-tight">
         <span className="block text-[11px] font-semibold text-[var(--dashboard-text)]">{t("Support technique LM", "LM technical support")}</span>
-        <span className="block text-[10px] text-[var(--dashboard-text)]/45">{t("Pas votre partenaire", "Not your partner")}</span>
+        <span className="block text-[10px] text-[var(--dashboard-text)]/40">{t("Pas votre partenaire", "Not your partner")}</span>
       </span>
     </span>
   );

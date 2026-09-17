@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
-import { Tag } from "../dashboard-accueil/shared";
+import { Tag, texteAvecChiffres } from "../dashboard-accueil/shared";
 import type { Categorie } from "./ajouter-produit/types";
 
 /*
@@ -95,15 +95,15 @@ export default function CreerCategorieModal({
         <div className="mt-1 max-h-48 overflow-y-auto">
           {categories.map((c) => (
             <div key={c.id} className="flex items-center justify-between gap-2 border-b border-[var(--dashboard-text)]/10 py-2 text-xs last:border-0">
-              <span className="font-medium">{t(c.nom, c.nomEn)}</span>
+              <span className="font-medium">{texteAvecChiffres(t(c.nom, c.nomEn))}</span>
               <span className="shrink-0 text-[var(--dashboard-text)]/40">
-                {c.nombreProduits > 0 ? t(`${c.nombreProduits} produits`, `${c.nombreProduits} products`) : t("Aucun produit", "No products")}
+                {c.nombreProduits > 0 ? texteAvecChiffres(t(`${c.nombreProduits} produits`, `${c.nombreProduits} products`)) : t("Aucun produit", "No products")}
               </span>
             </div>
           ))}
         </div>
 
-        <p className="mt-3 text-[9px] leading-snug text-[var(--dashboard-text)]/35">
+        <p className="mt-3 text-[9px] leading-snug text-[var(--dashboard-text)]/40">
           {t(
             "Une catégorie sans produit peut être supprimée. Une catégorie qui en contient se renomme, elle ne se supprime pas.",
             "A category with no products can be deleted. One that has products can be renamed, but not deleted."

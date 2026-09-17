@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import Link from "next/link";
-import { AreaChart, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, openBrandedReport, periodSeed, scaleForPeriod, SectionHeader, StatRow, Tag } from "./shared";
+import { AreaChart, Card, CollapsibleCards, Divider, HeaderActionBtn, Nature, openBrandedReport, periodSeed, scaleForPeriod, SectionHeader, StatRow, Tag, texteAvecChiffres } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -40,12 +40,12 @@ const PURPLE_CHART = "#8B5CF6";
 function KpiTile({ label, value, valueColor, sub, subColor }: { label: string; value: string; valueColor?: string; sub: string; subColor?: string }) {
   return (
     <div className="rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-3.5 shadow-[0_4px_12px_-4px_rgba(20,18,32,0.08)] transition-colors">
-      <p className="text-[9px] font-semibold uppercase tracking-wider text-[var(--dashboard-text)]/45">{label}</p>
-      <p className="mt-1.5 text-xl font-bold tracking-tight sm:text-2xl font-figures" style={{ color: valueColor }}>
+      <p className="text-[9px] font-semibold uppercase tracking-wider text-[var(--dashboard-text)]/40">{label}</p>
+      <p className="mt-1.5 text-xl tracking-tight sm:text-2xl font-figures-bold" style={{ color: valueColor }}>
         {value}
       </p>
       <p className={`mt-1 text-[10px] ${subColor ? "" : "text-[var(--dashboard-text)]/50"}`} style={{ color: subColor }}>
-        {sub}
+        {texteAvecChiffres(sub)}
       </p>
     </div>
   );
@@ -56,7 +56,7 @@ function DisputeStat({ label, value, valueColor }: { label: string; value: strin
     <div>
       <p className="text-[9px] text-[var(--dashboard-text)]/40">{label}</p>
       <p className="mt-1 text-xs font-semibold" style={{ color: valueColor }}>
-        {value}
+        {texteAvecChiffres(value)}
       </p>
     </div>
   );
@@ -97,10 +97,10 @@ function DisputeCard({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <Nature code={code} />
-          <span className="text-sm font-bold tracking-tight">{id}</span>
+          <span className="text-sm font-bold tracking-tight">{texteAvecChiffres(id)}</span>
           <Tag tone="warn">{t("Litige ouvert", "Dispute open")}</Tag>
         </div>
-        <span className="text-sm font-bold font-figures">{amount}</span>
+        <span className="text-sm font-figures-bold">{amount}</span>
       </div>
       <div className="mt-3.5 grid grid-cols-3 gap-3 sm:grid-cols-5">
         <DisputeStat label={t("Ouvert par", "Opened by")} value={t("Le client", "The customer")} />
@@ -139,8 +139,8 @@ function TimelineStep({
   return (
     <div className="grid grid-cols-[64px_20px_1fr] gap-0 sm:grid-cols-[84px_20px_1fr]">
       <div className="pr-3 pt-0.5 text-right">
-        <p className="text-sm font-bold tracking-tight font-figures">{time}</p>
-        {timeNote && <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{timeNote}</p>}
+        <p className="text-sm tracking-tight font-figures-bold">{time}</p>
+        {timeNote && <p className="mt-0.5 text-[9px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(timeNote)}</p>}
       </div>
       <div className="relative flex justify-center">
         {!last && <span className="absolute top-4 bottom-[-14px] w-px bg-[var(--dashboard-text)]/15" />}
@@ -151,14 +151,14 @@ function TimelineStep({
       </div>
       <div className={last ? "pb-0" : "pb-6"}>
         <p className="text-xs font-semibold" style={{ color: titleColor }}>
-          {title}
+          {texteAvecChiffres(title)}
         </p>
-        <p className="mt-1 text-[10px] leading-relaxed text-[var(--dashboard-text)]/55">{desc}</p>
+        <p className="mt-1 text-[10px] leading-relaxed text-[var(--dashboard-text)]/55">{texteAvecChiffres(desc)}</p>
         {badges.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {badges.map((b) => (
               <span key={b} className="rounded-full bg-[var(--dashboard-text)]/[0.06] px-2.5 py-1 text-[9px] font-semibold text-[var(--dashboard-text)]/65">
-                {b}
+                {texteAvecChiffres(b)}
               </span>
             ))}
           </div>
@@ -233,7 +233,7 @@ function MotifResponsableSankey({ motifs, causes, resp }: { motifs: SankeyMotif[
 
   return (
     <div className="mt-2">
-      <div className="flex justify-between px-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+      <div className="flex justify-between px-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
         <span>{t("Ce que le client déclare", "What the customer states")}</span>
         <span>{t("La cause identifiée", "The identified cause")}</span>
         <span>{t("Qui devait l'éviter", "Who should have avoided it")}</span>
@@ -248,7 +248,7 @@ function MotifResponsableSankey({ motifs, causes, resp }: { motifs: SankeyMotif[
               <rect x={X_MOTIF} y={m.y0} width={NODE_W} height={Math.max(m.h, 2)} rx={2} fill="#9096AA" />
               <text x={X_MOTIF - 10} y={m.y0 + m.h / 2 + 3} textAnchor="end" fontSize={11} fill="var(--dashboard-text)" fillOpacity={0.8}>
                 {t(m.fr, m.en)}
-                <tspan fontWeight={700} fillOpacity={1} dx={8}>{m.value}</tspan>
+                <tspan fontWeight={700} fillOpacity={1} dx={8} fontFamily='-apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif'>{m.value}</tspan>
               </text>
             </g>
           ))}
@@ -258,7 +258,14 @@ function MotifResponsableSankey({ motifs, causes, resp }: { motifs: SankeyMotif[
               <text x={X_CAUSE + NODE_W + 6} y={c.y0 - 3} fontSize={9} fontWeight={600} fill="var(--dashboard-text)" fillOpacity={0.75}>
                 {t(c.fr, c.en)}
               </text>
-              <text x={X_CAUSE + NODE_W + 6} y={c.y0 + c.h / 2 + 3.5} fontSize={10} fontWeight={700} fill={c.color}>
+              <text
+                x={X_CAUSE + NODE_W + 6}
+                y={c.y0 + c.h / 2 + 3.5}
+                fontSize={10}
+                fontWeight={700}
+                fill={c.color}
+                fontFamily='-apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif'
+              >
                 {c.value}
               </text>
             </g>
@@ -268,8 +275,8 @@ function MotifResponsableSankey({ motifs, causes, resp }: { motifs: SankeyMotif[
               <rect x={X_RESP} y={r.y0} width={NODE_W} height={Math.max(r.h, 2)} rx={2} fill={r.color} />
               <text x={X_RESP + NODE_W + 10} y={r.y0 + r.h / 2 + 3} fontSize={11} fill="var(--dashboard-text)" fillOpacity={0.8}>
                 {t(r.fr, r.en)}
-                <tspan fontWeight={700} fillOpacity={1} dx={8}>{r.value}</tspan>
-                <tspan fontSize={9} fillOpacity={0.4} dx={5}>{r.pct}</tspan>
+                <tspan fontWeight={700} fillOpacity={1} dx={8} fontFamily='-apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif'>{r.value}</tspan>
+                <tspan fontSize={9} fillOpacity={0.4} dx={5} fontFamily='-apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif'>{r.pct}</tspan>
               </text>
             </g>
           ))}
@@ -303,15 +310,15 @@ function RiskRow({
       <td className="py-2 pr-3">
         <span className="flex items-center gap-2 font-semibold">
           <Nature code={code} />
-          {name}
+          <span>{texteAvecChiffres(name)}</span>
         </span>
       </td>
-      <td className="py-2 pr-3">{ventes}</td>
-      <td className="py-2 pr-3">{litiges}</td>
-      <td className="py-2 pr-3 font-semibold" style={{ color: taux_color }}>
+      <td className="py-2 pr-3 font-figures">{ventes}</td>
+      <td className="py-2 pr-3 font-figures">{litiges}</td>
+      <td className="py-2 pr-3 font-figures-bold" style={{ color: taux_color }}>
         {taux}
       </td>
-      <td className="py-2 pr-3 text-[var(--dashboard-text)]/55">{cause}</td>
+      <td className="py-2 pr-3 text-[var(--dashboard-text)]/55">{texteAvecChiffres(cause)}</td>
     </tr>
   );
 }
@@ -337,12 +344,12 @@ function PartnerRow({
 }) {
   return (
     <tr className={`border-b border-[var(--dashboard-text)]/[0.05] last:border-0 ${bad ? "bg-[#c8262d0d]" : ""} ${total ? "border-t border-[var(--dashboard-text)]/15" : ""}`}>
-      <td className={`py-2.5 pr-3 ${total ? "font-bold" : "font-semibold"}`}>{poste}</td>
-      <td className="py-2.5 pr-3">{litiges}</td>
-      <td className={`py-2.5 pr-3 ${total ? "font-bold" : ""}`}>{cout}</td>
-      <td className="py-2.5 pr-3 text-[var(--dashboard-text)]/50">{reseau}</td>
+      <td className={`py-2.5 pr-3 ${total ? "font-bold" : "font-semibold"}`}>{texteAvecChiffres(poste)}</td>
+      <td className="py-2.5 pr-3 font-figures">{litiges}</td>
+      <td className={`py-2.5 pr-3 ${total ? "font-figures-bold" : "font-figures"}`}>{cout}</td>
+      <td className="py-2.5 pr-3 font-figures text-[var(--dashboard-text)]/50">{reseau}</td>
       <td className="py-2.5 pr-3 font-semibold" style={{ color: votreCasColor }}>
-        {votreCas}
+        {texteAvecChiffres(votreCas)}
       </td>
     </tr>
   );
@@ -370,13 +377,13 @@ function ActionItem({
       <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${dot}`}>{tone === "info" ? "i" : "!"}</span>
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-2 text-xs font-semibold">
-          {title}
+          <span>{texteAvecChiffres(title)}</span>
           {code && <Nature code={code} />}
         </p>
-        <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{desc}</p>
+        <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(desc)}</p>
       </div>
       <span className="shrink-0 rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[10px] font-semibold transition hover:border-[var(--dashboard-text)]/30 hover:bg-[var(--dashboard-text)]/5">
-        {cta}
+        {texteAvecChiffres(cta)}
       </span>
     </div>
   );
@@ -524,7 +531,7 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
       />
 
       {/* Légende : quelle couleur renvoie à quelle façon de vendre */}
-      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-2xl bg-[var(--dashboard-glass)] px-4 py-3 text-[10px] text-[var(--dashboard-text)]/50">
+      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-glass)] px-4 py-3 text-[10px] text-[var(--dashboard-text)]/50 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         <span className="flex items-center gap-1.5"><Nature code="S" /> {t("Stockage management", "Warehousing")}</span>
         <span className="flex items-center gap-1.5"><Nature code="D" /> {t("Dropshipping", "Drop-shipping")}</span>
         <span className="flex items-center gap-1.5"><Nature code="B" /> {t("Les deux", "Both")}</span>
@@ -554,7 +561,7 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
                 {t("Chaque heure compte : le compte à rebours du client tourne, et l'argent reste suspendu.", "Every hour counts: the customer's countdown is running, and the money stays on hold.")}
               </p>
             </div>
-            <Tag tone="warn" className="shrink-0">{t("47 480 F bloqués", "47 480 F on hold")}</Tag>
+            <Tag tone="warn" className="shrink-0">{texteAvecChiffres(t("47 480 F bloqués", "47 480 F on hold"))}</Tag>
           </div>
           <div className="mt-3.5 grid gap-3 lg:grid-cols-2 [&>*]:min-w-0">
             <DisputeCard
@@ -594,10 +601,10 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
             />
           </div>
           <p className="mt-3 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">
-            {t(
+            {texteAvecChiffres(t(
               "Les deux ont été pris en main dans les délais. Au-delà de 24 heures de résolution, le réachat de ces clients tombe à 19 % : le second est déjà dans cette zone.",
               "Both were taken in hand on time. Past 24 hours of resolution, repurchase for these customers drops to 19%: the second is already in that zone."
-            )}
+            ))}
           </p>
         </Card>
 
@@ -623,22 +630,22 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div>
               <p className="text-[9px] text-[var(--dashboard-text)]/40">{t("Litiges cumulés", "Cumulative disputes")}</p>
-              <p className="mt-1 text-base font-bold tracking-tight font-figures">26</p>
-              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("sur 1 480 livraisons", "of 1 480 deliveries")}</p>
+              <p className="mt-1 text-base tracking-tight font-figures-bold">26</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("sur 1 480 livraisons", "of 1 480 deliveries"))}</p>
             </div>
             <div>
               <p className="text-[9px] text-[var(--dashboard-text)]/40">{t("Il y a six mois", "Six months ago")}</p>
-              <p className="mt-1 text-base font-bold tracking-tight font-figures">3,1 %</p>
+              <p className="mt-1 text-base tracking-tight font-figures-bold">3,1 %</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("au niveau du réseau", "at network level")}</p>
             </div>
             <div>
               <p className="text-[9px] text-[var(--dashboard-text)]/40">{t("Aujourd'hui", "Today")}</p>
-              <p className="mt-1 text-base font-bold tracking-tight font-figures" style={{ color: GREEN }}>1,7 %</p>
+              <p className="mt-1 text-base tracking-tight font-figures-bold" style={{ color: GREEN }}>1,7 %</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("deux fois mieux", "twice as good")}</p>
             </div>
             <div>
               <p className="text-[9px] text-[var(--dashboard-text)]/40">{t("Économie réalisée", "Savings achieved")}</p>
-              <p className="mt-1 text-base font-bold tracking-tight font-figures" style={{ color: GREEN }}>71 400 F</p>
+              <p className="mt-1 text-base tracking-tight font-figures-bold" style={{ color: GREEN }}>71 400 F</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/40">{t("sur six mois", "over six months")}</p>
             </div>
           </div>
@@ -657,7 +664,7 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-sm font-semibold">{t("Du motif déclaré au responsable réel", "From the stated reason to who's really at fault")}</p>
-              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Les 26 litiges depuis l'ouverture, ce que le client a dit jusqu'à qui devait l'éviter", "The 26 disputes since launch, from what the customer said to who should have avoided it")}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(t("Les 26 litiges depuis l'ouverture, ce que le client a dit jusqu'à qui devait l'éviter", "The 26 disputes since launch, from what the customer said to who should have avoided it"))}</p>
             </div>
             <Nature code="B" />
           </div>
@@ -678,7 +685,7 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-sm font-semibold">{t("Ce que votre partenaire doit corriger", "What your partner needs to fix")}</p>
-              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("20 litiges sur 26 relèvent de sa prestation. Voici le dossier, prêt à lui être envoyé.", "20 of 26 disputes fall on his side of the service. Here's the file, ready to send him.")}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(t("20 litiges sur 26 relèvent de sa prestation. Voici le dossier, prêt à lui être envoyé.", "20 of 26 disputes fall on his side of the service. Here's the file, ready to send him."))}</p>
             </div>
             <Link
               href="/dashboard/partenaire-agree"
@@ -692,7 +699,7 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
               <thead>
                 <tr className="border-b border-[var(--dashboard-text)]/10">
                   {[t("Poste", "Item"), t("Litiges", "Disputes"), t("Coût pour vous", "Cost to you"), t("Sa moyenne réseau", "His network average"), t("Votre cas", "Your case")].map((h) => (
-                    <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+                    <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                       {h}
                     </th>
                   ))}
@@ -710,10 +717,10 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
           <Divider />
           <p className="text-xs font-semibold">{t("L'emballage est compris dans les frais logistiques que vous payez", "Packaging is included in the logistics fee you pay")}</p>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">
-            {t(
+            {texteAvecChiffres(t(
               "Le montant de ces frais est fixé par votre entreprise agréée, pas par LM. Quel que soit ce montant, l'emballage y est inclus. Sept litiges pour emballage insuffisant, dont trois sur la même référence textile, veulent dire qu'une prestation déjà payée n'a pas été rendue. 2,8 % contre 1,1 % de moyenne sur son réseau : ce n'est pas une fatalité du métier, c'est un écart. Le relevé ci-dessus contient les numéros de commande, les photos des clients et les dates — c'est ce qui transforme une plainte en demande.",
               "The amount of this fee is set by your approved company, not by LM. Whatever that amount, packaging is included in it. Seven disputes for insufficient packaging, three of them on the same textile item, mean a service already paid for wasn't delivered. 2.8% against a 1.1% average on his network: not a fact of the trade, a gap. The report above carries order numbers, customer photos and dates — that's what turns a complaint into a claim."
-            )}
+            ))}
           </p>
         </Card>
 
@@ -823,18 +830,18 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
             </div>
             <div className="mt-1.5 flex gap-2 text-[9px] text-[var(--dashboard-text)]/40">
               {HANDLING_BUCKETS.map((b) => (
-                <span key={b.fr} className="flex-1 text-center">{t(b.fr, b.en)}</span>
+                <span key={b.fr} className="flex-1 text-center">{texteAvecChiffres(t(b.fr, b.en))}</span>
               ))}
             </div>
             <Divider />
-            <StatRow label={t("Pris en main sous 3 heures", "Handled within 3 hours")} value={<span style={{ color: GREEN }}>21 sur 26</span>} />
-            <StatRow label={t("Dépassements du maximum de 9 h", "Overruns of the 9h max")} value={<span style={{ color: RED }}>1</span>} />
-            <StatRow label={t("Résolus dans les 24 h", "Resolved within 24h")} value="19 sur 26 · 73 %" bold={false} />
+            <StatRow label={t("Pris en main sous 3 heures", "Handled within 3 hours")} value={<span style={{ color: GREEN }}>{texteAvecChiffres("21 sur 26")}</span>} />
+            <StatRow label={t("Dépassements du maximum de 9 h", "Overruns of the 9h max")} value={<span className="font-figures" style={{ color: RED }}>1</span>} />
+            <StatRow label={t("Résolus dans les 24 h", "Resolved within 24h")} value={texteAvecChiffres("19 sur 26 · 73 %")} bold={false} />
             <StatRow
               label={t("Délai le plus long", "Longest delay")}
-              value={<span style={{ color: AMBER }}>{t("3 j · attente fournisseur", "3 days · waiting on supplier")}</span>}
+              value={<span style={{ color: AMBER }}>{texteAvecChiffres(t("3 j · attente fournisseur", "3 days · waiting on supplier"))}</span>}
             />
-            <StatRow label={t("Argent immobilisé pendant les litiges", "Money held during disputes")} value="14 h × 26 litiges" bold={false} />
+            <StatRow label={t("Argent immobilisé pendant les litiges", "Money held during disputes")} value={texteAvecChiffres("14 h × 26 litiges")} bold={false} />
             <p className="mt-3 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">
               {t(
                 "Prendre un litige en main vite ne le résout pas, mais cela suffit souvent : dire au client qu'on s'en occupe dans l'heure change son comportement plus que la solution elle-même.",
@@ -845,7 +852,7 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
 
           <Card className="!bg-[var(--dashboard-glass)]">
             <p className="text-sm font-semibold">{t("Comment ils se terminent", "How they end")}</p>
-            <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("26 litiges, quatre issues possibles", "26 disputes, four possible outcomes")}</p>
+            <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(t("26 litiges, quatre issues possibles", "26 disputes, four possible outcomes"))}</p>
             <div className="mt-4 flex items-center gap-5">
               <div
                 className="relative flex h-28 w-28 shrink-0 items-center justify-center rounded-full"
@@ -853,7 +860,7 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
               >
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--dashboard-card-bg)] text-center">
                   <div>
-                    <p className="text-base font-bold leading-none font-figures">26</p>
+                    <p className="text-base leading-none font-figures-bold">26</p>
                     <p className="mt-1 text-[8px] text-[var(--dashboard-text)]/40">{t("litiges", "disputes")}</p>
                   </div>
                 </div>
@@ -865,16 +872,16 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
                       <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: o.color }} />
                       {t(o.fr, o.en)}
                     </span>
-                    <span className="font-bold">{o.count}</span>
+                    <span className="font-figures-bold">{o.count}</span>
                   </div>
                 ))}
               </div>
             </div>
             <Divider />
-            <StatRow label={t("Coût d'un remplacement", "Cost of a replacement")} value="2 500 F" bold={false} />
-            <StatRow label={t("Coût d'un remboursement", "Cost of a refund")} value={<span style={{ color: RED }}>8 900 F</span>} />
-            <StatRow label={t("Coût total sur six mois", "Total cost over six months")} value="88 400 F" bold={false} />
-            <StatRow label={t("Marge perdue", "Margin lost")} value={<span style={{ color: RED }}>47 200 F</span>} />
+            <StatRow label={t("Coût d'un remplacement", "Cost of a replacement")} value={texteAvecChiffres("2 500 F")} bold={false} />
+            <StatRow label={t("Coût d'un remboursement", "Cost of a refund")} value={<span className="font-figures" style={{ color: RED }}>8 900 F</span>} />
+            <StatRow label={t("Coût total sur six mois", "Total cost over six months")} value={texteAvecChiffres("88 400 F")} bold={false} />
+            <StatRow label={t("Marge perdue", "Margin lost")} value={<span className="font-figures" style={{ color: RED }}>47 200 F</span>} />
             <p className="mt-3 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">
               {t(
                 "Un remplacement coûte trois fois et demie moins qu'un remboursement, et garde le client. Le proposer en premier n'est pas une économie mesquine : c'est ce qui préserve la relation, parce que le client repart avec ce qu'il voulait.",
@@ -889,7 +896,7 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-sm font-semibold">{t("Ce qu'un litige fait au client, selon la vitesse de réponse", "What a dispute does to the customer, depending on response speed")}</p>
-              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Part des clients qui rachètent après un litige, contre 18 % sans litige", "Share of customers who repurchase after a dispute, against 18% with no dispute")}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(t("Part des clients qui rachètent après un litige, contre 18 % sans litige", "Share of customers who repurchase after a dispute, against 18% with no dispute"))}</p>
             </div>
             <Nature code="B" />
           </div>
@@ -902,45 +909,45 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
                 />
                 {REPURCHASE.map((r) => (
                   <div key={r.fr} className="flex flex-1 flex-col items-center justify-end gap-1.5">
-                    <span className="text-[10px] font-bold">{r.pct} %</span>
+                    <span className="text-[10px] font-figures-bold">{r.pct} %</span>
                     <div className="w-full rounded-t" style={{ height: `${(r.pct / maxRepurchase) * 100}%`, background: r.color }} />
                   </div>
                 ))}
               </div>
               <div className="mt-1.5 flex gap-3 text-[9px] text-[var(--dashboard-text)]/40">
                 {REPURCHASE.map((r) => (
-                  <span key={r.fr} className="flex-1 text-center">{t(r.fr, r.en)}</span>
+                  <span key={r.fr} className="flex-1 text-center">{texteAvecChiffres(t(r.fr, r.en))}</span>
                 ))}
               </div>
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between rounded-xl bg-[var(--dashboard-surface-2)] px-3.5 py-2.5">
                 <div>
-                  <p className="text-xs font-semibold">{t("Résolu en moins de 3 heures", "Resolved in under 3 hours")}</p>
+                  <p className="text-xs font-semibold">{texteAvecChiffres(t("Résolu en moins de 3 heures", "Resolved in under 3 hours"))}</p>
                   <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Presque quatre fois votre réachat habituel.", "Nearly four times your usual repurchase rate.")}</p>
                 </div>
-                <span className="text-lg font-bold" style={{ color: GREEN }}>68 %</span>
+                <span className="text-lg font-figures-bold" style={{ color: GREEN }}>68 %</span>
               </div>
               <div className="flex items-center justify-between rounded-xl bg-[var(--dashboard-surface-2)] px-3.5 py-2.5">
                 <div>
-                  <p className="text-xs font-semibold">{t("Résolu entre 3 et 12 heures", "Resolved between 3 and 12 hours")}</p>
+                  <p className="text-xs font-semibold">{texteAvecChiffres(t("Résolu entre 3 et 12 heures", "Resolved between 3 and 12 hours"))}</p>
                   <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Encore largement au-dessus.", "Still well above.")}</p>
                 </div>
-                <span className="text-lg font-bold" style={{ color: GREEN }}>44 %</span>
+                <span className="text-lg font-figures-bold" style={{ color: GREEN }}>44 %</span>
               </div>
               <div className="flex items-center justify-between rounded-xl bg-[var(--dashboard-surface-2)] px-3.5 py-2.5">
                 <div>
-                  <p className="text-xs font-semibold">{t("Résolu entre 12 et 24 heures", "Resolved between 12 and 24 hours")}</p>
+                  <p className="text-xs font-semibold">{texteAvecChiffres(t("Résolu entre 12 et 24 heures", "Resolved between 12 and 24 hours"))}</p>
                   <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Le bénéfice s'efface.", "The benefit fades.")}</p>
                 </div>
-                <span className="text-lg font-bold" style={{ color: AMBER }}>29 %</span>
+                <span className="text-lg font-figures-bold" style={{ color: AMBER }}>29 %</span>
               </div>
               <div className="flex items-center justify-between rounded-xl bg-[var(--dashboard-surface-2)] px-3.5 py-2.5">
                 <div>
-                  <p className="text-xs font-semibold">{t("Résolu après 24 heures", "Resolved after 24 hours")}</p>
+                  <p className="text-xs font-semibold">{texteAvecChiffres(t("Résolu après 24 heures", "Resolved after 24 hours"))}</p>
                   <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Au niveau d'un client sans histoire.", "At the level of a customer with no history.")}</p>
                 </div>
-                <span className="text-lg font-bold" style={{ color: RED }}>19 %</span>
+                <span className="text-lg font-figures-bold" style={{ color: RED }}>19 %</span>
               </div>
               <div className="flex items-center justify-between rounded-xl border border-dashed border-[var(--dashboard-text)]/15 px-3.5 py-2.5">
                 <div>
@@ -976,7 +983,7 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
                 <thead>
                   <tr className="border-b border-[var(--dashboard-text)]/10">
                     {[t("Référence", "Item"), t("Ventes", "Sales"), t("Litiges", "Disputes"), t("Taux", "Rate"), t("Cause dominante", "Main cause")].map((h) => (
-                      <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/35">
+                      <th key={h} className="pb-2 pr-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
                         {h}
                       </th>
                     ))}
@@ -992,7 +999,7 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
               </table>
             </div>
             <Divider />
-            <p className="text-xs font-semibold">{t("Deux références concentrent 7 litiges sur 26", "Two items account for 7 of 26 disputes")}</p>
+            <p className="text-xs font-semibold">{texteAvecChiffres(t("Deux références concentrent 7 litiges sur 26", "Two items account for 7 of 26 disputes"))}</p>
             <p className="mt-1 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">
               {t(
                 "L'ensemble en lin cumule tout : couverture qui recule, demande faible, et un quart de ses ventes en litige parce que le textile est plié dans un emballage qui ne lui convient pas. Ni le carton ni la photo ne sont de votre ressort ici : l'emballage relève du partenaire, la fiche du sac cabas aussi. Sur ces deux références, votre levier n'est pas de corriger vous-même, c'est d'exiger. Le sérum, votre plus grosse vente, n'a jamais eu un seul litige.",
@@ -1011,15 +1018,15 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
                   <Nature code="S" />
                 </div>
                 <div className="mt-2.5 space-y-1.5 text-[11px]">
-                  <StatRow label={t("Litiges", "Disputes")} value="14" bold={false} />
-                  <StatRow label={t("Taux de litige", "Dispute rate")} value={<span style={{ color: GREEN }}>1,4 %</span>} />
+                  <StatRow label={t("Litiges", "Disputes")} value={<span className="font-figures">14</span>} bold={false} />
+                  <StatRow label={t("Taux de litige", "Dispute rate")} value={<span className="font-figures" style={{ color: GREEN }}>1,4 %</span>} />
                   <StatRow label={t("Cause dominante", "Main cause")} value={t("Emballage partenaire", "Partner packaging")} bold={false} />
-                  <StatRow label={t("Résolution moyenne", "Average resolution")} value={<span style={{ color: GREEN }}>9 h</span>} />
-                  <StatRow label={t("Issue en remplacement", "Replacement outcome")} value={<span style={{ color: GREEN }}>93 %</span>} />
+                  <StatRow label={t("Résolution moyenne", "Average resolution")} value={<span className="font-figures" style={{ color: GREEN }}>9 h</span>} />
+                  <StatRow label={t("Issue en remplacement", "Replacement outcome")} value={<span className="font-figures" style={{ color: GREEN }}>93 %</span>} />
                   <StatRow label={t("Marchandise récupérée", "Goods retrieved")} value={t("Oui", "Yes")} bold={false} />
                 </div>
                 <p className="mt-2.5 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">
-                  {t("Vous avez la marchandise chez le partenaire, il remplace le jour même. Le problème est physique et se corrige avec un meilleur emballage — de son côté.", "You have the goods at the partner's, he replaces the same day. The problem is physical and gets fixed with better packaging — on his side.")}
+                  {texteAvecChiffres(t("Vous avez la marchandise chez le partenaire, il remplace le jour même. Le problème est physique et se corrige avec un meilleur emballage — de son côté.", "You have the goods at the partner's, he replaces the same day. The problem is physical and gets fixed with better packaging — on his side."))}
                 </p>
               </div>
               <div className="rounded-xl border border-[#EC0C8C]/30 bg-[#EC0C8C]/5 p-3.5">
@@ -1028,25 +1035,25 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
                   <Nature code="D" />
                 </div>
                 <div className="mt-2.5 space-y-1.5 text-[11px]">
-                  <StatRow label={t("Litiges", "Disputes")} value="12" bold={false} />
-                  <StatRow label={t("Taux de litige", "Dispute rate")} value={<span style={{ color: RED }}>2,6 %</span>} />
+                  <StatRow label={t("Litiges", "Disputes")} value={<span className="font-figures">12</span>} bold={false} />
+                  <StatRow label={t("Taux de litige", "Dispute rate")} value={<span className="font-figures" style={{ color: RED }}>2,6 %</span>} />
                   <StatRow label={t("Cause dominante", "Main cause")} value={t("Fiche inexacte", "Inaccurate listing")} bold={false} />
-                  <StatRow label={t("Résolution moyenne", "Average resolution")} value={<span style={{ color: AMBER }}>21 h</span>} />
-                  <StatRow label={t("Issue en remplacement", "Replacement outcome")} value={<span style={{ color: AMBER }}>58 %</span>} />
+                  <StatRow label={t("Résolution moyenne", "Average resolution")} value={<span className="font-figures" style={{ color: AMBER }}>21 h</span>} />
+                  <StatRow label={t("Issue en remplacement", "Replacement outcome")} value={<span className="font-figures" style={{ color: AMBER }}>58 %</span>} />
                   <StatRow label={t("Marchandise récupérée", "Goods retrieved")} value={t("Par le partenaire", "By the partner")} bold={false} />
                 </div>
                 <p className="mt-2.5 text-[10px] leading-relaxed text-[var(--dashboard-text)]/50">
-                  {t("Vous dépendez du partenaire pour vérifier et remplacer, d'où deux fois plus de temps. Le problème est descriptif et se corrige avant la vente.", "You depend on the partner to verify and replace, hence twice the time. The problem is descriptive and gets fixed before the sale.")}
+                  {texteAvecChiffres(t("Vous dépendez du partenaire pour vérifier et remplacer, d'où deux fois plus de temps. Le problème est descriptif et se corrige avant la vente.", "You depend on the partner to verify and replace, hence twice the time. The problem is descriptive and gets fixed before the sale."))}
                 </p>
               </div>
             </div>
             <div className="mt-3.5 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-surface-2)] p-3.5">
               <p className="text-xs font-semibold">{t("Le drop double votre taux de litige, mais pour une raison entièrement évitable", "Drop-shipping doubles your dispute rate, for an entirely avoidable reason")}</p>
               <p className="mt-1.5 text-[10px] leading-relaxed text-[var(--dashboard-text)]/55">
-                {t(
+                {texteAvecChiffres(t(
                   "2,6 % contre 1,4 %. Ce n'est pas que les produits du partenaire soient moins bons : c'est qu'ils sont vendus sur la foi de fiches que personne n'a vérifiées. La responsabilité de la fiche inexacte est la sienne, mais le geste préventif est le vôtre : dix minutes de lecture avant d'activer une fiche évitent un litige à 3 400 F.",
                   "2.6% against 1.4%. It's not that the partner's products are worse: it's that they're sold on the strength of listings nobody checked. The inaccurate listing is on him, but the preventive move is on you: ten minutes reading before activating a listing avoids a 3 400 F dispute."
-                )}
+                ))}
               </p>
             </div>
           </Card>
@@ -1059,7 +1066,7 @@ export default function LitigesSection({ first = true, activeDate }: { first?: b
               <p className="text-sm font-semibold">{t("Ce qui réduirait vos litiges, classé par effet", "What would cut your disputes, ranked by impact")}</p>
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Chaque ligne chiffre ce qu'elle éviterait sur six mois", "Each line quantifies what it would avoid over six months")}</p>
             </div>
-            <Tag tone="warn" className="shrink-0">{t("6 actions", "6 actions")}</Tag>
+            <Tag tone="warn" className="shrink-0">{texteAvecChiffres(t("6 actions", "6 actions"))}</Tag>
           </div>
           <div>
             <ActionItem

@@ -73,13 +73,13 @@ export default function RetentionCard() {
       </div>
 
       <div className="mt-4 flex gap-2 pl-12">
-        <span className="flex-1 text-center text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">
+        <span className="flex-1 text-center text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/40">
           {texteAvecChiffres(t("À 30 jours", "At 30 days"))}
         </span>
-        <span className="flex-1 text-center text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">
+        <span className="flex-1 text-center text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/40">
           {texteAvecChiffres(t("À 60 jours", "At 60 days"))}
         </span>
-        <span className="flex-1 text-center text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/35">
+        <span className="flex-1 text-center text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--dashboard-text)]/40">
           {texteAvecChiffres(t("À 90 jours", "At 90 days"))}
         </span>
       </div>

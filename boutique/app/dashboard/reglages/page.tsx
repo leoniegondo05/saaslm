@@ -115,7 +115,7 @@ export default function ReglagesPage() {
               {activeTab === null ? (
                 <>
                   {aucunResultat && (
-                    <p className="mt-10 text-center text-xs text-[var(--dashboard-text)]/45">
+                    <p className="mt-10 text-center text-xs text-[var(--dashboard-text)]/40">
                       {t(`Aucun réglage pour « ${recherche} ».`, `No setting for “${recherche}”.`)}
                     </p>
                   )}
