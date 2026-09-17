@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
-import { Card, periodSeed, scaleForPeriod, SectionHeader, Tag } from "../dashboard-accueil/shared";
+import { Card, periodSeed, scaleForPeriod, SectionHeader, Tag, texteAvecChiffres } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import {
   AnneauCompteARebours,
@@ -183,7 +183,7 @@ export default function CommandesListe({
             <div key={jour.cle}>
               <div className="mb-3 flex flex-wrap items-center justify-between gap-x-5 gap-y-2 rounded-2xl bg-[var(--dashboard-glass)] px-4 py-3">
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <p className="text-xs font-bold text-[var(--dashboard-text)]">{t(jour.date, jour.dateEn)}</p>
+                  <p className="text-xs font-bold text-[var(--dashboard-text)]">{texteAvecChiffres(t(jour.date, jour.dateEn))}</p>
                   <NombreEtMot nombre={jour.commandes.length} mot={t("reçues", "received")} />
                 </div>
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">

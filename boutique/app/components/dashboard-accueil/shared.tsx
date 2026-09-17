@@ -20,8 +20,27 @@ import { useFiltrable, useRecherche } from "../DashboardRecherche";
   phrase du dashboard qui mélange texte et chiffre(s) passe par ici plutôt
   que par une classe posée à la main sur un fragment de string.
 */
+// Connecteurs courts coincés ENTRE deux chiffres ("17 h 05", "07:42",
+// "6 sur 8") sont inclus dans le même bloc que les chiffres : sinon le
+// connecteur, hors du split, hérite du gras du parent (souvent plus fort
+// que le poids "chiffres") — il ressort plus gras que les chiffres qu'il
+// sépare, ce qui saute aux yeux. Deux types couverts :
+//  - symboles ":"/"/"−" directement collés à un chiffre (heure "07:42",
+//    plage) — même classe que "," / "." / espace (déjà utilisés pour les
+//    séparateurs de milliers "1 480").
+//  - mots-connecteurs courts (h/min/mn/j/s = unités, "sur" = fraction/ratio
+//    "6 sur 8", + les noms de mois FR/EN pour "4 mars 2025" en un seul
+//    bloc), whitelist stricte (pas un \w+ générique — testé : un \w+
+//    générique avale aussi "et"/"à" dans "entre 3 et 12 heures"/"de 5 à 10
+//    jours", donc écarté) pour ne jamais absorber un vrai mot français pris
+//    en sandwich entre deux nombres qui n'a rien à voir ("7 litiges sur 26" :
+//    "litiges" reste hors figures, seul "sur" — juste avant le second
+//    chiffre — est absorbé).
+const MOIS = "janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|January|February|March|April|May|June|July|August|September|October|November|December|janv\\.?|févr\\.?|avr\\.?|juil\\.?|sept\\.?|oct\\.?|nov\\.?|déc\\.?";
+const RE_CHIFFRES = new RegExp(`(\\d+(?:[.,:/\\-\\s]\\d+|\\s?(?:h|min|mn|j|s|sur|${MOIS})\\s?\\d+)*)`, "g");
+
 export function texteAvecChiffres(texte: string) {
-  return texte.split(/(\d+(?:[.,\s]\d+)*)/g).map((partie, i) =>
+  return texte.split(RE_CHIFFRES).map((partie, i) =>
     /\d/.test(partie) ? (
       <span key={i} className="font-figures">
         {partie}
@@ -305,6 +324,8 @@ export function Card({
   badgeAlign = "right",
   titleAlign = "center",
   titleTab = false,
+  titleUppercase = true,
+  titleFont = "sans",
   className = "",
   style,
   children,
@@ -317,6 +338,10 @@ export function Card({
   titleAlign?: "left" | "center";
   /** Titre affiché en étiquette centrée (façon "onglet"), comme la carte Trésorerie disponible. */
   titleTab?: boolean;
+  /** Casse du titre en étiquette. Défaut: majuscules. Mis à false sur Réglages (retour utilisateur du 2026-09-17). */
+  titleUppercase?: boolean;
+  /** Police du titre en étiquette. Défaut: Sora (--font-sans). "inter" mis sur Réglages (retour utilisateur du 2026-09-17, hors charte graphique). */
+  titleFont?: "sans" | "inter";
   className?: string;
   style?: React.CSSProperties;
   children?: React.ReactNode;
@@ -335,8 +360,8 @@ export function Card({
       {title && titleTab && (
         <div className={`relative -mt-4 mb-5 flex items-center ${titleAlign === "left" ? "justify-start" : "justify-center"}`}>
           <p
-            className="rounded-b-lg px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]"
-            style={{ background: "var(--dashboard-surface-2)", fontFamily: "var(--font-sans)" }}
+            className={`rounded-b-lg px-3 py-1.5 font-semibold text-[var(--dashboard-text)] ${titleUppercase ? "text-[10px] uppercase tracking-[0.16em]" : "text-[13px] tracking-normal"}`}
+            style={{ background: "var(--dashboard-surface-2)", fontFamily: titleFont === "inter" ? "var(--font-inter)" : "var(--font-sans)" }}
           >
             {title}
           </p>

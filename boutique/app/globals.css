@@ -27,9 +27,11 @@
 
 /*
   Rendu des chiffres du dashboard (KPI, totaux, charts type trading) : pile
-  de polices système (style "SF Pro Display"), graisse regular, chiffres
-  tabulaires (alignement uniforme en colonne) et tracking resserré — demandé
-  tel quel par l'utilisateur. !important volontaire : la classe "font-figures"
+  de polices système (style "SF Pro Display"), graisse medium (500, un cran
+  plus marqué que le regular initial — ajusté à la demande, les chiffres
+  contrastaient trop face aux mots en gras autour), chiffres tabulaires
+  (alignement uniforme en colonne) et tracking resserré. !important
+  volontaire : la classe "font-figures"
   est posée à côté d'utilitaires Tailwind (font-bold, tracking-tight...) déjà
   présents sur ~40 emplacements du dashboard, elle doit gagner sans qu'il
   faille retirer ces classes une par une. Couleur/fond volontairement absents
@@ -38,7 +40,7 @@
 */
 .font-figures {
   font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif !important;
-  font-weight: 400 !important;
+  font-weight: 500 !important;
   font-variant-numeric: tabular-nums !important;
   letter-spacing: -0.02em !important;
 }

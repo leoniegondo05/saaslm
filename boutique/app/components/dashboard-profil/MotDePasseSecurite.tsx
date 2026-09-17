@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SectionHeader, Tag, useMockSave } from "../dashboard-accueil/shared";
+import { SectionHeader, Tag, texteAvecChiffres, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -88,25 +88,27 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
       />
 
       {/* ── Niveau de protection ── */}
-      <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] sm:p-6">
+      <div className="rounded-2xl bg-[var(--dashboard-card-bg)] p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--dashboard-text)]/40">
               {t("Niveau de protection", "Protection level")}
             </p>
-            <p className="mt-1 text-3xl font-bold tracking-tight text-[var(--dashboard-text)] sm:text-4xl">{niveauProtection}</p>
+            <p className="mt-0.5 text-2xl font-bold tracking-tight text-[var(--dashboard-text)]">{niveauProtection}</p>
           </div>
           <p className="text-xs text-[var(--dashboard-text)]/50">
             {protectionsActives === 4
               ? t("Quatre protections sur quatre sont en place.", "Four protections out of four are in place.")
-              : t(`${protectionsActives} protection${protectionsActives > 1 ? "s" : ""} sur quatre en place.`, `${protectionsActives} of four protections in place.`)}
+              : texteAvecChiffres(
+                  t(`${protectionsActives} protection${protectionsActives > 1 ? "s" : ""} sur quatre en place.`, `${protectionsActives} of four protections in place.`)
+                )}
           </p>
         </div>
-        <div className="mt-4 grid grid-cols-4 gap-2">
+        <div className="mt-3 grid grid-cols-4 gap-1.5">
           {Array.from({ length: 4 }).map((_, i) => (
             <span
               key={i}
-              className="h-2 rounded-full"
+              className="h-1.5 rounded-full"
               style={{
                 background:
                   i < protectionsActives
@@ -118,30 +120,30 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="mt-3 grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
         {/* ── Mot de passe ── */}
-        <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
+        <div className="rounded-2xl bg-[var(--dashboard-card-bg)] p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
           <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-purple/10 text-brand-purple">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/70">
                 <ShieldIcon />
               </span>
               <div>
                 <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("Mot de passe", "Password")}</p>
-                <p className="text-xs text-[var(--dashboard-text)]/40">{t("Changé il y a 2 mois", "Changed 2 months ago")}</p>
+                <p className="text-xs text-[var(--dashboard-text)]/40">{texteAvecChiffres(t("Changé il y a 2 mois", "Changed 2 months ago"))}</p>
               </div>
             </div>
             <Tag tone="ok">{t("Solide", "Strong")}</Tag>
           </div>
 
           {mdpConfirme && !changerMdp && (
-            <p className="mt-4 rounded-2xl bg-[#dcf5e3] px-3 py-2 text-xs font-semibold text-[#178a3f]">
+            <p className="mt-3 rounded-xl bg-[#dcf5e3] px-3 py-2 text-xs font-semibold text-[#178a3f]">
               {t("Mot de passe mis à jour.", "Password updated.")}
             </p>
           )}
 
           {changerMdp ? (
-            <div className="mt-4 space-y-2.5">
+            <div className="mt-3 space-y-2">
               <input
                 type="password"
                 value={mdpActuel}
@@ -166,13 +168,13 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
                 aria-label={t("Confirmer le nouveau mot de passe", "Confirm new password")}
                 className="w-full rounded-full border border-brand-pink/40 bg-brand-pink/5 px-4 py-2.5 text-sm text-[var(--dashboard-text)] outline-none focus:border-brand-pink"
               />
-              {mdpErreur && <p className="text-xs font-semibold text-[#c8262d]">{mdpErreur}</p>}
+              {mdpErreur && <p className="text-xs font-semibold text-[#c8262d]">{texteAvecChiffres(mdpErreur)}</p>}
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button
                   type="button"
                   onClick={annulerChangementMdp}
                   disabled={mdpEnCours}
-                  className="rounded-full border border-[var(--dashboard-text)]/15 px-4 py-2.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-full border border-[var(--dashboard-text)]/15 px-4 py-2 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {t("Annuler", "Cancel")}
                 </button>
@@ -180,7 +182,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
                   type="button"
                   onClick={enregistrerMdp}
                   disabled={mdpEnCours}
-                  className="rounded-full bg-[#141220] px-4 py-2.5 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
+                  className="rounded-full bg-[#141220] px-4 py-2 text-xs font-semibold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 dark:bg-brand-pink"
                 >
                   {mdpEnCours ? t("Enregistrement…", "Saving…") : t("Enregistrer", "Save")}
                 </button>
@@ -190,7 +192,7 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
             <button
               type="button"
               onClick={ouvrirChangementMdp}
-              className="mt-4 w-full rounded-full border border-brand-pink/40 bg-[var(--dashboard-card-bg)] px-4 py-2.5 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/10"
+              className="mt-3 w-full rounded-full border border-brand-pink/40 bg-[var(--dashboard-card-bg)] px-4 py-2 text-sm font-semibold text-brand-pink transition hover:bg-brand-pink/10"
             >
               {t("Changer mon mot de passe", "Change my password")}
             </button>
@@ -198,15 +200,15 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
         </div>
 
         {/* ── Double vérification ── */}
-        <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
+        <div className="rounded-2xl bg-[var(--dashboard-card-bg)] p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#dcf5e3] text-[#178a3f]">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/70">
                 <DeviceIcon />
               </span>
               <div>
                 <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("Double vérification", "Two-factor verification")}</p>
-                <p className="text-xs text-[var(--dashboard-text)]/40">{t("Un code de six chiffres sur tout appareil nouveau", "A six-digit code on every new device")}</p>
+                <p className="text-xs text-[var(--dashboard-text)]/40">{t("Code à six chiffres, appareil nouveau", "Six-digit code, new device")}</p>
               </div>
             </div>
             <ToggleSwitch
@@ -216,14 +218,14 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
             />
           </div>
 
-          <div className={`mt-4 grid grid-cols-2 gap-2 ${doubleVerification ? "" : "pointer-events-none opacity-40"}`}>
+          <div className={`mt-3 grid grid-cols-2 gap-2 ${doubleVerification ? "" : "pointer-events-none opacity-40"}`}>
             <button
               type="button"
               onClick={() => setMethodeVerification("message")}
               aria-pressed={methodeVerification === "message"}
-              className={`flex items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-semibold transition ${
+              className={`flex items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold transition ${
                 methodeVerification === "message"
-                  ? "border-transparent bg-brand-purple/10 text-brand-purple"
+                  ? "border-transparent bg-[var(--dashboard-text)]/10 text-[var(--dashboard-text)]"
                   : "border-[var(--dashboard-text)]/15 text-[var(--dashboard-text)]/50 hover:bg-[var(--dashboard-text)]/[0.03]"
               }`}
             >
@@ -234,9 +236,9 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
               type="button"
               onClick={() => setMethodeVerification("application")}
               aria-pressed={methodeVerification === "application"}
-              className={`flex items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-semibold transition ${
+              className={`flex items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold transition ${
                 methodeVerification === "application"
-                  ? "border-transparent bg-brand-purple/10 text-brand-purple"
+                  ? "border-transparent bg-[var(--dashboard-text)]/10 text-[var(--dashboard-text)]"
                   : "border-[var(--dashboard-text)]/15 text-[var(--dashboard-text)]/50 hover:bg-[var(--dashboard-text)]/[0.03]"
               }`}
             >
@@ -247,10 +249,10 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
         </div>
 
         {/* ── Codes de secours ── */}
-        <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
+        <div className="rounded-2xl bg-[var(--dashboard-card-bg)] p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fff1d6] text-[#a8690a]">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/70">
                 <TicketIcon />
               </span>
               <div>
@@ -258,12 +260,16 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
                 <p className="text-xs text-[var(--dashboard-text)]/40">{t("Pour le jour où le téléphone manque", "For the day your phone is missing")}</p>
               </div>
             </div>
-            <p className="shrink-0 text-sm text-[var(--dashboard-text)] font-figures-bold">
-              {codesRestants} {t("sur", "of")} {CODES_TOTAL}
+            {/* font-figures-bold posé sur chaque nombre seul (pas sur tout
+                le <p>) : sinon le mot "sur"/"of" hérite lui aussi de la
+                police SF Pro Display réservée aux chiffres. */}
+            <p className="shrink-0 text-sm text-[var(--dashboard-text)]">
+              <span className="font-figures-bold">{codesRestants}</span> {t("sur", "of")}{" "}
+              <span className="font-figures-bold">{CODES_TOTAL}</span>
             </p>
           </div>
 
-          <div className="mt-4 grid grid-cols-8 gap-1.5">
+          <div className="mt-3 grid grid-cols-8 gap-1.5">
             {Array.from({ length: CODES_TOTAL }).map((_, i) => (
               <span
                 key={i}
@@ -273,25 +279,25 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
             ))}
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => setAfficherCodes((v) => !v)}
-              className="rounded-full border border-[var(--dashboard-text)]/15 px-4 py-2.5 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
+              className="rounded-full border border-[var(--dashboard-text)]/15 px-4 py-2 text-xs font-semibold text-[var(--dashboard-text)] transition hover:bg-[var(--dashboard-text)]/[0.05]"
             >
               {afficherCodes ? t("Masquer mes codes", "Hide my codes") : t("Voir mes codes", "View my codes")}
             </button>
             <button
               type="button"
               onClick={genererHuitCodes}
-              className="rounded-full border border-brand-pink/40 bg-[var(--dashboard-card-bg)] px-4 py-2.5 text-xs font-semibold text-brand-pink transition hover:bg-brand-pink/10"
+              className="rounded-full border border-brand-pink/40 bg-[var(--dashboard-card-bg)] px-4 py-2 text-xs font-semibold text-brand-pink transition hover:bg-brand-pink/10"
             >
               {t("En générer huit", "Generate eight")}
             </button>
           </div>
 
           {afficherCodes && (
-            <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-[#FAF7FC] p-3 sm:grid-cols-4">
+            <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-[#FAF7FC] p-3 sm:grid-cols-4">
               {codesSecours.map((code, i) => (
                 <span
                   key={code}
@@ -307,15 +313,15 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
         </div>
 
         {/* ── M'alerter ── */}
-        <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-5 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
+        <div className="rounded-2xl bg-[var(--dashboard-card-bg)] p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#dbeafe] text-[#1d4ed8]">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/70">
                 <BellIcon />
               </span>
               <div>
                 <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("M'alerter", "Alert me")}</p>
-                <p className="text-xs text-[var(--dashboard-text)]/40">{t("Dès qu'un appareil inconnu ouvre le compte", "As soon as an unknown device opens the account")}</p>
+                <p className="text-xs text-[var(--dashboard-text)]/40">{t("Nouvel appareil inconnu", "Unknown new device")}</p>
               </div>
             </div>
             <ToggleSwitch
@@ -326,8 +332,8 @@ export default function MotDePasseSecurite({ first = false }: { first?: boolean 
           </div>
           <p className="mt-3 text-xs leading-snug text-[var(--dashboard-text)]/40">
             {t(
-              "Un message part avec la ville et l'heure. C'est ce qui prévient d'un mot de passe volé avant qu'il serve.",
-              "A message is sent with the city and time. This is what warns of a stolen password before it's used."
+              "Un message part avec la ville et l'heure, avant que le mot de passe volé serve.",
+              "A message is sent with the city and time, before a stolen password gets used."
             )}
           </p>
         </div>

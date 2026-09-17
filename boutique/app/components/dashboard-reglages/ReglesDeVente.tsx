@@ -61,7 +61,7 @@ export default function ReglesDeVente({ first = false }: { first?: boolean }) {
       </div>
 
       <div className="grid gap-3">
-        <Card title={t("Ce qui protège vos colis", "What protects your parcels")} titleTab badge={<Tag tone="ok">{t("Active par défaut", "Active by default")}</Tag>} className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Ce qui protège vos colis", "What protects your parcels")} titleTab titleUppercase={false} titleFont="inter" badge={<Tag tone="ok">{t("Active par défaut", "Active by default")}</Tag>} className="!bg-[var(--dashboard-card-bg)]">
           <ReglaRow
             titre={t("Protection contre le vol et la perte", "Protection against theft and loss")}
             note={t(
@@ -76,6 +76,7 @@ export default function ReglesDeVente({ first = false }: { first?: boolean }) {
         <Card
           title={t("Ce qu'un produit doit avoir pour être publié", "What a product needs to be published")}
           titleTab
+          titleUppercase={false} titleFont="inter"
           badge={<Tag tone="pink">{texteAvecChiffres(t("3 règles", "3 rules"))}</Tag>}
           className="!bg-[var(--dashboard-card-bg)]"
         >
@@ -116,7 +117,7 @@ export default function ReglesDeVente({ first = false }: { first?: boolean }) {
           </div>
         </Card>
 
-        <Card title={t("Le délai que vous laissez au client", "The window you give the customer")} titleTab className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Le délai que vous laissez au client", "The window you give the customer")} titleTab titleUppercase={false} titleFont="inter" className="!bg-[var(--dashboard-card-bg)]">
           <p className="text-xs text-[var(--dashboard-text)]/50">
             {t(
               "C'est vous qui décidez combien de temps un client peut ouvrir un litige après avoir reçu son colis. Ce délai vaut pour toutes les commandes de votre boutique.",

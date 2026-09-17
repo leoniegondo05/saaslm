@@ -401,9 +401,9 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
         rows: [
           [t("Visites de la page", "Page visits"), scaleForPeriod(8420, seed, 13).toLocaleString("fr-FR"), ""],
           [t("Commandes passées", "Orders placed"), `${scaleForPeriod(148, seed, 14)}`, t("1,76 % de transformation", "1.76% conversion")],
-          [t("Confirmées à l'appel", "Confirmed by phone"), `${scaleForPeriod(134, seed, 15)}`, "90,5 %"],
-          [t("Livrées et payées", "Delivered and paid"), `${scaleForPeriod(119, seed, 16)}`, "88,8 %"],
-          [t("Sans litige", "Without dispute"), `${scaleForPeriod(117, seed, 17)}`, "98,3 %"],
+          [t("Confirmées à l'appel", "Confirmed by phone"), `${scaleForPeriod(134, seed, 15)}`, t("90,5 %", "90.5%")],
+          [t("Livrées et payées", "Delivered and paid"), `${scaleForPeriod(119, seed, 16)}`, t("88,8 %", "88.8%")],
+          [t("Sans litige", "Without dispute"), `${scaleForPeriod(117, seed, 17)}`, t("98,3 %", "98.3%")],
         ],
       },
     ]);
@@ -512,9 +512,9 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
               rateColor="#EC0C8C"
               color={FUNNEL_COLORS[1]}
             />
-            <FunnelStep step={3} value={`${scaleForPeriod(134, seed, 15)}`} label={t("Confirmées à l'appel", "Confirmed by phone")} rate="90,5 %" rateColor="#178a3f" color={FUNNEL_COLORS[2]} />
-            <FunnelStep step={4} value={`${scaleForPeriod(119, seed, 16)}`} label={t("Livrées et payées", "Delivered and paid")} rate="88,8 %" rateColor="#a8690a" color={FUNNEL_COLORS[3]} />
-            <FunnelStep step={5} value={`${scaleForPeriod(117, seed, 17)}`} label={t("Sans litige", "Without dispute")} rate="98,3 %" rateColor="#178a3f" color={FUNNEL_COLORS[4]} />
+            <FunnelStep step={3} value={`${scaleForPeriod(134, seed, 15)}`} label={t("Confirmées à l'appel", "Confirmed by phone")} rate={t("90,5 %", "90.5%")} rateColor="#178a3f" color={FUNNEL_COLORS[2]} />
+            <FunnelStep step={4} value={`${scaleForPeriod(119, seed, 16)}`} label={t("Livrées et payées", "Delivered and paid")} rate={t("88,8 %", "88.8%")} rateColor="#a8690a" color={FUNNEL_COLORS[3]} />
+            <FunnelStep step={5} value={`${scaleForPeriod(117, seed, 17)}`} label={t("Sans litige", "Without dispute")} rate={t("98,3 %", "98.3%")} rateColor="#178a3f" color={FUNNEL_COLORS[4]} />
           </div>
         </div>
         <Divider />
@@ -551,7 +551,7 @@ export default function CommandesSection({ first = true, activeDate }: { first?:
             <StatBar value={`${scaleForPeriod(51, seed, 11)}`} label={t("Dropshipping · 34,5 %", "Drop-shipping · 34.5%")} pct={34.5} />
             <div>
               <p className="text-lg tracking-tight font-figures-bold">{scaleForPeriod(8, seed, 12)}</p>
-              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{t("Meilleur jour · samedi 23 août", "Best day · Sat Aug 23")}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/50">{texteAvecChiffres(t("Meilleur jour · samedi 23 août", "Best day · Sat Aug 23"))}</p>
             </div>
             <div>
               <p className="text-lg tracking-tight font-figures-bold">4,9</p>

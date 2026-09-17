@@ -108,6 +108,7 @@ export default function Confidentialite({ first = false }: { first?: boolean }) 
         <Card
           title={t("Qui voit les données de vos clients", "Who sees your customers' data")}
           titleTab
+          titleUppercase={false} titleFont="inter"
           badge={<Tag tone="ok">{t("Aucun partage commercial", "No commercial sharing")}</Tag>}
           className="!bg-[var(--dashboard-card-bg)]"
         >
@@ -144,6 +145,7 @@ export default function Confidentialite({ first = false }: { first?: boolean }) 
         <Card
           title={t("Ce que le client voit de vous", "What the customer sees of you")}
           titleTab
+          titleUppercase={false} titleFont="inter"
           badge={<Tag tone="warn">{t("Non modifiable ici", "Not editable here")}</Tag>}
           className="!bg-[var(--dashboard-card-bg)]"
         >
@@ -179,7 +181,7 @@ export default function Confidentialite({ first = false }: { first?: boolean }) 
           </p>
         </Card>
 
-        <Card title={t("Vos données", "Your data")} titleTab className="!bg-[var(--dashboard-card-bg)]">
+        <Card title={t("Vos données", "Your data")} titleTab titleUppercase={false} titleFont="inter" className="!bg-[var(--dashboard-card-bg)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="max-w-md">
               <p className="text-xs font-bold text-[var(--dashboard-text)]">{t("Exporter tout ce que je possède", "Export everything I own")}</p>

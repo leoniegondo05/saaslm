@@ -217,7 +217,7 @@ function AccountMenuButton({ className }: { className?: string }) {
                 <DeviceIcon />
               </span>
               <span className="flex-1 text-xs font-medium">{t("Mes appareils", "My devices")}</span>
-              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#141220] px-1 text-[10px] font-semibold text-white">
+              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#141220] px-1 text-[10px] font-figures-bold text-white">
                 {APPAREILS_CONNECTES_COUNT}
               </span>
               <ChevronIcon direction="right" />
@@ -231,7 +231,7 @@ function AccountMenuButton({ className }: { className?: string }) {
                 <PersonPlusIcon />
               </span>
               <span className="flex-1 text-xs font-medium">{t("Gérer les accès", "Manage access")}</span>
-              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#141220] px-1 text-[10px] font-semibold text-white">
+              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#141220] px-1 text-[10px] font-figures-bold text-white">
                 {PERSONNEL_ACTIF_COUNT}
               </span>
               <ChevronIcon direction="right" />

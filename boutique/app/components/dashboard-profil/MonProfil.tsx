@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import QrCode from "../QrCode";
-import { SectionHeader } from "../dashboard-accueil/shared";
+import { SectionHeader, texteAvecChiffres } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 /*
@@ -37,6 +37,19 @@ const PROFIL = {
 // rôle, boutique, appareils, dates... — vient du compte/API, pas de la
 // personne elle-même).
 type ChampModifiable = "nomAffiche" | "email" | "telephone";
+
+// Forme commune des champs affichés dans "Détails du profil" (groupés par
+// thème plus bas) : sans cette annotation explicite, TS infère un type
+// union par littéral (un par champ) au lieu d'une forme commune, et le
+// .map() perd l'accès à `verified`/`maskKey`/`editableKey`.
+type DetailField = {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  verified?: string;
+  maskKey?: "email" | "phone";
+  editableKey?: ChampModifiable;
+};
 
 export default function MonProfil() {
   const { t } = useDashboardLangue();
@@ -92,33 +105,57 @@ export default function MonProfil() {
   const modifierBrouillon = (champ: ChampModifiable, valeur: string) =>
     setBrouillon((b) => ({ ...b, [champ]: valeur }));
 
-  const detailFields = [
-    { icon: <PersonIcon />, label: t("Nom complet", "Full name"), value: profil.nomAffiche, editableKey: "nomAffiche" as const },
+  // Les 12 champs, groupés par nature plutôt qu'en une seule grille plate :
+  // qui vous êtes (identité), ce qui protège l'accès (rôle/sécurité), et le
+  // contexte commercial (boutique/partenaire) — chaque groupe encode une
+  // vraie distinction, pas un découpage arbitraire pour "aérer".
+  const detailGroups: { title: string; fields: DetailField[] }[] = [
     {
-      icon: <MailIcon />,
-      label: t("Adresse de connexion", "Login address"),
-      value: profil.email,
-      verified: t("VÉRIFIÉE", "VERIFIED"),
-      maskKey: "email" as const,
-      editableKey: "email" as const,
+      title: t("Identité", "Identity"),
+      fields: [
+        { icon: <PersonIcon />, label: t("Nom complet", "Full name"), value: profil.nomAffiche, editableKey: "nomAffiche" as const },
+        {
+          icon: <MailIcon />,
+          label: t("Adresse de connexion", "Login address"),
+          value: profil.email,
+          verified: t("VÉRIFIÉE", "VERIFIED"),
+          maskKey: "email" as const,
+          editableKey: "email" as const,
+        },
+        { icon: <PersonBadgeIcon />, label: t("Identifiant", "Username"), value: "awa.k" },
+        {
+          icon: <PhoneIcon />,
+          label: t("Téléphone", "Phone"),
+          // Numéro seul (pas de mots autour) : font-figures-bold posé
+          // directement ici plutôt que texteAvecChiffres, pour matcher le
+          // poids "font-bold" du <p> qui l'affiche (cf. règle 2 — jamais
+          // font-figures + font-bold sur le même élément, mais ici ce sont
+          // deux éléments imbriqués).
+          value: <span className="font-figures-bold">{profil.telephone}</span>,
+          verified: t("VÉRIFIÉ", "VERIFIED"),
+          maskKey: "phone" as const,
+          editableKey: "telephone" as const,
+        },
+      ],
     },
-    { icon: <ShieldIcon />, label: t("Son rôle", "Their role"), value: t("Administrateur", "Administrator") },
-    { icon: <PersonBadgeIcon />, label: t("Identifiant", "Username"), value: "awa.k" },
     {
-      icon: <PhoneIcon />,
-      label: t("Téléphone", "Phone"),
-      value: profil.telephone,
-      verified: t("VÉRIFIÉ", "VERIFIED"),
-      maskKey: "phone" as const,
-      editableKey: "telephone" as const,
+      title: t("Rôle & sécurité", "Role & security"),
+      fields: [
+        { icon: <ShieldIcon />, label: t("Son rôle", "Their role"), value: t("Administrateur", "Administrator") },
+        { icon: <CheckCircleIcon />, label: t("État du compte", "Account status"), value: t("Actif", "Active") },
+        { icon: <ClockIcon />, label: t("Dernière connexion", "Last login"), value: texteAvecChiffres(t("Aujourd'hui · 07:42", "Today · 7:42am")) },
+        { icon: <LaptopIcon />, label: t("Appareils connectés", "Connected devices"), value: <span className="font-figures-bold">{APPAREILS_CONNECTES_COUNT}</span> },
+      ],
     },
-    { icon: <HomeIcon />, label: t("Boutique", "Shop"), value: "Awa Beauté" },
-    { icon: <CheckCircleIcon />, label: t("État du compte", "Account status"), value: t("Actif", "Active") },
-    { icon: <ClockIcon />, label: t("Dernière connexion", "Last login"), value: t("Aujourd'hui · 07:42", "Today · 7:42am") },
-    { icon: <LaptopIcon />, label: t("Appareils connectés", "Connected devices"), value: String(APPAREILS_CONNECTES_COUNT) },
-    { icon: <TruckIcon />, label: t("Partenaire agréé", "Approved partner"), value: "Groupe Logistique Ivoire" },
-    { icon: <FileIcon />, label: t("Contrat de la boutique", "Shop contract"), value: t("Affiliée · depuis mars 2025", "Affiliated · since March 2025") },
-    { icon: <CalendarIcon />, label: t("Compte créé le", "Account created on"), value: t("4 mars 2025", "March 4, 2025") },
+    {
+      title: t("Boutique & partenaire", "Shop & partner"),
+      fields: [
+        { icon: <HomeIcon />, label: t("Boutique", "Shop"), value: "Awa Beauté" },
+        { icon: <TruckIcon />, label: t("Partenaire agréé", "Approved partner"), value: "Groupe Logistique Ivoire" },
+        { icon: <FileIcon />, label: t("Contrat de la boutique", "Shop contract"), value: texteAvecChiffres(t("Affiliée · depuis mars 2025", "Affiliated · since March 2025")) },
+        { icon: <CalendarIcon />, label: t("Compte créé le", "Account created on"), value: texteAvecChiffres(t("4 mars 2025", "March 4, 2025")) },
+      ],
+    },
   ];
 
   // Aperçu local uniquement (FileReader → data URL) : aucun endpoint
@@ -149,17 +186,20 @@ export default function MonProfil() {
       <div className="overflow-hidden rounded-[32px] bg-[var(--dashboard-card-bg)] shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
         {/* ── Bannière + avatar ── */}
         <div
-          className="relative h-40 overflow-hidden sm:h-48"
+          className="relative h-28 overflow-hidden sm:h-32"
           style={{
             backgroundImage:
-              "linear-gradient(120deg, var(--color-brand-pink) 0%, var(--color-brand-purple) 55%, #2f6bf0 100%)",
+              "linear-gradient(120deg, var(--color-brand-pink) 0%, var(--color-brand-purple) 62%, #011847 100%)",
           }}
         >
+          {/* Grille de points façon code scannable, écho discret du QR
+              "mon code à scanner" plus bas — plutôt qu'une texture
+              décorative sans rapport avec le sujet de la page. */}
           <div
-            className="absolute inset-0 opacity-20"
+            className="absolute inset-0 opacity-25"
             style={{
-              backgroundImage:
-                "repeating-linear-gradient(45deg, rgba(255,255,255,0.35) 0 2px, transparent 2px 14px)",
+              backgroundImage: "radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)",
+              backgroundSize: "14px 14px",
             }}
             aria-hidden
           />
@@ -184,13 +224,13 @@ export default function MonProfil() {
           </div>
         </div>
 
-        <div className="px-5 pb-6 sm:px-8">
-          <div className="grid gap-4 lg:grid-cols-[1fr_360px] lg:items-start">
+        <div className="px-5 pb-5 sm:px-6">
+          <div className="grid gap-3 lg:grid-cols-[1fr_320px] lg:items-start">
             {/* Colonne identité */}
             <div>
-              <div className="relative -mt-14 sm:-mt-16">
+              <div className="relative -mt-10 sm:-mt-12">
                 <div
-                  className="group relative h-28 w-28 shrink-0 overflow-hidden rounded-full border-[6px] border-[var(--dashboard-card-bg)]"
+                  className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-[5px] border-[var(--dashboard-card-bg)]"
                 >
                   {photo ? (
                     // eslint-disable-next-line @next/next/no-img-element -- aperçu local (data URL), pas une image du domaine
@@ -205,7 +245,7 @@ export default function MonProfil() {
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     aria-label={t("Changer la photo de profil", "Change profile photo")}
-                    className="absolute bottom-0.5 right-0.5 flex h-8 w-8 items-center justify-center rounded-full border-2 border-[var(--dashboard-card-bg)] bg-[#141220] text-white shadow-[0_2px_10px_rgba(0,0,0,0.25)] transition hover:brightness-110 dark:bg-brand-pink"
+                    className="absolute bottom-0.5 right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[var(--dashboard-card-bg)] bg-[#141220] text-white shadow-[0_2px_10px_rgba(0,0,0,0.25)] transition hover:brightness-110 dark:bg-brand-pink"
                   >
                     <CameraIcon />
                   </button>
@@ -219,14 +259,14 @@ export default function MonProfil() {
                 />
               </div>
 
-              <h1 className="mt-4 flex flex-wrap items-center gap-3 text-2xl font-bold tracking-tight text-[var(--dashboard-text)]">
+              <h1 className="mt-3 flex flex-wrap items-center gap-3 text-xl font-bold tracking-tight text-[var(--dashboard-text)]">
                 {enEdition ? (
                   <input
                     value={brouillon.nomAffiche}
                     onChange={(e) => modifierBrouillon("nomAffiche", e.target.value)}
                     placeholder={t("Nom complet", "Full name")}
                     aria-label={t("Nom complet", "Full name")}
-                    className="min-w-0 max-w-full rounded-lg border border-brand-pink/40 bg-brand-pink/5 px-2 py-1 text-2xl font-bold text-[var(--dashboard-text)] outline-none focus:border-brand-pink"
+                    className="min-w-0 max-w-full rounded-lg border border-brand-pink/40 bg-brand-pink/5 px-2 py-1 text-xl font-bold text-[var(--dashboard-text)] outline-none focus:border-brand-pink"
                   />
                 ) : (
                   profil.nomAffiche
@@ -238,26 +278,43 @@ export default function MonProfil() {
               </h1>
               <p className="mt-2 flex items-center gap-2 text-sm text-[var(--dashboard-text)]/50">
                 <CalendarIcon />
-                {t(PROFIL.role, PROFIL.roleEn)} · {t("dans l'équipe depuis le", "on the team since")} {t(PROFIL.depuis, PROFIL.depuisEn)}
+                {/* Un seul <span> ici (plutôt que 3 expressions séparées) :
+                    le tableau renvoyé par texteAvecChiffres exploserait sinon
+                    en plusieurs enfants du <p> flex, cassant les espaces aux
+                    frontières de mots (cf. règle 3). */}
+                <span>
+                  {texteAvecChiffres(
+                    `${t(PROFIL.role, PROFIL.roleEn)} · ${t("dans l'équipe depuis le", "on the team since")} ${t(PROFIL.depuis, PROFIL.depuisEn)}`
+                  )}
+                </span>
               </p>
             </div>
 
             {/* Colonne code personnel : fond opaque + ombre marquée, pour
                 bien se détacher de la bannière colorée qu'elle chevauche
-                (lg:-mt-20) plutôt que de s'y fondre. */}
-            <div className="relative z-10 rounded-3xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] p-4 shadow-[0_16px_32px_-12px_rgba(20,18,32,0.35)] lg:-mt-20">
-              <div className="flex items-start gap-3">
-                <div className="h-[92px] w-[92px] shrink-0 overflow-hidden rounded-2xl border border-[var(--dashboard-text)]/10 bg-white p-1.5">
+                (lg:-mt-10) plutôt que de s'y fondre. */}
+            <div className="relative z-10 overflow-hidden rounded-2xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] shadow-[0_16px_32px_-12px_rgba(20,18,32,0.35)] lg:-mt-10">
+              {/* Liseré façon carte-badge : seule note "signature" de la
+                  page, réservée à ce module (le code personnel scannable),
+                  le reste reste sobre. */}
+              <div
+                className="h-[3px] w-full"
+                style={{ backgroundImage: "linear-gradient(90deg, var(--color-brand-pink), var(--color-brand-purple))" }}
+                aria-hidden
+              />
+              <div className="p-3">
+              <div className="flex items-start gap-2.5">
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[var(--dashboard-text)]/10 bg-white p-1">
                   <QrCode value="https://liivremoi.com/id/awa-konan" className="h-full w-full" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-bold text-[var(--dashboard-text)]">{t("Mon code à scanner", "My scannable code")}</p>
-                    <span className="shrink-0 rounded-full bg-brand-purple/10 px-2.5 py-1 text-[10px] font-semibold text-brand-purple">
+                    <span className="shrink-0 rounded-full bg-brand-purple/10 px-2 py-0.5 text-[10px] font-semibold text-brand-purple">
                       {t("Application mobile", "Mobile app")}
                     </span>
                   </div>
-                  <p className="mt-1.5 text-xs leading-snug text-[var(--dashboard-text)]/50">
+                  <p className="mt-1 text-xs leading-snug text-[var(--dashboard-text)]/50">
                     {t(
                       '« Scanner mon code » dans l\'application mobile : vous entrez avec vos droits, et seulement les vôtres.',
                       '"Scan my code" in the mobile app: you get in with your permissions, and only yours.'
@@ -266,9 +323,12 @@ export default function MonProfil() {
                 </div>
               </div>
 
-              <div className="mt-4 h-px bg-[var(--dashboard-text)]/10" />
+              {/* Pointillé plutôt que ligne pleine : évoque la ligne de
+                  déchirure d'un coupon/ticket, cohérent avec un code
+                  personnel physique à scanner. */}
+              <div className="mt-3 border-t border-dashed border-[var(--dashboard-text)]/15" />
 
-              <p className="mt-3 text-xs text-[var(--dashboard-text)]/50">{t("Valable jusqu'au 12 nov. 2026 · 74 jours", "Valid until Nov. 12, 2026 · 74 days")}</p>
+              <p className="mt-2.5 text-xs text-[var(--dashboard-text)]/50">{texteAvecChiffres(t("Valable jusqu'au 12 nov. 2026 · 74 jours", "Valid until Nov. 12, 2026 · 74 days"))}</p>
               <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[var(--dashboard-text)]/[0.08]">
                 <div
                   className="h-full rounded-full"
@@ -276,33 +336,34 @@ export default function MonProfil() {
                 />
               </div>
 
-              <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="mt-2.5 grid grid-cols-3 gap-1.5">
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-1.5 rounded-full border border-brand-pink/40 bg-[var(--dashboard-card-bg)] px-2 py-2 text-[11px] font-semibold text-brand-pink transition hover:bg-brand-pink/10"
+                  className="flex items-center justify-center gap-1 rounded-full border border-brand-pink/40 bg-[var(--dashboard-card-bg)] px-2 py-1.5 text-[11px] font-semibold text-brand-pink transition hover:bg-brand-pink/10"
                 >
                   <DownloadIcon />
                   {t("Télécharger", "Download")}
                 </button>
                 <button
                   type="button"
-                  className="rounded-full bg-[#141220] px-2 py-2 text-[11px] font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
+                  className="rounded-full bg-[#141220] px-2 py-1.5 text-[11px] font-semibold text-white transition hover:brightness-110 dark:bg-brand-pink"
                 >
                   {t("Renouveler", "Renew")}
                 </button>
                 <button
                   type="button"
-                  className="rounded-full border border-[#c8262d]/30 bg-[var(--dashboard-card-bg)] px-2 py-2 text-[11px] font-semibold text-[#c8262d] transition hover:bg-[#ffe1e2]"
+                  className="rounded-full border border-[#c8262d]/30 bg-[var(--dashboard-card-bg)] px-2 py-1.5 text-[11px] font-semibold text-[#c8262d] transition hover:bg-[#ffe1e2]"
                 >
                   {t("Révoquer", "Revoke")}
                 </button>
               </div>
-              <p className="mt-2.5 text-[10px] leading-snug text-[var(--dashboard-text)]/40">
+              <p className="mt-2 text-[10px] leading-snug text-[var(--dashboard-text)]/40">
                 {t(
                   "Renouveler crée un nouveau code et annule l'ancien à la seconde. Révoquer coupe sans en créer : le geste du téléphone perdu.",
                   "Renewing creates a new code and cancels the old one instantly. Revoking cuts access without creating one: the lost-phone move."
                 )}
               </p>
+              </div>
             </div>
           </div>
         </div>
@@ -342,52 +403,59 @@ export default function MonProfil() {
           <p className="mt-3 text-xs font-semibold text-[#c8262d]">{erreur}</p>
         )}
 
-        <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
-          {detailFields.map((field) => (
-            <div key={field.label} className="flex items-start gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]/60">
-                {field.icon}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <p className="text-[11px] text-[var(--dashboard-text)]/40">{field.label}</p>
-                  {field.verified && (
-                    <span className="rounded-full bg-[#dcf5e3] px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-[#178a3f]">
-                      {field.verified}
-                    </span>
-                  )}
-                  {field.maskKey && !enEdition && (
-                    <button
-                      type="button"
-                      onClick={() => toggleReveal(field.maskKey!)}
-                      aria-label={
-                        revealed[field.maskKey]
-                          ? t(`Masquer ${field.label.toLowerCase()}`, `Hide ${field.label.toLowerCase()}`)
-                          : t(`Afficher ${field.label.toLowerCase()}`, `Show ${field.label.toLowerCase()}`)
-                      }
-                      className="text-[var(--dashboard-text)]/30 transition hover:text-[var(--dashboard-text)]/60"
-                    >
-                      {revealed[field.maskKey] ? <EyeOffIcon /> : <EyeIcon />}
-                    </button>
-                  )}
-                </div>
-                {enEdition && field.editableKey ? (
-                  <input
-                    value={brouillon[field.editableKey]}
-                    onChange={(e) => modifierBrouillon(field.editableKey!, e.target.value)}
-                    type={field.editableKey === "email" ? "email" : field.editableKey === "telephone" ? "tel" : "text"}
-                    aria-label={field.label}
-                    className="mt-1 w-full min-w-0 rounded-lg border border-brand-pink/40 bg-brand-pink/5 px-2 py-1 text-sm font-semibold text-[var(--dashboard-text)] outline-none focus:border-brand-pink"
-                  />
-                ) : field.maskKey && !revealed[field.maskKey] ? (
-                  <div className="mt-1.5 flex gap-1" aria-hidden>
-                    {Array.from({ length: 10 }).map((_, i) => (
-                      <span key={i} className="h-1.5 w-3 rounded-sm bg-[var(--dashboard-text)]/10" />
-                    ))}
+        <div className="mt-4 space-y-4">
+          {detailGroups.map((group, gi) => (
+            <div key={group.title}>
+              {gi > 0 && <div className="mb-4 h-px bg-[var(--dashboard-text)]/10" />}
+              <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--dashboard-text)]/35">
+                {group.title}
+              </p>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3 lg:grid-cols-4">
+                {group.fields.map((field) => (
+                  <div key={field.label} className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[11px] text-[var(--dashboard-text)]/40">{field.label}</p>
+                        {field.verified && (
+                          <span className="rounded-full bg-[#dcf5e3] px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-[#178a3f]">
+                            {field.verified}
+                          </span>
+                        )}
+                        {field.maskKey && !enEdition && (
+                          <button
+                            type="button"
+                            onClick={() => toggleReveal(field.maskKey!)}
+                            aria-label={
+                              revealed[field.maskKey]
+                                ? t(`Masquer ${field.label.toLowerCase()}`, `Hide ${field.label.toLowerCase()}`)
+                                : t(`Afficher ${field.label.toLowerCase()}`, `Show ${field.label.toLowerCase()}`)
+                            }
+                            className="text-[var(--dashboard-text)]/30 transition hover:text-[var(--dashboard-text)]/60"
+                          >
+                            {revealed[field.maskKey] ? <EyeOffIcon /> : <EyeIcon />}
+                          </button>
+                        )}
+                      </div>
+                      {enEdition && field.editableKey ? (
+                        <input
+                          value={brouillon[field.editableKey]}
+                          onChange={(e) => modifierBrouillon(field.editableKey!, e.target.value)}
+                          type={field.editableKey === "email" ? "email" : field.editableKey === "telephone" ? "tel" : "text"}
+                          aria-label={field.label}
+                          className={`mt-1 w-full min-w-0 rounded-lg border border-brand-pink/40 bg-brand-pink/5 px-2 py-1 text-sm text-[var(--dashboard-text)] outline-none focus:border-brand-pink ${
+                            field.editableKey === "telephone" ? "font-figures-bold" : "font-semibold"
+                          }`}
+                        />
+                      ) : field.maskKey && !revealed[field.maskKey] ? (
+                        <div className="mt-1.5 flex gap-1" aria-hidden>
+                          {Array.from({ length: 10 }).map((_, i) => (
+                            <span key={i} className="h-1.5 w-3 rounded-sm bg-[var(--dashboard-text)]/10" />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="mt-0.5 truncate text-sm font-bold text-[var(--dashboard-text)]">{field.value}</p>
+                      )}
                   </div>
-                ) : (
-                  <p className="mt-0.5 truncate text-sm font-bold text-[var(--dashboard-text)]">{field.value}</p>
-                )}
+                ))}
               </div>
             </div>
           ))}

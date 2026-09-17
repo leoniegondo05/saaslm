@@ -3,7 +3,6 @@
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 
 export const REGLAGES_TABS = [
-  { key: "ma-boutique", label: "Ma boutique", labelEn: "My shop" },
   { key: "commande", label: "Page de commande", labelEn: "Order page" },
   { key: "finances", label: "Finances et règlements", labelEn: "Finances and payouts" },
   { key: "regles-vente", label: "Mes règles de vente", labelEn: "My sales rules" },
@@ -17,10 +16,11 @@ export type ReglagesTab = (typeof REGLAGES_TABS)[number]["key"];
   Barre d'onglets de l'onglet "Réglages" du rail (voir DashboardSidebar) —
   même mécanique que CommandesNav (dashboard-commandes/CommandesNav.tsx) :
   active = null → toutes les fiches s'affichent empilées, cliquer un onglet
-  filtre sur cette seule fiche. "Personnel et accès" (dans le profil) et
-  "Le partenaire agréé" (sa propre page, /dashboard/partenaire-agree) ne
-  sont pas des fiches d'ici — ce sont des liens sortants, cf. la fiche
-  "Ma boutique".
+  filtre sur cette seule fiche. "Personnel et accès" (dans le profil), "Le
+  partenaire agréé" (sa propre page, /dashboard/partenaire-agree) et "Ma
+  boutique" (sa propre page, /dashboard/ma-boutique, accessible via le logo
+  boutique du header — voir DashboardHeader.tsx) ne sont pas des fiches
+  d'ici — ce sont des liens sortants.
 */
 export default function ReglagesNav({
   active,
