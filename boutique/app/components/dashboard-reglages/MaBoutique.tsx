@@ -172,7 +172,7 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
                   value={identite.nom}
                   onChange={(e) => setIdentite((b) => ({ ...b, nom: e.target.value }))}
                   aria-label={t("Nom de la boutique", "Shop name")}
-                  className="min-w-0 max-w-full rounded-lg border border-transparent bg-transparent px-1 -mx-1 text-xl font-bold tracking-tight text-[var(--dashboard-text)] outline-none transition focus:border-brand-pink/40 focus:bg-brand-pink/5"
+                  className="min-w-0 max-w-full rounded-lg border border-transparent bg-transparent px-1 -mx-1 text-xl font-bold tracking-tight text-[var(--dashboard-text)] outline-none transition focus:border-brand-pink/40"
                 />
                 <button
                   type="button"
@@ -375,7 +375,7 @@ function SectionCard({
 }
 
 const champBoxClasses =
-  "mt-1.5 w-full rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-xs font-semibold text-[var(--dashboard-text)] outline-none transition focus:border-brand-pink/50 focus:bg-brand-pink/5";
+  "mt-1.5 w-full rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-xs font-semibold text-[var(--dashboard-text)] outline-none transition focus:border-brand-pink/50";
 
 function Champ({
   icon,

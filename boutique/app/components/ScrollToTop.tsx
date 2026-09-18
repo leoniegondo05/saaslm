@@ -13,10 +13,11 @@ export default function ScrollToTop() {
 
   useEffect(() => {
     const checkPosition = () => {
+      const scrollHeight = document.documentElement.scrollHeight;
+      const isScrollable = scrollHeight > window.innerHeight + BOTTOM_THRESHOLD_PX;
       const scrolledToBottom =
-        window.innerHeight + window.scrollY >=
-        document.documentElement.scrollHeight - BOTTOM_THRESHOLD_PX;
-      setVisible(scrolledToBottom);
+        window.innerHeight + window.scrollY >= scrollHeight - BOTTOM_THRESHOLD_PX;
+      setVisible(isScrollable && scrolledToBottom);
     };
 
     checkPosition();
