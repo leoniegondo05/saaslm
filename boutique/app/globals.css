@@ -38,6 +38,14 @@
   d'ici : restent ceux du composant/thème (clair ou sombre) — décision
   utilisateur, ne pas les forcer en blanc/noir.
 */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .font-figures {
   font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif !important;
   font-weight: 500 !important;
@@ -2734,5 +2742,16 @@ html.dark {
   .vue h4 { font-size: 12px; }
   .vue p { font-size: 9.5px; }
   .montant { font-size: 22px; }
+}
+
+/*
+  Aperçu de l'éditeur "Personnaliser ma boutique" (BoutiquePreview.tsx) —
+  bouton de commande, réglage "Animation : Vibration" (onglet Style ·
+  Mouvements, cf. StyleReglages.tsx).
+*/
+@keyframes dashboard-preview-vibrer {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-1.5px); }
+  75% { transform: translateX(1.5px); }
 }
 

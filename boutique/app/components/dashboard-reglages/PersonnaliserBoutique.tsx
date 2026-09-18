@@ -1,15 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import { useDashboardBoutiqueLogo } from "../DashboardBoutiqueLogoProvider";
 import { texteAvecChiffres } from "../dashboard-accueil/shared";
 import BoutiquePreview from "./personnaliser/BoutiquePreview";
+import ReglagesBoutique from "./personnaliser/ReglagesBoutique";
 import ReglagesSection from "./personnaliser/ReglagesSection";
 import SectionsPanel from "./personnaliser/SectionsPanel";
-import { ETAT_DEFAUT, SECTIONS_DEFAUT } from "./personnaliser/types";
+import StyleReglages from "./personnaliser/StyleReglages";
+import { ETAT_DEFAUT, SECTIONS_DEFAUT, fusionnerEtatPersiste } from "./personnaliser/types";
 import type { EditeurState, PageId, SectionId } from "./personnaliser/types";
+import type { BoutiqueReglageId } from "./personnaliser/ReglagesBoutique";
+import type { StyleReglageId } from "./personnaliser/StyleReglages";
 
 /*
   Écran "Personnaliser ma boutique" — ouvert depuis le bouton en bas de la
@@ -33,6 +37,24 @@ import type { EditeurState, PageId, SectionId } from "./personnaliser/types";
 
 const NOM_BOUTIQUE = "Awa Beauté";
 
+// Persistance locale (pas encore d'API Laravel pour cet écran, cf. mémoire
+// [[dashboard-mock-data-pending-laravel-api]]) : sans ça, actualiser la page
+// remet tout à ETAT_DEFAUT et perd les modifications en cours ("modifications
+// en attente" retombe à 0 sans qu'elles aient été vraiment enregistrées).
+// On ne relit localStorage qu'après le montage (useEffect) pour éviter un
+// mismatch d'hydratation SSR — le premier rendu reste sur les valeurs par
+// défaut, identiques côté serveur et client.
+const CLE_STOCKAGE = "lm-personnaliser-boutique";
+
+type EtatPersiste = {
+  state: EditeurState;
+  page: PageId;
+  onglet: "sections" | "style" | "boutique";
+  sectionChoisie: SectionId;
+  reglageBoutique: BoutiqueReglageId;
+  styleReglage: StyleReglageId;
+};
+
 export default function PersonnaliserBoutique() {
   const { t } = useDashboardLangue();
   const { logo } = useDashboardBoutiqueLogo();
@@ -46,8 +68,10 @@ export default function PersonnaliserBoutique() {
   // "accueil" par défaut, comme U.page:'home' dans la maquette — c'est la
   // page qu'un visiteur voit en premier, avant même la fiche produit.
   const [page, setPage] = useState<PageId>("accueil");
-  const [onglet, setOnglet] = useState<"sections" | "style">("sections");
+  const [onglet, setOnglet] = useState<"sections" | "style" | "boutique">("sections");
   const [sectionChoisie, setSectionChoisie] = useState<SectionId>("grande-image");
+  const [reglageBoutique, setReglageBoutique] = useState<BoutiqueReglageId>("identite");
+  const [styleReglage, setStyleReglage] = useState<StyleReglageId>("modele");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "done">("idle");
   // Œil "aperçu" de la maquette : ouvre la vitrine en plein écran, sans
   // aucun contour de sélection ni panneau, telle qu'un client la verrait.
@@ -57,6 +81,50 @@ export default function PersonnaliserBoutique() {
   // section choisie jusque-là n'existe pas sur l'autre page (bandeau,
   // en-tête, avis, faq et pied de page restent valables sur les deux).
   const SECTION_PAR_DEFAUT: Record<PageId, SectionId> = { accueil: "grande-image", commande: "infos" };
+  // Chargement une fois montée : remplace aussi la référence "baseline" pour
+  // que le badge reparte de "Tout est enregistré" plutôt que de compter les
+  // modifications déjà présentes comme "en attente".
+  //
+  // `charge` bloque l'effet de sauvegarde ci-dessous tant que ce chargement
+  // n'est pas passé : sinon cet effet de sauvegarde tourne au montage avec
+  // les valeurs par défaut (le setState* du chargement est asynchrone, pas
+  // encore répercuté dans ce rendu) et écrase le blob tout juste lu —
+  // c'était le bug : actualiser la page ramenait toujours à la section par
+  // défaut au lieu de rester sur la section choisie.
+  const [charge, setCharge] = useState(false);
+  useEffect(() => {
+    try {
+      const brut = localStorage.getItem(CLE_STOCKAGE);
+      if (brut) {
+        const sauvegarde = JSON.parse(brut) as Partial<EtatPersiste>;
+        if (sauvegarde.state) {
+          const etatFusionne = fusionnerEtatPersiste(sauvegarde.state);
+          setStateRaw(etatFusionne);
+          setBaseline(etatFusionne);
+        }
+        if (sauvegarde.page) setPage(sauvegarde.page);
+        if (sauvegarde.onglet) setOnglet(sauvegarde.onglet);
+        if (sauvegarde.sectionChoisie) setSectionChoisie(sauvegarde.sectionChoisie);
+        if (sauvegarde.reglageBoutique) setReglageBoutique(sauvegarde.reglageBoutique);
+        if (sauvegarde.styleReglage) setStyleReglage(sauvegarde.styleReglage);
+      }
+    } catch {
+      // localStorage indisponible (navigation privée, quota...) : on reste sur ETAT_DEFAUT.
+    } finally {
+      setCharge(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!charge) return;
+    try {
+      const donnees: EtatPersiste = { state, page, onglet, sectionChoisie, reglageBoutique, styleReglage };
+      localStorage.setItem(CLE_STOCKAGE, JSON.stringify(donnees));
+    } catch {
+      // idem : échec silencieux, la personnalisation reste utilisable pour la session en cours.
+    }
+  }, [charge, state, page, onglet, sectionChoisie, reglageBoutique, styleReglage]);
+
   const choisirPage = (p: PageId) => {
     setPage(p);
     setSectionChoisie((cur) => {
@@ -236,6 +304,10 @@ export default function PersonnaliserBoutique() {
               setOnglet={setOnglet}
               sectionChoisie={sectionChoisie}
               setSectionChoisie={setSectionChoisie}
+              reglageBoutique={reglageBoutique}
+              setReglageBoutique={setReglageBoutique}
+              styleReglage={styleReglage}
+              setStyleReglage={setStyleReglage}
             />
           </div>
 
@@ -252,7 +324,21 @@ export default function PersonnaliserBoutique() {
           </div>
 
           <div className="lg:h-[calc(100vh-160px)]">
-            <ReglagesSection sectionId={sectionChoisie} state={state} setState={setState} />
+            {onglet === "boutique" ? (
+              <ReglagesBoutique
+                reglageBoutique={reglageBoutique}
+                onOuvrirSection={(id) => {
+                  setOnglet("sections");
+                  setSectionChoisie(id);
+                }}
+                state={state}
+                setState={setState}
+              />
+            ) : onglet === "style" ? (
+              <StyleReglages styleReglage={styleReglage} state={state} setState={setState} />
+            ) : (
+              <ReglagesSection sectionId={sectionChoisie} state={state} setState={setState} page={page} />
+            )}
           </div>
         </div>
       </div>
