@@ -26,13 +26,14 @@
 
 import { DROP_PRODUITS } from "../../dashboard-produits/dropCatalogue";
 
-export type SectionGroupe = "Haut de page" | "Produit" | "Commande" | "Contenu" | "Sections personnalisées" | "Bas de page";
+export type SectionGroupe = "Haut de page" | "Produit" | "Commande" | "Contenu" | "Sections personnalisées" | "Bas de page" | "Par-dessus la page";
 
 export type PageId = "accueil" | "commande";
 
 export type SectionId =
   | "bandeau"
   | "entete"
+  | "chemin-navigation"
   | "grande-image"
   | "confiance"
   | "categories"
@@ -43,11 +44,14 @@ export type SectionId =
   | "offres"
   | "formulaire"
   | "paiement"
+  | "onglets-details"
   | "avis"
   | "faq"
   | "engagements"
+  | "produits-lies"
   | "vendu-par"
   | "pied-de-page"
+  | "bouton-commande-fixe"
   // Sections de bibliothèque (bouton "Ajouter une section" en bas de
   // SectionsPanel.tsx) : absentes de SECTIONS_ETAT_DEFAUT (cf. `libre` sur
   // leur SectionDef) tant qu'on ne les a pas ajoutées depuis la fenêtre
@@ -92,8 +96,9 @@ export type SectionDef = {
    *  (absente de la page tant qu'on ne l'a pas ajoutée) et apparaît dans
    *  la fenêtre "Ajouter une section" plutôt que directement dans la liste. */
   libre?: boolean;
-  /** Tracé d'icône (viewBox 24×24) montré dans la fenêtre "Ajouter une
-   *  section" — cf. AjouterSectionModal.tsx. */
+  /** Tracé d'icône (viewBox 24×24) montré devant le nom de la section dans
+   *  SectionsPanel.tsx et, pour les sections `libre`, dans la fenêtre
+   *  "Ajouter une section" — cf. AjouterSectionModal.tsx. */
   icone?: string;
 };
 
@@ -103,23 +108,27 @@ export type SectionDef = {
 // "les-deux") on retombe sur ann/header/hero/trust/cats/promo/best/
 // reviews/faq/eng/footer de `defaults().order.home`.
 export const SECTIONS_DEFAUT: SectionDef[] = [
-  { id: "bandeau", label: "Bandeau d'annonce", labelEn: "Announcement bar", groupe: "Haut de page", groupeEn: "Top of page", page: "les-deux" },
-  { id: "entete", label: "En-tête", labelEn: "Header", groupe: "Haut de page", groupeEn: "Top of page", verrouillee: true, page: "les-deux" },
-  { id: "grande-image", label: "Grande image", labelEn: "Hero image", groupe: "Haut de page", groupeEn: "Top of page", page: "accueil" },
-  { id: "confiance", label: "Barre de confiance", labelEn: "Trust bar", groupe: "Contenu", groupeEn: "Content", page: "accueil", description: "Atouts de la boutique", descriptionEn: "Shop's trust badges" },
-  { id: "categories", label: "Catégories", labelEn: "Categories", groupe: "Contenu", groupeEn: "Content", page: "accueil" },
-  { id: "promo", label: "Bannière d'offre", labelEn: "Offer banner", groupe: "Contenu", groupeEn: "Content", page: "accueil", description: "Offre du moment", descriptionEn: "Current offer" },
-  { id: "grille", label: "Grille de produits", labelEn: "Product grid", groupe: "Contenu", groupeEn: "Content", page: "accueil" },
-  { id: "galerie", label: "Galerie · vidéo et photos", labelEn: "Gallery · video and photos", groupe: "Produit", groupeEn: "Product", verrouillee: true, page: "commande" },
-  { id: "infos", label: "Informations produit", labelEn: "Product information", groupe: "Produit", groupeEn: "Product", page: "commande" },
-  { id: "offres", label: "Offres par quantité", labelEn: "Quantity offers", groupe: "Produit", groupeEn: "Product", page: "commande" },
-  { id: "formulaire", label: "Formulaire de commande", labelEn: "Order form", groupe: "Commande", groupeEn: "Order", verrouillee: true, page: "commande" },
-  { id: "paiement", label: "Paiement et livraison", labelEn: "Payment and delivery", groupe: "Commande", groupeEn: "Order", verrouillee: true, page: "commande" },
-  { id: "avis", label: "Avis clients", labelEn: "Customer reviews", groupe: "Contenu", groupeEn: "Content", page: "les-deux", description: "Notes et commentaires", descriptionEn: "Ratings and comments" },
-  { id: "faq", label: "Questions fréquentes", labelEn: "Frequently asked questions", groupe: "Contenu", groupeEn: "Content", page: "les-deux" },
-  { id: "engagements", label: "Engagements", labelEn: "Commitments", groupe: "Contenu", groupeEn: "Content", page: "accueil", description: "Rangée d'assurances", descriptionEn: "Row of trust badges" },
-  { id: "vendu-par", label: "Vendu par", labelEn: "Sold by", groupe: "Bas de page", groupeEn: "Bottom of page", verrouillee: true, page: "commande" },
-  { id: "pied-de-page", label: "Pied de page", labelEn: "Footer", groupe: "Bas de page", groupeEn: "Bottom of page", verrouillee: true, page: "les-deux", description: "Bas de toutes les pages", descriptionEn: "Bottom of every page" },
+  { id: "bandeau", label: "Bandeau d'annonce", labelEn: "Announcement bar", groupe: "Haut de page", groupeEn: "Top of page", page: "les-deux", icone: "M3 10v4h4l6 4V6l-6 4H3zM16 9a3 3 0 0 1 0 6" },
+  { id: "entete", label: "En-tête", labelEn: "Header", groupe: "Haut de page", groupeEn: "Top of page", verrouillee: true, page: "les-deux", icone: "M4 5h16v14H4zM4 9h16" },
+  { id: "chemin-navigation", label: "Chemin de navigation", labelEn: "Breadcrumb", groupe: "Haut de page", groupeEn: "Top of page", page: "commande", icone: "M3 12h2l2-4 3 8 3-8 2 4h6" },
+  { id: "grande-image", label: "Grande image", labelEn: "Hero image", groupe: "Haut de page", groupeEn: "Top of page", page: "accueil", icone: "M4 5.5h16v13H4zM4 15l4.5-4.5L12 14l3-3 5 5.5M9 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" },
+  { id: "categories", label: "Catégories", labelEn: "Categories", groupe: "Contenu", groupeEn: "Content", page: "accueil", icone: "M4 4.5h7v7H4zM13 4.5h7v7h-7zM4 13.5h7v7H4zM13 13.5h7v7h-7z" },
+  { id: "confiance", label: "Barre de confiance", labelEn: "Trust bar", groupe: "Contenu", groupeEn: "Content", page: "accueil", description: "Atouts de la boutique", descriptionEn: "Shop's trust badges", icone: "M12 3.5 19 6v6c0 5-3 8-7 9-4-1-7-4-7-9V6z" },
+  { id: "promo", label: "Bannière d'offre", labelEn: "Offer banner", groupe: "Contenu", groupeEn: "Content", page: "accueil", description: "Offre du moment", descriptionEn: "Current offer", icone: "M20 12 12 20 4 12V4h8zM7.5 7.5h.01" },
+  { id: "grille", label: "Grille de produits", labelEn: "Product grid", groupe: "Contenu", groupeEn: "Content", page: "accueil", icone: "M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v6H4zM14 15h6v6h-6z" },
+  { id: "galerie", label: "Galerie", labelEn: "Gallery", groupe: "Produit", groupeEn: "Product", verrouillee: true, page: "commande", description: "Vidéo puis photos", descriptionEn: "Video then photos", icone: "M4 5.5h16v13H4zM10 9.5l5 2.5-5 2.5z" },
+  { id: "infos", label: "Informations produit", labelEn: "Product information", groupe: "Produit", groupeEn: "Product", verrouillee: true, page: "commande", description: "Nom, prix, variantes, bouton", descriptionEn: "Name, price, variants, button", icone: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 8h.01M11 11h1v5h1" },
+  { id: "offres", label: "Offres par quantité", labelEn: "Quantity offers", groupe: "Produit", groupeEn: "Product", page: "commande", icone: "M19 5 5 19M7.5 7.5a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6zM16.5 20.1a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6z" },
+  { id: "paiement", label: "Paiement et livraison", labelEn: "Payment and delivery", groupe: "Commande", groupeEn: "Order", verrouillee: true, page: "commande", icone: "M3 6.5h18v11H3zM3 10h18" },
+  { id: "formulaire", label: "Vos informations", labelEn: "Your information", groupe: "Commande", groupeEn: "Order", verrouillee: true, page: "commande", description: "Champs du client", descriptionEn: "Customer fields", icone: "M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 10a2.4 2.4 0 1 0 0-4.8M2.5 19c0-3 2.7-5.4 6-5.4s6 2.4 6 5.4M15 13.8c2.3.5 4 2.5 4 5.2" },
+  { id: "onglets-details", label: "Onglets détails", labelEn: "Detail tabs", groupe: "Produit", groupeEn: "Product", page: "commande", description: "Description, caractéristiques, livraison", descriptionEn: "Description, specs, delivery", icone: "M4 6h7v3H4zM13 6h7v3h-7zM4 11h16v7H4z" },
+  { id: "avis", label: "Avis clients", labelEn: "Customer reviews", groupe: "Contenu", groupeEn: "Content", page: "les-deux", description: "Notes et commentaires", descriptionEn: "Ratings and comments", icone: "M12 3.5l2.6 5.4 5.9.8-4.3 4.2 1 6-5.2-2.8-5.2 2.8 1-6-4.3-4.2 5.9-.8z" },
+  { id: "faq", label: "Questions fréquentes", labelEn: "Frequently asked questions", groupe: "Contenu", groupeEn: "Content", page: "les-deux", icone: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.4v.3M12 16.5h.01" },
+  { id: "engagements", label: "Engagements", labelEn: "Commitments", groupe: "Contenu", groupeEn: "Content", page: "accueil", description: "Rangée d'assurances", descriptionEn: "Row of trust badges", icone: "M12 3.5 19 6v6c0 5-3 8-7 9-4-1-7-4-7-9V6zM9 12l2 2 4-4" },
+  { id: "produits-lies", label: "Vous aimerez aussi", labelEn: "You may also like", groupe: "Produit", groupeEn: "Product", page: "commande", description: "Produits similaires en fin de page", descriptionEn: "Related products near the bottom", icone: "M12 8.3c-1.6-2-4.6-2-5.8-.2-1.2 1.8-.4 4 1.4 5.7L12 17l4.4-3.2c1.8-1.7 2.6-3.9 1.4-5.7-1.2-1.8-4.2-1.8-5.8.2ZM4 20h16" },
+  { id: "vendu-par", label: "Vendu par", labelEn: "Sold by", groupe: "Bas de page", groupeEn: "Bottom of page", verrouillee: true, page: "commande", description: "Quatre informations toujours visibles", descriptionEn: "Four details always visible", icone: "M4 9 5 4h14l1 5M4 9v11h16V9M4 9h16M9 20v-6h6v6" },
+  { id: "pied-de-page", label: "Pied de page", labelEn: "Footer", groupe: "Bas de page", groupeEn: "Bottom of page", verrouillee: true, page: "les-deux", description: "Bas de toutes les pages", descriptionEn: "Bottom of every page", icone: "M4 5h16v14H4zM4 15h16" },
+  { id: "bouton-commande-fixe", label: "Bouton de commande fixe", labelEn: "Fixed order button", groupe: "Par-dessus la page", groupeEn: "Over the page", verrouillee: true, page: "commande", description: "Sur téléphone seulement", descriptionEn: "Phone only", icone: "M4 4h2l1 2h13l-1.5 8h-11L6 6M9 19a1 1 0 1 0 0-2 1 1 0 0 0 0 2ZM16 19a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" },
 
   // Bibliothèque de la fenêtre "Ajouter une section" (cf. AjouterSectionModal.tsx) —
   // `libre: true` : absentes de SECTIONS_ETAT_DEFAUT ci-dessous, "les-deux" une fois
@@ -292,8 +301,14 @@ export const STYLE_DEFAUT: StyleState = {
   garderTextesImages: true,
 };
 
+export type BandeauMessage = {
+  texte: string;
+  /** Nom court affiché sur l'onglet du sélecteur "Message affiché". */
+  etiquette: string;
+};
+
 export type BandeauState = {
-  messages: string[];
+  messages: BandeauMessage[];
   /** Index dans `messages` montré dans l'aperçu (et utilisé tel quel en
    *  défilement "fixe") — le défilement réel entre les messages n'a de
    *  sens que côté boutique publiée, pas dans cet aperçu statique. */
@@ -327,19 +342,39 @@ export type EnteteState = {
 };
 
 export type GalerieState = {
+  vignettesOrdinateur: "gauche" | "dessous" | "aucune";
+  vignettesTelephone: "dessous" | "aucune";
+  format: "carre" | "portrait";
+  position: "gauche" | "droite";
+  boutonZoom: boolean;
+  compteur: boolean;
+  pointsPosition: boolean;
   lectureAuto: boolean;
   repeter: boolean;
-  format: "carre" | "portrait" | "paysage";
-  badge: string;
+  photosDefilentApresVideo: boolean;
+  dureeParPhoto: 2 | 3 | 5;
+  passage: "glisser" | "fondu";
 };
 
+export type DescriptionAffichage = "courte" | "complete";
+export type VariantesPresentation = "cases" | "ronds" | "liste";
+
 export type InfosState = {
-  noteMoyenne: boolean;
+  badgeNouveaute: boolean;
+  etoilesSousNom: boolean;
+  description: DescriptionAffichage;
+  stockRestant: boolean;
+  lienConseilsUtilisation: boolean;
+  quantite: boolean;
+  /** Pas dans la maquette "Informations produit" fournie (badge « Nouveauté », étoiles,
+   *  description, stock, lien, quantité, rangée de confiance) — gardés en fin de groupe
+   *  "Blocs affichés" plutôt que retirés, pour ne pas perdre ces réglages existants. */
   ancienPrixBarre: boolean;
   badgeRemise: boolean;
-  stockRestant: boolean;
-  variantes: boolean;
-  quantite: boolean;
+  variantesPresentation: VariantesPresentation;
+  /** Cf. "Stock restant · Afficher sous" de la maquette : le bloc stock (ci-dessus)
+   *  ne s'affiche que lorsque `PRODUIT_APERCU.unitesDisponibles` est sous ce seuil. */
+  stockAfficherSousUnites: number;
 };
 
 export type OffresState = {
@@ -349,18 +384,115 @@ export type OffresState = {
 
 export type FormulaireState = {
   colonnes: 1 | 2;
-  libellesDansChamp: boolean;
-  etapesNumerotees: boolean;
+  styleChamps: "cadre" | "plein" | "ligne";
+  libellesPosition: "dans-le-champ" | "au-dessus";
+  iconesDansChamps: boolean;
   boutonLocaliser: boolean;
   mentionSpecifique: boolean;
+  mentionType: "texte" | "choix" | "date";
+  libelleAdressePrecise: string;
+  texteExempleAdressePrecise: string;
 };
+
+export type BoutonCommandeTexte = "je-commande" | "commander" | "acheter";
 
 export type PaiementApercuState = {
   payerEnLigne: boolean;
   remiseEnLignePct: number;
+  /** Texte affiché sous la remise (ex. "Remise appliquée tout de suite"). */
+  texteRemiseOption: string;
   payerALaLivraison: boolean;
+  /** Mode de paiement présenté en premier au client sur la page de commande. */
+  modePreselectionne: "en-ligne" | "a-la-livraison";
   livraisonExpress: boolean;
+  /** Mode de livraison présenté en premier au client. */
+  livraisonPreselectionnee: "standard" | "express";
+  /** Texte affiché à côté de l'option express (ex. "Plus rapide"). */
+  texteExpress: string;
+  /** Un seul bouton carré, Partager OU Favoris (pas les deux à la fois). */
+  boutonSecondaire: "aucun" | "partager" | "favori";
+  rangeeConfiance: boolean;
+  /** Réglé depuis le panneau "Informations produit" (groupe "Bouton de commande",
+   *  cf. ReglagesSection.tsx) même si l'état vit ici, à côté du reste du bouton. */
+  boutonTexte: BoutonCommandeTexte;
+  totalDansBouton: boolean;
 };
+
+export type OngletsDetailsState = {
+  /** Onglets (par défaut) ou accordéon, cf. groupe "Affichage" du panneau. */
+  presentation: "onglets" | "accordeon";
+  grandeImage: boolean;
+  /** Affiche `atouts` (ci-dessous) sous forme de liste à puces avec icônes. */
+  atoutsAvecIcones: boolean;
+  /** Libellés des onglets, éditables (cf. menuLiens dans EnteteState pour le
+   *  même patron ajouter/renommer/retirer). Le premier est actif dans l'aperçu. */
+  onglets: string[];
+  nombreAtouts: 3 | 4;
+  atouts: [string, string, string, string];
+};
+
+export type PositionOngletsDetails = "sous-produit" | "apres-commande" | "avant-pied-de-page";
+
+/** Même logique que positionAvisActuelle/placerAvis plus bas, mais sur les
+ *  ancres de la page "commande" : "infos" (sous le produit) et "formulaire"
+ *  (juste après le bloc commande), cf. SECTIONS_DEFAUT. */
+export function positionOngletsDetailsActuelle(sections: SectionState[]): PositionOngletsDetails {
+  const ids = sections.map((s) => s.id);
+  const i = ids.indexOf("onglets-details");
+  if (i < 0) return "apres-commande";
+  if (ids[i + 1] === "pied-de-page") return "avant-pied-de-page";
+  if (ids[i - 1] === "infos") return "sous-produit";
+  return "apres-commande";
+}
+
+export function placerOngletsDetails(sections: SectionState[], cible: PositionOngletsDetails): SectionState[] {
+  const ids = sections.map((s) => s.id);
+  const sansOnglets = ids.filter((id) => id !== "onglets-details");
+  const ancre: SectionId = cible === "sous-produit" ? "infos" : cible === "apres-commande" ? "formulaire" : "pied-de-page";
+  const avant = cible === "avant-pied-de-page";
+  const indexAncre = sansOnglets.indexOf(ancre);
+  if (indexAncre === -1) return sections;
+  const insertion = avant ? indexAncre : indexAncre + 1;
+  const nouvelOrdre = [...sansOnglets.slice(0, insertion), "onglets-details" as SectionId, ...sansOnglets.slice(insertion)];
+  return nouvelOrdre.map((id) => sections.find((s) => s.id === id)!);
+}
+
+export type ProduitsLiesState = {
+  choisirSelon: "meme-rayon" | "meilleures-ventes";
+  nombre: 4 | 8;
+  colonnesOrdinateur: 2 | 3 | 4;
+  colonnesTelephone: 1 | 2;
+  noteEtoiles: boolean;
+  coeurFavoris: boolean;
+  bouton: "texte" | "icone" | "aucun";
+};
+
+export type PositionProduitsLies = "sous-produit" | "apres-commande" | "apres-details" | "avant-pied-de-page";
+
+/** Même logique que positionOngletsDetailsActuelle/placerOngletsDetails ci-dessus,
+ *  avec une ancre de plus ("après les détails" = juste après "onglets-details"). */
+export function positionProduitsLiesActuelle(sections: SectionState[]): PositionProduitsLies {
+  const ids = sections.map((s) => s.id);
+  const i = ids.indexOf("produits-lies");
+  if (i < 0) return "apres-commande";
+  if (ids[i + 1] === "pied-de-page") return "avant-pied-de-page";
+  if (ids[i - 1] === "infos") return "sous-produit";
+  if (ids[i - 1] === "onglets-details") return "apres-details";
+  return "apres-commande";
+}
+
+export function placerProduitsLies(sections: SectionState[], cible: PositionProduitsLies): SectionState[] {
+  const ids = sections.map((s) => s.id);
+  const sansProduitsLies = ids.filter((id) => id !== "produits-lies");
+  const ancre: SectionId =
+    cible === "sous-produit" ? "infos" : cible === "apres-commande" ? "formulaire" : cible === "apres-details" ? "onglets-details" : "pied-de-page";
+  const avant = cible === "avant-pied-de-page";
+  const indexAncre = sansProduitsLies.indexOf(ancre);
+  if (indexAncre === -1) return sections;
+  const insertion = avant ? indexAncre : indexAncre + 1;
+  const nouvelOrdre = [...sansProduitsLies.slice(0, insertion), "produits-lies" as SectionId, ...sansProduitsLies.slice(insertion)];
+  return nouvelOrdre.map((id) => sections.find((s) => s.id === id)!);
+}
 
 export type AvisApercuState = {
   disposition: "grille" | "liste" | "carrousel";
@@ -547,8 +679,35 @@ export type CategoriesState = {
   nombreProduits: boolean;
   lienToutVoir: boolean;
   titre: string;
-  position: "apres-grande-image" | "apres-produits" | "avant-pied-de-page";
 };
+
+export type PositionCategories = "apres-grande-image" | "apres-produits" | "avant-pied-de-page";
+
+/** Même logique que positionConfianceActuelle/placerConfiance ci-dessus : pas
+ *  de champ `position` séparé dans CategoriesState, "Position dans la page"
+ *  lit et écrit l'ordre de "categories" dans `state.sections` pour rester
+ *  cohérent avec Monter/Descendre — un champ à part avait rendu ces boutons
+ *  sans effet visible sur l'aperçu (cf. BoutiquePreview.tsx). */
+export function positionCategoriesActuelle(sections: SectionState[]): PositionCategories {
+  const ids = sections.map((s) => s.id);
+  const i = ids.indexOf("categories");
+  if (i < 0) return "apres-grande-image";
+  if (ids[i + 1] === "pied-de-page") return "avant-pied-de-page";
+  if (ids[i - 1] === "grille") return "apres-produits";
+  return "apres-grande-image";
+}
+
+export function placerCategories(sections: SectionState[], cible: PositionCategories): SectionState[] {
+  const ids = sections.map((s) => s.id);
+  const sansCategories = ids.filter((id) => id !== "categories");
+  const ancre: SectionId = cible === "apres-produits" ? "grille" : cible === "avant-pied-de-page" ? "pied-de-page" : "grande-image";
+  const avant = cible === "avant-pied-de-page";
+  const indexAncre = sansCategories.indexOf(ancre);
+  if (indexAncre === -1) return sections;
+  const insertion = avant ? indexAncre : indexAncre + 1;
+  const nouvelOrdre = [...sansCategories.slice(0, insertion), "categories" as SectionId, ...sansCategories.slice(insertion)];
+  return nouvelOrdre.map((id) => sections.find((s) => s.id === id)!);
+}
 
 export type PositionPromo = "apres-grande-image" | "apres-categories" | "apres-produits" | "avant-pied-de-page";
 
@@ -664,6 +823,45 @@ export function placerEngagements(sections: SectionState[], cible: PositionEngag
   return nouvelOrdre.map((id) => sections.find((s) => s.id === id)!);
 }
 
+export type PositionVenduPar = "sous-le-bouton" | "sous-produit" | "apres-commande" | "apres-details" | "avant-pied-de-page";
+
+/** Même logique que positionProduitsLiesActuelle/placerProduitsLies ci-dessus : pas de champ
+ *  `position` séparé dans InfosState, le panneau "Vendu par" lit et écrit l'ordre de
+ *  "vendu-par" dans `state.sections`. "Emplacement" (Bas de page / Sous le bouton) n'est
+ *  qu'un regroupement d'affichage : "Sous le bouton" vaut "sous-le-bouton" (juste après
+ *  "paiement"), "Bas de page" recouvre les quatre ancres fines de "Position dans la page". */
+export function positionVenduParActuelle(sections: SectionState[]): PositionVenduPar {
+  const ids = sections.map((s) => s.id);
+  const i = ids.indexOf("vendu-par");
+  if (i < 0) return "avant-pied-de-page";
+  if (ids[i + 1] === "pied-de-page") return "avant-pied-de-page";
+  if (ids[i - 1] === "paiement") return "sous-le-bouton";
+  if (ids[i - 1] === "infos") return "sous-produit";
+  if (ids[i - 1] === "onglets-details") return "apres-details";
+  return "apres-commande";
+}
+
+export function placerVenduPar(sections: SectionState[], cible: PositionVenduPar): SectionState[] {
+  const ids = sections.map((s) => s.id);
+  const sansVenduPar = ids.filter((id) => id !== "vendu-par");
+  const ancre: SectionId =
+    cible === "sous-le-bouton"
+      ? "paiement"
+      : cible === "sous-produit"
+        ? "infos"
+        : cible === "apres-commande"
+          ? "formulaire"
+          : cible === "apres-details"
+            ? "onglets-details"
+            : "pied-de-page";
+  const avant = cible === "avant-pied-de-page";
+  const indexAncre = sansVenduPar.indexOf(ancre);
+  if (indexAncre === -1) return sections;
+  const insertion = avant ? indexAncre : indexAncre + 1;
+  const nouvelOrdre = [...sansVenduPar.slice(0, insertion), "vendu-par" as SectionId, ...sansVenduPar.slice(insertion)];
+  return nouvelOrdre.map((id) => sections.find((s) => s.id === id)!);
+}
+
 export type FlottantsState = {
   boutonCommandeTelephone: boolean;
   whatsappAfficher: boolean;
@@ -740,9 +938,11 @@ export type EditeurState = {
   offres: OffresState;
   formulaire: FormulaireState;
   paiement: PaiementApercuState;
+  ongletsDetails: OngletsDetailsState;
   avis: AvisApercuState;
   faq: FaqApercuState;
   engagements: EngagementsState;
+  produitsLies: ProduitsLiesState;
   piedDePage: PiedDePageState;
   flottants: FlottantsState;
 };
@@ -767,7 +967,11 @@ export const ETAT_DEFAUT: EditeurState = {
     styleIcones: "trait",
   },
   bandeau: {
-    messages: ["Livraison en 4 h en moyenne", "Payez en ligne et économisez", "Nouvelle gamme de soins disponible"],
+    messages: [
+      { texte: "Livraison en 4 h en moyenne", etiquette: "Livraison" },
+      { texte: "Payez en ligne et économisez", etiquette: "Remise en ligne" },
+      { texte: "Nouvelle gamme de soins disponible", etiquette: "Nouveauté" },
+    ],
     messageActif: 0,
     iconeDevantMessage: true,
     compteARebours: false,
@@ -821,7 +1025,6 @@ export const ETAT_DEFAUT: EditeurState = {
     nombreProduits: true,
     lienToutVoir: true,
     titre: "Nos catégories",
-    position: "apres-grande-image",
   },
   promo: {
     cote: "gauche",
@@ -845,8 +1048,32 @@ export const ETAT_DEFAUT: EditeurState = {
     coeurFavoris: true,
     badges: true,
   },
-  galerie: { lectureAuto: true, repeter: false, format: "carre", badge: "Vidéo" },
-  infos: { noteMoyenne: true, ancienPrixBarre: true, badgeRemise: true, stockRestant: true, variantes: true, quantite: true },
+  galerie: {
+    vignettesOrdinateur: "gauche",
+    vignettesTelephone: "dessous",
+    format: "carre",
+    position: "gauche",
+    boutonZoom: true,
+    compteur: true,
+    pointsPosition: true,
+    lectureAuto: true,
+    repeter: false,
+    photosDefilentApresVideo: true,
+    dureeParPhoto: 3,
+    passage: "glisser",
+  },
+  infos: {
+    badgeNouveaute: true,
+    etoilesSousNom: true,
+    description: "courte",
+    stockRestant: true,
+    lienConseilsUtilisation: true,
+    quantite: true,
+    ancienPrixBarre: true,
+    badgeRemise: true,
+    variantesPresentation: "cases",
+    stockAfficherSousUnites: 20,
+  },
   offres: {
     actif: true,
     paliers: [
@@ -855,8 +1082,39 @@ export const ETAT_DEFAUT: EditeurState = {
       { unites: 3, remisePct: 15 },
     ],
   },
-  formulaire: { colonnes: 2, libellesDansChamp: true, etapesNumerotees: true, boutonLocaliser: true, mentionSpecifique: true },
-  paiement: { payerEnLigne: true, remiseEnLignePct: 30, payerALaLivraison: true, livraisonExpress: false },
+  formulaire: {
+    colonnes: 2,
+    styleChamps: "cadre",
+    libellesPosition: "dans-le-champ",
+    iconesDansChamps: false,
+    boutonLocaliser: true,
+    mentionSpecifique: true,
+    mentionType: "texte",
+    libelleAdressePrecise: "Adresse précise",
+    texteExempleAdressePrecise: "Quartier, rue, repère",
+  },
+  paiement: {
+    payerEnLigne: true,
+    remiseEnLignePct: 30,
+    texteRemiseOption: "Remise appliquée tout de suite",
+    payerALaLivraison: true,
+    modePreselectionne: "en-ligne",
+    livraisonExpress: true,
+    livraisonPreselectionnee: "standard",
+    texteExpress: "Plus rapide",
+    boutonSecondaire: "favori",
+    rangeeConfiance: true,
+    boutonTexte: "je-commande",
+    totalDansBouton: false,
+  },
+  ongletsDetails: {
+    presentation: "onglets",
+    grandeImage: true,
+    atoutsAvecIcones: true,
+    onglets: ["Détails", "Composition", "Utilisation", "Livraison et retours"],
+    nombreAtouts: 4,
+    atouts: ["Texture légère, absorption rapide", "Formule sans paraben ni sulfate", "Convient aux peaux sensibles", "Testé dermatologiquement"],
+  },
   avis: {
     disposition: "grille",
     colonnesOrdinateur: 3,
@@ -877,6 +1135,15 @@ export const ETAT_DEFAUT: EditeurState = {
   engagements: {
     nombre: 4,
     items: ["Paiement en ligne sécurisé", "Suivi de la commande", "Service client", "Offres régulières"],
+  },
+  produitsLies: {
+    choisirSelon: "meme-rayon",
+    nombre: 4,
+    colonnesOrdinateur: 4,
+    colonnesTelephone: 2,
+    noteEtoiles: true,
+    coeurFavoris: true,
+    bouton: "texte",
   },
   faq: {
     colonnes: "deux",
@@ -931,6 +1198,42 @@ export function fusionnerEtatPersiste(sauvegarde: Partial<EditeurState> | undefi
     (fusion as Record<string, unknown>)[cle] =
       typeof defautCle === "object" && defautCle !== null && !Array.isArray(defautCle) ? { ...defautCle, ...valeur } : valeur;
   }
+  // `sections` est un tableau : la boucle ci-dessus le remplace tel quel
+  // (pas de fusion champ à champ comme pour les objets) — une sauvegarde
+  // antérieure à l'ajout d'une SectionDef (ex. "bouton-commande-fixe" ou,
+  // en son temps, "vendu-par") ne la verrait donc jamais apparaître, section
+  // manquante en silence plutôt qu'en erreur. On reconstruit `sections` dans
+  // l'ordre canonique de SECTIONS_ETAT_DEFAUT (état sauvegardé réutilisé
+  // quand il existe pour cet id, sinon valeur par défaut) plutôt que de
+  // rajouter les ids manquants en vrac : sinon ils atterrissent tous juste
+  // avant le pied de page (position de `ajouterSection`) au lieu de leur
+  // place normale, et les en-têtes de groupe (SectionsPanel.tsx) se
+  // répètent. Les sections de bibliothèque déjà ajoutées par l'utilisateur
+  // (id connu mais hors SECTIONS_ETAT_DEFAUT) gardent leur état sauvegardé
+  // et sont réinsérées juste avant le pied de page, dans leur ordre
+  // d'origine — même position que `ajouterSection`. Les ids qu'aucune
+  // SectionDef ne reconnaît plus (section retirée depuis) sont écartés.
+  const idsConnus = new Set(SECTIONS_DEFAUT.map((d) => d.id));
+  const idsFixes = new Set(SECTIONS_ETAT_DEFAUT.map((d) => d.id));
+  const parId = new Map(fusion.sections.filter((s) => idsConnus.has(s.id)).map((s) => [s.id, s]));
+  const sectionsFixes = SECTIONS_ETAT_DEFAUT.map((d) => parId.get(d.id) ?? d);
+  const sectionsLibres = fusion.sections.filter((s) => idsConnus.has(s.id) && !idsFixes.has(s.id));
+  const indexPied = sectionsFixes.findIndex((s) => s.id === "pied-de-page");
+  fusion.sections =
+    indexPied === -1
+      ? [...sectionsFixes, ...sectionsLibres]
+      : [...sectionsFixes.slice(0, indexPied), ...sectionsLibres, ...sectionsFixes.slice(indexPied)];
+
+  // bandeau.messages était un tableau de chaînes avant l'introduction de
+  // BandeauMessage ({texte, etiquette}) — une sauvegarde localStorage plus
+  // ancienne planterait sinon l'aperçu (texteAvecChiffres reçoit un `.texte`
+  // undefined puisque l'élément est directement la chaîne).
+  fusion.bandeau = {
+    ...fusion.bandeau,
+    messages: (fusion.bandeau.messages as unknown[]).map((m, i) =>
+      typeof m === "string" ? { texte: m, etiquette: `Message ${i + 1}` } : (m as BandeauMessage)
+    ),
+  };
   return fusion;
 }
 
@@ -944,6 +1247,12 @@ export const PRODUIT_APERCU = {
   note: 4.7,
   avisCount: 126,
   variantes: ["30 ml", "50 ml"],
+  descriptionCourte: "Sérum concentré en actifs éclat, pour un teint unifié au quotidien.",
+  descriptionCourteEn: "A brightening-actives concentrate for an even, radiant complexion.",
+  descriptionComplete:
+    "Sérum concentré en actifs éclat qui unifie le teint et repulpe la peau dès les premières semaines. Texture légère à absorption rapide, convient aux peaux sensibles, sans paraben ni sulfate.",
+  descriptionCompleteEn:
+    "A brightening-actives concentrate that evens out skin tone and plumps the skin from the first few weeks. Lightweight, fast-absorbing texture, suitable for sensitive skin, paraben- and sulfate-free.",
 };
 
 export const AVIS_APERCU = [

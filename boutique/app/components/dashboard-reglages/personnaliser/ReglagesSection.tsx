@@ -2,8 +2,8 @@
 
 import { Tag, texteAvecChiffres } from "../../dashboard-accueil/shared";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { CATEGORIES_APERCU, SECTIONS_DEFAUT, appartientPage, deplacerSection, placerAvis, placerConfiance, placerEngagements, placerFaq, placerGrille, placerPromo, positionAvisActuelle, positionConfianceActuelle, positionEngagementsActuelle, positionFaqActuelle, positionGrilleActuelle, positionPromoActuelle } from "./types";
-import type { EditeurState, FaqItem, MenuLien, PageId, PositionAvis, PositionConfiance, PositionEngagements, PositionFaq, PositionGrille, PositionPromo, SectionId, SectionState } from "./types";
+import { CATEGORIES_APERCU, SECTIONS_DEFAUT, appartientPage, deplacerSection, placerAvis, placerCategories, placerConfiance, placerEngagements, placerFaq, placerGrille, placerOngletsDetails, placerProduitsLies, placerPromo, placerVenduPar, positionAvisActuelle, positionCategoriesActuelle, positionConfianceActuelle, positionEngagementsActuelle, positionFaqActuelle, positionGrilleActuelle, positionOngletsDetailsActuelle, positionProduitsLiesActuelle, positionPromoActuelle, positionVenduParActuelle } from "./types";
+import type { BandeauMessage, EditeurState, FaqItem, FormulaireState, GalerieState, MenuLien, OngletsDetailsState, PageId, PositionAvis, PositionCategories, PositionConfiance, PositionEngagements, PositionFaq, PositionGrille, PositionOngletsDetails, PositionProduitsLies, PositionPromo, PositionVenduPar, SectionId, SectionState } from "./types";
 
 /*
   Colonne de droite : réglages de la section choisie dans SectionsPanel.tsx.
@@ -17,11 +17,13 @@ export default function ReglagesSection({
   state,
   setState,
   page,
+  onOuvrirSection,
 }: {
   sectionId: SectionId;
   state: EditeurState;
   setState: (updater: (s: EditeurState) => EditeurState) => void;
   page: PageId;
+  onOuvrirSection?: (sectionId: SectionId) => void;
 }) {
   const { t } = useDashboardLangue();
   const def = SECTIONS_DEFAUT.find((d) => d.id === sectionId)!;
@@ -43,9 +45,9 @@ export default function ReglagesSection({
               <p className="mt-0.5 text-[10px] text-[var(--dashboard-text)]/45">{t(def.description, def.descriptionEn ?? def.description)}</p>
             )}
           </div>
-          {def.verrouillee && <Tag tone="neutral">{t("Toujours présente", "Always shown")}</Tag>}
+          {def.verrouillee && <Tag tone="neutral">{t("Toujours présent", "Always shown")}</Tag>}
         </div>
-        {sectionState && (
+        {sectionState && sectionId !== "bandeau" && sectionId !== "entete" && sectionId !== "pied-de-page" && sectionId !== "galerie" && sectionId !== "infos" && sectionId !== "bouton-commande-fixe" && sectionId !== "formulaire" && sectionId !== "paiement" && (
           <div className="mt-2.5 flex items-center gap-1 rounded-xl bg-[var(--dashboard-text)]/[0.05] p-1">
             <button
               type="button"
@@ -76,8 +78,7 @@ export default function ReglagesSection({
         )}
       </div>
       <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-0.5">
-        <Corps sectionId={sectionId} state={state} setState={setState} t={t} />
-        {sectionState && sectionId !== "bandeau" && sectionId !== "entete" && sectionId !== "pied-de-page" && (
+        {sectionState && sectionId !== "bandeau" && sectionId !== "entete" && sectionId !== "pied-de-page" && sectionId !== "galerie" && sectionId !== "infos" && sectionId !== "bouton-commande-fixe" && sectionId !== "formulaire" && sectionId !== "paiement" && (
           <>
             <GroupeTitre label={t("Pour cette section", "For this section")} />
             <Ligne label={t("Largeur", "Width")}>
@@ -125,6 +126,7 @@ export default function ReglagesSection({
             )}
           </>
         )}
+        <Corps sectionId={sectionId} state={state} setState={setState} t={t} onOuvrirSection={onOuvrirSection} />
       </div>
     </div>
   );
@@ -135,15 +137,19 @@ function Corps({
   state,
   setState,
   t,
+  onOuvrirSection,
 }: {
   sectionId: SectionId;
   state: EditeurState;
   setState: (updater: (s: EditeurState) => EditeurState) => void;
   t: (fr: string, en: string) => string;
+  onOuvrirSection?: (sectionId: SectionId) => void;
 }) {
   switch (sectionId) {
     case "bandeau": {
       const b = state.bandeau;
+      const majMessage = (i: number, patch: Partial<BandeauMessage>) =>
+        setState((s) => ({ ...s, bandeau: { ...s.bandeau, messages: s.bandeau.messages.map((m, j) => (j === i ? { ...m, ...patch } : m)) } }));
       return (
         <>
           <GroupeTitre label={t("Contenu", "Content")} />
@@ -151,40 +157,63 @@ function Corps({
             <Segmente
               label={t("Message affiché", "Message shown")}
               value={String(b.messageActif)}
-              options={b.messages.map((_, i) => ({ value: String(i), label: t(`Message ${i + 1}`, `Message ${i + 1}`) }))}
+              options={b.messages.map((m, i) => ({ value: String(i), label: m.etiquette || t(`Message ${i + 1}`, `Message ${i + 1}`) }))}
               onChange={(v) => setState((s) => ({ ...s, bandeau: { ...s.bandeau, messageActif: Number(v) } }))}
             />
           )}
           <div className="space-y-2">
             {b.messages.map((msg, i) => (
-              <div key={i} className="rounded-xl border border-[var(--dashboard-text)]/10 p-2.5">
-                <Champ
-                  label={t(`Message ${i + 1}`, `Message ${i + 1}`)}
-                  value={msg}
-                  onChange={(v) =>
-                    setState((s) => ({ ...s, bandeau: { ...s.bandeau, messages: s.bandeau.messages.map((m, j) => (j === i ? v : m)) } }))
-                  }
+              <div key={i} className="rounded-xl bg-[var(--dashboard-text)]/[0.05] p-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-1 text-[9.5px] uppercase tracking-[0.1em] text-[var(--dashboard-text)]/40">
+                    <span className="shrink-0">{t(`Message ${i + 1}`, `Message ${i + 1}`)}</span>
+                    <span className="shrink-0">·</span>
+                    <input
+                      type="text"
+                      value={msg.etiquette}
+                      onChange={(e) => majMessage(i, { etiquette: e.target.value })}
+                      title={t("Étiquette de l'onglet", "Tab label")}
+                      className="min-w-0 flex-1 bg-transparent text-[9.5px] normal-case tracking-normal text-[var(--dashboard-text)]/60 outline-none"
+                    />
+                  </div>
+                  {b.messages.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setState((s) => {
+                          const messages = s.bandeau.messages.filter((_, j) => j !== i);
+                          return { ...s, bandeau: { ...s.bandeau, messages, messageActif: Math.min(s.bandeau.messageActif, messages.length - 1) } };
+                        })
+                      }
+                      className="shrink-0 text-[10px] font-semibold text-[var(--dashboard-text)]/40 hover:text-[#c8262d]"
+                    >
+                      {t("Supprimer", "Delete")}
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={msg.texte}
+                  onChange={(e) => majMessage(i, { texte: e.target.value })}
+                  className="mt-0.5 w-full bg-transparent text-[12.5px] font-bold text-[var(--dashboard-text)] outline-none"
                 />
-                {b.messages.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setState((s) => {
-                        const messages = s.bandeau.messages.filter((_, j) => j !== i);
-                        return { ...s, bandeau: { ...s.bandeau, messages, messageActif: Math.min(s.bandeau.messageActif, messages.length - 1) } };
-                      })
-                    }
-                    className="mt-1.5 text-[10px] font-semibold text-[var(--dashboard-text)]/40 hover:text-[#c8262d]"
-                  >
-                    {t("Supprimer", "Delete")}
-                  </button>
-                )}
               </div>
             ))}
           </div>
           <button
             type="button"
-            onClick={() => setState((s) => ({ ...s, bandeau: { ...s.bandeau, messages: [...s.bandeau.messages, t("Nouveau message", "New message")] } }))}
+            onClick={() =>
+              setState((s) => ({
+                ...s,
+                bandeau: {
+                  ...s.bandeau,
+                  messages: [
+                    ...s.bandeau.messages,
+                    { texte: t("Nouveau message", "New message"), etiquette: t(`Message ${s.bandeau.messages.length + 1}`, `Message ${s.bandeau.messages.length + 1}`) },
+                  ],
+                },
+              }))
+            }
             className="inline-flex items-center gap-1 rounded-full border border-dashed border-brand-pink/40 px-3.5 py-1.5 text-[10px] font-semibold text-brand-pink"
           >
             + {t("Ajouter un message", "Add a message")}
@@ -573,13 +602,13 @@ function Corps({
           <Champ label={t("Titre", "Title")} value={c.titre} onChange={(v) => majCategories({ titre: v })} />
           <SegmenteGrille
             label={t("Position dans la page", "Position on the page")}
-            value={c.position}
+            value={positionCategoriesActuelle(state.sections)}
             options={[
               { value: "apres-grande-image", label: t("Après la grande image", "After the hero image") },
               { value: "apres-produits", label: t("Après les produits", "After the products") },
               { value: "avant-pied-de-page", label: t("Avant le pied de page", "Before the footer") },
             ]}
-            onChange={(v) => majCategories({ position: v as EditeurState["categories"]["position"] })}
+            onChange={(v) => setState((s) => ({ ...s, sections: placerCategories(s.sections, v as PositionCategories) }))}
           />
         </>
       );
@@ -776,52 +805,241 @@ function Corps({
       );
     }
 
-    case "galerie":
+    case "galerie": {
+      const g = state.galerie;
+      const majGalerie = (patch: Partial<GalerieState>) => setState((s) => ({ ...s, galerie: { ...s.galerie, ...patch } }));
+      const vignettesApercu = [
+        "M4 5.5h16v13H4zM10 9.5l5 2.5-5 2.5z",
+        "M6 4h12v16H6z",
+        "M4 4.5h12v12H4zM8 16.5h12v-12",
+        "M12 2 4 7v10l8 5 8-5V7z",
+        "M6 4h9l3 3v13H6z",
+        "M4 8.5 12 4l8 4.5v8L12 21l-8-4.5z",
+      ];
       return (
         <>
-          <Ligne label={t("Lecture automatique", "Autoplay")} note={t("Sans le son au départ", "Muted at first")}>
-            <Interrupteur checked={state.galerie.lectureAuto} onChange={(v) => setState((s) => ({ ...s, galerie: { ...s.galerie, lectureAuto: v } }))} />
+          <GroupeTitre icone="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" label={t("Ordre d'affichage", "Display order")} />
+          <div className="flex flex-wrap gap-1.5">
+            {vignettesApercu.map((icone, i) => (
+              <div
+                key={i}
+                className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg"
+                style={{ background: `color-mix(in srgb, var(--dashboard-text) ${6 + (i % 3) * 3}%, transparent)` }}
+              >
+                <MiniIcone chemin={icone} />
+                <span className="absolute left-1 top-1 flex h-3 w-3 items-center justify-center rounded-full bg-black/55 text-[6.5px] font-bold leading-none text-white">
+                  {i + 1}
+                </span>
+                {i === 0 && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/25">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/90">
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="ml-px h-2 w-2 text-[#141220]" aria-hidden>
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </span>
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold text-[var(--dashboard-text)]">{t("Vidéo et photos", "Video and photos")}</span>
+            <a href="/dashboard/produits" className="text-[11px] font-semibold text-brand-pink">
+              {t("Fiche produit", "Product page")}
+            </a>
+          </div>
+
+          <GroupeTitre icone="M4 4.5h12v12H4zM8 16.5h12v-12" label={t("Vignettes", "Thumbnails")} />
+          <Ligne label={t("Sur ordinateur", "On computer")}>
+            <SegmentPills
+              value={g.vignettesOrdinateur}
+              options={[
+                { value: "gauche", label: t("À gauche", "On the left") },
+                { value: "dessous", label: t("Dessous", "Below") },
+                { value: "aucune", label: t("Aucune", "None") },
+              ]}
+              onChange={(v) => majGalerie({ vignettesOrdinateur: v as GalerieState["vignettesOrdinateur"] })}
+            />
+          </Ligne>
+          <Ligne label={t("Sur téléphone", "On phone")}>
+            <SegmentPills
+              value={g.vignettesTelephone}
+              options={[
+                { value: "dessous", label: t("Dessous", "Below") },
+                { value: "aucune", label: t("Aucune", "None") },
+              ]}
+              onChange={(v) => majGalerie({ vignettesTelephone: v as GalerieState["vignettesTelephone"] })}
+            />
+          </Ligne>
+
+          <GroupeTitre icone="M4 5.5h16v13H4zM10 9.5l5 2.5-5 2.5z" label={t("Cadre", "Frame")} />
+          <Ligne label={t("Format", "Format")}>
+            <SegmentPills
+              value={g.format}
+              options={[
+                { value: "carre", label: t("Carré", "Square") },
+                { value: "portrait", label: t("Portrait", "Portrait") },
+              ]}
+              onChange={(v) => majGalerie({ format: v as GalerieState["format"] })}
+            />
+          </Ligne>
+          <Ligne label={t("Position", "Position")}>
+            <SegmentPills
+              value={g.position}
+              options={[
+                { value: "gauche", label: t("À gauche", "On the left") },
+                { value: "droite", label: t("À droite", "On the right") },
+              ]}
+              onChange={(v) => majGalerie({ position: v as GalerieState["position"] })}
+            />
+          </Ligne>
+          <Ligne label={t("Bouton zoom", "Zoom button")}>
+            <Interrupteur checked={g.boutonZoom} onChange={(v) => majGalerie({ boutonZoom: v })} />
+          </Ligne>
+          <Ligne label={t("Compteur 1 / 6", "Counter 1 / 6")}>
+            <Interrupteur checked={g.compteur} onChange={(v) => majGalerie({ compteur: v })} />
+          </Ligne>
+          <Ligne label={t("Points de position", "Position dots")}>
+            <Interrupteur checked={g.pointsPosition} onChange={(v) => majGalerie({ pointsPosition: v })} />
+          </Ligne>
+
+          <GroupeTitre icone="M8 5v14l11-7z" label={t("Lecture", "Playback")} />
+          <Ligne label={t("Vidéo en lecture automatique", "Video autoplay")} note={t("Sans le son au départ", "Muted at first")}>
+            <Interrupteur checked={g.lectureAuto} onChange={(v) => majGalerie({ lectureAuto: v })} />
           </Ligne>
           <Ligne label={t("Répéter la vidéo", "Loop the video")}>
-            <Interrupteur checked={state.galerie.repeter} onChange={(v) => setState((s) => ({ ...s, galerie: { ...s.galerie, repeter: v } }))} />
+            <Interrupteur checked={g.repeter} onChange={(v) => majGalerie({ repeter: v })} />
           </Ligne>
-          <Segmente
-            label={t("Format", "Format")}
-            value={state.galerie.format}
-            options={[
-              { value: "carre", label: t("Carré", "Square") },
-              { value: "portrait", label: t("Portrait", "Portrait") },
-              { value: "paysage", label: t("Paysage", "Landscape") },
-            ]}
-            onChange={(v) => setState((s) => ({ ...s, galerie: { ...s.galerie, format: v as typeof s.galerie.format } }))}
-          />
-          <Champ label={t("Texte du badge", "Badge text")} value={state.galerie.badge} onChange={(v) => setState((s) => ({ ...s, galerie: { ...s.galerie, badge: v } }))} />
-          <p className="rounded-xl border border-dashed border-[var(--dashboard-text)]/15 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-[10.5px] leading-relaxed text-[var(--dashboard-text)]/55">
-            {t(
-              "Aucune photo n'est encore déposée pour ce produit. Ajoutez-en depuis sa fiche, dans Produits.",
-              "No photo has been uploaded for this product yet. Add some from its page, under Products."
-            )}
-          </p>
+          <Ligne label={t("Photos qui défilent après la vidéo", "Photos advance after the video")}>
+            <Interrupteur checked={g.photosDefilentApresVideo} onChange={(v) => majGalerie({ photosDefilentApresVideo: v })} />
+          </Ligne>
+          <Ligne label={t("Durée par photo", "Duration per photo")}>
+            <SegmentPills
+              value={String(g.dureeParPhoto)}
+              options={[2, 3, 5].map((n) => ({ value: String(n), label: `${n} s` }))}
+              onChange={(v) => majGalerie({ dureeParPhoto: Number(v) as GalerieState["dureeParPhoto"] })}
+            />
+          </Ligne>
+          <Ligne label={t("Passage", "Transition")}>
+            <SegmentPills
+              value={g.passage}
+              options={[
+                { value: "glisser", label: t("Glisser", "Slide") },
+                { value: "fondu", label: t("Fondu", "Fade") },
+              ]}
+              onChange={(v) => majGalerie({ passage: v as GalerieState["passage"] })}
+            />
+          </Ligne>
         </>
       );
+    }
 
-    case "infos":
+    case "infos": {
+      const majInfos = (patch: Partial<EditeurState["infos"]>) => setState((s) => ({ ...s, infos: { ...s.infos, ...patch } }));
+      const majPaiement = (patch: Partial<EditeurState["paiement"]>) => setState((s) => ({ ...s, paiement: { ...s.paiement, ...patch } }));
       return (
         <>
-          {([
-            ["noteMoyenne", t("Note moyenne", "Average rating")],
-            ["ancienPrixBarre", t("Ancien prix barré", "Old price struck through")],
-            ["badgeRemise", t("Badge de remise", "Discount badge")],
-            ["stockRestant", t("Stock restant", "Remaining stock")],
-            ["variantes", t("Variantes", "Variants")],
-            ["quantite", t("Quantité", "Quantity")],
-          ] as const).map(([key, label]) => (
-            <Ligne key={key} label={label}>
-              <Interrupteur checked={state.infos[key]} onChange={(v) => setState((s) => ({ ...s, infos: { ...s.infos, [key]: v } }))} />
-            </Ligne>
-          ))}
+          <GroupeTitre label={t("Blocs affichés", "Displayed blocks")} />
+          <Ligne label={t("Badge « Nouveauté »", "“New” badge")}>
+            <Interrupteur checked={state.infos.badgeNouveaute} onChange={(v) => majInfos({ badgeNouveaute: v })} />
+          </Ligne>
+          <Ligne label={t("Étoiles sous le nom", "Stars under the name")}>
+            <Interrupteur checked={state.infos.etoilesSousNom} onChange={(v) => majInfos({ etoilesSousNom: v })} />
+          </Ligne>
+          <Ligne label={t("Description", "Description")}>
+            <SegmentPills
+              value={state.infos.description}
+              options={[
+                { value: "courte", label: t("Courte", "Short") },
+                { value: "complete", label: t("Complète", "Full") },
+              ]}
+              onChange={(v) => majInfos({ description: v as EditeurState["infos"]["description"] })}
+            />
+          </Ligne>
+          <Ligne label={t("Stock restant", "Remaining stock")}>
+            <Interrupteur checked={state.infos.stockRestant} onChange={(v) => majInfos({ stockRestant: v })} />
+          </Ligne>
+          <Ligne label={t("Lien « Conseils d'utilisation »", "“How to use” link")}>
+            <Interrupteur checked={state.infos.lienConseilsUtilisation} onChange={(v) => majInfos({ lienConseilsUtilisation: v })} />
+          </Ligne>
+          <Ligne label={t("Quantité", "Quantity")}>
+            <Interrupteur checked={state.infos.quantite} onChange={(v) => majInfos({ quantite: v })} />
+          </Ligne>
+          <Ligne label={t("Rangée de confiance", "Trust row")} note={t("Livraison, paiement, retours", "Delivery, payment, returns")}>
+            <Interrupteur checked={state.paiement.rangeeConfiance} onChange={(v) => majPaiement({ rangeeConfiance: v })} />
+          </Ligne>
+          <Ligne label={t("Ancien prix barré", "Old price struck through")}>
+            <Interrupteur checked={state.infos.ancienPrixBarre} onChange={(v) => majInfos({ ancienPrixBarre: v })} />
+          </Ligne>
+          <Ligne label={t("Badge de remise", "Discount badge")}>
+            <Interrupteur checked={state.infos.badgeRemise} onChange={(v) => majInfos({ badgeRemise: v })} />
+          </Ligne>
+
+          <GroupeTitre label={t("Variantes", "Variants")} />
+          <Segmente
+            label={t("Présentation", "Display")}
+            value={state.infos.variantesPresentation}
+            options={[
+              { value: "cases", label: t("Cases", "Boxes") },
+              { value: "ronds", label: t("Ronds", "Circles") },
+              { value: "liste", label: t("Liste", "List") },
+            ]}
+            onChange={(v) => majInfos({ variantesPresentation: v as EditeurState["infos"]["variantesPresentation"] })}
+          />
+
+          <GroupeTitre label={t("Bouton de commande", "Order button")} />
+          <Segmente
+            label={t("Texte", "Text")}
+            value={state.paiement.boutonTexte}
+            options={[
+              { value: "je-commande", label: t("Je commande", "I order") },
+              { value: "commander", label: t("Commander", "Order") },
+              { value: "acheter", label: t("Acheter", "Buy") },
+            ]}
+            onChange={(v) => majPaiement({ boutonTexte: v as EditeurState["paiement"]["boutonTexte"] })}
+          />
+          <Segmente
+            label={t("Animation", "Animation")}
+            value={state.mouvements.boutonCommandeAnimation}
+            options={[
+              { value: "aucun", label: t("Aucune", "None") },
+              { value: "pulsation", label: t("Pulsation", "Pulse") },
+              { value: "vibration", label: t("Vibration", "Vibration") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, mouvements: { ...s.mouvements, boutonCommandeAnimation: v as EditeurState["mouvements"]["boutonCommandeAnimation"] } }))}
+          />
+          <Ligne label={t("Total dans le bouton", "Total in the button")}>
+            <Interrupteur checked={state.paiement.totalDansBouton} onChange={(v) => majPaiement({ totalDansBouton: v })} />
+          </Ligne>
+          <Segmente
+            label={t("Bouton à côté", "Side button")}
+            value={state.paiement.boutonSecondaire}
+            options={[
+              { value: "partager", label: t("Partager", "Share") },
+              { value: "favori", label: t("Favoris", "Favorite") },
+              { value: "aucun", label: t("Aucun", "None") },
+            ]}
+            onChange={(v) => majPaiement({ boutonSecondaire: v as EditeurState["paiement"]["boutonSecondaire"] })}
+          />
+
+          <GroupeTitre label={t("Stock restant", "Remaining stock")} />
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] font-medium text-[var(--dashboard-text)]">{t("Afficher sous", "Show under")}</p>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min={0}
+                max={999}
+                value={state.infos.stockAfficherSousUnites}
+                onChange={(e) => majInfos({ stockAfficherSousUnites: Number(e.target.value) })}
+                className="w-14 rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-2 py-1 text-right text-[11px] font-semibold text-[var(--dashboard-text)] outline-none focus:border-brand-pink/50 font-figures"
+              />
+              <span className="text-[10px] text-[var(--dashboard-text)]/40">{t("unités", "units")}</span>
+            </div>
+          </div>
         </>
       );
+    }
 
     case "offres":
       return (
@@ -866,75 +1084,251 @@ function Corps({
         <>
           <div>
             <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40">
-              {t("Champs obligatoires", "Required fields")}
+              {t("Champs", "Fields")}
             </p>
-            <div className="space-y-1">
-              {[t("Nom et prénom", "Full name"), t("Commune", "District"), t("Adresse précise", "Precise address"), t("Téléphone", "Phone number")].map((c) => (
-                <div key={c} className="flex items-center gap-2 rounded-lg bg-[var(--dashboard-text)]/[0.03] px-2.5 py-1.5 text-[10.5px] text-[var(--dashboard-text)]/70">
-                  <CadenasIcon />
-                  {c}
+            <div className="space-y-2">
+              <ChampObligatoire label={t("Nom et prénom", "Full name")} />
+              <ChampObligatoire label={t("Commune (liste)", "District (list)")} />
+              <ChampObligatoire label={t("Adresse précise", "Precise address")} />
+              <Ligne label={t("Bouton « Me localiser »", "“Locate me” button")}>
+                <Interrupteur checked={state.formulaire.boutonLocaliser} onChange={(v) => setState((s) => ({ ...s, formulaire: { ...s.formulaire, boutonLocaliser: v } }))} />
+              </Ligne>
+              <ChampObligatoire label={t("Téléphone et indicatif", "Phone and dialing code")} />
+              <Ligne label={t("Mention spécifique", "Special note")}>
+                <Interrupteur checked={state.formulaire.mentionSpecifique} onChange={(v) => setState((s) => ({ ...s, formulaire: { ...s.formulaire, mentionSpecifique: v } }))} />
+              </Ligne>
+              {state.formulaire.mentionSpecifique && (
+                <div className="flex items-center gap-1.5">
+                  {(
+                    [
+                      { value: "texte", label: t("Texte", "Text") },
+                      { value: "choix", label: t("Choix", "Choice") },
+                      { value: "date", label: t("Date", "Date") },
+                    ] as { value: FormulaireState["mentionType"]; label: string }[]
+                  ).map((o) => (
+                    <button
+                      key={o.value}
+                      type="button"
+                      onClick={() => setState((s) => ({ ...s, formulaire: { ...s.formulaire, mentionType: o.value } }))}
+                      className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold transition ${
+                        state.formulaire.mentionType === o.value
+                          ? "border-brand-pink/40 bg-brand-pink/10 text-brand-pink"
+                          : "border-[var(--dashboard-text)]/10 text-[var(--dashboard-text)]/60"
+                      }`}
+                    >
+                      + {o.label}
+                    </button>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </div>
+
+          <GroupeTitre label={t("Allure des champs", "Field style")} />
           <Segmente
-            label={t("Colonnes", "Columns")}
-            value={String(state.formulaire.colonnes)}
+            label={t("Style", "Style")}
+            value={state.formulaire.styleChamps}
             options={[
-              { value: "1", label: t("Une", "One") },
-              { value: "2", label: t("Deux", "Two") },
+              { value: "cadre", label: t("Cadre", "Bordered") },
+              { value: "plein", label: t("Plein", "Filled") },
+              { value: "ligne", label: t("Ligne", "Underline") },
             ]}
-            onChange={(v) => setState((s) => ({ ...s, formulaire: { ...s.formulaire, colonnes: Number(v) as 1 | 2 } }))}
+            onChange={(v) => setState((s) => ({ ...s, formulaire: { ...s.formulaire, styleChamps: v as FormulaireState["styleChamps"] } }))}
           />
-          <Ligne label={t("Libellés dans le champ", "Labels inside the field")}>
-            <Interrupteur checked={state.formulaire.libellesDansChamp} onChange={(v) => setState((s) => ({ ...s, formulaire: { ...s.formulaire, libellesDansChamp: v } }))} />
+          <Segmente
+            label={t("Libellés", "Labels")}
+            value={state.formulaire.libellesPosition}
+            options={[
+              { value: "dans-le-champ", label: t("Dans le champ", "Inside the field") },
+              { value: "au-dessus", label: t("Au-dessus", "Above") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, formulaire: { ...s.formulaire, libellesPosition: v as FormulaireState["libellesPosition"] } }))}
+          />
+          <Ligne label={t("Icônes dans les champs", "Icons in the fields")}>
+            <Interrupteur checked={state.formulaire.iconesDansChamps} onChange={(v) => setState((s) => ({ ...s, formulaire: { ...s.formulaire, iconesDansChamps: v } }))} />
           </Ligne>
-          <Ligne label={t("Étapes numérotées", "Numbered steps")}>
-            <Interrupteur checked={state.formulaire.etapesNumerotees} onChange={(v) => setState((s) => ({ ...s, formulaire: { ...s.formulaire, etapesNumerotees: v } }))} />
-          </Ligne>
-          <Ligne label={t("Bouton « Me localiser »", "“Locate me” button")}>
-            <Interrupteur checked={state.formulaire.boutonLocaliser} onChange={(v) => setState((s) => ({ ...s, formulaire: { ...s.formulaire, boutonLocaliser: v } }))} />
-          </Ligne>
-          <Ligne label={t("Mention spécifique", "Special note")} note={t("Facultative pour le client", "Optional for the customer")}>
-            <Interrupteur checked={state.formulaire.mentionSpecifique} onChange={(v) => setState((s) => ({ ...s, formulaire: { ...s.formulaire, mentionSpecifique: v } }))} />
-          </Ligne>
+
+          <GroupeTitre label={t("Textes", "Texts")} />
+          <Champ
+            label={t("Libellé", "Label")}
+            value={state.formulaire.libelleAdressePrecise}
+            onChange={(v) => setState((s) => ({ ...s, formulaire: { ...s.formulaire, libelleAdressePrecise: v } }))}
+          />
+          <Champ
+            label={t("Texte d'exemple", "Example text")}
+            value={state.formulaire.texteExempleAdressePrecise}
+            onChange={(v) => setState((s) => ({ ...s, formulaire: { ...s.formulaire, texteExempleAdressePrecise: v } }))}
+          />
         </>
       );
 
-    case "paiement":
+    case "paiement": {
+      const majPaiement = (patch: Partial<EditeurState["paiement"]>) => setState((s) => ({ ...s, paiement: { ...s.paiement, ...patch } }));
+      const majInfos = (patch: Partial<EditeurState["infos"]>) => setState((s) => ({ ...s, infos: { ...s.infos, ...patch } }));
       return (
         <>
-          <Ligne label={t("Payer en ligne", "Pay online")}>
-            <Interrupteur checked={state.paiement.payerEnLigne} onChange={(v) => setState((s) => ({ ...s, paiement: { ...s.paiement, payerEnLigne: v } }))} />
+          <GroupeTitre icone="M3 6.5h18v11H3zM3 10h18" label={t("Paiement en ligne", "Online payment")} />
+          <Segmente
+            label={t("Remise", "Discount")}
+            value={String(state.paiement.remiseEnLignePct)}
+            options={[0, 10, 20, 30].map((n) => ({ value: String(n), label: `${n} %` }))}
+            onChange={(v) => majPaiement({ remiseEnLignePct: Number(v) })}
+          />
+          <Ligne label={t("Ancien prix barré", "Old price struck through")}>
+            <Interrupteur checked={state.infos.ancienPrixBarre} onChange={(v) => majInfos({ ancienPrixBarre: v })} />
           </Ligne>
-          {state.paiement.payerEnLigne && (
-            <div className="flex items-center gap-2 rounded-xl border border-[var(--dashboard-text)]/10 px-3 py-2">
-              <span className="flex-1 text-[11px] font-semibold text-[var(--dashboard-text)]">{t("Remise si paiement en ligne", "Discount for paying online")}</span>
-              <input
-                type="number"
-                min={0}
-                max={90}
-                value={state.paiement.remiseEnLignePct}
-                onChange={(e) => setState((s) => ({ ...s, paiement: { ...s.paiement, remiseEnLignePct: Number(e.target.value) } }))}
-                className="w-14 rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-2 py-1 text-right text-[11px] font-semibold text-[var(--dashboard-text)] outline-none focus:border-brand-pink/50 font-figures"
-              />
-              <span className="text-[10px] text-[var(--dashboard-text)]/40">%</span>
-            </div>
-          )}
-          <Ligne label={t("Payer à la livraison", "Pay on delivery")}>
-            <Interrupteur checked={state.paiement.payerALaLivraison} onChange={(v) => setState((s) => ({ ...s, paiement: { ...s.paiement, payerALaLivraison: v } }))} />
+          <Ligne label={t("Badge de remise", "Discount badge")}>
+            <Interrupteur checked={state.infos.badgeRemise} onChange={(v) => majInfos({ badgeRemise: v })} />
           </Ligne>
-          <Ligne label={t("Livraison express", "Express delivery")} note={texteAvecChiffres(t("+2 000 F, fixé par le partenaire agréé", "+2,000 F, set by the approved partner"))}>
-            <Interrupteur checked={state.paiement.livraisonExpress} onChange={(v) => setState((s) => ({ ...s, paiement: { ...s.paiement, livraisonExpress: v } }))} />
+          <Champ
+            label={t("Texte de l'option", "Option text")}
+            value={state.paiement.texteRemiseOption}
+            onChange={(v) => majPaiement({ texteRemiseOption: v })}
+          />
+
+          <GroupeTitre label={t("Mode proposé en premier", "Mode offered first")} />
+          <Segmente
+            label={t("Présélectionné", "Preselected")}
+            value={state.paiement.modePreselectionne}
+            options={[
+              { value: "en-ligne", label: t("En ligne", "Online") },
+              { value: "a-la-livraison", label: t("À la livraison", "On delivery") },
+            ]}
+            onChange={(v) => majPaiement({ modePreselectionne: v as EditeurState["paiement"]["modePreselectionne"] })}
+          />
+
+          <GroupeTitre label={t("Moyens de paiement en ligne", "Online payment methods")} />
+          {[
+            [t("Orange Money", "Orange Money")],
+            [t("MTN MoMo", "MTN MoMo")],
+            [t("Moov Money", "Moov Money")],
+            [t("Wave", "Wave")],
+          ].map(([label]) => (
+            <Ligne key={label} label={label}>
+              <Tag tone="neutral" className="gap-1">
+                <CadenasIcon />
+                {t("Toujours", "Always")}
+              </Tag>
+            </Ligne>
+          ))}
+
+          <GroupeTitre label={t("Livraison", "Delivery")} />
+          <Ligne label={t("Standard", "Standard")}>
+            <Tag tone="neutral" className="gap-1">
+              <CadenasIcon />
+              {texteAvecChiffres(t("4 h en moyenne", "4 h average"))}
+            </Tag>
           </Ligne>
-          <a
-            href="/dashboard/reglages?tab=commande"
-            className="block rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-[10.5px] font-semibold text-brand-pink"
-          >
-            {t("Orange Money, MTN MoMo, Moov Money, Wave → réglés dans Page de commande", "Orange Money, MTN MoMo, Moov Money, Wave → set in Order page")}
-          </a>
+          <Ligne label={t("Proposer l'express", "Offer express")} note={t("Selon les Réglages de la boutique", "Depending on the shop's Settings")}>
+            <Interrupteur checked={state.paiement.livraisonExpress} onChange={(v) => majPaiement({ livraisonExpress: v })} />
+          </Ligne>
+          <Segmente
+            label={t("Présélectionnée", "Preselected")}
+            value={state.paiement.livraisonPreselectionnee}
+            options={[
+              { value: "standard", label: t("Standard", "Standard") },
+              { value: "express", label: t("Express", "Express") },
+            ]}
+            onChange={(v) => majPaiement({ livraisonPreselectionnee: v as EditeurState["paiement"]["livraisonPreselectionnee"] })}
+          />
+          <Champ
+            label={t("Texte de l'express", "Express text")}
+            value={state.paiement.texteExpress}
+            onChange={(v) => majPaiement({ texteExpress: v })}
+          />
         </>
       );
+    }
+
+    case "onglets-details": {
+      const o = state.ongletsDetails;
+      const majOnglets = (patch: Partial<EditeurState["ongletsDetails"]>) => setState((s) => ({ ...s, ongletsDetails: { ...s.ongletsDetails, ...patch } }));
+      return (
+        <>
+          <GroupeTitre label={t("Affichage", "Display")} />
+          <Ligne label={t("Présentation", "Layout style")}>
+            <SegmentPills
+              value={o.presentation}
+              options={[
+                { value: "onglets", label: t("Onglets", "Tabs") },
+                { value: "accordeon", label: t("Accordéon", "Accordion") },
+              ]}
+              onChange={(v) => majOnglets({ presentation: v as OngletsDetailsState["presentation"] })}
+            />
+          </Ligne>
+          <Ligne label={t("Grande image de détail", "Large detail image")}>
+            <Interrupteur checked={o.grandeImage} onChange={(v) => majOnglets({ grandeImage: v })} />
+          </Ligne>
+          <Ligne label={t("Liste d'atouts avec icônes", "Highlight list with icons")}>
+            <Interrupteur checked={o.atoutsAvecIcones} onChange={(v) => majOnglets({ atoutsAvecIcones: v })} />
+          </Ligne>
+
+          <GroupeTitre label={t("Onglets", "Tabs")} />
+          <div className="flex flex-wrap gap-1.5">
+            {o.onglets.map((onglet, i) => (
+              <span key={i} className="flex items-center gap-1 rounded-full bg-[var(--dashboard-text)]/[0.06] py-1 pl-2.5 pr-1">
+                <input
+                  value={onglet}
+                  onChange={(ev) => majOnglets({ onglets: o.onglets.map((v, j) => (j === i ? ev.target.value : v)) })}
+                  style={{ width: `${Math.max(onglet.length, 3)}ch` }}
+                  className="bg-transparent text-[10px] font-medium text-[var(--dashboard-text)] outline-none"
+                />
+                <button
+                  type="button"
+                  aria-label={t("Retirer cet onglet", "Remove this tab")}
+                  onClick={() => majOnglets({ onglets: o.onglets.filter((_, j) => j !== i) })}
+                  className="flex h-4 w-4 items-center justify-center rounded-full text-[10px] leading-none text-[var(--dashboard-text)]/30 hover:bg-[#c8262d]/10 hover:text-[#c8262d]"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => majOnglets({ onglets: [...o.onglets, t("Nouvel onglet", "New tab")] })}
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-brand-pink/40 px-3.5 py-1.5 text-[10px] font-semibold text-brand-pink"
+          >
+            + {t("Ajouter un onglet", "Add a tab")}
+          </button>
+
+          <SegmenteGrille
+            label={t("Position dans la page", "Position on the page")}
+            value={positionOngletsDetailsActuelle(state.sections)}
+            options={[
+              { value: "sous-produit", label: t("Sous le produit", "Below the product") },
+              { value: "apres-commande", label: t("Après la commande", "After the order block") },
+              { value: "avant-pied-de-page", label: t("Avant le pied de page", "Before the footer") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, sections: placerOngletsDetails(s.sections, v as PositionOngletsDetails) }))}
+          />
+
+          {o.atoutsAvecIcones && (
+            <>
+              <GroupeTitre label={t("Atouts", "Highlights")} />
+              <Segmente
+                label={t("Nombre d'atouts", "Number of highlights")}
+                value={String(o.nombreAtouts)}
+                options={[
+                  { value: "3", label: t("Trois", "Three") },
+                  { value: "4", label: t("Quatre", "Four") },
+                ]}
+                onChange={(v) => majOnglets({ nombreAtouts: Number(v) as 3 | 4 })}
+              />
+              {o.atouts.map((atout, i) => (
+                <div key={i} className="rounded-xl border border-[var(--dashboard-text)]/10 p-2.5">
+                  <Champ
+                    label={t(`Atout ${i + 1}`, `Highlight ${i + 1}`)}
+                    value={atout}
+                    onChange={(v) => majOnglets({ atouts: o.atouts.map((a, j) => (j === i ? v : a)) as EditeurState["ongletsDetails"]["atouts"] })}
+                  />
+                </div>
+              ))}
+            </>
+          )}
+        </>
+      );
+    }
 
     case "avis": {
       const a = state.avis;
@@ -1171,15 +1565,156 @@ function Corps({
       );
     }
 
-    case "vendu-par":
+    case "produits-lies": {
+      const pl = state.produitsLies;
+      const majProduitsLies = (patch: Partial<EditeurState["produitsLies"]>) => setState((s) => ({ ...s, produitsLies: { ...s.produitsLies, ...patch } }));
       return (
-        <p className="rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-[10.5px] leading-relaxed text-[var(--dashboard-text)]/55">
-          {t(
-            "Reprend le nom, le téléphone, l'adresse email et la localisation renseignés dans « Ma boutique ». Ne se masque pas.",
-            "Pulls the name, phone number, email and location set in “My shop”. Cannot be hidden."
+        <>
+          <GroupeTitre label={t("Produits", "Products")} />
+          <Segmente
+            label={t("Choisis selon", "Chosen by")}
+            value={pl.choisirSelon}
+            options={[
+              { value: "meme-rayon", label: t("Même rayon", "Same category") },
+              { value: "meilleures-ventes", label: t("Meilleures ventes", "Best sellers") },
+            ]}
+            onChange={(v) => majProduitsLies({ choisirSelon: v as EditeurState["produitsLies"]["choisirSelon"] })}
+          />
+          <Ligne label={t("Nombre", "Count")}>
+            <SegmentPills
+              value={String(pl.nombre)}
+              options={[4, 8].map((n) => ({ value: String(n), label: String(n) }))}
+              onChange={(v) => majProduitsLies({ nombre: Number(v) as EditeurState["produitsLies"]["nombre"] })}
+            />
+          </Ligne>
+
+          <GroupeTitre label={t("Colonnes", "Columns")} />
+          <Ligne label={t("Sur ordinateur", "On computer")}>
+            <SegmentPills
+              value={String(pl.colonnesOrdinateur)}
+              options={[2, 3, 4].map((n) => ({ value: String(n), label: String(n) }))}
+              onChange={(v) => majProduitsLies({ colonnesOrdinateur: Number(v) as EditeurState["produitsLies"]["colonnesOrdinateur"] })}
+            />
+          </Ligne>
+          <Ligne label={t("Sur téléphone", "On phone")}>
+            <SegmentPills
+              value={String(pl.colonnesTelephone)}
+              options={[1, 2].map((n) => ({ value: String(n), label: String(n) }))}
+              onChange={(v) => majProduitsLies({ colonnesTelephone: Number(v) as EditeurState["produitsLies"]["colonnesTelephone"] })}
+            />
+          </Ligne>
+
+          <GroupeTitre label={t("Cartes", "Cards")} />
+          <Ligne label={t("Note en étoiles", "Star rating")}>
+            <Interrupteur checked={pl.noteEtoiles} onChange={(v) => majProduitsLies({ noteEtoiles: v })} />
+          </Ligne>
+          <Ligne label={t("Coeur favoris", "Favorite heart")}>
+            <Interrupteur checked={pl.coeurFavoris} onChange={(v) => majProduitsLies({ coeurFavoris: v })} />
+          </Ligne>
+          <Segmente
+            label={t("Bouton", "Button")}
+            value={pl.bouton}
+            options={[
+              { value: "texte", label: t("Texte", "Text") },
+              { value: "icone", label: t("Icône", "Icon") },
+              { value: "aucun", label: t("Aucun", "None") },
+            ]}
+            onChange={(v) => majProduitsLies({ bouton: v as EditeurState["produitsLies"]["bouton"] })}
+          />
+
+          <SegmenteGrille
+            label={t("Position dans la page", "Position on the page")}
+            value={positionProduitsLiesActuelle(state.sections)}
+            options={[
+              { value: "sous-produit", label: t("Sous le produit", "Below the product") },
+              { value: "apres-commande", label: t("Après la commande", "After the order block") },
+              { value: "apres-details", label: t("Après les détails", "After the details") },
+              { value: "avant-pied-de-page", label: t("Avant le pied de page", "Before the footer") },
+            ]}
+            onChange={(v) => setState((s) => ({ ...s, sections: placerProduitsLies(s.sections, v as PositionProduitsLies) }))}
+          />
+
+          {!state.cartesProduit.zones.includes("vous-aimerez-aussi") && (
+            <p className="rounded-xl border border-dashed border-[var(--dashboard-text)]/15 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-[10.5px] leading-relaxed text-[var(--dashboard-text)]/55">
+              {t(
+                "Section masquée : active « Vous aimerez aussi » dans l'onglet Style → Cartes produit → Où cela s'applique.",
+                "Section hidden: enable “You may also like” in the Style tab → Product cards → Where this applies."
+              )}
+            </p>
           )}
-        </p>
+          <p className="rounded-xl border border-dashed border-[var(--dashboard-text)]/15 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-[10.5px] leading-relaxed text-[var(--dashboard-text)]/55">
+            {t(
+              "Style des cartes (forme, densité, effets…) réglé dans Style → Cartes produit.",
+              "Card style (shape, density, effects…) set in Style → Product cards."
+            )}
+          </p>
+        </>
       );
+    }
+
+    case "vendu-par": {
+      const positionVenduPar = positionVenduParActuelle(state.sections);
+      const emplacementVenduPar: "bas-de-page" | "sous-le-bouton" = positionVenduPar === "sous-le-bouton" ? "sous-le-bouton" : "bas-de-page";
+      return (
+        <>
+          <GroupeTitre icone="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 8h.01M11 11h1v5h1" label={t("Informations", "Information")} />
+          <div className="space-y-2">
+            {[
+              t("Nom de la boutique", "Shop name"),
+              t("Téléphone", "Phone number"),
+              t("Adresse email", "Email address"),
+              t("Localisation", "Location"),
+            ].map((label) => (
+              <Ligne key={label} label={label}>
+                <Tag tone="neutral" className="gap-1">
+                  <CadenasIcon />
+                  {t("Toujours", "Always")}
+                </Tag>
+              </Ligne>
+            ))}
+          </div>
+
+          <GroupeTitre icone="M12 21s7-7.5 7-12a7 7 0 1 0-14 0c0 4.5 7 12 7 12zM12 11.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" label={t("Place", "Placement")} />
+          <Segmente
+            label={t("Emplacement", "Location")}
+            value={emplacementVenduPar}
+            options={[
+              { value: "bas-de-page", label: t("Bas de page", "Bottom of page") },
+              { value: "sous-le-bouton", label: t("Sous le bouton", "Under the button") },
+            ]}
+            onChange={(v) =>
+              setState((s) => ({
+                ...s,
+                sections: placerVenduPar(
+                  s.sections,
+                  v === "sous-le-bouton" ? "sous-le-bouton" : positionVenduPar === "sous-le-bouton" ? "avant-pied-de-page" : positionVenduPar
+                ),
+              }))
+            }
+          />
+          {emplacementVenduPar === "bas-de-page" && (
+            <SegmenteGrille
+              label={t("Position dans la page", "Position on the page")}
+              value={positionVenduPar}
+              options={[
+                { value: "sous-produit", label: t("Sous le produit", "Below the product") },
+                { value: "apres-commande", label: t("Après la commande", "After the order block") },
+                { value: "apres-details", label: t("Après les détails", "After the details") },
+                { value: "avant-pied-de-page", label: t("Avant le pied de page", "Before the footer") },
+              ]}
+              onChange={(v) => setState((s) => ({ ...s, sections: placerVenduPar(s.sections, v as PositionVenduPar) }))}
+            />
+          )}
+
+          <p className="rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-[10.5px] leading-relaxed text-[var(--dashboard-text)]/55">
+            {t(
+              "Reprend le nom, le téléphone, l'adresse email et la localisation renseignés dans « Ma boutique ». Ne se masque pas.",
+              "Pulls the name, phone number, email and location set in “My shop”. Cannot be hidden."
+            )}
+          </p>
+        </>
+      );
+    }
 
     case "pied-de-page": {
       const p = state.piedDePage;
@@ -1268,6 +1803,45 @@ function Corps({
       );
     }
 
+    case "bouton-commande-fixe":
+      return (
+        <>
+          <p className="rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-[10.5px] leading-relaxed text-[var(--dashboard-text)]/55">
+            {t(
+              "Reste collé en bas de l'écran pendant que le client fait défiler la page de commande, sur téléphone seulement.",
+              "Stays pinned to the bottom of the screen while the customer scrolls the order page, on phone only."
+            )}
+          </p>
+          <Ligne label={t("Afficher sur téléphone", "Show on phone")}>
+            <Interrupteur
+              checked={state.flottants.boutonCommandeTelephone}
+              onChange={(v) => setState((s) => ({ ...s, flottants: { ...s.flottants, boutonCommandeTelephone: v } }))}
+            />
+          </Ligne>
+          <Ligne label={t("Total dans le bouton", "Total in the button")}>
+            <Interrupteur
+              checked={state.paiement.totalDansBouton}
+              onChange={(v) => setState((s) => ({ ...s, paiement: { ...s.paiement, totalDansBouton: v } }))}
+            />
+          </Ligne>
+
+          <GroupeTitre
+            icone="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7zM12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"
+            label={t("À voir sur la page de commande", "See it on the order page")}
+          />
+          <button
+            type="button"
+            onClick={() => onOuvrirSection?.("galerie")}
+            className="flex items-center gap-1.5 rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-3 py-2.5 text-[11px] font-semibold text-brand-pink"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5 shrink-0" aria-hidden>
+              <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {t("Ouvrir cette page", "Open this page")}
+          </button>
+        </>
+      );
+
     default:
       return null;
   }
@@ -1345,6 +1919,19 @@ function Ligne({ label, note, children }: { label: string; note?: React.ReactNod
         {note && <p className="mt-0.5 text-[9.5px] text-[var(--dashboard-text)]/40">{note}</p>}
       </div>
       {children}
+    </div>
+  );
+}
+
+function ChampObligatoire({ label }: { label: string }) {
+  const { t } = useDashboardLangue();
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <p className="text-[11px] font-medium text-[var(--dashboard-text)]">{label}</p>
+      <Tag tone="neutral" className="gap-1">
+        <CadenasIcon />
+        {t("Obligatoire", "Required")}
+      </Tag>
     </div>
   );
 }
@@ -1440,11 +2027,24 @@ function SegmentPills<T extends string>({
   );
 }
 
-function GroupeTitre({ label }: { label: string }) {
+function GroupeTitre({ label, icone }: { label: string; icone?: string }) {
   return (
-    <p className="border-t border-[var(--dashboard-text)]/10 pt-2.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40 first:border-t-0 first:pt-0">
+    <p className="flex items-center gap-1.5 border-t border-[var(--dashboard-text)]/10 pt-2.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40 first:border-t-0 first:pt-0">
+      {icone && (
+        <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3 shrink-0" aria-hidden>
+          <path d={icone} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
       {label}
     </p>
+  );
+}
+
+function MiniIcone({ chemin }: { chemin: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+      <path d={chemin} stroke="var(--dashboard-text)" strokeOpacity="0.35" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
