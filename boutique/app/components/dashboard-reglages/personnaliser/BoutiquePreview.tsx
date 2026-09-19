@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
 import { texteAvecChiffres } from "../../dashboard-accueil/shared";
 import type { EditeurState, PageId, SectionId } from "./types";
@@ -20,6 +21,21 @@ import { AVIS_APERCU, CATEGORIES_APERCU, PRODUIT_APERCU, PRODUITS_GRILLE_APERCU,
   produit.
 */
 
+// Formulaire de commande, aperçu "commande" (cf. capture utilisateur du
+// 2026-09-19) : liste des communes suit le pays/zones desservies, "Me
+// localiser" remplit l'adresse précise via la position du téléphone, et
+// l'indicatif suit le pays du client — trois listes démonstratives (aucun
+// vrai découpage géographique par pays n'existe encore côté données).
+const COMMUNES_CI = ["Abobo", "Adjamé", "Anyama", "Attécoubé", "Bingerville", "Cocody", "Koumassi", "Marcory"];
+const INDICATIFS = [
+  { pays: "Côte d'Ivoire", paysEn: "Ivory Coast", code: "+225", drapeau: "🇨🇮" },
+  { pays: "Sénégal", paysEn: "Senegal", code: "+221", drapeau: "🇸🇳" },
+  { pays: "Mali", paysEn: "Mali", code: "+223", drapeau: "🇲🇱" },
+  { pays: "Burkina Faso", paysEn: "Burkina Faso", code: "+226", drapeau: "🇧🇫" },
+  { pays: "Togo", paysEn: "Togo", code: "+228", drapeau: "🇹🇬" },
+  { pays: "Bénin", paysEn: "Benin", code: "+229", drapeau: "🇧🇯" },
+];
+
 const boutonRadius: Record<string, string> = { carre: "6px", arrondi: "12px", pilule: "999px" };
 const OMBRE_CARTE: Record<string, string> = { aucune: "none", legeres: "0 10px 24px -12px rgba(11,14,28,.3)", marquees: "0 18px 34px -10px rgba(11,14,28,.5)" };
 const ESPACE_SECTION: Record<string, string> = { serre: "0px", normal: "10px", aere: "22px" };
@@ -39,6 +55,14 @@ function classeAnimationBoutonCommande(animation: EditeurState["mouvements"]["bo
   return "";
 }
 
+// "Bouton de commande · Texte" (panneau "Informations produit", cf. ReglagesSection.tsx) —
+// réutilisé par le bouton principal et par la barre fixe sur téléphone (ElementsFlottantsApercu).
+const BOUTON_COMMANDE_LABELS: Record<EditeurState["paiement"]["boutonTexte"], [string, string]> = {
+  "je-commande": ["Je commande", "I order"],
+  commander: ["Commander", "Order"],
+  acheter: ["Acheter", "Buy"],
+};
+
 // Onglet Style · Textes — deux polices de la charte graphique LM seulement
 // (Sora, Bricolage Grotesque : cf. CHARTE_GRAPHIQUE.md et types.ts/TexteState).
 // Même graisse/interlettrage pour "Moderne" et "Élégante" (cf. capture
@@ -49,6 +73,15 @@ const FONT_CORPS: Record<string, string> = { Sora: "var(--font-sora)", "Bricolag
 const TAILLE_TEXTE_BASE: Record<string, string> = { petite: "12.5px", moyenne: "13.5px", grande: "14.5px" };
 const TITRE_GRAISSE: Record<string, number> = { demi: 600, gras: 800 };
 const TITRE_ESPACEMENT: Record<string, string> = { serre: "-0.01em", normal: "normal" };
+
+// Rangée de confiance réutilisée à deux endroits de la page commande : la
+// version Halo qui chevauche la galerie (couleurs figées, cf. case "galerie")
+// et la version thème-aware sous le bouton de commande (cf. case "paiement").
+const CONFIANCE_ITEMS: { icon: string; label: string; labelEn: string }[] = [
+  { icon: "M3 11l2-6h14l2 6v2H3Zm2 2v6h2v-6m8 0v6h2v-6", label: "Livraison rapide", labelEn: "Fast delivery" },
+  { icon: "M4 7h16v10H4Zm0 3h16", label: "Paiement sécurisé", labelEn: "Secure payment" },
+  { icon: "M12 21s6.5-6 6.5-11A6.5 6.5 0 0 0 5.5 10c0 5 6.5 11 6.5 11Z", label: "Retour facile", labelEn: "Easy returns" },
+];
 
 export default function BoutiquePreview({
   state,
@@ -69,7 +102,7 @@ export default function BoutiquePreview({
 }) {
   const { t } = useDashboardLangue();
   const { style, texte } = state;
-  let visibles = state.sections
+  const visibles = state.sections
     .filter((s) => s.visible)
     .map((s) => s.id)
     .filter((id) => {
@@ -77,28 +110,12 @@ export default function BoutiquePreview({
       return def.page === "les-deux" || def.page === page;
     });
 
-  // "Position dans la page" de "confiance" n'est plus un champ séparé (cf.
-  // types.ts, positionConfianceActuelle/placerConfiance) : c'est l'ordre de
-  // "confiance" dans `state.sections` lui-même, donc Monter/Descendre et ce
-  // réglage agissent tous deux sur la même donnée et restent synchronisés
-  // avec l'aperçu — pas de logique de repositionnement à part ici.
-
-  // "Position dans la page" de "categories" (réglage propre à cette section, cf. CategoriesState).
-  if (visibles.includes("categories")) {
-    const sansCategories = visibles.filter((id) => id !== "categories");
-    const ancre: SectionId =
-      state.categories.position === "apres-grande-image"
-        ? "grande-image"
-        : state.categories.position === "apres-produits"
-          ? "grille"
-          : "pied-de-page";
-    const avant = state.categories.position === "avant-pied-de-page";
-    const indexAncre = sansCategories.indexOf(ancre);
-    if (indexAncre !== -1) {
-      const insertion = avant ? indexAncre : indexAncre + 1;
-      visibles = [...sansCategories.slice(0, insertion), "categories", ...sansCategories.slice(insertion)];
-    }
-  }
+  // "Position dans la page" de "confiance" et "categories" n'est plus un champ
+  // séparé (cf. types.ts, positionConfianceActuelle/placerConfiance et
+  // positionCategoriesActuelle/placerCategories) : c'est l'ordre de la section
+  // dans `state.sections` lui-même, donc Monter/Descendre et ce réglage
+  // agissent tous deux sur la même donnée et restent synchronisés avec
+  // l'aperçu — pas de logique de repositionnement à part ici.
 
   // "Fond du site · Apparence" (onglet Style · Couleurs) force le fond/texte
   // globaux, indépendamment du modèle choisi — bascule manuelle au-dessus
@@ -195,6 +212,7 @@ export default function BoutiquePreview({
             <span className="h-4 w-20 rounded-full bg-[#141220]" />
           </div>
           {contenu}
+          <ElementsFlottantsApercu flottants={state.flottants} boutonTexte={state.paiement.boutonTexte} page={page} device={device} t={t} />
         </div>
       </div>
     );
@@ -224,8 +242,104 @@ export default function BoutiquePreview({
           </span>
         </span>
       </div>
-      <div className="max-h-[640px] overflow-y-auto">{contenu}</div>
+      {/*
+        Hauteur du contenu adaptée à l'écran : 100vh moins la hauteur de la
+        barre d'outils (≈ 72px), le padding du conteneur (≈ 40px + 40px),
+        la barre de titre du navigateur simulée ci-dessus (≈ 60px) et une
+        marge de sécurité — évite le max-h figé à 640px qui coupait
+        le contenu sur les écrans < 900px.
+      */}
+      <div className="relative" style={{ height: "calc(100vh - 300px)", minHeight: "440px" }}>
+        <div className="no-scrollbar h-full overflow-y-auto">{contenu}</div>
+        <ElementsFlottantsApercu flottants={state.flottants} boutonTexte={state.paiement.boutonTexte} page={page} device={device} t={t} />
+      </div>
     </div>
+  );
+}
+
+/*
+  "Éléments flottants" (cf. ReglagesBoutique.tsx, onglet du même nom) — bouton
+  de commande fixe sur téléphone, bouton WhatsApp, fenêtre promotionnelle,
+  onglet "Avis" sur le côté et retour en haut. Réglages déjà en place côté
+  FlottantsState mais jamais rendus dans cet aperçu jusqu'ici : chacun se
+  voyait dans son panneau de réglages sans jamais apparaître à l'écran, à
+  l'inverse de toutes les autres sections (cf. commentaire en tête de
+  fichier : "tout se voit à l'écran dès qu'un réglage change"). Couche
+  superposée à `contenu` (pas une section : ce sont des éléments de chrome
+  qui flottent par-dessus la page, pas un bloc dans son ordre), ancrée sur le
+  conteneur défilant plutôt que sur la fenêtre du navigateur puisque cet
+  aperçu est lui-même une fenêtre réduite.
+*/
+function ElementsFlottantsApercu({
+  flottants,
+  boutonTexte,
+  page,
+  device,
+  t,
+}: {
+  flottants: EditeurState["flottants"];
+  boutonTexte: EditeurState["paiement"]["boutonTexte"];
+  page: PageId;
+  device: "phone" | "desktop";
+  t: (fr: string, en: string) => string;
+}) {
+  // Le bouton de commande fixe n'a de sens que sur téléphone, sur la page de
+  // commande (cf. maquette, "Bouton de commande fixe sur téléphone") — sur
+  // l'accueil ou sur ordinateur, rien à commander en bas de l'écran.
+  const barreCommande = flottants.boutonCommandeTelephone && device === "phone" && page === "commande";
+  const basReserve = barreCommande ? 58 : 12; // px laissés libres au-dessus de la barre de commande pour ne pas la recouvrir
+  return (
+    <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[inherit]">
+      {flottants.popupAfficher && (
+        <div
+          className="pointer-events-auto absolute inset-x-3 rounded-2xl bg-white p-3 shadow-[0_20px_40px_-12px_rgba(11,14,28,0.4)]"
+          style={{ bottom: basReserve + 46, border: "1px solid rgba(0,0,0,.08)" }}
+        >
+          <p className="text-[10px] font-bold text-[#0B0E1C]">{t("Offre spéciale", "Special offer")}</p>
+          <p className="mt-0.5 text-[9px] text-black/50">{t("−10 % sur votre première commande", "−10% on your first order")}</p>
+        </div>
+      )}
+      {flottants.ongletAvisCote && (
+        <span
+          className="pointer-events-auto absolute right-0 top-1/2 origin-right -translate-y-1/2 -rotate-90 rounded-t-md bg-[#0B0E1C] px-2.5 py-1 text-[8px] font-semibold text-white"
+        >
+          {t("Avis", "Reviews")}
+        </span>
+      )}
+      {flottants.boutonRetourHaut && (
+        <span
+          className="pointer-events-auto absolute left-3 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-[0_8px_18px_-6px_rgba(11,14,28,0.35)]"
+          style={{ bottom: basReserve }}
+        >
+          <MiniIcon path="M12 19V5M5 12l7-7 7 7" color="#0B0E1C" />
+        </span>
+      )}
+      {flottants.whatsappAfficher && (
+        <span
+          className={`pointer-events-auto absolute flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366] shadow-[0_10px_24px_-8px_rgba(0,0,0,0.4)] ${
+            flottants.whatsappCote === "gauche" ? "left-3" : "right-3"
+          }`}
+          style={{ bottom: basReserve }}
+        >
+          <WhatsappIcon />
+        </span>
+      )}
+      {barreCommande && (
+        <div className="pointer-events-auto absolute inset-x-0 bottom-0 border-t bg-white px-3 py-2" style={{ borderColor: "rgba(0,0,0,.08)" }}>
+          <button type="button" className="w-full rounded-full bg-[#0B0E1C] py-2.5 text-[11px] font-bold text-white">
+            {t(...BOUTON_COMMANDE_LABELS[boutonTexte])}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WhatsappIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="#fff" aria-hidden>
+      <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm5.8 14.2c-.24.7-1.4 1.3-1.9 1.4-.5.1-1.1.2-3.5-.7-2.9-1.1-4.8-4-5-4.2-.14-.2-1.2-1.6-1.2-3s.75-2.1 1-2.4c.26-.3.57-.36.76-.36h.55c.18 0 .42-.07.65.5.24.6.82 2 .9 2.15.07.15.12.32.02.5-.1.2-.15.32-.3.5l-.44.5c-.15.15-.3.32-.13.6.16.3.73 1.2 1.57 1.95 1.08 1 2 1.3 2.28 1.44.28.15.44.13.6-.08.17-.2.7-.82.9-1.1.2-.28.4-.23.66-.14.28.1 1.75.83 2.05 1 .3.14.5.2.57.33.08.13.08.72-.16 1.42Z" />
+    </svg>
   );
 }
 
@@ -247,6 +361,19 @@ function SectionRendue({
   t: (fr: string, en: string) => string;
 }) {
   const couleurEtoiles = state.style.etoilesCouleur === "principale" ? "var(--ac)" : "#F2A93B";
+
+  // Démo interactive du bloc "formulaire" (case ci-dessous) : trois listes
+  // que le client ouvre au clic dans le vrai formulaire de commande.
+  const [communeOuverte, setCommuneOuverte] = useState(false);
+  const [communeRecherche, setCommuneRecherche] = useState("");
+  const [communeChoisie, setCommuneChoisie] = useState("");
+  const [geoloc, setGeoloc] = useState<"repos" | "recherche" | "trouvee" | "refusee">("repos");
+  const [adresseModifiable, setAdresseModifiable] = useState(false);
+  const [adressePrecise, setAdressePrecise] = useState("");
+  const [indicatifOuvert, setIndicatifOuvert] = useState(false);
+  const [indicatifChoisi, setIndicatifChoisi] = useState(INDICATIFS[0]);
+  const [telephone, setTelephone] = useState("");
+
   switch (id) {
     case "bandeau": {
       const b = state.bandeau;
@@ -261,7 +388,7 @@ function SectionRendue({
           style={fondsCouleur[b.couleur]}
         >
           {b.iconeDevantMessage && <MiniIcon path="M12 3l2 5 5 1-4 3.6 1 5-4.5-2.5L7 17.6l1-5-4-3.6 5-1Z" />}
-          <span>{texteAvecChiffres(b.messages[b.messageActif] ?? b.messages[0])}</span>
+          <span>{texteAvecChiffres((b.messages[b.messageActif] ?? b.messages[0]).texte)}</span>
           {b.compteARebours && <span className="font-figures-bold opacity-80">· 05:12:33</span>}
           {b.fermable && (
             <span className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -317,6 +444,19 @@ function SectionRendue({
         </div>
       );
     }
+
+    case "chemin-navigation":
+      return (
+        <div className="flex items-center gap-1 overflow-hidden px-4 py-2 text-[9.5px]" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
+          <span className="shrink-0">{t("Accueil", "Home")}</span>
+          <span className="shrink-0">›</span>
+          <span className="shrink-0 truncate">{boutiqueNom}</span>
+          <span className="shrink-0">›</span>
+          <span className="truncate font-semibold" style={{ color: "var(--tx)" }}>
+            {t(PRODUIT_APERCU.nom, PRODUIT_APERCU.nomEn)}
+          </span>
+        </div>
+      );
 
     case "grande-image": {
       const isHalo = state.style.modele === "halo";
@@ -544,72 +684,18 @@ function SectionRendue({
           </div>
           <div className={defilement ? `flex ${espace} overflow-x-auto` : `grid ${espace}`} style={defilement ? undefined : { gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
             {produits.map((p) => (
-              <div
+              <CarteProduit
                 key={p.nom}
-                className={`group relative overflow-hidden ${defilement ? "w-24 shrink-0" : ""} ${c.style === "bordure" ? "border" : ""}`}
-                style={{
-                  borderColor: c.style === "bordure" ? "color-mix(in srgb, var(--tx) 14%, transparent)" : undefined,
-                  borderRadius: rayon,
-                  boxShadow: c.style === "ombre" ? "var(--card-shadow)" : undefined,
-                }}
-              >
-                <div className="relative flex items-center justify-center overflow-hidden" style={{ aspectRatio: "1/1", background: "color-mix(in srgb, var(--tx) 04%, transparent)" }}>
-                  <MiniIcon
-                    path="M4 6h4l1.4-2h5.2L16 6h4v12H4Z"
-                    color="color-mix(in srgb, var(--tx) 25%, transparent)"
-                  />
-                  {c.deuxiemePhotoSurvol && (
-                    <div className="absolute inset-0 bg-black/0 opacity-0 transition duration-300 group-hover:opacity-100" style={{ background: "color-mix(in srgb, var(--tx) 08%, transparent)" }} />
-                  )}
-                  {g.badges && c.positionBadges === "coin" && (
-                    <span className="absolute left-1.5 top-1.5 rounded-full bg-[#0B0E1C] px-1.5 py-0.5 text-[7px] font-figures-bold text-white">
-                      −15%
-                    </span>
-                  )}
-                  {g.coeurFavoris && (
-                    <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white/85">
-                      <MiniIcon path="M12 20s-6.2-3.9-8.4-7.6C1.8 9.4 3.6 6 7 6c1.9 0 3.4 1 5 2.8C13.6 7 15.1 6 17 6c3.4 0 5.2 3.4 3.4 6.4C18.2 16.1 12 20 12 20Z" color="var(--ac)" />
-                    </span>
-                  )}
-                  {c.commandeRapide && (
-                    <span
-                      className="absolute bottom-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-white opacity-0 transition duration-200 group-hover:opacity-100"
-                      style={{ background: "var(--ac)" }}
-                    >
-                      <MiniIcon path="M12 5v14M5 12h14" color="#fff" />
-                    </span>
-                  )}
-                </div>
-                <div className={paddingTexte}>
-                  {g.badges && c.positionBadges === "dessous" && (
-                    <span className="mb-0.5 inline-block rounded-full bg-[#0B0E1C] px-1.5 py-0.5 text-[7px] font-figures-bold text-white">
-                      −15%
-                    </span>
-                  )}
-                  <p className="truncate text-[8px] font-semibold">{t(p.nom, p.nomEn)}</p>
-                  {g.noteEtoiles && <Etoiles note={4.6} taille={6} couleur={couleurEtoiles} />}
-                  {c.rondsCouleurVariantes && (
-                    <div className="mt-0.5 flex gap-0.5">
-                      {dotsCouleurs.map((couleur) => (
-                        <span key={couleur} className="h-2 w-2 rounded-full border border-white/40" style={{ background: couleur }} />
-                      ))}
-                    </div>
-                  )}
-                  <p className="mt-0.5 text-[9.5px] font-figures-bold" style={{ color: "var(--ac)" }}>
-                    {(g.prixAffiche === "normal" ? p.prixNormal : p.prix).toLocaleString("fr-FR")} F
-                  </p>
-                  {g.bouton === "texte" && (
-                    <span className="mt-1 block text-[7px] font-semibold" style={{ color: "var(--ac)" }}>
-                      {t("Commander", "Order")}
-                    </span>
-                  )}
-                  {g.bouton === "icone" && (
-                    <span className="mt-1 flex h-4 w-4 items-center justify-center rounded-full" style={{ background: "color-mix(in srgb, var(--ac) 12%, transparent)" }}>
-                      <MiniIcon path="M5.5 8h13l-1 12.5h-11ZM9 8V6.5a3 3 0 0 1 6 0V8" color="var(--ac)" />
-                    </span>
-                  )}
-                </div>
-              </div>
+                p={p}
+                g={g}
+                c={c}
+                dotsCouleurs={dotsCouleurs}
+                rayon={rayon}
+                paddingTexte={paddingTexte}
+                couleurEtoiles={couleurEtoiles}
+                scroll={defilement}
+                t={t}
+              />
             ))}
           </div>
         </div>
@@ -639,53 +725,86 @@ function SectionRendue({
     }
 
     case "galerie": {
-      const ratio = state.galerie.format === "portrait" ? "3/4" : state.galerie.format === "paysage" ? "16/9" : "1/1";
+      const g = state.galerie;
+      const ratio = g.format === "portrait" ? "3/4" : "1/1";
       const isHalo = state.style.modele === "halo";
       return (
         <div className="relative">
-          <div
-            className="relative flex items-center justify-center overflow-hidden"
-            style={{
-              aspectRatio: ratio,
-              background: isHalo
-                ? "linear-gradient(150deg, #F7D9EA, #E9DFF7 55%, #FCE9EF)"
-                : "linear-gradient(150deg, rgba(236,12,140,.10), rgba(58,29,138,.10))",
-            }}
-          >
-            {/* courbes fines convergeant vers un point lumineux, motif Halo (maquette) */}
-            {isHalo && <HaloCourbes />}
-            <div className="relative flex flex-col items-center gap-1.5 text-center">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/10">
-                <MiniIcon path="M4 6h4l1.4-2h5.2L16 6h4v12H4Z" color="rgba(0,0,0,.35)" />
-              </span>
-              <span className="text-[9.5px]" style={{ color: "rgba(0,0,0,.4)" }}>
-                {t("Aucune photo déposée", "No photo uploaded yet")}
-              </span>
-            </div>
-            {isHalo && (
-              <span className="absolute -bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[9.5px] font-semibold shadow-[0_10px_24px_-8px_rgba(11,14,28,0.35)]">
-                <Etoiles note={PRODUIT_APERCU.note} taille={9} couleur={couleurEtoiles} />
-                <span className="font-figures-bold">{PRODUIT_APERCU.note}</span>
-              </span>
+          <div className="flex gap-1.5">
+            {g.vignettesOrdinateur === "gauche" && (
+              <div className="flex w-9 shrink-0 flex-col gap-1.5">
+                {[0, 1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="relative flex items-center justify-center overflow-hidden rounded-lg"
+                    style={{
+                      aspectRatio: "1/1",
+                      background: "color-mix(in srgb, var(--tx) 04%, transparent)",
+                      boxShadow: i === 0 ? "0 0 0 1.5px var(--ac)" : undefined,
+                    }}
+                  >
+                    <MiniIcon path="M4 6h4l1.4-2h5.2L16 6h4v12H4Z" color="color-mix(in srgb, var(--tx) 25%, transparent)" />
+                  </div>
+                ))}
+              </div>
             )}
+            <div
+              className="relative flex flex-1 items-center justify-center overflow-hidden"
+              style={{
+                aspectRatio: ratio,
+                background: isHalo
+                  ? "linear-gradient(150deg, #F7D9EA, #E9DFF7 55%, #FCE9EF)"
+                  : "linear-gradient(150deg, rgba(236,12,140,.10), rgba(58,29,138,.10))",
+              }}
+            >
+              {/* courbes fines convergeant vers un point lumineux, motif Halo (maquette) */}
+              {isHalo && <HaloCourbes />}
+              <div className="relative flex flex-col items-center gap-1.5 text-center">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/10">
+                  <MiniIcon path="M4 6h4l1.4-2h5.2L16 6h4v12H4Z" color="rgba(0,0,0,.35)" />
+                </span>
+                <span className="text-[9.5px]" style={{ color: "rgba(0,0,0,.4)" }}>
+                  {t("Aucune photo déposée", "No photo uploaded yet")}
+                </span>
+              </div>
+              {isHalo && (
+                <span className="absolute -bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[9.5px] font-semibold shadow-[0_10px_24px_-8px_rgba(11,14,28,0.35)]">
+                  <Etoiles note={PRODUIT_APERCU.note} taille={9} couleur={couleurEtoiles} />
+                  <span className="font-figures-bold">{PRODUIT_APERCU.note}</span>
+                </span>
+              )}
+              {g.boutonZoom && (
+                <span className="absolute bottom-2.5 right-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/85">
+                  <MiniIcon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14ZM16 16l4 4" color="rgba(0,0,0,.6)" />
+                </span>
+              )}
+              {g.lectureAuto && (
+                <span className="absolute left-2.5 top-2.5 rounded-full bg-black/45 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur">
+                  {t("Vidéo", "Video")}
+                </span>
+              )}
+              {g.compteur && (
+                <span className="absolute right-2.5 top-2.5 rounded-full bg-black/45 px-2 py-1 text-[9px] font-semibold text-white backdrop-blur font-figures">
+                  1 / 6
+                </span>
+              )}
+              {g.pointsPosition && (
+                <div className="absolute bottom-2.5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1">
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <span key={i} className="h-1 w-1 rounded-full" style={{ background: i === 0 ? "#fff" : "rgba(255,255,255,.5)" }} />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          {state.galerie.lectureAuto && (
-            <span className="absolute left-2.5 top-2.5 rounded-full bg-black/45 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur">
-              {texteAvecChiffres(state.galerie.badge)}
-            </span>
-          )}
           {/* barre de confiance qui chevauche le bas de l'image, motif Halo (maquette) */}
           {isHalo && (
             <div className="relative z-10 mx-4 -mt-5 flex items-center justify-around gap-1 rounded-2xl bg-white px-2 py-2.5 shadow-[0_14px_30px_-10px_rgba(11,14,28,0.28)]">
-              {[
-                { icon: "M3 11l2-6h14l2 6v2H3Zm2 2v6h2v-6m8 0v6h2v-6", label: t("Livraison rapide", "Fast delivery") },
-                { icon: "M4 7h16v10H4Zm0 3h16", label: t("Paiement sécurisé", "Secure payment") },
-                { icon: "M12 21s6.5-6 6.5-11A6.5 6.5 0 0 0 5.5 10c0 5 6.5 11 6.5 11Z", label: t("Retour facile", "Easy returns") },
-              ].map((item) => (
+              {CONFIANCE_ITEMS.map((item) => (
                 <div key={item.label} className="flex flex-col items-center gap-1 px-1 text-center">
                   <MiniIcon path={item.icon} color="#E8207E" />
                   <span className="text-[7.5px] font-semibold leading-tight" style={{ color: "rgba(0,0,0,.55)" }}>
-                    {item.label}
+                    {t(item.label, item.labelEn)}
                   </span>
                 </div>
               ))}
@@ -699,6 +818,14 @@ function SectionRendue({
       const isHalo = state.style.modele === "halo";
       return (
         <div className="px-4 py-3.5">
+          {state.infos.badgeNouveaute && (
+            <span
+              className="mb-1 inline-block rounded-full px-2 py-0.5 text-[8px] font-figures-bold text-white"
+              style={{ background: isHalo ? "linear-gradient(100deg,#E8207E,#6B21D6)" : "var(--ac)" }}
+            >
+              {t("Nouveauté", "New")}
+            </span>
+          )}
           <p
             className="text-[15px] leading-tight"
             style={{
@@ -710,7 +837,7 @@ function SectionRendue({
           >
             {t(PRODUIT_APERCU.nom, PRODUIT_APERCU.nomEn)}
           </p>
-          {state.infos.noteMoyenne && (
+          {state.infos.etoilesSousNom && (
             <p className="mt-1 flex items-center gap-1 text-[10.5px]" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
               <Etoiles note={PRODUIT_APERCU.note} couleur={couleurEtoiles} /> <span className="font-figures">{PRODUIT_APERCU.note}</span> · <span className="font-figures">{PRODUIT_APERCU.avisCount}</span> {t("avis", "reviews")}
             </p>
@@ -729,24 +856,26 @@ function SectionRendue({
               </span>
             )}
           </div>
-          {state.infos.stockRestant && (
+          {/* "Stock restant · Afficher sous" (panneau "Informations produit") : le bloc ne
+              s'affiche que sous ce seuil, pas simplement quand le réglage est activé. */}
+          {state.infos.stockRestant && PRODUIT_APERCU.unitesDisponibles <= state.infos.stockAfficherSousUnites && (
             <p className="mt-1.5 text-[10px]" style={{ color: "color-mix(in srgb, var(--tx) 5%, transparent)" }}>
               {texteAvecChiffres(t(`Plus que ${PRODUIT_APERCU.unitesDisponibles} en stock`, `Only ${PRODUIT_APERCU.unitesDisponibles} left in stock`))}
             </p>
           )}
-          {state.infos.variantes && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {PRODUIT_APERCU.variantes.map((v, i) => (
-                <span
-                  key={v}
-                  className="rounded-full border px-3 py-1 text-[10px] font-figures-bold"
-                  style={i === 0 ? { borderColor: "var(--ac)", color: "var(--ac)", background: "color-mix(in srgb, var(--ac) 8%, transparent)" } : { borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" }}
-                >
-                  {v}
-                </span>
-              ))}
-            </div>
+          <p className="mt-2 text-[10.5px] leading-relaxed" style={{ color: "color-mix(in srgb, var(--tx) 55%, transparent)" }}>
+            {state.infos.description === "complete"
+              ? t(PRODUIT_APERCU.descriptionComplete, PRODUIT_APERCU.descriptionCompleteEn)
+              : t(PRODUIT_APERCU.descriptionCourte, PRODUIT_APERCU.descriptionCourteEn)}
+          </p>
+          {state.infos.lienConseilsUtilisation && (
+            <a href="#" className="mt-1 inline-block text-[9.5px] font-semibold underline" style={{ color: "var(--ac)" }}>
+              {t("Conseils d'utilisation", "How to use")}
+            </a>
           )}
+          <div className="mt-3">
+            <VariantesApercu presentation={state.infos.variantesPresentation} variantes={PRODUIT_APERCU.variantes} t={t} />
+          </div>
           {state.infos.quantite && (
             <div className="mt-2.5 inline-flex items-center gap-3 rounded-full border px-3 py-1 text-[11px]" style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" }}>
               <span>−</span>
@@ -784,38 +913,254 @@ function SectionRendue({
       );
 
     case "formulaire": {
-      const champs = [
-        { label: t("Nom et prénom", "Full name"), demi: false },
-        { label: t("Commune", "District"), demi: state.formulaire.colonnes === 2 },
-        { label: t("Adresse précise", "Precise address"), demi: state.formulaire.colonnes === 2 },
-        { label: t("Téléphone", "Phone number"), demi: false },
-      ];
+      const f = state.formulaire;
+      const bordure = { borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" };
+      const boiteBase = f.styleChamps === "ligne" ? "rounded-none border-0 border-b" : f.styleChamps === "plein" ? "rounded-xl border-0" : "rounded-xl border";
+      const boiteClasses = `${boiteBase} px-3 py-2.5`;
+      const boiteStyle = (actif?: boolean): React.CSSProperties =>
+        f.styleChamps === "plein"
+          ? { background: actif ? "color-mix(in srgb, var(--ac) 8%, transparent)" : "color-mix(in srgb, var(--tx) 5%, transparent)" }
+          : { borderColor: actif ? "var(--ac)" : bordure.borderColor };
+      const libelleDansChamp = f.libellesPosition === "dans-le-champ";
+      const libelle = (texte: string) =>
+        libelleDansChamp && <p className="text-[7.5px]" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>{texte}</p>;
+      const labelExterne = (texte: string) =>
+        !libelleDansChamp && (
+          <p className="mb-1 text-[9px] font-medium" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
+            {texte}
+          </p>
+        );
+      const iconeChamp = (chemin: string) =>
+        f.iconesDansChamps && <MiniIcon path={chemin} color="color-mix(in srgb, var(--tx) 30%, transparent)" />;
+      const iconePersonne = "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 20c0-3.3 3.6-6 8-6s8 2.7 8 6";
+      const iconeLieu = "M12 21s7-5.8 7-11a7 7 0 1 0-14 0c0 5.2 7 11 7 11Z";
+      const iconeTelephone = "M6.5 3h3l1.2 4.5-2 1.6a11 11 0 0 0 5.2 5.2l1.6-2 4.5 1.2v3a2 2 0 0 1-2.2 2A16 16 0 0 1 4.5 5.2 2 2 0 0 1 6.5 3Z";
+      const communesFiltrees = COMMUNES_CI.filter((c) => c.toLowerCase().includes(communeRecherche.toLowerCase()));
+      const localiser = () => {
+        if (typeof navigator === "undefined" || !navigator.geolocation) {
+          setGeoloc("refusee");
+          return;
+        }
+        setGeoloc("recherche");
+        navigator.geolocation.getCurrentPosition(
+          () => {
+            setGeoloc("trouvee");
+            setAdressePrecise(t("Position actuelle du téléphone", "Phone's current position"));
+          },
+          () => setGeoloc("refusee")
+        );
+      };
       return (
         <div className="px-4 py-3.5">
           <p className="mb-2 text-[11px] font-bold">{t("Vos informations", "Your information")}</p>
-          <div className={`grid gap-2 ${state.formulaire.colonnes === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
-            {champs.map((c) => (
-              <div key={c.label} className={`rounded-xl border px-3 py-2.5 ${c.demi ? "" : "col-span-full"}`} style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" }}>
-                {state.formulaire.libellesDansChamp ? (
-                  <>
-                    <p className="text-[7.5px]" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>{c.label}</p>
-                    <p className="mt-0.5 h-2.5 w-2/3 rounded" style={{ background: "color-mix(in srgb, var(--tx) 08%, transparent)" }} />
-                  </>
-                ) : (
-                  <p className="text-[10px]" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>{c.label}</p>
+          <div className={`grid gap-2 ${f.colonnes === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+            <div className="col-span-full">
+              {labelExterne(t("Nom et prénom", "Full name"))}
+              <div className={boiteClasses} style={boiteStyle()}>
+                <div className="flex items-center gap-1.5">
+                  {iconeChamp(iconePersonne)}
+                  <div className="min-w-0 flex-1">
+                    {libelleDansChamp ? (
+                      <>
+                        {libelle(t("Nom et prénom", "Full name"))}
+                        <p className="mt-0.5 h-2.5 w-2/3 rounded" style={{ background: "color-mix(in srgb, var(--tx) 08%, transparent)" }} />
+                      </>
+                    ) : (
+                      <p className="text-[10px]" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>{t("Nom et prénom", "Full name")}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 1. Commune — liste + recherche */}
+            <div className={f.colonnes === 2 ? "" : "col-span-full"}>
+              {labelExterne(t("Commune", "District"))}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setCommuneOuverte((v) => !v)}
+                  className={`w-full text-left ${boiteClasses}`}
+                  style={boiteStyle(communeOuverte)}
+                >
+                  <div className="flex items-center gap-1.5">
+                    {iconeChamp(iconeLieu)}
+                    <div className="min-w-0 flex-1">
+                      {libelle(t("Commune", "District"))}
+                      <span className="flex items-center justify-between gap-1">
+                        <span className="truncate text-[10px]" style={{ color: communeChoisie ? "var(--tx)" : "color-mix(in srgb, var(--tx) 4%, transparent)" }}>
+                          {communeChoisie || t("Choisir", "Select")}
+                        </span>
+                        <MiniIcon path="M6 9l6 6 6-6" color="color-mix(in srgb, var(--tx) 30%, transparent)" />
+                      </span>
+                    </div>
+                  </div>
+                </button>
+                {communeOuverte && (
+                  <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[170px] overflow-y-auto rounded-xl border shadow-lg" style={{ ...bordure, background: "var(--bg)" }}>
+                    <div className="flex items-center gap-1.5 border-b px-2.5 py-2" style={{ borderColor: "color-mix(in srgb, var(--tx) 8%, transparent)" }}>
+                      <MiniIcon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm9 16-4.35-4.35" color="color-mix(in srgb, var(--tx) 30%, transparent)" />
+                      <input
+                        value={communeRecherche}
+                        onChange={(e) => setCommuneRecherche(e.target.value)}
+                        placeholder={t("Rechercher une commune", "Search a district")}
+                        className="w-full bg-transparent text-[10px] outline-none"
+                        style={{ color: "var(--tx)" }}
+                      />
+                    </div>
+                    {communesFiltrees.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => {
+                          setCommuneChoisie(c);
+                          setCommuneOuverte(false);
+                          setCommuneRecherche("");
+                        }}
+                        className="block w-full px-2.5 py-1.5 text-left text-[10px]"
+                        style={c === communeChoisie ? { background: "color-mix(in srgb, var(--ac) 10%, transparent)", color: "var(--ac)", fontWeight: 600 } : { color: "var(--tx)" }}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
-            ))}
-          </div>
-          {state.formulaire.boutonLocaliser && (
-            <div className="mt-2 flex items-center gap-2 rounded-xl border border-dashed px-3 py-2 text-[10.5px] font-semibold" style={{ borderColor: "var(--ac)", color: "var(--ac)" }}>
-              <MiniIcon path="M12 21s7-5.8 7-11a7 7 0 1 0-14 0c0 5.2 7 11 7 11Z" color="var(--ac)" />
-              {t("Me localiser maintenant", "Locate me now")}
             </div>
+
+            {/* 2. Adresse précise — remplie/modifiable après "Me localiser" */}
+            <div className={f.colonnes === 2 ? "" : "col-span-full"}>
+              {labelExterne(f.libelleAdressePrecise)}
+              <div className={boiteClasses} style={boiteStyle()}>
+                <div className="flex items-center gap-1.5">
+                  {iconeChamp(iconeLieu)}
+                  <div className="min-w-0 flex-1">
+                    {geoloc === "trouvee" ? (
+                      <>
+                        {libelle(f.libelleAdressePrecise)}
+                        {adresseModifiable ? (
+                          <input
+                            value={adressePrecise}
+                            onChange={(e) => setAdressePrecise(e.target.value)}
+                            onBlur={() => setAdresseModifiable(false)}
+                            autoFocus
+                            placeholder={f.texteExempleAdressePrecise}
+                            className="mt-0.5 w-full bg-transparent text-[10px] outline-none"
+                            style={{ color: "var(--tx)" }}
+                          />
+                        ) : (
+                          <span className="mt-0.5 flex items-center justify-between gap-1">
+                            <span className="flex items-center gap-1 truncate text-[10px]" style={{ color: "var(--tx)" }}>
+                              {!f.iconesDansChamps && <MiniIcon path={iconeLieu} color="var(--ac)" />}
+                              {adressePrecise}
+                            </span>
+                            <button type="button" onClick={() => setAdresseModifiable(true)} className="shrink-0 text-[9.5px] font-semibold underline" style={{ color: "var(--ac)" }}>
+                              {t("Modifier", "Edit")}
+                            </button>
+                          </span>
+                        )}
+                      </>
+                    ) : libelleDansChamp ? (
+                      <>
+                        {libelle(f.libelleAdressePrecise)}
+                        <p className="mt-0.5 truncate text-[10px]" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>{f.texteExempleAdressePrecise}</p>
+                      </>
+                    ) : (
+                      <p className="text-[10px]" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>{f.libelleAdressePrecise}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Téléphone — indicatif pays + numéro */}
+            <div className="col-span-full">
+              {labelExterne(t("Téléphone et indicatif", "Phone and dialing code"))}
+              <div className={`relative flex overflow-visible ${boiteBase}`} style={boiteStyle()}>
+                {f.iconesDansChamps && (
+                  <span className="flex shrink-0 items-center pl-2.5">
+                    <MiniIcon path={iconeTelephone} color="color-mix(in srgb, var(--tx) 30%, transparent)" />
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIndicatifOuvert((v) => !v)}
+                  className="flex shrink-0 items-center gap-1 border-r px-2.5 py-2.5"
+                  style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" }}
+                >
+                  <span className="text-[12px]">{indicatifChoisi.drapeau}</span>
+                  <span className="text-[10px] font-semibold" style={{ color: "var(--tx)" }}>{indicatifChoisi.code}</span>
+                  <MiniIcon path="M6 9l6 6 6-6" color="color-mix(in srgb, var(--tx) 30%, transparent)" />
+                </button>
+                <input
+                  value={telephone}
+                  onChange={(e) => setTelephone(e.target.value.replace(/[^\d\s]/g, ""))}
+                  placeholder={t("Numéro de téléphone", "Phone number")}
+                  className="flex-1 bg-transparent px-3 py-2.5 text-[10px] outline-none"
+                  style={{ color: "var(--tx)" }}
+                />
+                {indicatifOuvert && (
+                  <div className="absolute left-0 top-full z-30 mt-1 w-full min-w-[175px] overflow-hidden rounded-xl border shadow-lg" style={{ ...bordure, background: "var(--bg)" }}>
+                    {INDICATIFS.map((ind) => (
+                      <button
+                        key={ind.code}
+                        type="button"
+                        onClick={() => {
+                          setIndicatifChoisi(ind);
+                          setIndicatifOuvert(false);
+                        }}
+                        className="flex w-full items-center justify-between px-2.5 py-1.5 text-left text-[10px]"
+                        style={ind.code === indicatifChoisi.code ? { background: "color-mix(in srgb, var(--ac) 10%, transparent)", color: "var(--ac)", fontWeight: 600 } : { color: "var(--tx)" }}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-[12px]">{ind.drapeau}</span>
+                          {t(ind.pays, ind.paysEn)}
+                        </span>
+                        <span className="font-figures">{ind.code}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {f.boutonLocaliser &&
+            (geoloc === "trouvee" ? (
+              <div
+                className="mt-2 flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-semibold"
+                style={{ borderColor: "#1E9E6A", color: "#1E9E6A", background: "color-mix(in srgb, #1E9E6A 6%, transparent)" }}
+              >
+                <MiniIcon path="M5 12l4 4 10-10" color="#1E9E6A" />
+                <span>
+                  {t("Position trouvée", "Position found")}
+                  <br />
+                  <span className="font-normal opacity-80">{t("Adresse précise remplie", "Precise address filled in")}</span>
+                </span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={localiser}
+                className="mt-2 flex w-full items-center gap-2 rounded-xl border border-dashed px-3 py-2 text-[10.5px] font-semibold"
+                style={{ borderColor: "var(--ac)", color: "var(--ac)" }}
+              >
+                <MiniIcon path="M12 21s7-5.8 7-11a7 7 0 1 0-14 0c0 5.2 7 11 7 11Z" color="var(--ac)" />
+                {geoloc === "recherche" ? t("Recherche en cours…", "Locating…") : t("Me localiser maintenant", "Locate me now")}
+              </button>
+            ))}
+          {geoloc === "refusee" && (
+            <p className="mt-1.5 text-[9.5px]" style={{ color: "#D8347E" }}>
+              {t("Position indisponible, remplis l'adresse précise à la main.", "Location unavailable, fill in the precise address by hand.")}
+            </p>
           )}
-          {state.formulaire.mentionSpecifique && (
+          {f.mentionSpecifique && (
             <div className="mt-2 rounded-xl border px-3 py-2 text-[9.5px]" style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)", color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>
-              {t("Une précision pour le livreur ? (facultatif)", "Anything the courier should know? (optional)")}
+              {f.mentionType === "choix"
+                ? t("Choisis une option pour le livreur (facultatif)", "Pick an option for the courier (optional)")
+                : f.mentionType === "date"
+                ? t("Une date à préciser pour le livreur ? (facultatif)", "A date for the courier? (optional)")
+                : t("Une précision pour le livreur ? (facultatif)", "Anything the courier should know? (optional)")}
             </div>
           )}
         </div>
@@ -866,13 +1211,124 @@ function SectionRendue({
               <span className="text-[10.5px] font-figures-bold">+2 000 F</span>
             </div>
           )}
-          <button
-            type="button"
-            className={`w-full py-3 text-center text-[12px] font-bold text-white transition hover:brightness-110 ${classeAnimationBoutonCommande(state.mouvements.boutonCommandeAnimation)}`}
-            style={{ background: style_boutonCommandeBg(state), borderRadius: "var(--rad)", textTransform: "var(--btn-uppercase)" as React.CSSProperties["textTransform"] }}
-          >
-            {t("Je commande", "I order")} · <span className="font-figures-bold">{(state.paiement.payerEnLigne ? prixLigne : PRODUIT_APERCU.prixVente).toLocaleString("fr-FR")} F</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className={`flex-1 py-3 text-center text-[12px] font-bold text-white transition hover:brightness-110 ${classeAnimationBoutonCommande(state.mouvements.boutonCommandeAnimation)}`}
+              style={{ background: style_boutonCommandeBg(state), borderRadius: "var(--rad)", textTransform: "var(--btn-uppercase)" as React.CSSProperties["textTransform"] }}
+            >
+              {t(...BOUTON_COMMANDE_LABELS[state.paiement.boutonTexte])}
+              {state.paiement.totalDansBouton && (
+                <>
+                  {" "}
+                  · <span className="font-figures-bold">{(state.paiement.payerEnLigne ? prixLigne : PRODUIT_APERCU.prixVente).toLocaleString("fr-FR")} F</span>
+                </>
+              )}
+            </button>
+            {state.paiement.boutonSecondaire !== "aucun" && (
+              <button
+                type="button"
+                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center border"
+                style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)", borderRadius: "12px" }}
+                aria-label={state.paiement.boutonSecondaire === "favori" ? t("Ajouter aux favoris", "Add to favorites") : t("Partager", "Share")}
+              >
+                <MiniIcon
+                  path={
+                    state.paiement.boutonSecondaire === "favori"
+                      ? "M12 20s-6.2-3.9-8.4-7.6C1.8 9.4 3.6 6 7 6c1.9 0 3.4 1 5 2.8C13.6 7 15.1 6 17 6c3.4 0 5.2 3.4 3.4 6.4C18.2 16.1 12 20 12 20Z"
+                      : "M18 8a3 3 0 1 0-2.8-4M18 16a3 3 0 1 0-2.8 4M6 13.5a3 3 0 1 0 0-3M8.7 11.2l6.6-3.7M8.7 14.8l6.2 3.5"
+                  }
+                  color="var(--tx)"
+                />
+              </button>
+            )}
+          </div>
+          {state.paiement.rangeeConfiance && (
+            <div className="mt-2.5 flex items-center justify-around gap-1">
+              {CONFIANCE_ITEMS.map((item) => (
+                <div key={item.label} className="flex flex-col items-center gap-1 px-1 text-center">
+                  <MiniIcon path={item.icon} color="var(--ac)" />
+                  <span className="text-[7.5px] font-semibold leading-tight" style={{ color: "color-mix(in srgb, var(--tx) 55%, transparent)" }}>
+                    {t(item.label, item.labelEn)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    case "onglets-details": {
+      const o = state.ongletsDetails;
+      const isHalo = state.style.modele === "halo";
+      const estLivraison = /livraison/i.test(o.onglets[0] ?? "");
+      const contenu = estLivraison ? (
+        <p className="text-[10.5px] leading-relaxed" style={{ color: "color-mix(in srgb, var(--tx) 55%, transparent)" }}>
+          {texteAvecChiffres(
+            t(
+              "Livraison en 4 h en moyenne partout en Côte d'Ivoire. Retours acceptés sous 7 jours.",
+              "Delivery in 4 h on average across Ivory Coast. Returns accepted within 7 days."
+            )
+          )}
+        </p>
+      ) : o.atoutsAvecIcones ? (
+        <ul className="space-y-1.5">
+          {o.atouts.slice(0, o.nombreAtouts).map((a) => (
+            <li key={a} className="flex items-start gap-1.5 text-[10.5px]" style={{ color: "color-mix(in srgb, var(--tx) 65%, transparent)" }}>
+              <span
+                className="mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full"
+                style={{ background: "color-mix(in srgb, var(--ac) 12%, transparent)" }}
+              >
+                <MiniIcon path="M5 12l4 4 10-10" color="var(--ac)" />
+              </span>
+              {a}
+            </li>
+          ))}
+        </ul>
+      ) : null;
+      return (
+        <div className="px-4 py-3.5">
+          {o.presentation === "accordeon" ? (
+            <div>
+              {o.onglets.map((onglet, i) => (
+                <div key={i} className="border-t py-2 first:border-t-0" style={{ borderColor: "color-mix(in srgb, var(--tx) 08%, transparent)" }}>
+                  <div className="flex items-center justify-between text-[10.5px] font-semibold">
+                    <span>{onglet}</span>
+                    <span style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>{i === 0 ? "−" : "+"}</span>
+                  </div>
+                  {i === 0 && <div className="mt-2">{contenu}</div>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="flex gap-1 rounded-full p-1" style={{ background: "color-mix(in srgb, var(--tx) 05%, transparent)" }}>
+                {o.onglets.map((onglet, i) => (
+                  <span
+                    key={i}
+                    className="flex-1 truncate rounded-full py-1.5 text-center text-[9.5px] font-semibold"
+                    style={i === 0 ? { background: "var(--ac)", color: "#fff" } : { color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}
+                  >
+                    {onglet}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-3">{contenu}</div>
+            </>
+          )}
+          {o.grandeImage && (
+            <div
+              className="relative mt-3 flex items-center justify-center overflow-hidden rounded-xl"
+              style={{
+                aspectRatio: "16/9",
+                background: isHalo ? "linear-gradient(150deg, #F7D9EA, #E9DFF7 55%, #FCE9EF)" : "color-mix(in srgb, var(--tx) 04%, transparent)",
+              }}
+            >
+              {isHalo && <HaloCourbes />}
+              <MiniIcon path="M4 6h4l1.4-2h5.2L16 6h4v12H4Z" color="color-mix(in srgb, var(--tx) 25%, transparent)" />
+            </div>
+          )}
         </div>
       );
     }
@@ -938,6 +1394,46 @@ function SectionRendue({
         </div>
       );
 
+    case "produits-lies": {
+      if (!state.cartesProduit.zones.includes("vous-aimerez-aussi")) return null;
+      const pl = state.produitsLies;
+      const c = state.cartesProduit;
+      const g: Pick<EditeurState["grille"], "badges" | "coeurFavoris" | "noteEtoiles" | "prixAffiche" | "bouton"> = {
+        badges: state.grille.badges,
+        prixAffiche: state.grille.prixAffiche,
+        noteEtoiles: pl.noteEtoiles,
+        coeurFavoris: pl.coeurFavoris,
+        bouton: pl.bouton,
+      };
+      const cols = device === "phone" ? pl.colonnesTelephone : pl.colonnesOrdinateur;
+      const rayon = c.style === "sans-cadre" ? 0 : state.style.arrondi;
+      const espace = c.densite === "compacte" ? "gap-1.5" : "gap-2";
+      const paddingTexte = c.densite === "compacte" ? "px-1.5 py-1" : "px-1.5 py-1.5";
+      const dotsCouleurs = ["#0B0E1C", state.style.couleurPrincipale, "#F5C1DC"];
+      const produits = PRODUITS_GRILLE_APERCU.slice(0, pl.nombre);
+      return (
+        <div className="px-4 py-3.5">
+          <p className="mb-2 text-[11px] font-bold">{t("Vous aimerez aussi", "You may also like")}</p>
+          <div className={`grid ${espace}`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
+            {produits.map((p) => (
+              <CarteProduit
+                key={p.nom}
+                p={p}
+                g={g}
+                c={c}
+                dotsCouleurs={dotsCouleurs}
+                rayon={rayon}
+                paddingTexte={paddingTexte}
+                couleurEtoiles={couleurEtoiles}
+                scroll={false}
+                t={t}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     case "vendu-par":
       return (
         <div className="mx-4 mb-3.5 flex items-center gap-2.5 rounded-xl border px-3.5 py-3" style={{ borderColor: "color-mix(in srgb, var(--tx) 1%, transparent)", background: "color-mix(in srgb, var(--tx) 02%, transparent)" }}>
@@ -955,7 +1451,7 @@ function SectionRendue({
       const fondsPied: Record<EditeurState["piedDePage"]["couleur"], { background: string; color: string; sousTexte: string }> = {
         nuit: { background: isHalo ? "#0B0E1C" : "#1F1328", color: "#CFC6D8", sousTexte: "rgba(255,255,255,.4)" },
         clair: { background: "var(--bg)", color: "var(--tx)", sousTexte: "rgba(0,0,0,.4)" },
-        degrade: { background: "linear-gradient(120deg,#EC0C8C,#3A1D8A)", color: "#F5E9FF", sousTexte: "rgba(255,255,255,.5)" },
+        degrade: { background: isHalo ? "linear-gradient(120deg,#E8207E,#3A1D8A)" : "linear-gradient(120deg,#EC0C8C,#3A1D8A)", color: "#F5E9FF", sousTexte: "rgba(255,255,255,.5)" },
       };
       const fond = fondsPied[p.couleur];
       const sombreFond = p.couleur !== "clair";
@@ -997,6 +1493,12 @@ function SectionRendue({
         </div>
       );
     }
+
+    // Élément flottant, pas une section dans le flux : déjà rendu en overlay
+    // par ElementsFlottantsApercu ci-dessus (cf. `barreCommande`), quelle que
+    // soit sa position dans `state.sections` — rien à afficher ici.
+    case "bouton-commande-fixe":
+      return null;
 
     // Sections de bibliothèque (cf. AjouterSectionModal.tsx) : pas de mise en
     // page dédiée pour chacune (18 blocs génériques), un aperçu de type
@@ -1081,5 +1583,149 @@ function Etoiles({ note, taille = 10, couleur = "#F2A93B" }: { note: number; tai
         </svg>
       ))}
     </span>
+  );
+}
+
+// "Variantes · Présentation" (panneau "Informations produit", cf. ReglagesSection.tsx) —
+// première variante toujours mise en avant (choix par défaut), comme l'ancien rendu "cases".
+function VariantesApercu({
+  presentation,
+  variantes,
+  t,
+}: {
+  presentation: EditeurState["infos"]["variantesPresentation"];
+  variantes: readonly string[];
+  t: (fr: string, en: string) => string;
+}) {
+  const bordureClaire = "color-mix(in srgb, var(--tx) 12%, transparent)";
+  const styleChoisi = { borderColor: "var(--ac)", color: "var(--ac)", background: "color-mix(in srgb, var(--ac) 8%, transparent)" };
+  if (presentation === "liste") {
+    return (
+      <div className="flex flex-col gap-1.5">
+        {variantes.map((v, i) => (
+          <div
+            key={v}
+            className="flex items-center gap-2 rounded-xl border px-3 py-2 text-[10.5px] font-semibold"
+            style={i === 0 ? styleChoisi : { borderColor: bordureClaire }}
+          >
+            <span
+              className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-[1.5px]"
+              style={i === 0 ? { borderColor: "var(--ac)" } : { borderColor: bordureClaire }}
+            >
+              {i === 0 && <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--ac)" }} />}
+            </span>
+            {v}
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (presentation === "ronds") {
+    return (
+      <div className="flex flex-wrap gap-2">
+        {variantes.map((v, i) => (
+          <span
+            key={v}
+            className="flex h-9 w-9 items-center justify-center rounded-full border text-[8.5px] font-figures-bold leading-tight"
+            style={i === 0 ? styleChoisi : { borderColor: bordureClaire }}
+          >
+            {v.split(" ")[0]}
+          </span>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {variantes.map((v, i) => (
+        <span key={v} className="rounded-lg border px-3 py-1 text-[10px] font-figures-bold" style={i === 0 ? styleChoisi : { borderColor: bordureClaire }}>
+          {v}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// Corps de carte produit partagé par case "grille" (accueil) et case
+// "produits-lies" (commande, "Vous aimerez aussi") — mêmes réglages de
+// contenu (state.grille) et de style (state.cartesProduit) dans les deux cas,
+// pour que les deux rangées restent identiques par construction.
+function CarteProduit({
+  p,
+  g,
+  c,
+  dotsCouleurs,
+  rayon,
+  paddingTexte,
+  couleurEtoiles,
+  scroll,
+  t,
+}: {
+  p: (typeof PRODUITS_GRILLE_APERCU)[number];
+  g: Pick<EditeurState["grille"], "badges" | "coeurFavoris" | "noteEtoiles" | "prixAffiche" | "bouton">;
+  c: EditeurState["cartesProduit"];
+  dotsCouleurs: string[];
+  rayon: number;
+  paddingTexte: string;
+  couleurEtoiles: string;
+  /** Carte de largeur fixe dans une rangée défilante (produits-lies, grille en mode défilement téléphone) vs cellule de grille pleine largeur. */
+  scroll: boolean;
+  t: (fr: string, en: string) => string;
+}) {
+  return (
+    <div
+      className={`group relative overflow-hidden ${scroll ? "w-24 shrink-0" : ""} ${c.style === "bordure" ? "border" : ""}`}
+      style={{
+        borderColor: c.style === "bordure" ? "color-mix(in srgb, var(--tx) 14%, transparent)" : undefined,
+        borderRadius: rayon,
+        boxShadow: c.style === "ombre" ? "var(--card-shadow)" : undefined,
+      }}
+    >
+      <div className="relative flex items-center justify-center overflow-hidden" style={{ aspectRatio: "1/1", background: "color-mix(in srgb, var(--tx) 04%, transparent)" }}>
+        <MiniIcon path="M4 6h4l1.4-2h5.2L16 6h4v12H4Z" color="color-mix(in srgb, var(--tx) 25%, transparent)" />
+        {c.deuxiemePhotoSurvol && (
+          <div className="absolute inset-0 bg-black/0 opacity-0 transition duration-300 group-hover:opacity-100" style={{ background: "color-mix(in srgb, var(--tx) 08%, transparent)" }} />
+        )}
+        {g.badges && c.positionBadges === "coin" && (
+          <span className="absolute left-1.5 top-1.5 rounded-full bg-[#0B0E1C] px-1.5 py-0.5 text-[7px] font-figures-bold text-white">−15%</span>
+        )}
+        {g.coeurFavoris && (
+          <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white/85">
+            <MiniIcon path="M12 20s-6.2-3.9-8.4-7.6C1.8 9.4 3.6 6 7 6c1.9 0 3.4 1 5 2.8C13.6 7 15.1 6 17 6c3.4 0 5.2 3.4 3.4 6.4C18.2 16.1 12 20 12 20Z" color="var(--ac)" />
+          </span>
+        )}
+        {c.commandeRapide && (
+          <span
+            className="absolute bottom-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-white opacity-0 transition duration-200 group-hover:opacity-100"
+            style={{ background: "var(--ac)" }}
+          >
+            <MiniIcon path="M12 5v14M5 12h14" color="#fff" />
+          </span>
+        )}
+      </div>
+      <div className={paddingTexte}>
+        {g.badges && c.positionBadges === "dessous" && (
+          <span className="mb-0.5 inline-block rounded-full bg-[#0B0E1C] px-1.5 py-0.5 text-[7px] font-figures-bold text-white">−15%</span>
+        )}
+        <p className="truncate text-[8px] font-semibold">{t(p.nom, p.nomEn)}</p>
+        {g.noteEtoiles && <Etoiles note={4.6} taille={6} couleur={couleurEtoiles} />}
+        {c.rondsCouleurVariantes && (
+          <div className="mt-0.5 flex gap-0.5">
+            {dotsCouleurs.map((couleur) => (
+              <span key={couleur} className="h-2 w-2 rounded-full border border-white/40" style={{ background: couleur }} />
+            ))}
+          </div>
+        )}
+        <p className="mt-0.5 text-[9.5px] font-figures-bold" style={{ color: "var(--ac)" }}>
+          {(g.prixAffiche === "normal" ? p.prixNormal : p.prix).toLocaleString("fr-FR")} F
+        </p>
+        {g.bouton === "texte" && <span className="mt-1 block text-[7px] font-semibold" style={{ color: "var(--ac)" }}>{t("Commander", "Order")}</span>}
+        {g.bouton === "icone" && (
+          <span className="mt-1 flex h-4 w-4 items-center justify-center rounded-full" style={{ background: "color-mix(in srgb, var(--ac) 12%, transparent)" }}>
+            <MiniIcon path="M5.5 8h13l-1 12.5h-11ZM9 8V6.5a3 3 0 0 1 6 0V8" color="var(--ac)" />
+          </span>
+        )}
+      </div>
+    </div>
   );
 }

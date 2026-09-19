@@ -581,6 +581,9 @@ const ICONE_COMPORTEMENT = "M13 2 4 14h6l-1 8 9-12h-6Z";
 const ICONE_ZONES = "M12 3a6 6 0 0 0-6 6c0 4.5 6 12 6 12s6-7.5 6-12a6 6 0 0 0-6-6Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z";
 
 const ZONE_VERROUILLEE = { label: "Grilles de produits", labelEn: "Product grids" };
+// "vous-aimerez-aussi" contrôle la visibilité de la section "produits-lies"
+// (page commande, cf. BoutiquePreview.tsx) — désactivée ici, cette section
+// ne s'affiche pas, même ajoutée/visible côté SectionsPanel.tsx.
 const ZONES_BASCULABLES: { id: CartesProduitZoneId; label: string; labelEn: string }[] = [
   { id: "vous-aimerez-aussi", label: "Vous aimerez aussi", labelEn: "You may also like" },
   { id: "recherche", label: "Recherche", labelEn: "Search" },

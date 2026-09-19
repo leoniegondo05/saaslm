@@ -22,6 +22,25 @@ import { STYLE_REGLAGES_DEFAUT } from "./StyleReglages";
   nourrit la liste plutôt que dupliquer ce panneau.
 */
 
+// Paires de sections rendues sous une ligne-mère (icône + cadenas) avec
+// leurs enfants indentés dessous, cf. maquette "Contenu de la page" — pas
+// tout le groupe `SectionDef.groupe` (celui-ci sert plus largement, ex.
+// "Produit" couvre aussi Offres/Onglets détails/Vous aimerez aussi, qui eux
+// restent des lignes plates avec le petit label "PRODUIT" au-dessus, comme
+// avant). "produit" ici regroupe seulement Galerie + Informations produit,
+// "commande" seulement Vos informations + Paiement et livraison (repliable
+// via chevron, son libellé de ligne-mère diffère du groupe "Commande").
+const PARENT_ENFANTS: Record<"produit" | "commande", { ids: SectionId[]; label: string; labelEn: string; icone: string; repliable: boolean }> = {
+  produit: { ids: ["galerie", "infos"], label: "Produit", labelEn: "Product", icone: "M4 8.5 12 4l8 4.5v8L12 21l-8-4.5zM12 21v-8.5M4 8.5 12 13l8-4.5", repliable: false },
+  commande: { ids: ["paiement", "formulaire"], label: "Formulaire de commande", labelEn: "Order form", icone: "M6 4.5h12v15H6zM9 8.5h6M9 12h6M9 15.5h4", repliable: true },
+};
+
+function clePere(id: SectionId): "produit" | "commande" | null {
+  if (PARENT_ENFANTS.produit.ids.includes(id)) return "produit";
+  if (PARENT_ENFANTS.commande.ids.includes(id)) return "commande";
+  return null;
+}
+
 export default function SectionsPanel({
   state,
   setState,
@@ -49,6 +68,10 @@ export default function SectionsPanel({
 }) {
   const { t } = useDashboardLangue();
   const [modalAjoutOuvert, setModalAjoutOuvert] = useState(false);
+  // Repli visuel des paires "produit"/"commande" (cf. PARENT_ENFANTS) — seule
+  // "commande" est repliable (chevron dans la maquette), "produit" reste
+  // toujours ouvert.
+  const [groupesReplies, setGroupesReplies] = useState<Partial<Record<"produit" | "commande", boolean>>>({});
 
   const toggleVisible = (id: SectionId) =>
     setState((s) => ({
@@ -99,15 +122,44 @@ export default function SectionsPanel({
             const def = SECTIONS_DEFAUT.find((d) => d.id === sec.id)!;
             const defPrecedent = i > 0 ? SECTIONS_DEFAUT.find((d) => d.id === sectionsPage[i - 1].id) : null;
             const nouveauGroupe = !defPrecedent || defPrecedent.groupe !== def.groupe;
+            const cle = clePere(sec.id);
+            const clePrecedente = i > 0 ? clePere(sectionsPage[i - 1].id) : null;
+            const nouvellePaire = !!cle && cle !== clePrecedente;
+            const pere = cle ? PARENT_ENFANTS[cle] : null;
+            const replie = !!(pere?.repliable && cle && groupesReplies[cle]);
             return (
               <div key={sec.id}>
-                {nouveauGroupe && (
+                {nouvellePaire && pere && (
+                  <div className="mb-1 mt-3 flex items-center gap-1.5 rounded-xl bg-[var(--dashboard-text)]/[0.05] px-2 py-1.5 first:mt-0">
+                    <span className="shrink-0 text-[var(--dashboard-text)]/45">
+                      <MiniIcon path={pere.icone} />
+                    </span>
+                    <span className="flex-1 truncate text-[11.5px] font-semibold text-[var(--dashboard-text)]">
+                      {t(pere.label, pere.labelEn)}
+                    </span>
+                    {pere.repliable && cle && (
+                      <button
+                        type="button"
+                        onClick={() => setGroupesReplies((r) => ({ ...r, [cle]: !r[cle] }))}
+                        aria-label={replie ? t("Déplier", "Expand") : t("Replier", "Collapse")}
+                        className="shrink-0 text-[var(--dashboard-text)]/40 hover:text-[var(--dashboard-text)]"
+                      >
+                        <ChevronBasIcon replie={replie} />
+                      </button>
+                    )}
+                    <span className="shrink-0 text-[var(--dashboard-text)]/30">
+                      <CadenasIcon />
+                    </span>
+                  </div>
+                )}
+                {!cle && nouveauGroupe && (
                   <p className="mb-1.5 mt-3 px-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dashboard-text)]/40 first:mt-0">
                     {t(def.groupe, def.groupeEn)}
                   </p>
                 )}
+                {!replie && (
                 <div
-                  className={`group flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-left transition ${
+                  className={`group flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-left transition ${cle ? "ml-3" : ""} ${
                     sectionChoisie === sec.id
                       ? "bg-brand-pink/10 ring-1 ring-brand-pink/40"
                       : "hover:bg-[var(--dashboard-text)]/[0.04]"
@@ -116,30 +168,37 @@ export default function SectionsPanel({
                   <button
                     type="button"
                     onClick={() => setSectionChoisie(sec.id)}
-                    className="min-w-0 flex-1 truncate text-left text-[11.5px] font-semibold text-[var(--dashboard-text)]"
+                    className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-[11.5px] font-semibold text-[var(--dashboard-text)]"
                   >
-                    {t(def.label, def.labelEn)}
+                    {def.icone && (
+                      <span className="shrink-0 text-[var(--dashboard-text)]/45">
+                        <MiniIcon path={def.icone} />
+                      </span>
+                    )}
+                    <span className="truncate">{t(def.label, def.labelEn)}</span>
                   </button>
-                  <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
-                    <button
-                      type="button"
-                      disabled={i === 0}
-                      onClick={() => deplacer(sec.id, -1)}
-                      aria-label={t("Monter", "Move up")}
-                      className="flex h-5 w-5 items-center justify-center rounded text-[var(--dashboard-text)]/40 hover:text-[var(--dashboard-text)] disabled:opacity-0"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      disabled={i === sectionsPage.length - 1}
-                      onClick={() => deplacer(sec.id, 1)}
-                      aria-label={t("Descendre", "Move down")}
-                      className="flex h-5 w-5 items-center justify-center rounded text-[var(--dashboard-text)]/40 hover:text-[var(--dashboard-text)] disabled:opacity-0"
-                    >
-                      ↓
-                    </button>
-                  </div>
+                  {sec.id !== "pied-de-page" && sec.id !== "bouton-commande-fixe" && (
+                    <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
+                      <button
+                        type="button"
+                        disabled={i === 0}
+                        onClick={() => deplacer(sec.id, -1)}
+                        aria-label={t("Monter", "Move up")}
+                        className="flex h-5 w-5 items-center justify-center rounded text-[var(--dashboard-text)]/40 hover:text-[var(--dashboard-text)] disabled:opacity-0"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        disabled={i === sectionsPage.length - 1}
+                        onClick={() => deplacer(sec.id, 1)}
+                        aria-label={t("Descendre", "Move down")}
+                        className="flex h-5 w-5 items-center justify-center rounded text-[var(--dashboard-text)]/40 hover:text-[var(--dashboard-text)] disabled:opacity-0"
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  )}
                   {def.verrouillee ? (
                     <span title={t("Toujours présente", "Always shown")} className="shrink-0 text-[var(--dashboard-text)]/30">
                       <CadenasIcon />
@@ -165,6 +224,7 @@ export default function SectionsPanel({
                     </button>
                   )}
                 </div>
+                )}
               </div>
             );
           })}
@@ -280,6 +340,14 @@ function OeilIcon({ barre }: { barre: boolean }) {
       <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke="currentColor" strokeWidth="1.5" />
       <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
       {barre && <path d="M4 4l16 16" stroke="currentColor" strokeWidth="1.5" />}
+    </svg>
+  );
+}
+
+function ChevronBasIcon({ replie }: { replie: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={`h-3.5 w-3.5 transition-transform ${replie ? "-rotate-90" : ""}`} aria-hidden>
+      <path d="M6 9.5 12 15l6-5.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

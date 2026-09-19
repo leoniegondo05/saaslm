@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import { useDashboardBoutiqueLogo } from "../DashboardBoutiqueLogoProvider";
 import { texteAvecChiffres } from "../dashboard-accueil/shared";
@@ -53,7 +54,16 @@ type EtatPersiste = {
   sectionChoisie: SectionId;
   reglageBoutique: BoutiqueReglageId;
   styleReglage: StyleReglageId;
+  largeurPanneauGauche: number;
 };
+
+// Bornes de la colonne "Sections/Style/Boutique" redimensionnable à la
+// souris (cf. LARGEUR_PANNEAU_DEFAUT ci-dessous) — assez étroit pour ne pas
+// écraser l'aperçu, assez large pour ne jamais tronquer un libellé long
+// ("Questions fréquentes", "Vous aimerez aussi...").
+const LARGEUR_PANNEAU_MIN = 220;
+const LARGEUR_PANNEAU_MAX = 420;
+const LARGEUR_PANNEAU_DEFAUT = 288;
 
 export default function PersonnaliserBoutique() {
   const { t } = useDashboardLangue();
@@ -72,7 +82,10 @@ export default function PersonnaliserBoutique() {
   const [sectionChoisie, setSectionChoisie] = useState<SectionId>("grande-image");
   const [reglageBoutique, setReglageBoutique] = useState<BoutiqueReglageId>("identite");
   const [styleReglage, setStyleReglage] = useState<StyleReglageId>("modele");
+  const [ongletMobile, setOngletMobile] = useState<"menu" | "apercu" | "reglages">("apercu");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "done">("idle");
+  const [largeurPanneauGauche, setLargeurPanneauGauche] = useState(LARGEUR_PANNEAU_DEFAUT);
+  const [redimensionnement, setRedimensionnement] = useState(false);
   // Œil "aperçu" de la maquette : ouvre la vitrine en plein écran, sans
   // aucun contour de sélection ni panneau, telle qu'un client la verrait.
   const [apercuOuvert, setApercuOuvert] = useState(false);
@@ -107,6 +120,7 @@ export default function PersonnaliserBoutique() {
         if (sauvegarde.sectionChoisie) setSectionChoisie(sauvegarde.sectionChoisie);
         if (sauvegarde.reglageBoutique) setReglageBoutique(sauvegarde.reglageBoutique);
         if (sauvegarde.styleReglage) setStyleReglage(sauvegarde.styleReglage);
+        if (sauvegarde.largeurPanneauGauche) setLargeurPanneauGauche(sauvegarde.largeurPanneauGauche);
       }
     } catch {
       // localStorage indisponible (navigation privée, quota...) : on reste sur ETAT_DEFAUT.
@@ -118,12 +132,37 @@ export default function PersonnaliserBoutique() {
   useEffect(() => {
     if (!charge) return;
     try {
-      const donnees: EtatPersiste = { state, page, onglet, sectionChoisie, reglageBoutique, styleReglage };
+      const donnees: EtatPersiste = { state, page, onglet, sectionChoisie, reglageBoutique, styleReglage, largeurPanneauGauche };
       localStorage.setItem(CLE_STOCKAGE, JSON.stringify(donnees));
     } catch {
       // idem : échec silencieux, la personnalisation reste utilisable pour la session en cours.
     }
-  }, [charge, state, page, onglet, sectionChoisie, reglageBoutique, styleReglage]);
+  }, [charge, state, page, onglet, sectionChoisie, reglageBoutique, styleReglage, largeurPanneauGauche]);
+
+  // Glisser la poignée entre "Sections" et l'aperçu redimensionne la colonne
+  // de gauche (cf. demande : plus figée à 288px, ajustable à la souris).
+  // Écouteurs posés sur window plutôt que sur la poignée : le curseur sort
+  // vite de la poignée pendant un drag rapide, sinon le mouvement se perd.
+  useEffect(() => {
+    if (!redimensionnement) return;
+    const onMouseMove = (e: MouseEvent) => {
+      const conteneur = document.getElementById("personnaliser-trois-colonnes");
+      if (!conteneur) return;
+      const largeur = e.clientX - conteneur.getBoundingClientRect().left;
+      setLargeurPanneauGauche(Math.min(LARGEUR_PANNEAU_MAX, Math.max(LARGEUR_PANNEAU_MIN, largeur)));
+    };
+    const onMouseUp = () => setRedimensionnement(false);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "col-resize";
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    };
+  }, [redimensionnement]);
 
   const choisirPage = (p: PageId) => {
     setPage(p);
@@ -293,9 +332,13 @@ export default function PersonnaliserBoutique() {
           </div>
         </div>
 
-        {/* Trois colonnes */}
-        <div className="grid gap-4 lg:grid-cols-[238px_1fr_320px]">
-          <div className="lg:h-[calc(100vh-160px)]">
+        {/* Trois colonnes (largeur de la première ajustable, cf. poignée ci-dessous) */}
+        <div
+          id="personnaliser-trois-colonnes"
+          className="grid gap-4 lg:grid-cols-[var(--largeur-panneau)_14px_1fr_320px] pb-20 lg:pb-0"
+          style={{ "--largeur-panneau": `${largeurPanneauGauche}px` } as CSSProperties}
+        >
+          <div className={`${ongletMobile === "menu" ? "block" : "hidden"} lg:block lg:h-[calc(100vh-160px)]`}>
             <SectionsPanel
               state={state}
               setState={setState}
@@ -303,15 +346,36 @@ export default function PersonnaliserBoutique() {
               onglet={onglet}
               setOnglet={setOnglet}
               sectionChoisie={sectionChoisie}
-              setSectionChoisie={setSectionChoisie}
+              setSectionChoisie={(id) => {
+                setSectionChoisie(id);
+                setOngletMobile("reglages");
+              }}
               reglageBoutique={reglageBoutique}
-              setReglageBoutique={setReglageBoutique}
+              setReglageBoutique={(id) => {
+                setReglageBoutique(id);
+                setOngletMobile("reglages");
+              }}
               styleReglage={styleReglage}
-              setStyleReglage={setStyleReglage}
+              setStyleReglage={(id) => {
+                setStyleReglage(id);
+                setOngletMobile("reglages");
+              }}
             />
           </div>
 
-          <div className="flex items-start justify-center overflow-y-auto rounded-2xl border border-dashed border-[var(--dashboard-text)]/10 bg-[radial-gradient(circle_at_50%_0%,rgba(236,12,140,0.06),transparent_60%)] p-5 lg:h-[calc(100vh-160px)]">
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label={t("Redimensionner le panneau", "Resize panel")}
+            onMouseDown={() => setRedimensionnement(true)}
+            onDoubleClick={() => setLargeurPanneauGauche(LARGEUR_PANNEAU_DEFAUT)}
+            title={t("Glisser pour redimensionner, double-clic pour réinitialiser", "Drag to resize, double-click to reset")}
+            className="hidden cursor-col-resize items-center justify-center lg:flex lg:h-[calc(100vh-160px)]"
+          >
+            <div className={`h-10 w-1 rounded-full transition ${redimensionnement ? "bg-brand-pink" : "bg-[var(--dashboard-text)]/15 hover:bg-[var(--dashboard-text)]/30"}`} />
+          </div>
+
+          <div className={`${ongletMobile === "apercu" ? "flex" : "hidden"} lg:flex items-start justify-center overflow-y-auto rounded-2xl border border-dashed border-[var(--dashboard-text)]/10 bg-[radial-gradient(circle_at_50%_0%,rgba(236,12,140,0.06),transparent_60%)] p-5 lg:h-[calc(100vh-160px)]`}>
             <BoutiquePreview
               state={state}
               device={device}
@@ -319,17 +383,22 @@ export default function PersonnaliserBoutique() {
               boutiqueNom={NOM_BOUTIQUE}
               logo={logo}
               sectionChoisie={sectionChoisie}
-              onChoisirSection={setSectionChoisie}
+              onChoisirSection={(id) => {
+                setSectionChoisie(id);
+                setOnglet("sections");
+                setOngletMobile("reglages");
+              }}
             />
           </div>
 
-          <div className="lg:h-[calc(100vh-160px)]">
+          <div className={`${ongletMobile === "reglages" ? "block" : "hidden"} lg:block lg:h-[calc(100vh-160px)]`}>
             {onglet === "boutique" ? (
               <ReglagesBoutique
                 reglageBoutique={reglageBoutique}
                 onOuvrirSection={(id) => {
                   setOnglet("sections");
                   setSectionChoisie(id);
+                  setOngletMobile("reglages");
                 }}
                 state={state}
                 setState={setState}
@@ -337,9 +406,40 @@ export default function PersonnaliserBoutique() {
             ) : onglet === "style" ? (
               <StyleReglages styleReglage={styleReglage} state={state} setState={setState} />
             ) : (
-              <ReglagesSection sectionId={sectionChoisie} state={state} setState={setState} page={page} />
+              <ReglagesSection
+                sectionId={sectionChoisie}
+                state={state}
+                setState={setState}
+                page={page}
+                onOuvrirSection={(id) => {
+                  setSectionChoisie(id);
+                  setOngletMobile("reglages");
+                }}
+              />
             )}
           </div>
+        </div>
+
+        {/* Navigation Mobile */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-[var(--dashboard-text)]/10 bg-[var(--dashboard-card-bg)] px-4 py-2 lg:hidden shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+          <button
+            onClick={() => setOngletMobile("menu")}
+            className={`flex-1 rounded-lg py-2 text-xs font-bold transition ${ongletMobile === "menu" ? "bg-brand-pink text-white" : "text-[var(--dashboard-text)]/60 hover:bg-[var(--dashboard-text)]/[0.05]"}`}
+          >
+            {t("Menu", "Menu")}
+          </button>
+          <button
+            onClick={() => setOngletMobile("apercu")}
+            className={`flex-1 rounded-lg py-2 text-xs font-bold transition ${ongletMobile === "apercu" ? "bg-brand-pink text-white" : "text-[var(--dashboard-text)]/60 hover:bg-[var(--dashboard-text)]/[0.05]"}`}
+          >
+            {t("Aperçu", "Preview")}
+          </button>
+          <button
+            onClick={() => setOngletMobile("reglages")}
+            className={`flex-1 rounded-lg py-2 text-xs font-bold transition ${ongletMobile === "reglages" ? "bg-brand-pink text-white" : "text-[var(--dashboard-text)]/60 hover:bg-[var(--dashboard-text)]/[0.05]"}`}
+          >
+            {t("Réglages", "Settings")}
+          </button>
         </div>
       </div>
 
