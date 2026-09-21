@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { DashboardThemeProvider, STORAGE_KEY } from "../components/DashboardThemeProvider";
+import { DashboardThemeProvider } from "../components/DashboardThemeProvider";
 import { DashboardLanguageProvider, LANG_STORAGE_KEY, type Langue } from "../components/DashboardLanguageProvider";
 import { DashboardBoutiqueLogoProvider } from "../components/DashboardBoutiqueLogoProvider";
 import ScrollToTop from "../components/ScrollToTop";
@@ -31,17 +31,6 @@ async function getInitialLangue(): Promise<Langue> {
   return value === "EN" ? "EN" : "FR";
 }
 
-// Script "anti-flash" : DashboardThemeProvider lit localStorage dans un
-// useEffect, qui ne s'exécute qu'APRÈS le premier rendu/paint — sur un
-// rechargement complet (F5) avec le mode nuit déjà choisi, l'utilisateur
-// voit donc toujours un éclair clair avant que React ne bascule en sombre.
-// Ce petit <script> synchrone, injecté avant le contenu de la page, pose la
-// classe "dark" sur <html> AVANT que le navigateur ne peigne quoi que ce
-// soit (un script sans async/defer bloque le rendu de ce qui le suit dans
-// le flux HTML) — React retrouve ensuite la classe déjà posée à
-// l'hydratation, donc rien à corriger, pas de flash. Pattern standard pour
-// un thème sombre persistant (ex. next-themes).
-const NO_FLASH_SCRIPT = `try{if(localStorage.getItem(${JSON.stringify(STORAGE_KEY)})==="1")document.documentElement.classList.add("dark")}catch(e){}`;
 
 export default async function DashboardLayout({
   children,
@@ -53,7 +42,9 @@ export default async function DashboardLayout({
     <DashboardThemeProvider>
       <DashboardLanguageProvider initialLangue={initialLangue}>
         <DashboardBoutiqueLogoProvider>
-          <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
+        {/* Script anti-flash déplacé dans app/layout.tsx (head du root layout,
+            Server Component) pour respecter la contrainte React 19 qui interdit
+            les <script> dans le rendu client. */}
           {/* display:contents : ce div n'existe que pour donner un
               sélecteur CSS au scope "chiffres du dashboard" (voir
               ".dashboard-figures-scope" dans globals.css) — il ne doit rien

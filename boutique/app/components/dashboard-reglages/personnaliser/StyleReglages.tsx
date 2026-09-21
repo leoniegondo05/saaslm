@@ -218,7 +218,7 @@ function ModeleReglages({
   );
 }
 
-const COULEURS_PRESETS = ["#EC0C8C", "#7C3AED", "#A78BFA", "#2563EB", "#16A34A", "#F97316", "#EF4444"];
+const COULEURS_PRESETS = ["#E8207E", "#EC0C8C", "#7C3AED", "#A78BFA", "#2563EB", "#16A34A", "#F97316", "#EF4444"];
 
 const ICONE_GOUTTE = "M12 3.5c3 3.8 6 7.2 6 10.5a6 6 0 1 1-12 0c0-3.3 3-6.7 6-10.5Z";
 const ICONE_PANIER = "M4.5 7h15l-1.4 9.5a2 2 0 0 1-2 1.7H7.9a2 2 0 0 1-2-1.7Zm3-1.5V5a4.5 4.5 0 0 1 9 0v.5";

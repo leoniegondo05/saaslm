@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
 import { texteAvecChiffres } from "../../dashboard-accueil/shared";
 import type { EditeurState, PageId, SectionId } from "./types";
-import { AVIS_APERCU, CATEGORIES_APERCU, PRODUIT_APERCU, PRODUITS_GRILLE_APERCU, SECTIONS_DEFAUT } from "./types";
+import { AVIS_APERCU, AVIS_DISTRIBUTION_APERCU, CATEGORIES_APERCU, PRODUIT_APERCU, PRODUITS_GRILLE_APERCU, SECTIONS_DEFAUT } from "./types";
 
 /*
   Aperçu en direct de la boutique, tel que le client la verrait — reflète
@@ -34,6 +34,65 @@ const INDICATIFS = [
   { pays: "Burkina Faso", paysEn: "Burkina Faso", code: "+226", drapeau: "🇧🇫" },
   { pays: "Togo", paysEn: "Togo", code: "+228", drapeau: "🇹🇬" },
   { pays: "Bénin", paysEn: "Benin", code: "+229", drapeau: "🇧🇯" },
+];
+
+// Pied de page — groupes de liens démonstratifs (cf. "Colonnes de liens" dans
+// ReglagesSection.tsx, `piedDePage.colonnesLiens` sélectionne combien de ces
+// groupes s'affichent, dans l'ordre). "À propos" reprend les deux liens fixes
+// déjà annoncés comme tags dans le panneau de réglages (Conditions de vente,
+// Confidentialité).
+const PIED_GROUPES_APERCU: { titre: [string, string]; liens: [string, string][] }[] = [
+  {
+    titre: ["Boutique", "Shop"],
+    liens: [
+      ["Soins visage", "Face care"],
+      ["Corps", "Body"],
+      ["Coffrets", "Gift sets"],
+      ["Offres", "Deals"],
+    ],
+  },
+  {
+    titre: ["Aide", "Help"],
+    liens: [
+      ["Suivre ma commande", "Track my order"],
+      ["Livraison et retours", "Delivery and returns"],
+      ["Questions fréquentes", "FAQ"],
+    ],
+  },
+  {
+    titre: ["À propos", "About"],
+    liens: [
+      ["Notre histoire", "Our story"],
+      ["Conditions de vente", "Terms of sale"],
+      ["Confidentialité", "Privacy"],
+    ],
+  },
+  {
+    titre: ["Communauté", "Community"],
+    liens: [
+      ["Nous écrire", "Contact us"],
+      ["Programme fidélité", "Loyalty program"],
+      ["Parrainage", "Referral"],
+    ],
+  },
+];
+
+// Mêmes logos que la carte "Reversé sur ce compte" (cf. PaymentMethodCard.tsx,
+// fichiers dans public/images) — vrais logos plutôt qu'une icône générique.
+const PIED_PAIEMENT_APERCU: { label: string; logo: string }[] = [
+  { label: "Orange Money", logo: "/images/ORANGE.png" },
+  { label: "MTN MoMo", logo: "/images/MTN.svg" },
+  { label: "Moov Money", logo: "/images/MOOV.png" },
+  { label: "Wave", logo: "/images/wave.png" },
+];
+
+// Icônes de réseaux (rangée sous la présentation) — génériques (caméra,
+// lecture, message) : "Réseaux sociaux" n'a pas encore de champ où choisir
+// quels réseaux sont reliés, cf. `piedDePage.reseaux` (booléen simple).
+const PIED_RESEAUX_ICONES = [
+  "M4 8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4Z M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z",
+  "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z M10 9l5 3-5 3Z",
+  "M4 4h16v12H8l-4 4Z",
 ];
 
 const boutonRadius: Record<string, string> = { carre: "6px", arrondi: "12px", pilule: "999px" };
@@ -147,8 +206,8 @@ export default function BoutiquePreview({
       style={{
         ...vars,
         fontSize: TAILLE_TEXTE_BASE[texte.tailleTexte],
-        paddingLeft: device === "desktop" && style.largeurOrdinateur === "large" ? 0 : device === "desktop" ? 48 : undefined,
-        paddingRight: device === "desktop" && style.largeurOrdinateur === "large" ? 0 : device === "desktop" ? 48 : undefined,
+        // Pas de padding global : chaque section gère son propre inset
+        // (bandeau/entete/pied-de-page/pleine = bord-à-bord, page = 28px).
       }}
       className="leading-tight"
     >
@@ -161,8 +220,20 @@ export default function BoutiquePreview({
         // Bandeau ignore les réglages génériques (Largeur/Marges/Couleurs) :
         // toujours plein-bord, sans marge, avec sa propre couleur (cf. "Affichage"
         // dans Corps ci-dessus) — pas de "Pour cette section" pour lui non plus.
-        const margeVerticale = id === "bandeau" ? 0 : MARGE_SECTION[sec.marges];
-        const largeurInset = id === "bandeau" ? 0 : sec.largeur === "page" ? (device === "phone" ? 12 : 28) : 0;
+        // Bandeau, entête et pied-de-page : collés bord-à-bord, sans marge verticale ni section-gap.
+        const CHROME_EDGE = new Set(["bandeau", "entete", "pied-de-page"]);
+        const margeVerticale = CHROME_EDGE.has(id) ? 0 : MARGE_SECTION[sec.marges];
+        // FULL_EDGE : toujours inset 0 latéralement (fond couvre tout).
+        // Grande-image : la largeur "page" se gère en interne (maxWidth),
+        // pas via marginLeft/Right pour que le fond reste plein-bord.
+        const FULL_EDGE = new Set(["bandeau", "entete", "pied-de-page", "grande-image"]);
+        const insetDesktop = style.largeurOrdinateur === "large" ? 8 : 28;
+        const largeurInset =
+          FULL_EDGE.has(id)
+            ? 0
+            : sec.largeur === "page"
+              ? device === "phone" ? 12 : insetDesktop
+              : 0;
         const couleursOverride: React.CSSProperties =
           id === "bandeau"
             ? {}
@@ -177,7 +248,8 @@ export default function BoutiquePreview({
             onClick={onChoisirSection ? () => onChoisirSection(id) : undefined}
             className={onChoisirSection ? "group/hl relative cursor-pointer" : "relative"}
             style={{
-              ...(i > 0 ? { marginTop: "var(--section-gap)" } : undefined),
+              // Pas de section-gap avant le pied-de-page (collé en bas comme le bandeau en haut)
+              ...(i > 0 && !CHROME_EDGE.has(id) ? { marginTop: "var(--section-gap)" } : undefined),
               paddingTop: margeVerticale,
               paddingBottom: margeVerticale,
               marginLeft: largeurInset,
@@ -290,15 +362,6 @@ function ElementsFlottantsApercu({
   const basReserve = barreCommande ? 58 : 12; // px laissés libres au-dessus de la barre de commande pour ne pas la recouvrir
   return (
     <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[inherit]">
-      {flottants.popupAfficher && (
-        <div
-          className="pointer-events-auto absolute inset-x-3 rounded-2xl bg-white p-3 shadow-[0_20px_40px_-12px_rgba(11,14,28,0.4)]"
-          style={{ bottom: basReserve + 46, border: "1px solid rgba(0,0,0,.08)" }}
-        >
-          <p className="text-[10px] font-bold text-[#0B0E1C]">{t("Offre spéciale", "Special offer")}</p>
-          <p className="mt-0.5 text-[9px] text-black/50">{t("−10 % sur votre première commande", "−10% on your first order")}</p>
-        </div>
-      )}
       {flottants.ongletAvisCote && (
         <span
           className="pointer-events-auto absolute right-0 top-1/2 origin-right -translate-y-1/2 -rotate-90 rounded-t-md bg-[#0B0E1C] px-2.5 py-1 text-[8px] font-semibold text-white"
@@ -308,10 +371,13 @@ function ElementsFlottantsApercu({
       )}
       {flottants.boutonRetourHaut && (
         <span
-          className="pointer-events-auto absolute left-3 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-[0_8px_18px_-6px_rgba(11,14,28,0.35)]"
-          style={{ bottom: basReserve }}
+          className={`pointer-events-auto absolute flex h-7 w-7 items-center justify-center rounded-full shadow-[0_8px_18px_-6px_rgba(11,14,28,0.35)] ${
+            // Côté opposé au bouton WhatsApp quand les deux sont affichés du même côté (cf. capture : à droite par défaut, WhatsApp étant caché).
+            flottants.whatsappAfficher && flottants.whatsappCote === "droite" ? "left-3" : "right-3"
+          }`}
+          style={{ bottom: basReserve, background: "var(--ac)" }}
         >
-          <MiniIcon path="M12 19V5M5 12l7-7 7 7" color="#0B0E1C" />
+          <MiniIcon path="M12 19V5M5 12l7-7 7 7" color="#fff" />
         </span>
       )}
       {flottants.whatsappAfficher && (
@@ -459,25 +525,36 @@ function SectionRendue({
       );
 
     case "grande-image": {
+      const sec = state.sections.find((s) => s.id === id)!;
       const isHalo = state.style.modele === "halo";
       const h = state.grandeImage;
       const remise = state.paiement.remiseEnLignePct;
       const inverse = h.imagePosition === "gauche";
       const centree = h.imagePosition === "centre";
       const centreTexte = centree || h.texteAlign === "centre";
-      const minH = h.hauteur === "s" ? 150 : h.hauteur === "l" ? 230 : 190;
+      const minH = h.hauteur === "s" ? 240 : h.hauteur === "l" ? 360 : 300;
       const sombre = h.typeFond !== "degrade" || isHalo;
       const textColor = sombre ? "#fff" : "var(--tx)";
       const fonds: Record<typeof h.typeFond, React.CSSProperties["background"]> = {
-        degrade: isHalo ? "linear-gradient(135deg, #E8207E, #6B21D6 60%, #0B0E1C)" : "color-mix(in srgb, var(--ac) 8%, var(--bg))",
+        degrade: isHalo ? "linear-gradient(135deg, #E8207E 45%, #6B21D6 78%, #0B0E1C)" : "color-mix(in srgb, var(--ac) 8%, var(--bg))",
         uni: "var(--ac)",
         photo: "linear-gradient(160deg, rgba(11,14,28,.65), rgba(11,14,28,.35)), linear-gradient(135deg, #6B21D6, #0B0E1C)",
       };
       const imagePhone = device === "phone" && h.imageDifferenteSurTelephone;
       return (
-        <div className="relative overflow-hidden px-4 py-5" style={{ minHeight: minH, background: fonds[h.typeFond], color: textColor }}>
-          {h.courbesLumineuses && <HaloCourbes ton={sombre ? "sombre" : "clair"} />}
-          <div className={`relative flex h-full items-center gap-4 ${centree ? "flex-col text-center" : inverse ? "flex-row-reverse" : ""}`}>
+        <div className="relative overflow-hidden px-6 py-8" style={{ minHeight: minH, background: fonds[h.typeFond], color: textColor }}>
+          {h.courbesLumineuses && (isHalo ? <HaloRayons /> : <HaloCourbes ton={sombre ? "sombre" : "clair"} />)}
+          {/* largeur "page" : contenu centré avec maxWidth, fond reste plein-bord */}
+          <div
+            className={`relative flex h-full gap-3 ${
+              centree
+                ? "flex-col items-center text-center"
+                : device === "phone"
+                  ? "flex-col items-start"
+                  : `items-center ${inverse ? "flex-row-reverse" : ""}`
+            }`}
+            style={sec.largeur === "page" ? { maxWidth: device === "phone" ? "100%" : 520, margin: "0 auto" } : undefined}
+          >
             <div className={`min-w-0 flex-1 ${centreTexte ? "flex flex-col items-center text-center" : ""}`}>
               <div className="flex flex-wrap items-center gap-1.5">
                 <span
@@ -497,7 +574,7 @@ function SectionRendue({
                 )}
               </div>
               <p
-                className="mt-2 text-[16px] leading-tight"
+                className="mt-2 text-[24px] leading-tight"
                 style={{
                   fontFamily: "var(--font-titre)",
                   fontWeight: "var(--titre-graisse)" as unknown as number,
@@ -510,16 +587,16 @@ function SectionRendue({
               <p className="mt-1 text-[10px]" style={{ opacity: sombre ? 0.85 : 0.6 }}>
                 {t("Des soins naturels pour le visage et le corps, choisis avec soin.", "Natural skincare for face and body, carefully chosen.")}
               </p>
-              <div className="mt-3 flex items-center gap-2">
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
                 <span
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-[10.5px] font-semibold ${classeEffetSurvol(state.mouvements.effetSurvol, "hover:brightness-110")}`}
+                  className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-2 text-[10.5px] font-semibold ${classeEffetSurvol(state.mouvements.effetSurvol, "hover:brightness-110")}`}
                   style={{ background: sombre ? "#fff" : "var(--ac)", color: sombre ? "#0B0E1C" : "#fff", borderRadius: "var(--rad)", textTransform: "var(--btn-uppercase)" as React.CSSProperties["textTransform"] }}
                 >
                   {h.bouton1Texte}
                 </span>
                 {h.boutons === 2 && (
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-[10.5px] font-semibold ${classeEffetSurvol(state.mouvements.effetSurvol, "hover:brightness-90")}`}
+                    className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-2 text-[10.5px] font-semibold ${classeEffetSurvol(state.mouvements.effetSurvol, "hover:brightness-90")}`}
                     style={{
                       borderWidth: "var(--btn-border)",
                       borderStyle: "solid",
@@ -534,8 +611,18 @@ function SectionRendue({
                 )}
               </div>
             </div>
-            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl" style={{ background: sombre ? "rgba(255,255,255,.12)" : "rgba(0,0,0,.06)" }}>
-              <MiniIcon path={imagePhone ? "M6 4h12v16H6Z M9 8h6v6H9Z" : "M4 6h4l1.4-2h5.2L16 6h4v12H4Z"} color={sombre ? "rgba(255,255,255,.7)" : "rgba(0,0,0,.3)"} />
+            <div className="relative flex h-32 w-32 shrink-0 items-center justify-center">
+              <div className="h-full w-full overflow-hidden rounded-2xl">
+                <img
+                  src={imagePhone ? "/images/serum2.jpg" : "/images/serum1.avif"}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  style={{
+                    maskImage: "radial-gradient(circle, #000 55%, transparent 100%)",
+                    WebkitMaskImage: "radial-gradient(circle, #000 55%, transparent 100%)",
+                  }}
+                />
+              </div>
               {h.badge && remise > 0 && (
                 <span className="absolute -top-2 -right-2 rounded-full bg-[#0B0E1C] px-1.5 py-0.5 text-[7.5px] font-figures-bold text-white shadow">
                   −{remise}%
@@ -596,20 +683,17 @@ function SectionRendue({
       const rond = c.formeImages === "rond";
       const defilement = device === "phone" && c.colonnesTelephone === "defilement";
       const cols = device === "phone" ? Number(c.colonnesTelephone) || 2 : c.colonnesOrdinateur;
-      const carte = (cat: (typeof CATEGORIES_APERCU)[number]) => (
-        <div key={cat.label} className={defilement ? "w-16 shrink-0" : ""}>
-          <div
-            className={`flex aspect-square items-center justify-center ${rond ? "rounded-full" : "overflow-hidden rounded-xl border"}`}
-            style={{
-              background: "color-mix(in srgb, var(--ac) 10%, transparent)",
-              borderColor: rond ? undefined : "color-mix(in srgb, var(--tx) 08%, transparent)",
-            }}
-          >
-            <MiniIcon path="M4 6h16M4 12h16M4 18h16" color="var(--ac)" />
+      const carte = (cat: (typeof CATEGORIES_APERCU)[number], i: number) => (
+        <div
+          key={cat.label}
+          className={`w-full overflow-hidden rounded-lg bg-white shadow-[0_6px_16px_-8px_rgba(20,18,32,0.18)] ${defilement ? "w-16 shrink-0" : ""}`}
+        >
+          <div className={`flex aspect-square items-center justify-center overflow-hidden ${rond ? "m-2 rounded-full" : ""}`}>
+            <img src={i % 2 === 0 ? "/images/serum1.avif" : "/images/serum2.jpg"} alt="" className="h-full w-full object-cover object-top" />
           </div>
-          <p className={`truncate px-1.5 pt-1 text-[8px] font-semibold ${rond ? "text-center" : ""}`}>{t(cat.label, cat.labelEn)}</p>
+          <p className={`truncate px-2 pt-1.5 text-[8px] font-semibold ${rond ? "text-center" : ""}`}>{t(cat.label, cat.labelEn)}</p>
           {c.nombreProduits && (
-            <p className={`truncate px-1.5 pb-1.5 text-[7px] ${rond ? "text-center" : ""}`} style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>
+            <p className={`truncate px-2 pb-2 text-[7px] ${rond ? "text-center" : ""}`} style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
               {texteAvecChiffres(t(`${cat.count} produits`, `${cat.count} products`))}
             </p>
           )}
@@ -624,8 +708,8 @@ function SectionRendue({
           {defilement ? (
             <div className="flex gap-2 overflow-x-auto">{CATEGORIES_APERCU.map(carte)}</div>
           ) : (
-            <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
-              {CATEGORIES_APERCU.map(carte)}
+            <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
+              {CATEGORIES_APERCU.slice(0, cols).map(carte)}
             </div>
           )}
         </div>
@@ -635,26 +719,49 @@ function SectionRendue({
     case "promo": {
       const p = state.promo;
       const inverse = p.cote === "droite";
-      const fond = p.fond === "nuit" ? "#0B0E1C" : "linear-gradient(120deg,#0B0E1C,#1A1240 60%,#3A0F4E)";
+      const phone = device === "phone";
+      const fond = p.fond === "nuit" ? "linear-gradient(160deg,#170A22,#0B0E1C 65%)" : "linear-gradient(135deg,#6B21D6,#E8207E)";
       return (
         <div className="px-4 py-3.5">
-          <div className={`flex items-center gap-3 overflow-hidden rounded-2xl px-4 py-4 text-white ${inverse ? "flex-row-reverse" : ""}`} style={{ background: fond }}>
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/10">
-              <MiniIcon path="M20 7 12 3 4 7l8 4 8-4Zm0 3-8 4-8-4m0 5 8 4 8-4" color="rgba(255,255,255,.7)" />
+          <div
+            className={`overflow-hidden rounded-2xl px-5 py-5 text-white ${
+              phone ? "flex flex-col gap-3" : `flex min-h-[112px] items-center justify-center gap-4 py-6 ${inverse ? "flex-row-reverse" : ""}`
+            }`}
+            style={{ background: fond }}
+          >
+            <div
+              className={phone ? "relative flex h-32 w-full items-end justify-center" : "flex h-28 w-28 shrink-0 items-end justify-center"}
+              style={{
+                maskImage: "radial-gradient(circle, #000 55%, transparent 100%)",
+                WebkitMaskImage: "radial-gradient(circle, #000 55%, transparent 100%)",
+              }}
+            >
+              {phone && (
+                <>
+                  <FeuilleDecor className="absolute left-4 top-0 h-16 w-10 -rotate-12" opacity={0.18} />
+                  <FeuilleDecor className="absolute right-4 top-2 h-14 w-9 rotate-[18deg]" color="#F5C1DC" opacity={0.35} />
+                </>
+              )}
+              {(["flacon", "pompe", "pot"] as const).map((variante, i) => (
+                <div key={variante} className={`h-full ${phone ? "w-24" : "w-1/3"} ${i > 0 ? "-ml-3" : ""}`}>
+                  <ProduitIllustration variante={variante} accent="#fff" />
+                </div>
+              ))}
             </div>
-            <div className="min-w-0 flex-1">
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[8px] font-semibold">{p.petitTexte}</span>
-              <p className="mt-1 text-[12px] font-bold leading-tight">{texteAvecChiffres(p.titre)}</p>
+            <div className={phone ? "min-w-0" : "min-w-0 max-w-[76%]"}>
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold">{p.petitTexte}</span>
+              <p className="mt-1.5 text-[19px] font-bold leading-tight">{texteAvecChiffres(p.titre)}</p>
+              {p.sousTitre && <p className="mt-1 text-[9px] leading-snug text-white/75">{p.sousTitre}</p>}
               {p.compteur && (
-                <div className="mt-1.5 flex gap-1">
-                  {[["02", t("j", "d")], ["14", t("h", "h")], ["36", t("min", "min")]].map(([v, u]) => (
-                    <span key={u} className="rounded-md bg-white/15 px-1.5 py-0.5 text-center text-[8px]">
+                <div className="mt-2 flex gap-1.5">
+                  {[["02", t("jours", "days")], ["14", t("heures", "hours")], ["36", t("min", "min")], ["08", "s"]].map(([v, u]) => (
+                    <span key={u} className="flex flex-col items-center rounded-md bg-white/15 px-2 py-1 text-center text-[9px]">
                       <span className="font-figures-bold">{v}</span> {u}
                     </span>
                   ))}
                 </div>
               )}
-              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[9.5px] font-semibold text-[#0B0E1C]">
+              <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[11px] font-semibold text-[#0B0E1C]">
                 {p.boutonTexte}
               </span>
             </div>
@@ -671,11 +778,12 @@ function SectionRendue({
       const produits = PRODUITS_GRILLE_APERCU.slice(0, g.nombre);
       const c = state.cartesProduit;
       const rayon = c.style === "sans-cadre" ? 0 : state.style.arrondi;
-      const espace = c.densite === "compacte" ? "gap-1.5" : "gap-2";
+      const espace = c.densite === "compacte" ? "gap-2.5" : "gap-3.5";
       const paddingTexte = c.densite === "compacte" ? "px-1.5 py-1" : "px-1.5 py-1.5";
       const dotsCouleurs = ["#0B0E1C", state.style.couleurPrincipale, "#F5C1DC"];
       const titreGrille =
         g.montrer === "meilleures-ventes" ? t("Meilleures ventes", "Best sellers") : g.montrer === "nouveautes" ? t("Nouveautés", "New arrivals") : t("Sélection", "Handpicked");
+      const meilleureVenteIndex = indexMeilleureVente(produits);
       return (
         <div className="px-4 py-3.5">
           <div className="mb-2 flex items-center justify-between">
@@ -683,7 +791,7 @@ function SectionRendue({
             <span className="text-[9px] font-semibold" style={{ color: "var(--ac)" }}>{t("Tout voir", "See all")}</span>
           </div>
           <div className={defilement ? `flex ${espace} overflow-x-auto` : `grid ${espace}`} style={defilement ? undefined : { gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
-            {produits.map((p) => (
+            {produits.map((p, i) => (
               <CarteProduit
                 key={p.nom}
                 p={p}
@@ -694,6 +802,9 @@ function SectionRendue({
                 paddingTexte={paddingTexte}
                 couleurEtoiles={couleurEtoiles}
                 scroll={defilement}
+                variante={PRODUIT_ILLUSTRATIONS[i % PRODUIT_ILLUSTRATIONS.length]}
+                badge={i === meilleureVenteIndex ? "populaire" : p.ventes30j === 0 ? "nouveau" : undefined}
+                compact
                 t={t}
               />
             ))}
@@ -709,17 +820,53 @@ function SectionRendue({
         "M4 4h16v12H8l-4 4Z",
         "M12 3l2 5 5 1-4 3.6 1 5-4.5-2.5L7 17.6l1-5-4-3.6 5-1Z",
       ];
-      const items = icones.slice(0, state.engagements.nombre).map((icon, i) => ({ icon, label: state.engagements.items[i] }));
+      // Sous-libellé fixe par position, comme l'icône (cf. types.ts) : pas de champ éditable,
+      // ce sont les 4 mêmes garanties quel que soit le libellé personnalisé au-dessus.
+      const sousLibelles = [
+        t("Orange Money, MTN MoMo, Moov Money, Wave", "Orange Money, MTN MoMo, Moov Money, Wave"),
+        t("Du départ à la livraison", "From pickup to delivery"),
+        t("Par message ou appel", "By message or call"),
+        t("Réservées aux clientes", "Reserved for customers"),
+      ];
+      const items = icones.slice(0, state.engagements.nombre).map((icon, i) => ({ icon, label: state.engagements.items[i], sousLabel: sousLibelles[i] }));
+      // Téléphone : ligne unique trop étroite pour icône + titre + sous-libellé sur 4 colonnes,
+      // donc grille 2×2 (bordure haute sur la 2e rangée, bordure gauche sur la 2e colonne).
+      const colsPhone = 2;
       return (
-        <div className="grid gap-2 px-4 py-3.5" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0,1fr))` }}>
-          {items.map((it) => (
-            <div key={it.label} className="flex flex-col items-center gap-1 text-center">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "color-mix(in srgb, var(--ac) 12%, transparent)" }}>
-                <MiniIcon path={it.icon} color="var(--ac)" />
-              </span>
-              <span className="text-[7.5px] font-semibold leading-tight">{it.label}</span>
-            </div>
-          ))}
+        <div className="px-4 py-3.5">
+          <div
+            className={device === "phone" ? "grid rounded-lg border px-2.5 py-2.5" : "flex items-stretch rounded-lg border px-2.5 py-2.5"}
+            style={{
+              borderColor: "color-mix(in srgb, var(--ac) 20%, transparent)",
+              background: "color-mix(in srgb, var(--ac) 5%, transparent)",
+              ...(device === "phone" ? { gridTemplateColumns: `repeat(${colsPhone}, minmax(0,1fr))` } : undefined),
+            }}
+          >
+            {items.map((it, i) => (
+              <div
+                key={it.label}
+                className="flex flex-1 items-center gap-1.5 px-2 py-1"
+                style={
+                  device === "phone"
+                    ? {
+                        borderLeft: i % colsPhone > 0 ? "1px solid color-mix(in srgb, var(--ac) 15%, transparent)" : undefined,
+                        borderTop: i >= colsPhone ? "1px solid color-mix(in srgb, var(--ac) 15%, transparent)" : undefined,
+                      }
+                    : i > 0
+                      ? { borderLeft: "1px solid color-mix(in srgb, var(--ac) 15%, transparent)" }
+                      : undefined
+                }
+              >
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg" style={{ background: "color-mix(in srgb, var(--ac) 14%, transparent)" }}>
+                  <MiniIcon path={it.icon} color="var(--ac)" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[7px] font-bold leading-tight">{it.label}</p>
+                  <p className="mt-0.5 truncate text-[6px] leading-tight" style={{ color: "var(--ac)", opacity: 0.75 }}>{it.sousLabel}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       );
     }
@@ -743,7 +890,7 @@ function SectionRendue({
                       boxShadow: i === 0 ? "0 0 0 1.5px var(--ac)" : undefined,
                     }}
                   >
-                    <MiniIcon path="M4 6h4l1.4-2h5.2L16 6h4v12H4Z" color="color-mix(in srgb, var(--tx) 25%, transparent)" />
+                    <ProduitIllustration variante={PRODUIT_ILLUSTRATIONS[i % PRODUIT_ILLUSTRATIONS.length]} accent="var(--ac)" />
                   </div>
                 ))}
               </div>
@@ -759,13 +906,8 @@ function SectionRendue({
             >
               {/* courbes fines convergeant vers un point lumineux, motif Halo (maquette) */}
               {isHalo && <HaloCourbes />}
-              <div className="relative flex flex-col items-center gap-1.5 text-center">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/10">
-                  <MiniIcon path="M4 6h4l1.4-2h5.2L16 6h4v12H4Z" color="rgba(0,0,0,.35)" />
-                </span>
-                <span className="text-[9.5px]" style={{ color: "rgba(0,0,0,.4)" }}>
-                  {t("Aucune photo déposée", "No photo uploaded yet")}
-                </span>
+              <div className="relative flex h-full w-full items-center justify-center">
+                <ProduitIllustration variante="flacon" accent="var(--ac)" />
               </div>
               {isHalo && (
                 <span className="absolute -bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[9.5px] font-semibold shadow-[0_10px_24px_-8px_rgba(11,14,28,0.35)]">
@@ -1333,66 +1475,195 @@ function SectionRendue({
       );
     }
 
-    case "avis":
+    case "avis": {
+      const a = state.avis;
+      const cols = device === "phone" ? 1 : a.colonnesOrdinateur;
+      const avisAffiches = AVIS_APERCU.slice(0, Math.min(AVIS_APERCU.length, a.nombreAffiches));
+      const filtres = [t("Tous", "All"), ...(a.photosClients ? [t("Avec photos", "With photos")] : []), t("5 étoiles", "5 stars"), t("4 étoiles", "4 stars")];
+      const resume = (
+        <>
+          <span className="text-[30px] font-figures-bold leading-none">{PRODUIT_APERCU.note}</span>
+          <Etoiles note={PRODUIT_APERCU.note} taille={15} couleur={couleurEtoiles} />
+          <p className="mt-1 text-[11px]" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
+            <span className="font-figures">{PRODUIT_APERCU.avisCount}</span> {t("avis", "reviews")}
+          </p>
+          {device !== "phone" && (
+            <div className="mt-3 flex flex-col gap-1.5">
+              {AVIS_DISTRIBUTION_APERCU.map((d) => (
+                <div key={d.etoiles} className="flex items-center gap-2">
+                  <span className="w-2.5 shrink-0 text-[9px] font-figures" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>{d.etoiles}</span>
+                  <span className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: "color-mix(in srgb, var(--tx) 08%, transparent)" }}>
+                    <span className="block h-full rounded-full" style={{ width: `${d.pourcent}%`, background: "#F2A93B" }} />
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          {a.compteurAchatsVerifies && (
+            <span
+              className="mt-3 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10.5px] font-bold"
+              style={{ background: "color-mix(in srgb, #1E9E6A 12%, transparent)", color: "#1F8A5B" }}
+            >
+              <MiniIcon path="M5 12l4 4 10-10" color="#1E9E6A" />
+              {texteAvecChiffres(t("118 achats vérifiés", "118 verified purchases"))}
+            </span>
+          )}
+        </>
+      );
       return (
         <div className="px-4 py-3.5">
-          <p className="mb-2 text-[11px] font-bold">{t("Ce que disent nos clientes", "What our customers say")}</p>
-          <div className="mb-2 flex items-center gap-3">
-            <span className="text-[22px] font-figures-bold leading-none">{PRODUIT_APERCU.note}</span>
-            <div>
-              <Etoiles note={PRODUIT_APERCU.note} taille={11} couleur={couleurEtoiles} />
-              <p className="text-[9px]" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}><span className="font-figures">{PRODUIT_APERCU.avisCount}</span> {t("avis", "reviews")}</p>
-            </div>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <p className="text-[15px] font-bold">{t("Ce que disent nos clientes", "What our customers say")}</p>
+            <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-semibold" style={{ color: "var(--ac)" }}>
+              {t("Tous les avis", "See all reviews")}
+              <MiniIcon path="M9 5l7 7-7 7" color="var(--ac)" />
+            </span>
           </div>
-          <div className={state.avis.disposition === "grille" ? "grid grid-cols-2 gap-2" : "flex flex-col gap-2"}>
-            {AVIS_APERCU.slice(0, state.avis.disposition === "grille" ? 2 : Math.min(2, state.avis.nombreAffiches)).map((a) => (
-              <div key={a.nom} className="rounded-xl border px-3 py-2.5" style={{ borderColor: "color-mix(in srgb, var(--tx) 1%, transparent)" }}>
-                <div className="flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-bold text-white" style={{ background: "var(--ac)" }}>
-                    {a.initiales}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[10px] font-semibold">{a.nom}</p>
-                    <Etoiles note={a.note} taille={8} couleur={couleurEtoiles} />
-                  </div>
-                  {a.verifie && (
-                    <span className="shrink-0 text-[8px] font-semibold" style={{ color: "#1F8A5B" }}>
-                      ✓ {t("Achat vérifié", "Verified purchase")}
+
+          {a.filtres && (
+            <div className="mb-3 flex gap-2 overflow-x-auto">
+              {filtres.map((f, i) => (
+                <span
+                  key={f}
+                  className="shrink-0 rounded-full px-3.5 py-2 text-[11px] font-semibold"
+                  style={
+                    i === 0
+                      ? { background: "#0B0E1C", color: "#fff" }
+                      : { border: "1px solid color-mix(in srgb, var(--tx) 10%, transparent)", color: "color-mix(in srgb, var(--tx) 55%, transparent)" }
+                  }
+                >
+                  {f}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div className={device === "phone" ? "flex flex-col gap-3" : "flex items-start gap-3"}>
+            {a.resumeDesNotes && (
+              <div
+                className={device === "phone" ? "w-full rounded-xl border px-4 py-5" : "w-[168px] shrink-0 rounded-xl border px-4 py-5"}
+                style={{ borderColor: "color-mix(in srgb, var(--tx) 06%, transparent)" }}
+              >
+                {resume}
+              </div>
+            )}
+            <div className="grid flex-1 gap-3" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
+              {avisAffiches.map((av) => (
+                <div key={av.nom} className="rounded-xl border px-3 py-2.5" style={{ borderColor: "color-mix(in srgb, var(--tx) 06%, transparent)" }}>
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[9.5px] font-bold text-white" style={{ background: "var(--ac)" }}>
+                      {av.initiales}
                     </span>
+                    <p className="min-w-0 truncate text-[11px] font-bold">{av.nom}</p>
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    <Etoiles note={av.note} taille={9} couleur={couleurEtoiles} />
+                    {a.date && (
+                      <span className="text-[9px]" style={{ color: "color-mix(in srgb, var(--tx) 40%, transparent)" }}>
+                        {texteAvecChiffres(t(`${av.jour} sept.`, `Sep ${av.jour}`))}
+                      </span>
+                    )}
+                    {av.verifie && (
+                      <span className="text-[9px] font-semibold" style={{ color: "#1F8A5B" }}>
+                        ✓ {t("Achat vérifié", "Verified purchase")}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1.5 text-[10.5px] leading-snug" style={{ color: "color-mix(in srgb, var(--tx) 55%, transparent)" }}>{t(av.texte, av.texteEn)}</p>
+                  {a.photosClients && av.photos && (
+                    <div className="mt-1.5 flex gap-1.5">
+                      {(["flacon", "pot"] as const).map((v, i) => (
+                        <span key={i} className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: "color-mix(in srgb, var(--tx) 04%, transparent)" }}>
+                          <ProduitIllustration variante={v} accent="var(--ac)" />
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {a.reponsesBoutique && av.reponse && (
+                    <div className="mt-1.5 rounded-lg border-l-2 px-2 py-1.5 text-[9.5px]" style={{ borderColor: "var(--ac)", background: "color-mix(in srgb, var(--tx) 03%, transparent)", color: "color-mix(in srgb, var(--tx) 55%, transparent)" }}>
+                      <b style={{ color: "var(--ac)" }}>{boutiqueNom} :</b> {t(av.reponse, av.reponseEn ?? av.reponse)}
+                    </div>
+                  )}
+                  {a.produitSousAvis && av.produit && (
+                    <div className="mt-1.5 flex items-center gap-1.5 border-t pt-1.5" style={{ borderColor: "color-mix(in srgb, var(--tx) 06%, transparent)" }}>
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded" style={{ background: "color-mix(in srgb, var(--tx) 04%, transparent)" }}>
+                        <ProduitIllustration variante={av.produit.illustration} accent="color-mix(in srgb, var(--tx) 35%, transparent)" />
+                      </span>
+                      <span className="truncate text-[9px]" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
+                        {t(av.produit.nom, av.produit.nomEn)}
+                      </span>
+                    </div>
                   )}
                 </div>
-                <p className="mt-1.5 text-[10px]" style={{ color: "color-mix(in srgb, var(--tx) 55%, transparent)" }}>{a.texte}</p>
-                {a.reponse && (
-                  <div className="mt-1.5 rounded-lg border-l-2 px-2 py-1.5 text-[9px]" style={{ borderColor: "var(--ac)", background: "color-mix(in srgb, var(--tx) 03%, transparent)", color: "color-mix(in srgb, var(--tx) 55%, transparent)" }}>
-                    <b style={{ color: "var(--ac)" }}>{boutiqueNom} :</b> {a.reponse}
-                  </div>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       );
+    }
 
-    case "faq":
+    case "faq": {
+      const fq = state.faq;
+      const colonnes = device === "phone" ? "grid-cols-1" : fq.colonnes === "deux" ? "grid-cols-2" : "grid-cols-1";
       return (
         <div className="px-4 py-3.5">
           <p className="mb-2 text-[11px] font-bold">{t("Questions fréquentes", "Frequently asked questions")}</p>
-          <div className="flex flex-col">
-            {state.faq.items.map((q, i) => {
-              const ouverte = i === 0 && state.faq.premiereOuverte ? true : !!q.ouverte;
+
+          {fq.rechercheActivee && (
+            <div
+              className="mb-2.5 flex items-center gap-1.5 rounded-full border px-2.5 py-1.5"
+              style={{ borderColor: "color-mix(in srgb, var(--tx) 10%, transparent)" }}
+            >
+              <MiniIcon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm9 16-4.35-4.35" color="color-mix(in srgb, var(--tx) 30%, transparent)" />
+              <span className="text-[9.5px]" style={{ color: "color-mix(in srgb, var(--tx) 35%, transparent)" }}>
+                {t("Rechercher une question…", "Search a question…")}
+              </span>
+            </div>
+          )}
+
+          <div className={`grid ${colonnes} gap-2`}>
+            {fq.items.map((q, i) => {
+              const ouverte = i === 0 && fq.premiereOuverte ? true : !!q.ouverte;
               return (
-                <div key={q.question} className="border-b py-2" style={{ borderColor: "color-mix(in srgb, var(--tx) 08%, transparent)" }}>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[10.5px] font-semibold">{texteAvecChiffres(q.question)}</p>
-                    <span className="shrink-0 text-[11px]" style={{ color: "color-mix(in srgb, var(--tx) 35%, transparent)" }}>{ouverte ? "−" : "+"}</span>
+                <div
+                  key={i}
+                  className="rounded-xl border px-2.5 py-2"
+                  style={{
+                    borderColor: ouverte ? "color-mix(in srgb, var(--ac) 30%, transparent)" : "color-mix(in srgb, var(--tx) 08%, transparent)",
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-[10px] font-semibold leading-snug">{texteAvecChiffres(q.question)}</p>
+                    <span className="mt-0.5 shrink-0" style={{ color: "var(--ac)" }}>
+                      {fq.icone === "fleche" ? (
+                        <MiniIcon path={ouverte ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} color="var(--ac)" />
+                      ) : (
+                        <span className="text-[11px] font-semibold">{ouverte ? "−" : "+"}</span>
+                      )}
+                    </span>
                   </div>
-                  {ouverte && <p className="mt-1 text-[10px] leading-relaxed" style={{ color: "color-mix(in srgb, var(--tx) 5%, transparent)" }}>{texteAvecChiffres(q.reponse)}</p>}
+                  {ouverte && (
+                    <p className="mt-1 text-[9px] leading-relaxed" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
+                      {texteAvecChiffres(q.reponse)}
+                    </p>
+                  )}
                 </div>
               );
             })}
           </div>
+
+          {fq.boutonPoserQuestion && (
+            <button
+              type="button"
+              className="mt-2.5 w-full rounded-full border py-1.5 text-[9.5px] font-semibold"
+              style={{ borderColor: "color-mix(in srgb, var(--ac) 35%, transparent)", color: "var(--ac)" }}
+            >
+              {t("Poser une question", "Ask a question")}
+            </button>
+          )}
         </div>
       );
+    }
 
     case "produits-lies": {
       if (!state.cartesProduit.zones.includes("vous-aimerez-aussi")) return null;
@@ -1407,15 +1678,16 @@ function SectionRendue({
       };
       const cols = device === "phone" ? pl.colonnesTelephone : pl.colonnesOrdinateur;
       const rayon = c.style === "sans-cadre" ? 0 : state.style.arrondi;
-      const espace = c.densite === "compacte" ? "gap-1.5" : "gap-2";
+      const espace = c.densite === "compacte" ? "gap-2.5" : "gap-3.5";
       const paddingTexte = c.densite === "compacte" ? "px-1.5 py-1" : "px-1.5 py-1.5";
       const dotsCouleurs = ["#0B0E1C", state.style.couleurPrincipale, "#F5C1DC"];
       const produits = PRODUITS_GRILLE_APERCU.slice(0, pl.nombre);
+      const meilleureVenteIndex = indexMeilleureVente(produits);
       return (
         <div className="px-4 py-3.5">
           <p className="mb-2 text-[11px] font-bold">{t("Vous aimerez aussi", "You may also like")}</p>
           <div className={`grid ${espace}`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
-            {produits.map((p) => (
+            {produits.map((p, i) => (
               <CarteProduit
                 key={p.nom}
                 p={p}
@@ -1426,6 +1698,8 @@ function SectionRendue({
                 paddingTexte={paddingTexte}
                 couleurEtoiles={couleurEtoiles}
                 scroll={false}
+                variante={PRODUIT_ILLUSTRATIONS[i % PRODUIT_ILLUSTRATIONS.length]}
+                badge={i === meilleureVenteIndex ? "populaire" : p.ventes30j === 0 ? "nouveau" : undefined}
                 t={t}
               />
             ))}
@@ -1457,38 +1731,107 @@ function SectionRendue({
       const sombreFond = p.couleur !== "clair";
       const centre = p.alignement === "centre";
       const tailleLogoPx = p.tailleLogo === "petite" ? 16 : p.tailleLogo === "grande" ? 26 : 20;
+      const traitCouleur = sombreFond ? "rgba(255,255,255,.1)" : "rgba(0,0,0,.08)";
+      const puceCouleur = sombreFond ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.05)";
+      const groupes = PIED_GROUPES_APERCU.slice(0, p.colonnesLiens);
+      const nbColonnes = groupes.length + (p.moyensPaiement ? 1 : 0);
+      // Téléphone + "Colonnes repliables" : empilées en une seule liste plutôt
+      // qu'un vrai accordéon interactif (cf. "entete/resteVisible" plus haut,
+      // même simplification assumée — l'aperçu reste honnête sur le contenu,
+      // pas sur la nuance d'interaction).
+      const colsGrille = device === "phone" ? (p.colonnesRepliablesTelephone ? 1 : Math.min(2, nbColonnes)) : nbColonnes;
       return (
-        <div className="relative overflow-hidden px-4 py-4 text-[10px]" style={{ background: fond.background, color: fond.color, textAlign: centre ? "center" : "left" }}>
+        <div className="relative overflow-hidden px-4 py-4 text-[10px]" style={{ background: fond.background, color: fond.color }}>
           {/* mêmes courbes que la grande image, convergeant vers un point lumineux — motif Halo (maquette) */}
           {isHalo && sombreFond && <HaloCourbes ton="sombre" />}
-          <div className="relative">
-            {p.logoAffiche && (
-              <div className={`mb-2 flex ${centre ? "justify-center" : ""}`}>
-                <Marque logo={logo} taille={tailleLogoPx} />
+
+          <div
+            className="relative overflow-hidden rounded-2xl border px-2.5 py-2"
+            style={{ borderColor: traitCouleur, background: sombreFond ? "rgba(255,255,255,.03)" : "rgba(0,0,0,.02)" }}
+          >
+            <div className={`flex items-start gap-2.5 ${centre ? "flex-col items-center text-center" : ""}`}>
+              {p.logoAffiche && <Marque logo={logo} taille={tailleLogoPx} />}
+              <div className="min-w-0 flex-1">
+                <b className="block text-[12px]" style={{ color: sombreFond ? "#fff" : "var(--tx)" }}>
+                  {boutiqueNom}
+                </b>
+                {p.presentation && (
+                  <p className="mt-0.5 text-[9px] leading-relaxed" style={{ opacity: 0.6 }}>
+                    {t(
+                      "Des soins naturels pour le visage et le corps, préparés avec des recettes sûres.",
+                      "Natural skincare for face and body, made with safe recipes."
+                    )}
+                  </p>
+                )}
               </div>
-            )}
-            {p.presentation && (
-              <p className="mb-2">
-                <b className="block" style={{ color: sombreFond ? "#fff" : "var(--tx)" }}>{boutiqueNom}</b>
-                {t("Soins naturels pour le visage et le corps.", "Natural skincare and body care.")}
-              </p>
-            )}
-            <div className={`flex flex-wrap gap-x-4 gap-y-1 ${centre ? "justify-center" : ""}`}>
-              {[t("Conditions de vente", "Terms of sale"), t("Livraison et retours", "Delivery and returns"), t("Confidentialité", "Privacy"), t("FAQ", "FAQ")]
-                .slice(0, p.colonnesLiens)
-                .map((lien) => (
-                  <span key={lien}>{lien}</span>
-                ))}
-              {p.reseaux && <span>Facebook · Instagram</span>}
             </div>
-            {p.moyensPaiement && (
-              <div className={`mt-2 flex flex-wrap gap-1.5 ${centre ? "justify-center" : ""}`}>
-                {["Orange Money", "MTN MoMo", "Moov Money", "Wave"].map((m) => (
-                  <span key={m} className="rounded px-1.5 py-0.5 text-[8px]" style={{ background: sombreFond ? "rgba(255,255,255,.1)" : "rgba(0,0,0,.06)" }}>{m}</span>
+
+            {p.reseaux && (
+              <div className={`mt-2 flex items-center gap-1.5 ${centre ? "justify-center" : ""}`}>
+                {PIED_RESEAUX_ICONES.map((path, i) => (
+                  <span
+                    key={i}
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+                    style={{ background: sombreFond ? "rgba(255,255,255,.1)" : "rgba(0,0,0,.06)" }}
+                  >
+                    <MiniIcon path={path} color={sombreFond ? "#fff" : "var(--tx)"} />
+                  </span>
                 ))}
               </div>
             )}
-            <p className="mt-2.5 text-[8.5px]" style={{ color: fond.sousTexte }}>{texteAvecChiffres(p.mentionBas)}</p>
+
+            {nbColonnes > 0 && (
+              <div
+                className="mt-2.5 grid gap-x-8 gap-y-2.5 border-t pt-2.5"
+                style={{
+                  gridTemplateColumns: `repeat(${colsGrille}, max-content)`,
+                  justifyContent: centre ? "center" : "start",
+                  borderColor: traitCouleur,
+                }}
+              >
+                {groupes.map((g) => (
+                  <div key={g.titre[0]} className={centre ? "text-center" : ""}>
+                    <p className="text-[9.5px] font-bold">{t(...g.titre)}</p>
+                    <div className="mt-1.5 flex flex-col gap-1">
+                      {g.liens.map((lien) => (
+                        <span key={lien[0]} className="truncate text-[9px]" style={{ opacity: 0.6 }}>
+                          {t(...lien)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {p.moyensPaiement && (
+                  <div className={centre ? "text-center" : ""}>
+                    <p className="text-[9.5px] font-bold">{t("Paiement", "Payment")}</p>
+                    <div className={`mt-1.5 grid grid-cols-2 gap-1.5 ${centre ? "justify-items-center" : ""}`}>
+                      {PIED_PAIEMENT_APERCU.map((m) => (
+                        <span key={m.label} className="flex items-center gap-1 rounded-lg px-1.5 py-1" style={{ background: puceCouleur }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element -- aperçu, pas une image du domaine */}
+                          <img src={m.logo} alt="" className="h-3.5 w-3.5 shrink-0 rounded-[3px] object-contain" />
+                          <span className="truncate text-[7.5px] font-semibold">{m.label}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className={`relative mt-3 flex flex-wrap items-center gap-2 ${centre ? "justify-center text-center" : "justify-between"}`}>
+            <p className="text-[8.5px]" style={{ color: fond.sousTexte }}>
+              {texteAvecChiffres(p.mentionBas)} · {t("Conditions de vente", "Terms of sale")} · {t("Confidentialité", "Privacy")}
+            </p>
+            {state.avis.compteurAchatsVerifies && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10.5px] font-semibold"
+                style={{ background: "rgba(63,203,142,.16)", color: "#5FE0AA" }}
+              >
+                <MiniIcon path="M5 12l4 4 10-10" color="#5FE0AA" />
+                {texteAvecChiffres(t("118 achats vérifiés", "118 verified purchases"))}
+              </span>
+            )}
           </div>
         </div>
       );
@@ -1554,6 +1897,42 @@ function HaloCourbes({ ton = "clair" }: { ton?: "clair" | "sombre" }) {
   );
 }
 
+/*
+  Rayons fins divergeant d'un point lumineux + feuilles éparpillées — décor
+  du hero grande-image du modèle Halo (maquette), remplace HaloCourbes pour
+  ce cas précis : un point de lumière près du produit d'où partent des
+  traits droits, quelques feuilles translucides et deux points dorés.
+*/
+function HaloRayons() {
+  const foyer = { x: 330, y: 92 };
+  const rayons: [number, number][] = [
+    [4, 22], [4, 92], [4, 168], [70, 6], [96, 190], [180, 2],
+  ];
+  return (
+    <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 400 200" preserveAspectRatio="none" aria-hidden>
+      <radialGradient id="halo-rayons-foyer">
+        <stop offset="0%" stopColor="#fff" stopOpacity="0.95" />
+        <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+      </radialGradient>
+      {rayons.map(([x, y], i) => (
+        <linearGradient key={i} id={`halo-rayon-fade-${i}`} x1={foyer.x} y1={foyer.y} x2={x} y2={y} gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#fff" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
+      ))}
+      {rayons.map(([x, y], i) => (
+        <line key={i} x1={foyer.x} y1={foyer.y} x2={x} y2={y} stroke={`url(#halo-rayon-fade-${i})`} strokeWidth="0.75" />
+      ))}
+      <circle cx={foyer.x} cy={foyer.y} r="14" fill="url(#halo-rayons-foyer)" />
+      <path d="M244 34 C 254 19, 274 19, 279 36 C 274 52, 254 52, 244 34Z" fill="rgba(255,255,255,.18)" transform="rotate(-25 261 36)" />
+      <path d="M296 146 C 308 129, 330 131, 334 150 C 328 168, 306 166, 296 146Z" fill="rgba(255,255,255,.16)" transform="rotate(15 315 148)" />
+      <path d="M366 58 C 376 44, 394 46, 396 62 C 392 78, 374 76, 366 58Z" fill="rgba(255,255,255,.16)" transform="rotate(40 381 60)" />
+      <circle cx="226" cy="58" r="2" fill="#F5D36B" />
+      <circle cx="356" cy="138" r="2" fill="#F5D36B" />
+    </svg>
+  );
+}
+
 function TitreAvecMotValorise({ titre, mot, couleur }: { titre: string; mot: string; couleur: string }) {
   const idx = mot ? titre.toLowerCase().indexOf(mot.toLowerCase()) : -1;
   if (idx === -1) return <>{titre}</>;
@@ -1570,6 +1949,42 @@ function MiniIcon({ path, color = "currentColor" }: { path: string; color?: stri
   return (
     <svg viewBox="0 0 24 24" fill="none" className="h-[14px] w-[14px]" aria-hidden>
       <path d={path} stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/*
+  Images de produit test (photos réelles) — deux photos de test (serum1/
+  serum2, cf. public/images) remplacent les silhouettes SVG le temps de
+  vérifier le rendu visuel avec de vraies photos plutôt que des glyphes,
+  cf. [[dashboard-mock-data-pending-laravel-api]]. Alternance par variante
+  (flacon/pompe → serum1, pot/tube → serum2), pas un vrai lien produit→photo.
+*/
+const PRODUIT_ILLUSTRATIONS = ["flacon", "pot", "tube", "pompe"] as const;
+type ProduitIllustrationId = (typeof PRODUIT_ILLUSTRATIONS)[number];
+const PRODUIT_ILLUSTRATION_SRC: Record<ProduitIllustrationId, string> = {
+  flacon: "/images/serum1.avif",
+  pompe: "/images/serum1.avif",
+  pot: "/images/serum2.jpg",
+  tube: "/images/serum2.jpg",
+};
+
+function ProduitIllustration({ variante }: { variante: ProduitIllustrationId; accent?: string }) {
+  return (
+    <img
+      src={PRODUIT_ILLUSTRATION_SRC[variante]}
+      alt=""
+      className="h-full w-full object-cover"
+      aria-hidden
+    />
+  );
+}
+
+function FeuilleDecor({ className, color = "#fff", opacity = 0.2 }: { className?: string; color?: string; opacity?: number }) {
+  return (
+    <svg viewBox="0 0 40 64" className={className} aria-hidden>
+      <path d="M20 2C7 11 3 30 20 62 37 30 33 11 20 2Z" fill={color} fillOpacity={opacity} />
+      <path d="M20 8v50" stroke={color} strokeOpacity={Math.min(opacity + 0.15, 1)} strokeWidth={1.2} />
     </svg>
   );
 }
@@ -1646,6 +2061,14 @@ function VariantesApercu({
   );
 }
 
+// Étiquette "Meilleure vente" (statut réel, dérivé de vosVentes30j) : la
+// référence la plus vendue du lot affiché — recalculé à chaque rangée
+// (grille pleine vs "Vous aimerez aussi") puisque le lot change selon
+// `nombre`. Pas d'égalité gérée à la main : reduce garde le premier max.
+function indexMeilleureVente(produits: (typeof PRODUITS_GRILLE_APERCU)[number][]): number {
+  return produits.reduce((meilleur, p, i) => (p.ventes30j > produits[meilleur].ventes30j ? i : meilleur), 0);
+}
+
 // Corps de carte produit partagé par case "grille" (accueil) et case
 // "produits-lies" (commande, "Vous aimerez aussi") — mêmes réglages de
 // contenu (state.grille) et de style (state.cartesProduit) dans les deux cas,
@@ -1659,6 +2082,9 @@ function CarteProduit({
   paddingTexte,
   couleurEtoiles,
   scroll,
+  variante,
+  badge,
+  compact,
   t,
 }: {
   p: (typeof PRODUITS_GRILLE_APERCU)[number];
@@ -1670,56 +2096,102 @@ function CarteProduit({
   couleurEtoiles: string;
   /** Carte de largeur fixe dans une rangée défilante (produits-lies, grille en mode défilement téléphone) vs cellule de grille pleine largeur. */
   scroll: boolean;
+  variante: ProduitIllustrationId;
+  /** "populaire" = référence la plus vendue du lot, "nouveau" = pas encore de vente (cf. indexMeilleureVente ci-dessus). */
+  badge?: "populaire" | "nouveau";
+  /** Grille de produits de l'accueil seulement (cf. retour utilisateur "cards trop grandes") :
+      photo moins haute, coins et icônes plus petits — "Vous aimerez aussi" garde la taille normale. */
+  compact?: boolean;
   t: (fr: string, en: string) => string;
 }) {
+  const enPromo = g.prixAffiche === "en-ligne" && p.prixNormal > p.prix;
+  const etiquette = badge && (
+    <span
+      className="inline-block rounded-full px-1.5 py-0.5 text-[6.5px] font-bold text-white"
+      style={{ background: badge === "populaire" ? "#D8347E" : "linear-gradient(100deg,#6B21D6,#3A1D8A)" }}
+    >
+      {badge === "populaire" ? t("Meilleure vente", "Best seller") : t("Nouveauté", "New")}
+    </span>
+  );
+  // Coins de carte plafonnés à 10px : le réglage global "Formes et espaces"
+  // (arrondi, jusqu'à ~28px pour les boutons/champs) rendait ces petites
+  // cartes trop arrondies (cf. capture utilisateur du 2026-09-21) — la
+  // carte produit garde des coins nets même quand le site choisit un style
+  // très arrondi ailleurs.
+  const rayonCarte = Math.min(rayon, compact ? 8 : 10);
+  const iconeTaille = compact ? "h-3.5 w-3.5" : "h-4 w-4";
   return (
     <div
-      className={`group relative overflow-hidden ${scroll ? "w-24 shrink-0" : ""} ${c.style === "bordure" ? "border" : ""}`}
+      className={`group relative flex h-full flex-col overflow-hidden ${scroll ? "w-24 shrink-0" : ""} ${c.style === "bordure" ? "border" : ""}`}
       style={{
         borderColor: c.style === "bordure" ? "color-mix(in srgb, var(--tx) 14%, transparent)" : undefined,
-        borderRadius: rayon,
+        borderRadius: rayonCarte,
         boxShadow: c.style === "ombre" ? "var(--card-shadow)" : undefined,
       }}
     >
-      <div className="relative flex items-center justify-center overflow-hidden" style={{ aspectRatio: "1/1", background: "color-mix(in srgb, var(--tx) 04%, transparent)" }}>
-        <MiniIcon path="M4 6h4l1.4-2h5.2L16 6h4v12H4Z" color="color-mix(in srgb, var(--tx) 25%, transparent)" />
+      <div
+        className="relative flex items-center justify-center overflow-hidden"
+        style={{ aspectRatio: compact ? "6/5" : "1/1", background: "linear-gradient(160deg, color-mix(in srgb, var(--ac) 16%, transparent), color-mix(in srgb, var(--tx) 04%, transparent) 75%)" }}
+      >
+        <ProduitIllustration variante={variante} accent="var(--ac)" />
         {c.deuxiemePhotoSurvol && (
           <div className="absolute inset-0 bg-black/0 opacity-0 transition duration-300 group-hover:opacity-100" style={{ background: "color-mix(in srgb, var(--tx) 08%, transparent)" }} />
         )}
-        {g.badges && c.positionBadges === "coin" && (
-          <span className="absolute left-1.5 top-1.5 rounded-full bg-[#0B0E1C] px-1.5 py-0.5 text-[7px] font-figures-bold text-white">−15%</span>
-        )}
+        {g.badges && c.positionBadges === "coin" && etiquette && <span className="absolute left-1.5 top-1.5">{etiquette}</span>}
         {g.coeurFavoris && (
-          <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white/85">
+          <span className={`absolute right-1.5 top-1.5 flex items-center justify-center rounded-full bg-white/85 ${iconeTaille}`}>
             <MiniIcon path="M12 20s-6.2-3.9-8.4-7.6C1.8 9.4 3.6 6 7 6c1.9 0 3.4 1 5 2.8C13.6 7 15.1 6 17 6c3.4 0 5.2 3.4 3.4 6.4C18.2 16.1 12 20 12 20Z" color="var(--ac)" />
           </span>
         )}
         {c.commandeRapide && (
           <span
-            className="absolute bottom-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-white opacity-0 transition duration-200 group-hover:opacity-100"
+            className={`absolute bottom-1.5 right-1.5 flex items-center justify-center rounded-full text-white opacity-0 transition duration-200 group-hover:opacity-100 ${iconeTaille}`}
             style={{ background: "var(--ac)" }}
           >
             <MiniIcon path="M12 5v14M5 12h14" color="#fff" />
           </span>
         )}
       </div>
-      <div className={paddingTexte}>
-        {g.badges && c.positionBadges === "dessous" && (
-          <span className="mb-0.5 inline-block rounded-full bg-[#0B0E1C] px-1.5 py-0.5 text-[7px] font-figures-bold text-white">−15%</span>
+      {/* flex-col + le bloc infos en flex-1 : le bouton reste collé en bas
+          de chaque carte, aligné sur toute la rangée, même quand une carte a
+          un nom sur deux lignes ou une étiquette que sa voisine n'a pas
+          (cf. capture utilisateur du 2026-09-21, boutons pas alignés). */}
+      <div className={`flex flex-1 flex-col ${paddingTexte}`}>
+        <div className="flex-1">
+          {g.badges && c.positionBadges === "dessous" && etiquette && <div className="mb-0.5">{etiquette}</div>}
+          <p className="truncate text-[8px] font-semibold">{t(p.nom, p.nomEn)}</p>
+          {p.contenance && <p className="text-[7px]" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>{p.contenance}</p>}
+          {g.noteEtoiles && (
+            <p className="mt-0.5 flex items-center gap-1">
+              <Etoiles note={p.note} taille={6} couleur={couleurEtoiles} />
+              <span className="text-[6.5px]" style={{ color: "color-mix(in srgb, var(--tx) 40%, transparent)" }}>({p.avisCount})</span>
+            </p>
+          )}
+          {c.rondsCouleurVariantes && (
+            <div className="mt-0.5 flex gap-0.5">
+              {dotsCouleurs.map((couleur) => (
+                <span key={couleur} className="h-2 w-2 rounded-full border border-white/40" style={{ background: couleur }} />
+              ))}
+            </div>
+          )}
+          <p className="mt-0.5 flex items-baseline gap-1">
+            <span className="text-[9.5px] font-figures-bold" style={{ color: "var(--ac)" }}>
+              {(g.prixAffiche === "normal" ? p.prixNormal : p.prix).toLocaleString("fr-FR")} F
+            </span>
+            {enPromo && (
+              <span className="text-[7px] line-through font-figures" style={{ color: "color-mix(in srgb, var(--tx) 35%, transparent)" }}>
+                {p.prixNormal.toLocaleString("fr-FR")} F
+              </span>
+            )}
+          </p>
+          {enPromo && <p className="text-[6px]" style={{ color: "color-mix(in srgb, var(--tx) 40%, transparent)" }}>{t("en payant en ligne", "when paying online")}</p>}
+        </div>
+        {g.bouton === "texte" && (
+          <span className="mx-2 mt-1 flex items-center justify-center gap-1 rounded-full py-1 text-[7px] font-semibold text-white" style={{ background: "var(--ac)" }}>
+            <MiniIcon path="M5.5 8h13l-1 12.5h-11ZM9 8V6.5a3 3 0 0 1 6 0V8" color="#fff" />
+            {t("Commander", "Order")}
+          </span>
         )}
-        <p className="truncate text-[8px] font-semibold">{t(p.nom, p.nomEn)}</p>
-        {g.noteEtoiles && <Etoiles note={4.6} taille={6} couleur={couleurEtoiles} />}
-        {c.rondsCouleurVariantes && (
-          <div className="mt-0.5 flex gap-0.5">
-            {dotsCouleurs.map((couleur) => (
-              <span key={couleur} className="h-2 w-2 rounded-full border border-white/40" style={{ background: couleur }} />
-            ))}
-          </div>
-        )}
-        <p className="mt-0.5 text-[9.5px] font-figures-bold" style={{ color: "var(--ac)" }}>
-          {(g.prixAffiche === "normal" ? p.prixNormal : p.prix).toLocaleString("fr-FR")} F
-        </p>
-        {g.bouton === "texte" && <span className="mt-1 block text-[7px] font-semibold" style={{ color: "var(--ac)" }}>{t("Commander", "Order")}</span>}
         {g.bouton === "icone" && (
           <span className="mt-1 flex h-4 w-4 items-center justify-center rounded-full" style={{ background: "color-mix(in srgb, var(--ac) 12%, transparent)" }}>
             <MiniIcon path="M5.5 8h13l-1 12.5h-11ZM9 8V6.5a3 3 0 0 1 6 0V8" color="var(--ac)" />

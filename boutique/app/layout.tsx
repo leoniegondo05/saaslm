@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Sora, Bricolage_Grotesque, Inter } from "next/font/google";
 import { headers } from "next/headers";
+import Script from "next/script";
 import "./globals.css";
 
 // On charge la police "Sora" (celle utilisée dans la maquette Figma) depuis
@@ -50,13 +51,35 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Lecture obligatoire pour que Next.js applique le nonce (middleware.ts)
-  // à ses propres scripts de bootstrap — cf. commentaire dans middleware.ts.
-  await headers();
+  // Lecture obligatoire pour que Next.js applique le nonce (proxy.ts)
+  // à ses propres scripts de bootstrap — cf. commentaire dans proxy.ts.
+  // On récupère aussi sa valeur pour l'appliquer nous-même à notre <Script>
+  // ci-dessous : l'attache "automatique" de Next.js ne couvre que ses propres
+  // scripts, pas ceux qu'on ajoute à la main (cf. doc content-security-policy,
+  // "Any <Script> components using the nonce prop") — sans ça, le nonce="" mal
+  // résolu sur ce <script> déclenchait un hydration mismatch en dev.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
-    <html lang="fr" className={`${sora.variable} ${bricolage.variable} ${inter.variable}`}>
+    <html lang="fr" suppressHydrationWarning className={`${sora.variable} ${bricolage.variable} ${inter.variable}`}>
       <body className="flex min-h-screen flex-col bg-brand-bg font-sans text-brand-white antialiased">
+        {/* Script anti-flash thème sombre : exécuté de manière synchrone avant
+            tout paint pour poser la classe "dark" sur <html> si le mode nuit
+            est actif — sans ce script, React bascule la classe dans un useEffect
+            et l'utilisateur voit un éclair clair au rechargement.
+            beforeInteractive doit être placé dans <body> (pas <head>) — Next.js
+            l'y déplace lui-même au moment du build ; le laisser dans <head>
+            empêche cette interception spéciale et React 19 tente alors de rendre
+            un <script> littéral, ce qui déclenche l'erreur console.
+            (cf. https://nextjs.org/docs/app/api-reference/components/script). */}
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem("lm-dashboard-mode-nuit")==="1")document.documentElement.classList.add("dark")}catch(e){}`,
+          }}
+        />
         {children}
       </body>
     </html>

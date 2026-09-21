@@ -150,7 +150,7 @@ export default function Footer() {
       </div>
 
       <div className="mx-auto mt-16 flex max-w-[1320px] flex-col items-start justify-between gap-6 border-t border-black/10 pt-6 text-xs text-brand-bg/50 sm:flex-row sm:items-center sm:gap-4">
-        <nav className="order-1 flex flex-col items-start gap-4 sm:order-2 sm:flex-row sm:flex-wrap sm:justify-center">
+        <nav className="order-1 flex flex-col items-start gap-4 px-0 sm:order-2 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4 sm:px-2">
           {LEGAL_LINKS.map((link) => (
             <Link
               key={link.href}
