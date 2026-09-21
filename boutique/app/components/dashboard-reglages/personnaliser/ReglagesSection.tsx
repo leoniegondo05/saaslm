@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef, useState } from "react";
+
 import { Tag, texteAvecChiffres } from "../../dashboard-accueil/shared";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
 import { CATEGORIES_APERCU, SECTIONS_DEFAUT, appartientPage, deplacerSection, placerAvis, placerCategories, placerConfiance, placerEngagements, placerFaq, placerGrille, placerOngletsDetails, placerProduitsLies, placerPromo, placerVenduPar, positionAvisActuelle, positionCategoriesActuelle, positionConfianceActuelle, positionEngagementsActuelle, positionFaqActuelle, positionGrilleActuelle, positionOngletsDetailsActuelle, positionProduitsLiesActuelle, positionPromoActuelle, positionVenduParActuelle } from "./types";
@@ -439,6 +441,13 @@ function Corps({
               onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, typeFond: v as typeof s.grandeImage.typeFond } }))}
             />
           </Ligne>
+          {h.typeFond === "photo" && (
+            <ChampImage
+              label={t("Photo de fond", "Background photo")}
+              value={h.image}
+              onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, image: v } }))}
+            />
+          )}
           <Ligne label={t("Courbes lumineuses", "Light curves")}>
             <Interrupteur checked={h.courbesLumineuses} onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, courbesLumineuses: v } }))} />
           </Ligne>
@@ -461,7 +470,13 @@ function Corps({
             value={h.petitTexte}
             onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, petitTexte: v } }))}
           />
-          <Champ label={t("Titre", "Title")} value={h.titre} onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, titre: v } }))} />
+          <Champ
+            label={t("Titre", "Title")}
+            value={h.titre}
+            onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, titre: v } }))}
+            multiline
+            rows={3}
+          />
           <Champ
             label={t("Mot mis en valeur", "Highlighted word")}
             value={h.motValorise}
@@ -1042,44 +1057,6 @@ function Corps({
       );
     }
 
-    case "offres":
-      return (
-        <>
-          <Ligne label={t("Proposer des offres", "Offer quantity discounts")}>
-            <Interrupteur checked={state.offres.actif} onChange={(v) => setState((s) => ({ ...s, offres: { ...s.offres, actif: v } }))} />
-          </Ligne>
-          {state.offres.actif && (
-            <div className="space-y-1.5">
-              {state.offres.paliers.map((p, i) => (
-                <div key={p.unites} className="flex items-center gap-2 rounded-xl border border-[var(--dashboard-text)]/10 px-3 py-2">
-                  <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-[var(--dashboard-text)]">
-                    <span className="font-figures">{p.unites}</span> {p.unites > 1 ? t("flacons", "bottles") : t("flacon", "bottle")}
-                    {p.badge && <span className="ml-1 text-[9px] font-normal text-brand-pink">· {p.badge}</span>}
-                  </span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={90}
-                    value={p.remisePct}
-                    onChange={(e) =>
-                      setState((s) => ({
-                        ...s,
-                        offres: {
-                          ...s.offres,
-                          paliers: s.offres.paliers.map((x, j) => (j === i ? { ...x, remisePct: Number(e.target.value) } : x)),
-                        },
-                      }))
-                    }
-                    className="w-14 rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-2 py-1 text-right text-[11px] font-semibold text-[var(--dashboard-text)] outline-none focus:border-brand-pink/50 font-figures"
-                  />
-                  <span className="text-[10px] text-[var(--dashboard-text)]/40">%</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      );
-
     case "formulaire":
       return (
         <>
@@ -1241,95 +1218,8 @@ function Corps({
       );
     }
 
-    case "onglets-details": {
-      const o = state.ongletsDetails;
-      const majOnglets = (patch: Partial<EditeurState["ongletsDetails"]>) => setState((s) => ({ ...s, ongletsDetails: { ...s.ongletsDetails, ...patch } }));
-      return (
-        <>
-          <GroupeTitre label={t("Affichage", "Display")} />
-          <Ligne label={t("Présentation", "Layout style")}>
-            <SegmentPills
-              value={o.presentation}
-              options={[
-                { value: "onglets", label: t("Onglets", "Tabs") },
-                { value: "accordeon", label: t("Accordéon", "Accordion") },
-              ]}
-              onChange={(v) => majOnglets({ presentation: v as OngletsDetailsState["presentation"] })}
-            />
-          </Ligne>
-          <Ligne label={t("Grande image de détail", "Large detail image")}>
-            <Interrupteur checked={o.grandeImage} onChange={(v) => majOnglets({ grandeImage: v })} />
-          </Ligne>
-          <Ligne label={t("Liste d'atouts avec icônes", "Highlight list with icons")}>
-            <Interrupteur checked={o.atoutsAvecIcones} onChange={(v) => majOnglets({ atoutsAvecIcones: v })} />
-          </Ligne>
-
-          <GroupeTitre label={t("Onglets", "Tabs")} />
-          <div className="flex flex-wrap gap-1.5">
-            {o.onglets.map((onglet, i) => (
-              <span key={i} className="flex items-center gap-1 rounded-full bg-[var(--dashboard-text)]/[0.06] py-1 pl-2.5 pr-1">
-                <input
-                  value={onglet}
-                  onChange={(ev) => majOnglets({ onglets: o.onglets.map((v, j) => (j === i ? ev.target.value : v)) })}
-                  style={{ width: `${Math.max(onglet.length, 3)}ch` }}
-                  className="bg-transparent text-[10px] font-medium text-[var(--dashboard-text)] outline-none"
-                />
-                <button
-                  type="button"
-                  aria-label={t("Retirer cet onglet", "Remove this tab")}
-                  onClick={() => majOnglets({ onglets: o.onglets.filter((_, j) => j !== i) })}
-                  className="flex h-4 w-4 items-center justify-center rounded-full text-[10px] leading-none text-[var(--dashboard-text)]/30 hover:bg-[#c8262d]/10 hover:text-[#c8262d]"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => majOnglets({ onglets: [...o.onglets, t("Nouvel onglet", "New tab")] })}
-            className="inline-flex items-center gap-1 rounded-full border border-dashed border-brand-pink/40 px-3.5 py-1.5 text-[10px] font-semibold text-brand-pink"
-          >
-            + {t("Ajouter un onglet", "Add a tab")}
-          </button>
-
-          <SegmenteGrille
-            label={t("Position dans la page", "Position on the page")}
-            value={positionOngletsDetailsActuelle(state.sections)}
-            options={[
-              { value: "sous-produit", label: t("Sous le produit", "Below the product") },
-              { value: "apres-commande", label: t("Après la commande", "After the order block") },
-              { value: "avant-pied-de-page", label: t("Avant le pied de page", "Before the footer") },
-            ]}
-            onChange={(v) => setState((s) => ({ ...s, sections: placerOngletsDetails(s.sections, v as PositionOngletsDetails) }))}
-          />
-
-          {o.atoutsAvecIcones && (
-            <>
-              <GroupeTitre label={t("Atouts", "Highlights")} />
-              <Segmente
-                label={t("Nombre d'atouts", "Number of highlights")}
-                value={String(o.nombreAtouts)}
-                options={[
-                  { value: "3", label: t("Trois", "Three") },
-                  { value: "4", label: t("Quatre", "Four") },
-                ]}
-                onChange={(v) => majOnglets({ nombreAtouts: Number(v) as 3 | 4 })}
-              />
-              {o.atouts.map((atout, i) => (
-                <div key={i} className="rounded-xl border border-[var(--dashboard-text)]/10 p-2.5">
-                  <Champ
-                    label={t(`Atout ${i + 1}`, `Highlight ${i + 1}`)}
-                    value={atout}
-                    onChange={(v) => majOnglets({ atouts: o.atouts.map((a, j) => (j === i ? v : a)) as EditeurState["ongletsDetails"]["atouts"] })}
-                  />
-                </div>
-              ))}
-            </>
-          )}
-        </>
-      );
-    }
+    case "onglets-details":
+      return <ReglagesOnglets state={state} setState={setState} t={t} />;
 
     case "avis": {
       const a = state.avis;
@@ -1843,8 +1733,34 @@ function Corps({
         </>
       );
 
-    default:
-      return null;
+    // Sections de bibliothèque (`libre: true` dans SECTIONS_DEFAUT, ajoutées
+    // depuis AjouterSectionModal.tsx) : un seul bloc de contenu générique
+    // (titre/texte/image/bouton) plutôt qu'un panneau par type — remplace
+    // l'ancien "Contenu à personnaliser depuis le panneau de droite" qui ne
+    // menait nulle part, cf. rendu par défaut dans BoutiquePreview.tsx.
+    default: {
+      const sec = state.sections.find((s) => s.id === sectionId);
+      if (!sec) return null;
+      const majContenu = (patch: Partial<SectionState>) =>
+        setState((s) => ({ ...s, sections: s.sections.map((x) => (x.id === sectionId ? { ...x, ...patch } : x)) }));
+      const boutonRempli = (sec.contenuBoutonTexte ?? "").trim().length > 0;
+      return (
+        <>
+          <GroupeTitre label={t("Contenu", "Content")} />
+          <Champ label={t("Titre", "Title")} value={sec.contenuTitre ?? ""} onChange={(v) => majContenu({ contenuTitre: v })} />
+          <Champ label={t("Texte", "Text")} value={sec.contenuTexte ?? ""} onChange={(v) => majContenu({ contenuTexte: v })} multiline rows={4} />
+          <ChampImage label={t("Image", "Image")} value={sec.contenuImage ?? null} onChange={(v) => majContenu({ contenuImage: v })} />
+          <Champ
+            label={t("Texte du bouton (facultatif)", "Button text (optional)")}
+            value={sec.contenuBoutonTexte ?? ""}
+            onChange={(v) => majContenu({ contenuBoutonTexte: v })}
+          />
+          {boutonRempli && (
+            <Champ label={t("Lien du bouton", "Button link")} value={sec.contenuBoutonLien ?? ""} onChange={(v) => majContenu({ contenuBoutonLien: v })} />
+          )}
+        </>
+      );
+    }
   }
 }
 
@@ -1864,21 +1780,83 @@ function Champ({
   value,
   onChange,
   multiline = false,
+  rows = 2,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   multiline?: boolean;
+  rows?: number;
 }) {
   return (
     <div>
       <p className="text-[9.5px] uppercase tracking-[0.1em] text-[var(--dashboard-text)]/40">{label}</p>
       {multiline ? (
-        <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={2} className={`${champBoxClasses} resize-none leading-relaxed`} />
+        <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} className={`${champBoxClasses} resize-none leading-relaxed`} />
       ) : (
         <input type="text" value={value} onChange={(e) => onChange(e.target.value)} className={champBoxClasses} />
       )}
     </div>
+  );
+}
+
+/** Import d'image locale (data URL, FileReader) — pas d'upload serveur tant
+ *  qu'il n'y a pas d'API (cf. [[dashboard-mock-data-pending-laravel-api]]),
+ *  mais un vrai fichier choisi par l'utilisateur plutôt qu'un mock figé. */
+function ChampImage({ label, value, onChange }: { label: string; value: string | null; onChange: (v: string | null) => void }) {
+  const { t } = useDashboardLangue();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const choisir = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fichier = e.target.files?.[0];
+    if (!fichier) return;
+    const lecteur = new FileReader();
+    lecteur.onload = () => onChange(lecteur.result as string);
+    lecteur.readAsDataURL(fichier);
+    e.target.value = "";
+  };
+
+  return (
+    <div>
+      <p className="text-[9.5px] uppercase tracking-[0.1em] text-[var(--dashboard-text)]/40">{label}</p>
+      <div className="mt-1 flex items-center gap-2.5">
+        {value ? (
+          // eslint-disable-next-line @next/next/no-img-element -- aperçu local (data URL), pas une image du domaine
+          <img src={value} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" />
+        ) : (
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-dashed border-[var(--dashboard-text)]/20 text-[var(--dashboard-text)]/35">
+            <ImageIcon />
+          </span>
+        )}
+        <div className="flex min-w-0 flex-col items-start gap-1">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="text-[10px] font-semibold text-brand-pink transition hover:brightness-90"
+          >
+            {value ? t("Remplacer", "Replace") : t("Importer une image", "Upload an image")}
+          </button>
+          {value && (
+            <button
+              type="button"
+              onClick={() => onChange(null)}
+              className="text-[10px] font-semibold text-[var(--dashboard-text)]/40 transition hover:text-[#c8262d]"
+            >
+              {t("Retirer", "Remove")}
+            </button>
+          )}
+        </div>
+      </div>
+      <input ref={inputRef} type="file" accept="image/*" onChange={choisir} className="hidden" />
+    </div>
+  );
+}
+
+function ImageIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden>
+      <path d="M4 5h16v14H4Zm0 10 5-5 3 3 4-4 4 4M9 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
@@ -2069,5 +2047,166 @@ function CadenasIcon() {
       <rect x="5" y="10.5" width="14" height="10" rx="2.5" stroke="currentColor" strokeWidth="1.5" />
       <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" stroke="currentColor" strokeWidth="1.5" />
     </svg>
+  );
+}
+
+/* ── Sous-composant dédié pour le case "onglets-details" ──────────────────────
+   Séparé de Corps pour pouvoir utiliser useState (hooks interdits dans un case
+   de switch). Gère la sélection de l'onglet actif et l'édition de son contenu.
+*/
+function ReglagesOnglets({
+  state,
+  setState,
+  t,
+}: {
+  state: EditeurState;
+  setState: (updater: (s: EditeurState) => EditeurState) => void;
+  t: (fr: string, en: string) => string;
+}) {
+  const o = state.ongletsDetails;
+  const majOnglets = (patch: Partial<EditeurState["ongletsDetails"]>) =>
+    setState((s) => ({ ...s, ongletsDetails: { ...s.ongletsDetails, ...patch } }));
+
+  const [ongletActif, setOngletActif] = useState(0);
+  const actif = Math.min(ongletActif, o.onglets.length - 1);
+
+  const majContenu = (valeur: string) => {
+    const contenus = [...(o.contenus ?? o.onglets.map(() => ""))];
+    contenus[actif] = valeur;
+    majOnglets({ contenus });
+  };
+
+  const majNomOnglet = (i: number, valeur: string) => {
+    majOnglets({ onglets: o.onglets.map((v, j) => (j === i ? valeur : v)) });
+  };
+
+  const retirerOnglet = (i: number) => {
+    const nouveauxOnglets = o.onglets.filter((_, j) => j !== i);
+    const nouveauxContenus = (o.contenus ?? []).filter((_, j) => j !== i);
+    majOnglets({ onglets: nouveauxOnglets, contenus: nouveauxContenus });
+    if (ongletActif >= nouveauxOnglets.length) setOngletActif(Math.max(0, nouveauxOnglets.length - 1));
+  };
+
+  const ajouterOnglet = () => {
+    const label = t("Nouvel onglet", "New tab");
+    majOnglets({
+      onglets: [...o.onglets, label],
+      contenus: [...(o.contenus ?? []), ""],
+    });
+    setOngletActif(o.onglets.length);
+  };
+
+  return (
+    <>
+      <GroupeTitre label={t("Affichage", "Display")} />
+      <Ligne label={t("Présentation", "Layout style")}>
+        <SegmentPills
+          value={o.presentation}
+          options={[
+            { value: "onglets", label: t("Onglets", "Tabs") },
+            { value: "accordeon", label: t("Accordéon", "Accordion") },
+          ]}
+          onChange={(v) => majOnglets({ presentation: v as OngletsDetailsState["presentation"] })}
+        />
+      </Ligne>
+      <Ligne label={t("Grande image de détail", "Large detail image")}>
+        <Interrupteur checked={o.grandeImage} onChange={(v) => majOnglets({ grandeImage: v })} />
+      </Ligne>
+      <Ligne label={t("Liste d'atouts avec icônes", "Highlight list with icons")}>
+        <Interrupteur checked={o.atoutsAvecIcones} onChange={(v) => majOnglets({ atoutsAvecIcones: v })} />
+      </Ligne>
+
+      <GroupeTitre label={t("Onglets", "Tabs")} />
+
+      {/* Sélecteur d'onglet actif */}
+      <div className="flex flex-wrap gap-1.5">
+        {o.onglets.map((onglet, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => setOngletActif(i)}
+            className={`flex items-center gap-1 rounded-full py-1 pl-2.5 pr-1 text-[10px] font-medium transition ${
+              i === actif
+                ? "bg-brand-pink/15 text-brand-pink ring-1 ring-brand-pink/30"
+                : "bg-[var(--dashboard-text)]/[0.06] text-[var(--dashboard-text)]"
+            }`}
+          >
+            <input
+              value={onglet}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(ev) => majNomOnglet(i, ev.target.value)}
+              style={{ width: `${Math.max(onglet.length, 3)}ch` }}
+              className="bg-transparent outline-none"
+            />
+            <span
+              role="button"
+              aria-label={t("Retirer cet onglet", "Remove this tab")}
+              onClick={(e) => { e.stopPropagation(); retirerOnglet(i); }}
+              className="flex h-4 w-4 items-center justify-center rounded-full text-[10px] leading-none text-[var(--dashboard-text)]/30 hover:bg-[#c8262d]/10 hover:text-[#c8262d]"
+            >
+              ×
+            </span>
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={ajouterOnglet}
+        className="inline-flex items-center gap-1 rounded-full border border-dashed border-brand-pink/40 px-3.5 py-1.5 text-[10px] font-semibold text-brand-pink"
+      >
+        + {t("Ajouter un onglet", "Add a tab")}
+      </button>
+
+      {/* Éditeur de contenu de l'onglet sélectionné */}
+      {o.onglets.length > 0 && (
+        <div className="rounded-xl border border-[var(--dashboard-text)]/10 p-2.5">
+          <p className="mb-1.5 text-[10px] font-semibold text-[var(--dashboard-text)]/50">
+            {t(`Contenu · ${o.onglets[actif]}`, `Content · ${o.onglets[actif]}`)}
+          </p>
+          <textarea
+            value={(o.contenus ?? [])[actif] ?? ""}
+            onChange={(e) => majContenu(e.target.value)}
+            rows={4}
+            placeholder={t("Texte affiché dans cet onglet…", "Text shown in this tab…")}
+            className="w-full resize-none rounded-lg border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.03] px-2.5 py-2 text-[11px] leading-relaxed text-[var(--dashboard-text)] outline-none placeholder:text-[var(--dashboard-text)]/30 focus:border-brand-pink/40"
+          />
+        </div>
+      )}
+
+      <SegmenteGrille
+        label={t("Position dans la page", "Position on the page")}
+        value={positionOngletsDetailsActuelle(state.sections)}
+        options={[
+          { value: "sous-produit", label: t("Sous le produit", "Below the product") },
+          { value: "apres-commande", label: t("Après la commande", "After the order block") },
+          { value: "avant-pied-de-page", label: t("Avant le pied de page", "Before the footer") },
+        ]}
+        onChange={(v) => setState((s) => ({ ...s, sections: placerOngletsDetails(s.sections, v as PositionOngletsDetails) }))}
+      />
+
+      {o.atoutsAvecIcones && (
+        <>
+          <GroupeTitre label={t("Atouts", "Highlights")} />
+          <Segmente
+            label={t("Nombre d'atouts", "Number of highlights")}
+            value={String(o.nombreAtouts)}
+            options={[
+              { value: "3", label: t("Trois", "Three") },
+              { value: "4", label: t("Quatre", "Four") },
+            ]}
+            onChange={(v) => majOnglets({ nombreAtouts: Number(v) as 3 | 4 })}
+          />
+          {o.atouts.map((atout, i) => (
+            <div key={i} className="rounded-xl border border-[var(--dashboard-text)]/10 p-2.5">
+              <Champ
+                label={t(`Atout ${i + 1}`, `Highlight ${i + 1}`)}
+                value={atout}
+                onChange={(v) => majOnglets({ atouts: o.atouts.map((a, j) => (j === i ? v : a)) as EditeurState["ongletsDetails"]["atouts"] })}
+              />
+            </div>
+          ))}
+        </>
+      )}
+    </>
   );
 }

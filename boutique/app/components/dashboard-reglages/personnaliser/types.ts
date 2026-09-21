@@ -30,6 +30,10 @@ export type SectionGroupe = "Haut de page" | "Produit" | "Commande" | "Contenu" 
 
 export type PageId = "accueil" | "commande";
 
+/** Appareil simulé dans l'aperçu (cf. PersonnaliserBoutique.tsx et
+ *  BoutiquePreview.tsx). */
+export type Appareil = "phone" | "desktop";
+
 export type SectionId =
   | "bandeau"
   | "entete"
@@ -41,7 +45,6 @@ export type SectionId =
   | "grille"
   | "galerie"
   | "infos"
-  | "offres"
   | "formulaire"
   | "paiement"
   | "onglets-details"
@@ -112,13 +115,12 @@ export const SECTIONS_DEFAUT: SectionDef[] = [
   { id: "entete", label: "En-tête", labelEn: "Header", groupe: "Haut de page", groupeEn: "Top of page", verrouillee: true, page: "les-deux", icone: "M4 5h16v14H4zM4 9h16" },
   { id: "chemin-navigation", label: "Chemin de navigation", labelEn: "Breadcrumb", groupe: "Haut de page", groupeEn: "Top of page", page: "commande", icone: "M3 12h2l2-4 3 8 3-8 2 4h6" },
   { id: "grande-image", label: "Grande image", labelEn: "Hero image", groupe: "Haut de page", groupeEn: "Top of page", page: "accueil", icone: "M4 5.5h16v13H4zM4 15l4.5-4.5L12 14l3-3 5 5.5M9 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" },
-  { id: "categories", label: "Catégories", labelEn: "Categories", groupe: "Contenu", groupeEn: "Content", page: "accueil", icone: "M4 4.5h7v7H4zM13 4.5h7v7h-7zM4 13.5h7v7H4zM13 13.5h7v7h-7z" },
   { id: "confiance", label: "Barre de confiance", labelEn: "Trust bar", groupe: "Contenu", groupeEn: "Content", page: "accueil", description: "Atouts de la boutique", descriptionEn: "Shop's trust badges", icone: "M12 3.5 19 6v6c0 5-3 8-7 9-4-1-7-4-7-9V6z" },
+  { id: "categories", label: "Catégories", labelEn: "Categories", groupe: "Contenu", groupeEn: "Content", page: "accueil", icone: "M4 4.5h7v7H4zM13 4.5h7v7h-7zM4 13.5h7v7H4zM13 13.5h7v7h-7z" },
   { id: "promo", label: "Bannière d'offre", labelEn: "Offer banner", groupe: "Contenu", groupeEn: "Content", page: "accueil", description: "Offre du moment", descriptionEn: "Current offer", icone: "M20 12 12 20 4 12V4h8zM7.5 7.5h.01" },
   { id: "grille", label: "Grille de produits", labelEn: "Product grid", groupe: "Contenu", groupeEn: "Content", page: "accueil", icone: "M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v6H4zM14 15h6v6h-6z" },
   { id: "galerie", label: "Galerie", labelEn: "Gallery", groupe: "Produit", groupeEn: "Product", verrouillee: true, page: "commande", description: "Vidéo puis photos", descriptionEn: "Video then photos", icone: "M4 5.5h16v13H4zM10 9.5l5 2.5-5 2.5z" },
   { id: "infos", label: "Informations produit", labelEn: "Product information", groupe: "Produit", groupeEn: "Product", verrouillee: true, page: "commande", description: "Nom, prix, variantes, bouton", descriptionEn: "Name, price, variants, button", icone: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 8h.01M11 11h1v5h1" },
-  { id: "offres", label: "Offres par quantité", labelEn: "Quantity offers", groupe: "Produit", groupeEn: "Product", page: "commande", icone: "M19 5 5 19M7.5 7.5a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6zM16.5 20.1a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6z" },
   { id: "paiement", label: "Paiement et livraison", labelEn: "Payment and delivery", groupe: "Commande", groupeEn: "Order", verrouillee: true, page: "commande", icone: "M3 6.5h18v11H3zM3 10h18" },
   { id: "formulaire", label: "Vos informations", labelEn: "Your information", groupe: "Commande", groupeEn: "Order", verrouillee: true, page: "commande", description: "Champs du client", descriptionEn: "Customer fields", icone: "M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 10a2.4 2.4 0 1 0 0-4.8M2.5 19c0-3 2.7-5.4 6-5.4s6 2.4 6 5.4M15 13.8c2.3.5 4 2.5 4 5.2" },
   { id: "onglets-details", label: "Onglets détails", labelEn: "Detail tabs", groupe: "Produit", groupeEn: "Product", page: "commande", description: "Description, caractéristiques, livraison", descriptionEn: "Description, specs, delivery", icone: "M4 6h7v3H4zM13 6h7v3h-7zM4 11h16v7H4z" },
@@ -165,6 +167,17 @@ export type SectionState = {
   couleurs: "claires" | "douces" | "nuit";
   visibleTelephone: boolean;
   visibleOrdinateur: boolean;
+  /** Contenu des sections de bibliothèque (`libre: true` dans SectionDef,
+   *  cf. AjouterSectionModal.tsx) — un seul bloc générique (titre/texte/
+   *  image/bouton) plutôt qu'une forme de contenu par type, pour rester
+   *  éditable et cohérent sans 18 panneaux différents. Optionnel : absent
+   *  (`undefined`) pour les sections fixes, qui ont chacune leur propre
+   *  XxxState pour leur contenu réel. */
+  contenuTitre?: string;
+  contenuTexte?: string;
+  contenuImage?: string | null;
+  contenuBoutonTexte?: string;
+  contenuBoutonLien?: string;
 };
 
 // Les sections `libre` (bibliothèque "Ajouter une section") en sont exclues :
@@ -196,6 +209,31 @@ export function appartientPage(id: SectionId, page: PageId): boolean {
   return def.page === "les-deux" || def.page === page;
 }
 
+/** Glisser-déposer (SectionsPanel.tsx) : déplace `sourceId` juste avant
+ *  `cibleId`, au sein de la page active seulement (même principe que
+ *  `deplacerSection` — les sections d'une autre page gardent leur position
+ *  dans le tableau complet). Sans effet si l'un des deux id est introuvable
+ *  ou déjà à sa place. */
+export function reordonnerSections(sections: SectionState[], page: PageId, sourceId: SectionId, cibleId: SectionId): SectionState[] {
+  if (sourceId === cibleId) return sections;
+  const indices: number[] = [];
+  sections.forEach((sec, i) => {
+    if (appartientPage(sec.id, page)) indices.push(i);
+  });
+  const visibles = indices.map((i) => sections[i]);
+  const vi = visibles.findIndex((sec) => sec.id === sourceId);
+  const vj = visibles.findIndex((sec) => sec.id === cibleId);
+  if (vi === -1 || vj === -1) return sections;
+  const nouvelOrdre = [...visibles];
+  const [deplacee] = nouvelOrdre.splice(vi, 1);
+  nouvelOrdre.splice(nouvelOrdre.findIndex((sec) => sec.id === cibleId), 0, deplacee);
+  const copie = [...sections];
+  indices.forEach((i, k) => {
+    copie[i] = nouvelOrdre[k];
+  });
+  return copie;
+}
+
 /** Échange la section `id` avec sa voisine (au sein de la page active
  *  seulement, cf. `appartientPage`) dans le sens `sens`. Renvoie le tableau
  *  inchangé si le déplacement est hors limites. */
@@ -218,6 +256,7 @@ export function deplacerSection(sections: SectionState[], id: SectionId, page: P
  *  cf. AjouterSectionModal.tsx. Sans effet si `id` est déjà présente. */
 export function ajouterSection(sections: SectionState[], id: SectionId): SectionState[] {
   if (sections.some((s) => s.id === id)) return sections;
+  const def = SECTIONS_DEFAUT.find((d) => d.id === id);
   const nouvelle: SectionState = {
     id,
     visible: true,
@@ -226,6 +265,11 @@ export function ajouterSection(sections: SectionState[], id: SectionId): Section
     couleurs: "claires",
     visibleTelephone: true,
     visibleOrdinateur: true,
+    contenuTitre: def ? def.label : "",
+    contenuTexte: "",
+    contenuImage: null,
+    contenuBoutonTexte: "",
+    contenuBoutonLien: "",
   };
   const indexPied = sections.findIndex((s) => s.id === "pied-de-page");
   if (indexPied === -1) return [...sections, nouvelle];
@@ -377,11 +421,6 @@ export type InfosState = {
   stockAfficherSousUnites: number;
 };
 
-export type OffresState = {
-  actif: boolean;
-  paliers: { unites: number; remisePct: number; badge?: string }[];
-};
-
 export type FormulaireState = {
   colonnes: 1 | 2;
   styleChamps: "cadre" | "plein" | "ligne";
@@ -427,6 +466,8 @@ export type OngletsDetailsState = {
   /** Libellés des onglets, éditables (cf. menuLiens dans EnteteState pour le
    *  même patron ajouter/renommer/retirer). Le premier est actif dans l'aperçu. */
   onglets: string[];
+  /** Contenu textuel de chaque onglet (même index que `onglets`). */
+  contenus: string[];
   nombreAtouts: 3 | 4;
   atouts: [string, string, string, string];
 };
@@ -605,6 +646,10 @@ export type HeroState = {
   texteAlign: "gauche" | "centre";
   boutons: 1 | 2;
   typeFond: "degrade" | "uni" | "photo";
+  /** Photo importée (data URL) quand `typeFond === "photo"` — `null` tant
+   *  que rien n'est importé, l'aperçu retombe alors sur un dégradé de
+   *  marque plutôt que d'inventer une photo. */
+  image: string | null;
   courbesLumineuses: boolean;
   /** Pas d'upload d'image dédié au mobile pour l'instant — le réglage
    *  existe déjà côté produit (cf. logique similaire), l'aperçu se contente
@@ -871,6 +916,87 @@ export type FlottantsState = {
   boutonRetourHaut: boolean;
 };
 
+/** Onglet "Boutique" > Identité — le nom et la taille du logo sont réglés
+ *  depuis l'en-tête (EnteteState.nomAvecLogo / tailleLogo, cf.
+ *  ReglagesSection.tsx) pour ne garder qu'un seul réglage réel par notion ;
+ *  seule l'icône d'onglet (favicon) est propre à cet écran. */
+export type IdentiteState = {
+  iconeOnglet: string | null;
+};
+
+export type EnvoiMessageClient = "sms" | "whatsapp";
+
+export type ApresCommandeState = {
+  titre: string;
+  message: string;
+  recapitulatif: boolean;
+  lienDeSuivi: boolean;
+  boutonWhatsapp: boolean;
+  proposerAvantExpedition: boolean;
+  produitOffre: string;
+  remise: number;
+  envoyePar: EnvoiMessageClient;
+  texteClient: string;
+};
+
+export type SeoState = {
+  titre: string;
+  description: string;
+  visible: boolean;
+};
+
+export type PixelRegieId = "meta" | "tiktok" | "google" | "youtube";
+
+export type PixelsState = {
+  actives: Record<PixelRegieId, boolean>;
+};
+
+export type PageEntree = {
+  id: string;
+  label: string;
+  labelEn: string;
+  sousTitre?: string;
+  sousTitreEn?: string;
+  icone: string;
+};
+
+export type SuiteDeLaListe = "numeros" | "voir-plus" | "automatique";
+
+export const PAGES_DEFAUT: PageEntree[] = [
+  { id: "accueil", label: "Accueil", labelEn: "Home", sousTitre: "Construite en sections", sousTitreEn: "Built with sections", icone: "M4 11 12 4l8 7M6 10v9h5v-5h2v5h5v-9" },
+  { id: "commande-commun", label: "Page de commande", labelEn: "Checkout page", sousTitre: "Modèle commun · tous les produits", sousTitreEn: "Common template · all products", icone: "M7 3h8l4 4v14H7Zm8 0v4h4M9.5 11h5M9.5 15h5" },
+  { id: "commande-coffrets", label: "Page de commande", labelEn: "Checkout page", sousTitre: "Modèle « Coffrets » · 3 produits", sousTitreEn: "“Coffrets” template · 3 products", icone: "M7 3h8l4 4v14H7Zm8 0v4h4M9.5 11h5M9.5 15h5" },
+  { id: "rayon", label: "Rayon", labelEn: "Category page", sousTitre: "Grille, filtres, tri", sousTitreEn: "Grid, filters, sorting", icone: "M4 4h6.5v6.5H4Zm9.5 0H20v6.5h-6.5ZM4 13.5h6.5V20H4Zm9.5 0H20V20h-6.5Z" },
+  { id: "recherche", label: "Recherche", labelEn: "Search", icone: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm10 17-5.6-5.6" },
+  { id: "confirmation", label: "Confirmation de commande", labelEn: "Order confirmation", icone: "M4.5 12.5 9.5 17.5 19.5 6.5" },
+  { id: "suivi", label: "Suivi de commande", labelEn: "Order tracking", icone: "M3 6.5h11v8H3Zm11 2.5h4l3 3v2.5h-7ZM6.5 17.5a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2Zm11 0a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2Z" },
+  { id: "avis", label: "Tous les avis", labelEn: "All reviews", icone: "M12 3.5l2.6 5.5 6 .6-4.5 4 1.3 6-5.4-3.1-5.4 3.1 1.3-6-4.5-4 6-.6Z" },
+  { id: "a-propos", label: "À propos", labelEn: "About", sousTitre: "Page libre", sousTitreEn: "Free page", icone: "M7 3h8l4 4v14H7Zm8 0v4h4M9.5 11h5M9.5 15h5" },
+  { id: "livraison", label: "Livraison et retours", labelEn: "Shipping and returns", sousTitre: "Page libre", sousTitreEn: "Free page", icone: "M3 6h10v8H3Zm10 2.5h4l3 3V16h-7ZM6 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm10.5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" },
+];
+
+export const ICONE_PAGE_LIBRE = "M7 3h8l4 4v14H7Zm8 0v4h4M9.5 11h5M9.5 15h5";
+
+export type PagesState = {
+  liste: PageEntree[];
+  pageChoisie: string;
+  produitsParPage: number;
+  suiteDeLaListe: SuiteDeLaListe;
+  filtresEtTri: boolean;
+};
+
+/** Programmation de mise en ligne — persistée pour ne pas se réinitialiser
+ *  au changement d'onglet, mais aucune vraie publication programmée tant
+ *  qu'il n'y a pas d'API pour l'exécuter (cf.
+ *  [[dashboard-mock-data-pending-laravel-api]]) : le réglage tient, mais ne
+ *  déclenche rien de son propre chef. `dateIso` plutôt qu'un `Date` pour
+ *  rester sérialisable tel quel en JSON (localStorage). */
+export type ProgrammationState = {
+  brouillon: boolean;
+  active: boolean;
+  dateIso: string;
+};
+
 export type CartesProduitZoneId = "vous-aimerez-aussi" | "recherche" | "rayons";
 
 export type CartesProduitState = {
@@ -933,7 +1059,6 @@ export type EditeurState = {
   grille: GrilleState;
   galerie: GalerieState;
   infos: InfosState;
-  offres: OffresState;
   formulaire: FormulaireState;
   paiement: PaiementApercuState;
   ongletsDetails: OngletsDetailsState;
@@ -943,6 +1068,24 @@ export type EditeurState = {
   produitsLies: ProduitsLiesState;
   piedDePage: PiedDePageState;
   flottants: FlottantsState;
+  identite: IdentiteState;
+  apresCommande: ApresCommandeState;
+  seo: SeoState;
+  pixels: PixelsState;
+  pages: PagesState;
+  programmation: ProgrammationState;
+};
+
+/** Instantané enregistré à chaque clic sur "Enregistrer" (cf.
+ *  PersonnaliserBoutique.tsx) — permet à "Versions et programmation" de
+ *  proposer un vrai retour en arrière plutôt qu'une liste figée. Gardé hors
+ *  d'`EditeurState`/localStorage principal (clé séparée) pour ne pas faire
+ *  grossir chaque sauvegarde d'une copie d'elle-même. */
+export type VersionSnapshot = {
+  id: string;
+  horodatage: number;
+  label: string;
+  state: EditeurState;
 };
 
 export const ETAT_DEFAUT: EditeurState = {
@@ -999,12 +1142,13 @@ export const ETAT_DEFAUT: EditeurState = {
     texteAlign: "gauche",
     boutons: 2,
     typeFond: "degrade",
+    image: null,
     courbesLumineuses: true,
     imageDifferenteSurTelephone: false,
     badge: true,
     note: true,
     petitTexte: "Livraison en 4 h en moyenne",
-    titre: "Une peau qui rayonne, chaque jour.",
+    titre: "Une peau qui\nrayonne, chaque jour.",
     motValorise: "rayonne",
     bouton1Texte: "Découvrir les soins",
     bouton2Texte: "Voir les offres",
@@ -1071,15 +1215,7 @@ export const ETAT_DEFAUT: EditeurState = {
     ancienPrixBarre: true,
     badgeRemise: true,
     variantesPresentation: "cases",
-    stockAfficherSousUnites: 20,
-  },
-  offres: {
-    actif: true,
-    paliers: [
-      { unites: 1, remisePct: 0 },
-      { unites: 2, remisePct: 10, badge: "Le plus choisi" },
-      { unites: 3, remisePct: 15 },
-    ],
+    stockAfficherSousUnites: 400,
   },
   formulaire: {
     colonnes: 2,
@@ -1101,7 +1237,7 @@ export const ETAT_DEFAUT: EditeurState = {
     livraisonExpress: true,
     livraisonPreselectionnee: "standard",
     texteExpress: "Plus rapide",
-    boutonSecondaire: "favori",
+    boutonSecondaire: "partager",
     rangeeConfiance: true,
     boutonTexte: "je-commande",
     totalDansBouton: false,
@@ -1111,6 +1247,12 @@ export const ETAT_DEFAUT: EditeurState = {
     grandeImage: true,
     atoutsAvecIcones: true,
     onglets: ["Détails", "Composition", "Utilisation", "Livraison et retours"],
+    contenus: [
+      "Sérum concentré en actifs éclat, pour un teint unifié au quotidien.",
+      "Eau florale, glycérine végétale, vitamine C stabilisée, extrait d'agrumes, conservateur doux.",
+      "Appliquer quelques gouttes sur le visage matin et soir après le nettoyage.",
+      "Livraison en 4 h en moyenne partout en Côte d'Ivoire. Retours acceptés sous 7 jours.",
+    ],
     nombreAtouts: 4,
     atouts: ["Texture légère, absorption rapide", "Formule sans paraben ni sulfate", "Convient aux peaux sensibles", "Testé dermatologiquement"],
   },
@@ -1174,6 +1316,41 @@ export const ETAT_DEFAUT: EditeurState = {
     whatsappCote: "droite",
     ongletAvisCote: false,
     boutonRetourHaut: true,
+  },
+  identite: {
+    iconeOnglet: null,
+  },
+  apresCommande: {
+    titre: "Merci, votre commande est enregistrée",
+    message: "Nous vous appelons pour confirmer la livraison.",
+    recapitulatif: true,
+    lienDeSuivi: true,
+    boutonWhatsapp: true,
+    proposerAvantExpedition: true,
+    produitOffre: "Crème de jour",
+    remise: 10,
+    envoyePar: "whatsapp",
+    texteClient: "Bonjour Nom, votre commande Numéro est bien reçue.",
+  },
+  seo: {
+    titre: "Sérum éclat 30 ml · Awa Beauté",
+    description: "Sérum concentré pour un teint lumineux. Livraison en 4 h en moyenne.",
+    visible: true,
+  },
+  pixels: {
+    actives: { meta: true, tiktok: true, google: false, youtube: false },
+  },
+  pages: {
+    liste: PAGES_DEFAUT,
+    pageChoisie: "accueil",
+    produitsParPage: 24,
+    suiteDeLaListe: "numeros",
+    filtresEtTri: false,
+  },
+  programmation: {
+    brouillon: false,
+    active: false,
+    dateIso: "2026-12-20T00:00",
   },
 };
 

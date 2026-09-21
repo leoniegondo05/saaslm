@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import { useDashboardBoutiqueLogo } from "../DashboardBoutiqueLogoProvider";
 import { texteAvecChiffres } from "../dashboard-accueil/shared";
@@ -12,7 +13,7 @@ import ReglagesSection from "./personnaliser/ReglagesSection";
 import SectionsPanel from "./personnaliser/SectionsPanel";
 import StyleReglages from "./personnaliser/StyleReglages";
 import { ETAT_DEFAUT, SECTIONS_DEFAUT, fusionnerEtatPersiste } from "./personnaliser/types";
-import type { EditeurState, PageId, SectionId } from "./personnaliser/types";
+import type { Appareil, EditeurState, PageId, SectionId, VersionSnapshot } from "./personnaliser/types";
 import type { BoutiqueReglageId } from "./personnaliser/ReglagesBoutique";
 import type { StyleReglageId } from "./personnaliser/StyleReglages";
 
@@ -47,6 +48,13 @@ const NOM_BOUTIQUE = "Awa Beauté";
 // défaut, identiques côté serveur et client.
 const CLE_STOCKAGE = "lm-personnaliser-boutique";
 
+// Instantanés "Versions et programmation" (cf. ReglagesBoutique.tsx) : clé à
+// part pour ne pas faire grossir chaque sauvegarde de la boutique d'une
+// copie d'elle-même (cf. VersionSnapshot dans types.ts). Plafonné à
+// NB_VERSIONS_MAX, le plus récent en tête.
+const CLE_STOCKAGE_VERSIONS = "lm-personnaliser-boutique-versions";
+const NB_VERSIONS_MAX = 20;
+
 type EtatPersiste = {
   state: EditeurState;
   page: PageId;
@@ -55,6 +63,8 @@ type EtatPersiste = {
   reglageBoutique: BoutiqueReglageId;
   styleReglage: StyleReglageId;
   largeurPanneauGauche: number;
+  device: Appareil;
+  largeurOrdinateur: number;
 };
 
 // Bornes de la colonne "Sections/Style/Boutique" redimensionnable à la
@@ -65,6 +75,13 @@ const LARGEUR_PANNEAU_MIN = 220;
 const LARGEUR_PANNEAU_MAX = 420;
 const LARGEUR_PANNEAU_DEFAUT = 288;
 
+// Cadre "Ordinateur" de l'aperçu, redimensionnable librement à la souris
+// (cf. poignées ci-dessous) — le contenu suit les mêmes réglages
+// "Ordinateur" que la boutique réelle, seule la largeur du cadre change.
+const LARGEUR_APERCU_MIN = 420;
+const LARGEUR_APERCU_MAX = 1600;
+const LARGEUR_ORDINATEUR_DEFAUT = 1180;
+
 export default function PersonnaliserBoutique() {
   const { t } = useDashboardLangue();
   const { logo } = useDashboardBoutiqueLogo();
@@ -74,7 +91,9 @@ export default function PersonnaliserBoutique() {
   const [past, setPast] = useState<EditeurState[]>([]);
   const [future, setFuture] = useState<EditeurState[]>([]);
 
-  const [device, setDevice] = useState<"phone" | "desktop">("phone");
+  const [device, setDevice] = useState<Appareil>("phone");
+  const [largeurApercu, setLargeurApercu] = useState(LARGEUR_ORDINATEUR_DEFAUT);
+  const [redimensionnementApercu, setRedimensionnementApercu] = useState(false);
   // "accueil" par défaut, comme U.page:'home' dans la maquette — c'est la
   // page qu'un visiteur voit en premier, avant même la fiche produit.
   const [page, setPage] = useState<PageId>("accueil");
@@ -84,6 +103,7 @@ export default function PersonnaliserBoutique() {
   const [styleReglage, setStyleReglage] = useState<StyleReglageId>("modele");
   const [ongletMobile, setOngletMobile] = useState<"menu" | "apercu" | "reglages">("apercu");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "done">("idle");
+  const [versions, setVersions] = useState<VersionSnapshot[]>([]);
   const [largeurPanneauGauche, setLargeurPanneauGauche] = useState(LARGEUR_PANNEAU_DEFAUT);
   const [redimensionnement, setRedimensionnement] = useState(false);
   // Œil "aperçu" de la maquette : ouvre la vitrine en plein écran, sans
@@ -121,7 +141,11 @@ export default function PersonnaliserBoutique() {
         if (sauvegarde.reglageBoutique) setReglageBoutique(sauvegarde.reglageBoutique);
         if (sauvegarde.styleReglage) setStyleReglage(sauvegarde.styleReglage);
         if (sauvegarde.largeurPanneauGauche) setLargeurPanneauGauche(sauvegarde.largeurPanneauGauche);
+        if (sauvegarde.device) setDevice(sauvegarde.device);
+        if (sauvegarde.largeurOrdinateur) setLargeurApercu(sauvegarde.largeurOrdinateur);
       }
+      const versionsBrut = localStorage.getItem(CLE_STOCKAGE_VERSIONS);
+      if (versionsBrut) setVersions(JSON.parse(versionsBrut) as VersionSnapshot[]);
     } catch {
       // localStorage indisponible (navigation privée, quota...) : on reste sur ETAT_DEFAUT.
     } finally {
@@ -132,12 +156,22 @@ export default function PersonnaliserBoutique() {
   useEffect(() => {
     if (!charge) return;
     try {
-      const donnees: EtatPersiste = { state, page, onglet, sectionChoisie, reglageBoutique, styleReglage, largeurPanneauGauche };
+      const donnees: EtatPersiste = {
+        state,
+        page,
+        onglet,
+        sectionChoisie,
+        reglageBoutique,
+        styleReglage,
+        largeurPanneauGauche,
+        device,
+        largeurOrdinateur: largeurApercu,
+      };
       localStorage.setItem(CLE_STOCKAGE, JSON.stringify(donnees));
     } catch {
       // idem : échec silencieux, la personnalisation reste utilisable pour la session en cours.
     }
-  }, [charge, state, page, onglet, sectionChoisie, reglageBoutique, styleReglage, largeurPanneauGauche]);
+  }, [charge, state, page, onglet, sectionChoisie, reglageBoutique, styleReglage, largeurPanneauGauche, device, largeurApercu]);
 
   // Glisser la poignée entre "Sections" et l'aperçu redimensionne la colonne
   // de gauche (cf. demande : plus figée à 288px, ajustable à la souris).
@@ -163,6 +197,34 @@ export default function PersonnaliserBoutique() {
       document.body.style.cursor = "";
     };
   }, [redimensionnement]);
+
+  // Poignées de part et d'autre du cadre "Ordinateur" (comme un artboard
+  // Figma/Canva) : le cadre étant centré par son conteneur flex, on
+  // recalcule sa largeur symétriquement à partir de la distance entre le
+  // curseur et son centre — glisser l'un ou l'autre bord l'agrandit des deux
+  // côtés à la fois plutôt que de le décaler.
+  useEffect(() => {
+    if (!redimensionnementApercu) return;
+    const onMouseMove = (e: MouseEvent) => {
+      const cadre = document.getElementById("apercu-cadre-bureau");
+      if (!cadre) return;
+      const rect = cadre.getBoundingClientRect();
+      const centre = rect.left + rect.width / 2;
+      const largeur = Math.abs(e.clientX - centre) * 2;
+      setLargeurApercu(Math.min(LARGEUR_APERCU_MAX, Math.max(LARGEUR_APERCU_MIN, largeur)));
+    };
+    const onMouseUp = () => setRedimensionnementApercu(false);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "col-resize";
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    };
+  }, [redimensionnementApercu, setLargeurApercu]);
 
   const choisirPage = (p: PageId) => {
     setPage(p);
@@ -212,7 +274,37 @@ export default function PersonnaliserBoutique() {
       setFuture([]);
       setSaveStatus("done");
       setTimeout(() => setSaveStatus("idle"), 1800);
+
+      const snapshot: VersionSnapshot = {
+        id: `v-${Date.now()}`,
+        horodatage: Date.now(),
+        label: t("Enregistrement manuel", "Manual save"),
+        state,
+      };
+      setVersions((v) => {
+        const suite = [snapshot, ...v].slice(0, NB_VERSIONS_MAX);
+        try {
+          localStorage.setItem(CLE_STOCKAGE_VERSIONS, JSON.stringify(suite));
+        } catch {
+          // idem : échec silencieux, l'historique des versions reste vide côté stockage mais l'édition continue.
+        }
+        return suite;
+      });
     }, 500);
+  };
+
+  // "Versions et programmation" > "Revenir à une version" (ReglagesBoutique.tsx) :
+  // restaure un instantané réellement enregistré plutôt que de faire semblant
+  // (l'ancienne liste VERSIONS_MOCK ne faisait rien). Redevient aussi la
+  // nouvelle "baseline" : après restauration, "Tout est enregistré" tant
+  // qu'on n'a rien retouché.
+  const restaurerVersion = (id: string) => {
+    const version = versions.find((v) => v.id === id);
+    if (!version) return;
+    setStateRaw(version.state);
+    setBaseline(version.state);
+    setPast([]);
+    setFuture([]);
   };
 
   const pending = past.length;
@@ -253,22 +345,7 @@ export default function PersonnaliserBoutique() {
               </button>
             </div>
 
-            <div className="flex items-center gap-1 rounded-full bg-[var(--dashboard-text)]/[0.06] p-1">
-              <button
-                type="button"
-                onClick={() => setDevice("phone")}
-                className={`rounded-full px-3 py-1.5 text-[10.5px] font-semibold transition ${device === "phone" ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-sm" : "text-[var(--dashboard-text)]/50"}`}
-              >
-                {t("Téléphone", "Phone")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setDevice("desktop")}
-                className={`rounded-full px-3 py-1.5 text-[10.5px] font-semibold transition ${device === "desktop" ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-sm" : "text-[var(--dashboard-text)]/50"}`}
-              >
-                {t("Ordinateur", "Computer")}
-              </button>
-            </div>
+            <SelecteurAppareil device={device} setDevice={setDevice} t={t} />
 
             <div className="flex items-center gap-1">
               <button
@@ -376,47 +453,83 @@ export default function PersonnaliserBoutique() {
           </div>
 
           <div className={`${ongletMobile === "apercu" ? "flex" : "hidden"} lg:flex items-start justify-center overflow-y-auto rounded-2xl border border-dashed border-[var(--dashboard-text)]/10 bg-[radial-gradient(circle_at_50%_0%,rgba(236,12,140,0.06),transparent_60%)] p-5 lg:h-[calc(100vh-160px)]`}>
-            <BoutiquePreview
-              state={state}
-              device={device}
-              page={page}
-              boutiqueNom={NOM_BOUTIQUE}
-              logo={logo}
-              sectionChoisie={sectionChoisie}
-              onChoisirSection={(id) => {
-                setSectionChoisie(id);
-                setOnglet("sections");
-                setOngletMobile("reglages");
-              }}
-            />
+            {device === "phone" ? (
+              <BoutiquePreview
+                state={state}
+                device={device}
+                page={page}
+                boutiqueNom={NOM_BOUTIQUE}
+                logo={logo}
+                sectionChoisie={sectionChoisie}
+                onChoisirSection={(id) => {
+                  setSectionChoisie(id);
+                  setOnglet("sections");
+                  setOngletMobile("reglages");
+                }}
+              />
+            ) : (
+              <div id="apercu-cadre-bureau" className="relative" style={{ width: largeurApercu, maxWidth: "100%" }}>
+                <BoutiquePreview
+                  state={state}
+                  device={device}
+                  page={page}
+                  boutiqueNom={NOM_BOUTIQUE}
+                  logo={logo}
+                  sectionChoisie={sectionChoisie}
+                  onChoisirSection={(id) => {
+                    setSectionChoisie(id);
+                    setOnglet("sections");
+                    setOngletMobile("reglages");
+                  }}
+                />
+                <PoigneeCadre cote="gauche" actif={redimensionnementApercu} onMouseDown={() => setRedimensionnementApercu(true)} t={t} />
+                <PoigneeCadre cote="droite" actif={redimensionnementApercu} onMouseDown={() => setRedimensionnementApercu(true)} t={t} />
+                <p className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9.5px] font-medium text-[var(--dashboard-text)]/40">
+                  {texteAvecChiffres(`${Math.round(largeurApercu)} px`)}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className={`${ongletMobile === "reglages" ? "block" : "hidden"} lg:block lg:h-[calc(100vh-160px)]`}>
-            {onglet === "boutique" ? (
-              <ReglagesBoutique
-                reglageBoutique={reglageBoutique}
-                onOuvrirSection={(id) => {
-                  setOnglet("sections");
-                  setSectionChoisie(id);
-                  setOngletMobile("reglages");
-                }}
-                state={state}
-                setState={setState}
-              />
-            ) : onglet === "style" ? (
-              <StyleReglages styleReglage={styleReglage} state={state} setState={setState} />
-            ) : (
-              <ReglagesSection
-                sectionId={sectionChoisie}
-                state={state}
-                setState={setState}
-                page={page}
-                onOuvrirSection={(id) => {
-                  setSectionChoisie(id);
-                  setOngletMobile("reglages");
-                }}
-              />
-            )}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={onglet === "boutique" ? `boutique-${reglageBoutique}` : onglet === "style" ? `style-${styleReglage}` : `section-${sectionChoisie}`}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.14, ease: "easeOut" }}
+                className="h-full"
+              >
+                {onglet === "boutique" ? (
+                  <ReglagesBoutique
+                    reglageBoutique={reglageBoutique}
+                    onOuvrirSection={(id) => {
+                      setOnglet("sections");
+                      setSectionChoisie(id);
+                      setOngletMobile("reglages");
+                    }}
+                    state={state}
+                    setState={setState}
+                    versions={versions}
+                    onRestaurerVersion={restaurerVersion}
+                  />
+                ) : onglet === "style" ? (
+                  <StyleReglages styleReglage={styleReglage} state={state} setState={setState} />
+                ) : (
+                  <ReglagesSection
+                    sectionId={sectionChoisie}
+                    state={state}
+                    setState={setState}
+                    page={page}
+                    onOuvrirSection={(id) => {
+                      setSectionChoisie(id);
+                      setOngletMobile("reglages");
+                    }}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
 
@@ -478,30 +591,72 @@ export default function PersonnaliserBoutique() {
                   {t("Page de commande", "Order page")}
                 </button>
               </div>
-              <div className="flex items-center gap-1 rounded-full bg-[var(--dashboard-text)]/[0.06] p-1">
-                <button
-                  type="button"
-                  onClick={() => setDevice("phone")}
-                  className={`rounded-full px-3 py-1.5 text-[10.5px] font-semibold transition ${device === "phone" ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-sm" : "text-[var(--dashboard-text)]/50"}`}
-                >
-                  {t("Téléphone", "Phone")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDevice("desktop")}
-                  className={`rounded-full px-3 py-1.5 text-[10.5px] font-semibold transition ${device === "desktop" ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-sm" : "text-[var(--dashboard-text)]/50"}`}
-                >
-                  {t("Ordinateur", "Computer")}
-                </button>
-              </div>
+              <SelecteurAppareil device={device} setDevice={setDevice} t={t} />
             </div>
           </div>
 
-          <div className="flex flex-1 items-start justify-center overflow-y-auto p-6">
-            <BoutiquePreview state={state} device={device} page={page} boutiqueNom={NOM_BOUTIQUE} logo={logo} />
+          <div className={`flex flex-1 overflow-y-auto ${device === "phone" ? "items-start justify-center p-6" : ""}`}>
+            <BoutiquePreview state={state} device={device} page={page} boutiqueNom={NOM_BOUTIQUE} logo={logo} pleinEcran={device === "desktop"} />
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function SelecteurAppareil({
+  device,
+  setDevice,
+  t,
+}: {
+  device: Appareil;
+  setDevice: (d: Appareil) => void;
+  t: (fr: string, en: string) => string;
+}) {
+  return (
+    <div className="flex items-center gap-1 rounded-full bg-[var(--dashboard-text)]/[0.06] p-1">
+      {([
+        ["phone", t("Téléphone", "Phone")],
+        ["desktop", t("Ordinateur", "Computer")],
+      ] as const).map(([v, label]) => (
+        <button
+          key={v}
+          type="button"
+          onClick={() => setDevice(v)}
+          className={`rounded-full px-3 py-1.5 text-[10.5px] font-semibold transition ${device === v ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-sm" : "text-[var(--dashboard-text)]/50"}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Poignée de redimensionnement libre du cadre "Ordinateur" (cf. effet de
+// drag dans le composant parent) — même principe visuel que la
+// poignée entre les colonnes "Sections" et l'aperçu, posée ici sur chaque
+// bord du cadre plutôt qu'entre deux colonnes fixes.
+function PoigneeCadre({
+  cote,
+  actif,
+  onMouseDown,
+  t,
+}: {
+  cote: "gauche" | "droite";
+  actif: boolean;
+  onMouseDown: () => void;
+  t: (fr: string, en: string) => string;
+}) {
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={t("Redimensionner l'aperçu", "Resize the preview")}
+      onMouseDown={onMouseDown}
+      title={t("Glisser pour redimensionner", "Drag to resize")}
+      className={`absolute top-1/2 hidden -translate-y-1/2 cursor-col-resize items-center justify-center lg:flex ${cote === "gauche" ? "-left-3" : "-right-3"}`}
+    >
+      <div className={`h-12 w-1.5 rounded-full transition ${actif ? "bg-brand-pink" : "bg-[var(--dashboard-text)]/15 hover:bg-[var(--dashboard-text)]/30"}`} />
     </div>
   );
 }

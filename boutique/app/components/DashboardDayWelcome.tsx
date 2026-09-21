@@ -11,25 +11,23 @@ import { useDashboardLangue } from "./DashboardLanguageProvider";
   (colonne droite). Remplace DashboardBrain (soleil qui suivait la souris en
   `position: fixed` sur toute la page, en continu) : ici la scène est
   CONTENUE dans son propre cadre et joue une séquence d'entrée une fois au
-  montage (l'astre se lève depuis l'horizon, rayons, reflet qui ondule) avant
-  de retomber dans une respiration ambiante discrète. L'astre lui-même est
-  la vraie photo public/images/soleil.png (jour/aube) ou
-  public/images/lune.png (nuit, disque plein — pas de phase lunaire), recadrée
-  à ras de la sphère (cf. script de crop dans l'historique) et animée en
-  rotation continue lente sur elle-même ; le reste de la scène (halo, rayons,
-  oiseaux/nuages/étoiles) reste dessiné en CSS pour rester net à toute taille
-  et suivre les couleurs de la charte (cf. mémoire
-  [[charte-graphique-livre-moi]]).
+  montage (l'astre se lève depuis l'horizon, reflet qui ondule) avant de
+  retomber dans une respiration ambiante discrète. L'astre lui-même est la
+  vraie photo public/images/soleil.png (jour/aube) ou public/images/lune.png
+  (nuit, disque plein — pas de phase lunaire), recadrée à ras de la sphère
+  (cf. script de crop dans l'historique) et animée en rotation continue lente
+  sur elle-même ; le reste de la scène (halo, oiseaux/nuages/étoiles) reste
+  dessiné en CSS pour rester net à toute taille et suivre les couleurs de la
+  charte (cf. mémoire [[charte-graphique-livre-moi]]). Pas de rayons — retirés
+  autour du soleil, l'image suffit.
 
   Change avec l'heure locale du navigateur (cf. getPhaseForHour ci-dessous) :
-    - 5h–7h59  "dawn"  : aube — nuages qui dérivent devant un soleil pâle,
-                         rayons discrets qui percent dessous/autour.
-    - 8h–17h59 "day"   : plein jour — soleil franc, rayons vifs, oiseaux.
+    - 5h–7h59  "dawn"  : aube — nuages qui dérivent devant un soleil pâle.
+    - 8h–17h59 "day"   : plein jour — soleil franc, oiseaux.
     - 18h–4h59 "night" : nuit — l'astre devient la lune (public/images/lune.png,
-                         disque plein, pas de croissant/quartier) ; pas de
-                         rayons, juste un halo froid ; étoiles qui
-                         scintillent au lieu des oiseaux. Signale "la nuit
-                         commence" dès 18h.
+                         disque plein, pas de croissant/quartier) ; halo
+                         froid ; étoiles qui scintillent au lieu des
+                         oiseaux. Signale "la nuit commence" dès 18h.
   Recalculé au montage puis toutes les 5 min (PHASE_CHECK_MS) pour suivre un
   changement d'heure si le dashboard reste ouvert — pas de tick seconde par
   seconde, inutile pour un changement qui n'arrive qu'à l'heure pile.
@@ -68,13 +66,11 @@ const PHASE_CHECK_MS = 5 * 60 * 1000;
 // approuvées (orange/jaune du soleil) ; "dawn" les adoucit vers le rose de
 // la charte ([[charte-graphique-livre-moi]] : --color-brand-pink) ; "night"
 // bascule sur un gris-bleu neutre (couleur de lune, pas une couleur de
-// marque), pas de rayons — juste la lune et son halo froid.
+// marque). Pas de rayons (retirés — l'image soleil.png se suffit).
 const PHASE_STYLES: Record<
   Phase,
   {
     haloColor: string;
-    rayColor: string;
-    rayOpacity: number;
     orbGlow: string;
     ariaFr: string;
     ariaEn: string;
@@ -82,24 +78,18 @@ const PHASE_STYLES: Record<
 > = {
   dawn: {
     haloColor: "255,178,150",
-    rayColor: "255,190,150",
-    rayOpacity: 0.18,
     orbGlow: "0 0 40px 8px rgba(255,150,140,0.35), 0 0 90px 24px rgba(255,150,140,0.16)",
     ariaFr: "Le jour se lève, un nuage passe : votre journée commence tout doucement.",
     ariaEn: "Dawn is breaking, a cloud drifts by: your day is starting gently.",
   },
   day: {
     haloColor: "255,157,31",
-    rayColor: "255,176,32",
-    rayOpacity: 0.32,
     orbGlow: "0 0 60px 10px rgba(255,157,31,0.45), 0 0 110px 30px rgba(255,157,31,0.2)",
     ariaFr: "Le soleil est haut : votre journée bat son plein.",
     ariaEn: "The sun is high: your day is in full swing.",
   },
   night: {
     haloColor: "140,150,235",
-    rayColor: "170,180,240",
-    rayOpacity: 0.1,
     orbGlow: "0 0 40px 8px rgba(140,160,255,0.35), 0 0 90px 24px rgba(140,160,255,0.15)",
     ariaFr: "La lune se lève : la nuit commence.",
     ariaEn: "The moon is rising: night is falling.",
@@ -200,37 +190,6 @@ export default function DashboardDayWelcome() {
           }
         />
 
-        {/* Rayons (soleil, jour/aube uniquement) : conique tournant
-            lentement, même règle de fade que le halo. Pas de rayons la
-            nuit — juste la lune et son halo froid. */}
-        {phase !== "night" && (
-          <motion.div
-            aria-hidden
-            className="absolute inset-0"
-            style={{
-              transform: "translateZ(-40px)",
-              background: `repeating-conic-gradient(from 0deg, rgba(${style.rayColor},${style.rayOpacity}) 0deg 5deg, transparent 5deg 16deg)`,
-              maskImage:
-                "radial-gradient(circle closest-side at 50% 58%, black 20%, transparent 72%)",
-              WebkitMaskImage:
-                "radial-gradient(circle closest-side at 50% 58%, black 20%, transparent 72%)",
-            }}
-            initial={reducedMotion ? undefined : { opacity: 0, rotate: 0 }}
-            animate={
-              reducedMotion
-                ? { opacity: 1 }
-                : { opacity: risen ? 1 : 0, rotate: 360 }
-            }
-            transition={
-              reducedMotion
-                ? undefined
-                : {
-                    opacity: { duration: 1.1, delay: 0.15 },
-                    rotate: { duration: 90, repeat: Infinity, ease: "linear" },
-                  }
-            }
-          />
-        )}
 
         {/* Oiseaux (jour) : chevrons volant une fois à l'entrée, comme sur
             soleil.png. */}
@@ -378,20 +337,20 @@ export default function DashboardDayWelcome() {
           ))}
 
         {/* Astre : photo réelle (public/images/soleil.png jour/aube,
-            public/images/lune.png nuit), recadrée à ras de la sphère à
-            l'import (cf. script de crop) pour que la rotation continue
-            tourne bien AUTOUR du centre de la boule, pas en orbite excentrée
-            dans son cadre carré. Se lève depuis l'horizon puis respire
-            doucement (mêmes animations qu'avant, seul le contenu du disque
-            change). La nuit, l'image est découpée par le même croissant/la
-            même forme réelle du jour (SVG clipPath, cf. buildMoonPath) —
-            fond transparent pour ne rien montrer derrière le croissant — et
-            tourne À L'INTÉRIEUR de ce contour fixe (le clipPath ne tourne
-            pas, seule la texture en dessous) ; le halo (boxShadow) reste,
-            rond, comme un vrai halo lunaire indépendant de la forme. */}
+            public/images/lune.png nuit, disque plein), recadrée à ras de la
+            sphère à l'import (cf. script de crop) pour que la rotation
+            continue tourne bien AUTOUR du centre de la boule, pas en orbite
+            excentrée dans son cadre carré. Se lève depuis l'horizon puis
+            respire doucement. La lune est affichée un peu plus grande que
+            le soleil (taille par phase ci-dessous) — plus lisible dans le
+            cadre nocturne, halo (boxShadow) inclus. */}
         <motion.div
           aria-hidden
-          className="absolute left-1/2 h-[132px] w-[132px] -translate-x-1/2 rounded-full sm:h-[156px] sm:w-[156px]"
+          className={
+            phase === "night"
+              ? "absolute left-1/2 h-[146px] w-[146px] -translate-x-1/2 rounded-full sm:h-[172px] sm:w-[172px]"
+              : "absolute left-1/2 h-[132px] w-[132px] -translate-x-1/2 rounded-full sm:h-[156px] sm:w-[156px]"
+          }
           style={{ bottom: "48%", transform: "translateZ(10px)" }}
           initial={reducedMotion ? undefined : { y: 90, opacity: 0, scale: 0.7 }}
           animate={

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import * as DrapeauxSvg from "country-flag-icons/react/3x2";
+import { getCountries, getCountryCallingCode } from "libphonenumber-js/min";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
 import { texteAvecChiffres } from "../../dashboard-accueil/shared";
-import type { EditeurState, PageId, SectionId } from "./types";
+import type { Appareil, EditeurState, FormulaireState, PageId, SectionId } from "./types";
 import { AVIS_APERCU, AVIS_DISTRIBUTION_APERCU, CATEGORIES_APERCU, PRODUIT_APERCU, PRODUITS_GRILLE_APERCU, SECTIONS_DEFAUT } from "./types";
 
 /*
@@ -27,14 +29,31 @@ import { AVIS_APERCU, AVIS_DISTRIBUTION_APERCU, CATEGORIES_APERCU, PRODUIT_APERC
 // l'indicatif suit le pays du client — trois listes démonstratives (aucun
 // vrai découpage géographique par pays n'existe encore côté données).
 const COMMUNES_CI = ["Abobo", "Adjamé", "Anyama", "Attécoubé", "Bingerville", "Cocody", "Koumassi", "Marcory"];
-const INDICATIFS = [
-  { pays: "Côte d'Ivoire", paysEn: "Ivory Coast", code: "+225", drapeau: "🇨🇮" },
-  { pays: "Sénégal", paysEn: "Senegal", code: "+221", drapeau: "🇸🇳" },
-  { pays: "Mali", paysEn: "Mali", code: "+223", drapeau: "🇲🇱" },
-  { pays: "Burkina Faso", paysEn: "Burkina Faso", code: "+226", drapeau: "🇧🇫" },
-  { pays: "Togo", paysEn: "Togo", code: "+228", drapeau: "🇹🇬" },
-  { pays: "Bénin", paysEn: "Benin", code: "+229", drapeau: "🇧🇯" },
-];
+// Liste complète des indicatifs (tous pays reconnus par libphonenumber-js),
+// pas seulement la Côte d'Ivoire + 5 voisins codés en dur (cf. capture
+// utilisateur du 2026-09-21) — noms via Intl.DisplayNames (déjà FR/EN comme
+// le reste du fichier), drapeau en SVG local (country-flag-icons) : un emoji
+// 🇨🇮 ne s'affiche pas sur Windows (Segoe UI Emoji sans glyphes drapeaux, replié
+// en texte "CI"), et une image distante (ex. flagcdn.com) est bloquée par le
+// CSP `img-src 'self' blob: data:` (cf. proxy.ts) — le SVG local respecte les
+// deux contraintes.
+const NOMS_PAYS_FR = new Intl.DisplayNames(["fr"], { type: "region" });
+const NOMS_PAYS_EN = new Intl.DisplayNames(["en"], { type: "region" });
+const INDICATIFS = getCountries()
+  .filter((code) => code in DrapeauxSvg)
+  .map((code) => ({
+    pays: NOMS_PAYS_FR.of(code) ?? code,
+    paysEn: NOMS_PAYS_EN.of(code) ?? code,
+    code: `+${getCountryCallingCode(code)}`,
+    drapeau: code,
+  }))
+  .sort((a, b) => a.pays.localeCompare(b.pays, "fr"));
+const INDICATIF_DEFAUT = INDICATIFS.find((i) => i.drapeau === "CI") ?? INDICATIFS[0];
+
+function IconeDrapeau({ code, className }: { code: string; className: string }) {
+  const Drapeau = DrapeauxSvg[code as keyof typeof DrapeauxSvg];
+  return Drapeau ? <Drapeau className={className} /> : null;
+}
 
 // Pied de page — groupes de liens démonstratifs (cf. "Colonnes de liens" dans
 // ReglagesSection.tsx, `piedDePage.colonnesLiens` sélectionne combien de ces
@@ -133,14 +152,364 @@ const TAILLE_TEXTE_BASE: Record<string, string> = { petite: "12.5px", moyenne: "
 const TITRE_GRAISSE: Record<string, number> = { demi: 600, gras: 800 };
 const TITRE_ESPACEMENT: Record<string, string> = { serre: "-0.01em", normal: "normal" };
 
-// Rangée de confiance réutilisée à deux endroits de la page commande : la
-// version Halo qui chevauche la galerie (couleurs figées, cf. case "galerie")
-// et la version thème-aware sous le bouton de commande (cf. case "paiement").
+// Rangée de confiance sous le bouton de commande (cf. case "paiement").
 const CONFIANCE_ITEMS: { icon: string; label: string; labelEn: string }[] = [
   { icon: "M3 11l2-6h14l2 6v2H3Zm2 2v6h2v-6m8 0v6h2v-6", label: "Livraison rapide", labelEn: "Fast delivery" },
   { icon: "M4 7h16v10H4Zm0 3h16", label: "Paiement sécurisé", labelEn: "Secure payment" },
   { icon: "M12 21s6.5-6 6.5-11A6.5 6.5 0 0 0 5.5 10c0 5 6.5 11 6.5 11Z", label: "Retour facile", labelEn: "Easy returns" },
 ];
+
+/*
+  Champs de "Vos informations" (nom, commune, adresse précise, téléphone) —
+  extrait en composant indépendant (own useState pour la démo interactive :
+  commune/indicatif ouverts, géoloc, adresse modifiable) pour être rendu à
+  l'intérieur de la carte "Finaliser ma commande" (case "paiement" de
+  SectionRendue, page "commande" uniquement). "formulaire" et "paiement" sont
+  fusionnés en une seule carte 2 colonnes (cf. capture utilisateur du
+  2026-09-21) : tous deux `verrouillee: true` dans SECTIONS_DEFAUT et déjà
+  exclus du repositionnement générique (Monter/Descendre/Largeur/Marges) dans
+  ReglagesSection.tsx, donc cette fusion ne casse aucune réorganisation
+  possible côté utilisateur. La case "formulaire" du switch ne rend donc plus
+  rien elle-même (cf. plus bas) — seul ce composant produit son contenu.
+*/
+function FormulaireChampsApercu({ f, t }: { f: FormulaireState; t: (fr: string, en: string) => string }) {
+  const [communeOuverte, setCommuneOuverte] = useState(false);
+  const [communeRecherche, setCommuneRecherche] = useState("");
+  const [communeChoisie, setCommuneChoisie] = useState("");
+  const [geoloc, setGeoloc] = useState<"repos" | "recherche" | "trouvee" | "refusee">("repos");
+  const [adresseModifiable, setAdresseModifiable] = useState(false);
+  const [adressePrecise, setAdressePrecise] = useState("");
+  const [indicatifOuvert, setIndicatifOuvert] = useState(false);
+  const [indicatifRecherche, setIndicatifRecherche] = useState("");
+  const [indicatifChoisi, setIndicatifChoisi] = useState(INDICATIF_DEFAUT);
+  const [telephone, setTelephone] = useState("");
+  const [nomPrenom, setNomPrenom] = useState("");
+  const indicatifsFiltres = useMemo(() => {
+    const q = indicatifRecherche.trim().toLowerCase();
+    if (!q) return INDICATIFS;
+    return INDICATIFS.filter((ind) => ind.pays.toLowerCase().includes(q) || ind.paysEn.toLowerCase().includes(q) || ind.code.includes(q));
+  }, [indicatifRecherche]);
+
+  const bordure = { borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" };
+  const boiteBase = f.styleChamps === "ligne" ? "rounded-none border-0 border-b" : f.styleChamps === "plein" ? "rounded-xl border-0" : "rounded-xl border";
+  const boiteClasses = `${boiteBase} px-3 py-2.5`;
+  const boiteStyle = (actif?: boolean): React.CSSProperties =>
+    f.styleChamps === "plein"
+      ? { background: actif ? "color-mix(in srgb, var(--ac) 8%, transparent)" : "color-mix(in srgb, var(--tx) 5%, transparent)" }
+      : { borderColor: actif ? "var(--ac)" : bordure.borderColor };
+  const libelleDansChamp = f.libellesPosition === "dans-le-champ";
+  const libelle = (texte: string) =>
+    libelleDansChamp && <p className="text-[7.5px]" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>{texte}</p>;
+  const labelExterne = (texte: string) =>
+    !libelleDansChamp && (
+      <p className="mb-1 text-[9px] font-medium" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
+        {texte}
+      </p>
+    );
+  const iconeChamp = (chemin: string) =>
+    f.iconesDansChamps && <MiniIcon path={chemin} color="color-mix(in srgb, var(--tx) 30%, transparent)" />;
+  const iconePersonne = "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 20c0-3.3 3.6-6 8-6s8 2.7 8 6";
+  const iconeLieu = "M12 21s7-5.8 7-11a7 7 0 1 0-14 0c0 5.2 7 11 7 11Z";
+  const iconeTelephone = "M6.5 3h3l1.2 4.5-2 1.6a11 11 0 0 0 5.2 5.2l1.6-2 4.5 1.2v3a2 2 0 0 1-2.2 2A16 16 0 0 1 4.5 5.2 2 2 0 0 1 6.5 3Z";
+  const communesFiltrees = COMMUNES_CI.filter((c) => c.toLowerCase().includes(communeRecherche.toLowerCase()));
+  const localiser = () => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoloc("refusee");
+      return;
+    }
+    setGeoloc("recherche");
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        setGeoloc("trouvee");
+        setAdressePrecise(t("Position actuelle du téléphone", "Phone's current position"));
+      },
+      () => setGeoloc("refusee")
+    );
+  };
+
+  return (
+    <>
+      <div className={`grid gap-2 ${f.colonnes === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+        <div className="col-span-full">
+          {labelExterne(t("Nom et prénom", "Full name"))}
+          <div className={boiteClasses} style={boiteStyle()}>
+            <div className="flex items-center gap-1.5">
+              {iconeChamp(iconePersonne)}
+              <div className="min-w-0 flex-1">
+                {libelleDansChamp && libelle(t("Nom et prénom", "Full name"))}
+                <input
+                  value={nomPrenom}
+                  onChange={(e) => setNomPrenom(e.target.value)}
+                  placeholder={libelleDansChamp ? "" : t("Nom et prénom", "Full name")}
+                  className={`w-full bg-transparent text-[10px] outline-none ${libelleDansChamp ? "mt-0.5" : ""}`}
+                  style={{ color: "var(--tx)" }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 1. Commune — liste + recherche */}
+        <div className={f.colonnes === 2 ? "" : "col-span-full"}>
+          {labelExterne(t("Commune", "District"))}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setCommuneOuverte((v) => !v)}
+              className={`w-full text-left ${boiteClasses}`}
+              style={boiteStyle(communeOuverte)}
+            >
+              <div className="flex items-center gap-1.5">
+                {iconeChamp(iconeLieu)}
+                <div className="min-w-0 flex-1">
+                  {libelle(t("Commune", "District"))}
+                  <span className="flex items-center justify-between gap-1">
+                    <span className="truncate text-[10px]" style={{ color: communeChoisie ? "var(--tx)" : "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
+                      {communeChoisie || t("Choisir", "Select")}
+                    </span>
+                    <MiniIcon path="M6 9l6 6 6-6" color="color-mix(in srgb, var(--tx) 30%, transparent)" />
+                  </span>
+                </div>
+              </div>
+            </button>
+            {communeOuverte && (
+              <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[170px] overflow-y-auto rounded-xl border shadow-lg" style={{ ...bordure, background: "var(--bg)" }}>
+                <div className="flex items-center gap-1.5 border-b px-2.5 py-2" style={{ borderColor: "color-mix(in srgb, var(--tx) 8%, transparent)" }}>
+                  <MiniIcon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm9 16-4.35-4.35" color="color-mix(in srgb, var(--tx) 30%, transparent)" />
+                  <input
+                    value={communeRecherche}
+                    onChange={(e) => setCommuneRecherche(e.target.value)}
+                    placeholder={t("Rechercher une commune", "Search a district")}
+                    className="w-full bg-transparent text-[10px] outline-none"
+                    style={{ color: "var(--tx)" }}
+                  />
+                </div>
+                {communesFiltrees.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      setCommuneChoisie(c);
+                      setCommuneOuverte(false);
+                      setCommuneRecherche("");
+                    }}
+                    className="block w-full px-2.5 py-1.5 text-left text-[10px]"
+                    style={c === communeChoisie ? { background: "color-mix(in srgb, var(--ac) 10%, transparent)", color: "var(--ac)", fontWeight: 600 } : { color: "var(--tx)" }}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 2. Adresse précise — remplie/modifiable après "Me localiser" */}
+        <div className={f.colonnes === 2 ? "" : "col-span-full"}>
+          {labelExterne(f.libelleAdressePrecise)}
+          <div className={boiteClasses} style={boiteStyle()}>
+            <div className="flex items-center gap-1.5">
+              {iconeChamp(iconeLieu)}
+              <div className="min-w-0 flex-1">
+                {geoloc === "trouvee" ? (
+                  <>
+                    {libelle(f.libelleAdressePrecise)}
+                    {adresseModifiable ? (
+                      <input
+                        value={adressePrecise}
+                        onChange={(e) => setAdressePrecise(e.target.value)}
+                        onBlur={() => setAdresseModifiable(false)}
+                        autoFocus
+                        placeholder={f.texteExempleAdressePrecise}
+                        className="mt-0.5 w-full bg-transparent text-[10px] outline-none"
+                        style={{ color: "var(--tx)" }}
+                      />
+                    ) : (
+                      <span className="mt-0.5 flex items-center justify-between gap-1">
+                        <span className="flex items-center gap-1 truncate text-[10px]" style={{ color: "var(--tx)" }}>
+                          {!f.iconesDansChamps && <MiniIcon path={iconeLieu} color="var(--ac)" />}
+                          {adressePrecise}
+                        </span>
+                        <button type="button" onClick={() => setAdresseModifiable(true)} className="shrink-0 text-[9.5px] font-semibold underline" style={{ color: "var(--ac)" }}>
+                          {t("Modifier", "Edit")}
+                        </button>
+                      </span>
+                    )}
+                  </>
+                ) : libelleDansChamp ? (
+                  <>
+                    {libelle(f.libelleAdressePrecise)}
+                    <p className="mt-0.5 truncate text-[10px]" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>{f.texteExempleAdressePrecise}</p>
+                  </>
+                ) : (
+                  <p className="text-[10px]" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>{f.libelleAdressePrecise}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Téléphone — indicatif pays + numéro */}
+        <div className="col-span-full">
+          {labelExterne(t("Téléphone et indicatif", "Phone and dialing code"))}
+          <div className={`relative flex overflow-visible ${boiteBase}`} style={boiteStyle()}>
+            {f.iconesDansChamps && (
+              <span className="flex shrink-0 items-center pl-2.5">
+                <MiniIcon path={iconeTelephone} color="color-mix(in srgb, var(--tx) 30%, transparent)" />
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => setIndicatifOuvert((v) => !v)}
+              className="flex shrink-0 items-center gap-1 border-r px-2.5 py-2.5"
+              style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" }}
+            >
+              <IconeDrapeau code={indicatifChoisi.drapeau} className="h-[9px] w-3 rounded-[1.5px] object-cover" />
+              <span className="text-[10px] font-semibold" style={{ color: "var(--tx)" }}>{indicatifChoisi.code}</span>
+              <MiniIcon path="M6 9l6 6 6-6" color="color-mix(in srgb, var(--tx) 30%, transparent)" />
+            </button>
+            <input
+              value={telephone}
+              onChange={(e) => setTelephone(e.target.value.replace(/[^\d\s]/g, ""))}
+              placeholder={t("Numéro de téléphone", "Phone number")}
+              className="flex-1 bg-transparent px-3 py-2.5 text-[10px] outline-none"
+              style={{ color: "var(--tx)" }}
+            />
+            {indicatifOuvert && (
+              <div className="absolute left-0 top-full z-30 mt-1 w-[210px] overflow-hidden rounded-xl border shadow-lg" style={{ ...bordure, background: "var(--bg)" }}>
+                <div className="flex items-center gap-1.5 border-b px-2.5 py-2" style={{ borderColor: "color-mix(in srgb, var(--tx) 8%, transparent)" }}>
+                  <MiniIcon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm9 16-4.35-4.35" color="color-mix(in srgb, var(--tx) 30%, transparent)" />
+                  <input
+                    value={indicatifRecherche}
+                    onChange={(e) => setIndicatifRecherche(e.target.value)}
+                    placeholder={t("Rechercher un pays", "Search a country")}
+                    className="w-full bg-transparent text-[10px] outline-none"
+                    style={{ color: "var(--tx)" }}
+                    autoFocus
+                  />
+                </div>
+                <div className="max-h-[170px] overflow-y-auto">
+                  {indicatifsFiltres.map((ind) => (
+                    <button
+                      key={ind.drapeau}
+                      type="button"
+                      onClick={() => {
+                        setIndicatifChoisi(ind);
+                        setIndicatifOuvert(false);
+                        setIndicatifRecherche("");
+                      }}
+                      className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left text-[10px]"
+                      style={ind.drapeau === indicatifChoisi.drapeau ? { background: "color-mix(in srgb, var(--ac) 10%, transparent)", color: "var(--ac)", fontWeight: 600 } : { color: "var(--tx)" }}
+                    >
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <IconeDrapeau code={ind.drapeau} className="h-[9px] w-3 shrink-0 rounded-[1.5px] object-cover" />
+                        <span className="truncate">{t(ind.pays, ind.paysEn)}</span>
+                      </span>
+                      <span className="shrink-0 font-figures">{ind.code}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {f.boutonLocaliser &&
+        (geoloc === "trouvee" ? (
+          <>
+            {/* Vignette carte statique — cf. capture utilisateur du 2026-09-21,
+                panneau 2 "Après « Me localiser »" : rues claires + zone d'eau,
+                pin plein centré au-dessus de "Position trouvée". */}
+            <div className="relative mt-2 overflow-hidden rounded-xl" style={{ height: 68 }}>
+              <svg viewBox="0 0 300 68" preserveAspectRatio="none" className="block h-full w-full">
+                <rect width="300" height="68" fill="#EAE3D2" />
+                <rect x="0" y="12" width="300" height="7" fill="#F6F1E5" />
+                <rect x="46" y="0" width="7" height="68" fill="#F6F1E5" />
+                <rect x="130" y="0" width="9" height="68" fill="#F6F1E5" />
+                <rect x="0" y="45" width="300" height="6" fill="#F6F1E5" />
+                <rect x="205" y="0" width="7" height="68" fill="#F6F1E5" />
+                <path d="M215 68 L300 32 L300 68 Z" fill="#C2DBE6" />
+                <rect x="64" y="20" width="20" height="16" fill="#DED4BC" />
+                <rect x="155" y="49" width="22" height="15" fill="#DED4BC" />
+              </svg>
+              <span
+                className="absolute left-1/2 top-1/2 h-2 w-4 -translate-x-1/2 rounded-full"
+                style={{ background: "rgba(0,0,0,.16)", filter: "blur(1px)", marginTop: 9 }}
+              />
+              <svg viewBox="0 0 24 30" className="absolute left-1/2 top-1/2 h-6 w-5 -translate-x-1/2 -translate-y-[85%]" style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,.3))" }}>
+                <path d="M12 0C5.4 0 0 5.3 0 11.8 0 20.6 12 30 12 30s12-9.4 12-18.2C24 5.3 18.6 0 12 0Z" fill="var(--ac)" />
+                <circle cx="12" cy="11.5" r="4.5" fill="#fff" />
+              </svg>
+            </div>
+            <div
+              className="mt-2 flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-semibold"
+              style={{ borderColor: "#1E9E6A", color: "#1E9E6A", background: "color-mix(in srgb, #1E9E6A 6%, transparent)" }}
+            >
+              <MiniIcon path="M5 12l4 4 10-10" color="#1E9E6A" />
+              <span>
+                {t("Position trouvée", "Position found")}
+                <br />
+                <span className="font-normal opacity-80">{t("Adresse précise remplie", "Precise address filled in")}</span>
+              </span>
+            </div>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={localiser}
+            className="mt-2 flex w-full items-center gap-2 rounded-xl border border-dashed px-3 py-2 text-[10.5px] font-semibold"
+            style={{ borderColor: "var(--ac)", color: "var(--ac)" }}
+          >
+            <MiniIcon path="M12 21s7-5.8 7-11a7 7 0 1 0-14 0c0 5.2 7 11 7 11Z" color="var(--ac)" />
+            {geoloc === "recherche" ? t("Recherche en cours…", "Locating…") : t("Me localiser maintenant", "Locate me now")}
+          </button>
+        ))}
+      {geoloc === "refusee" && (
+        <p className="mt-1.5 text-[9.5px]" style={{ color: "#D8347E" }}>
+          {t("Position indisponible, remplis l'adresse précise à la main.", "Location unavailable, fill in the precise address by hand.")}
+        </p>
+      )}
+      {f.mentionSpecifique && (
+        <div className="mt-2 rounded-xl border px-3 py-2 text-[9.5px]" style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)", color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
+          {f.mentionType === "choix"
+            ? t("Choisis une option pour le livreur (facultatif)", "Pick an option for the courier (optional)")
+            : f.mentionType === "date"
+            ? t("Une date à préciser pour le livreur ? (facultatif)", "A date for the courier? (optional)")
+            : t("Une précision pour le livreur ? (facultatif)", "Anything the courier should know? (optional)")}
+        </div>
+      )}
+    </>
+  );
+}
+
+// Radio-bouton (cercle plein/vide) et en-tête numéroté rose — répétés pour
+// les 4 blocs "1/2/3/4" de la carte "Finaliser ma commande" (case "paiement"
+// de SectionRendue, cf. capture utilisateur du 2026-09-21).
+function RadioCercle({ actif }: { actif: boolean }) {
+  return (
+    <span
+      className="flex h-[13px] w-[13px] shrink-0 items-center justify-center rounded-full border-2"
+      style={{ borderColor: actif ? "var(--ac)" : "rgba(20,18,32,.25)" }}
+    >
+      {actif && <span className="h-[6px] w-[6px] rounded-full" style={{ background: "var(--ac)" }} />}
+    </span>
+  );
+}
+
+function TitreNumerote({ n, titre }: { n: number; titre: string }) {
+  return (
+    <div className="mb-1.5 flex items-center gap-1.5">
+      <span
+        className="flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-white"
+        style={{ background: "var(--ac)" }}
+      >
+        {n}
+      </span>
+      <span className="text-[10.5px] font-bold" style={{ color: "#141220" }}>{titre}</span>
+    </div>
+  );
+}
 
 export default function BoutiquePreview({
   state,
@@ -150,17 +519,35 @@ export default function BoutiquePreview({
   logo,
   sectionChoisie,
   onChoisirSection,
+  pleinEcran,
 }: {
   state: EditeurState;
-  device: "phone" | "desktop";
+  device: Appareil;
   page: PageId;
   boutiqueNom: string;
   logo: string | null;
   sectionChoisie?: SectionId;
   onChoisirSection?: (id: SectionId) => void;
+  // Vue "Aperçu" plein écran (œil, cf. PersonnaliserBoutique.tsx) : rendu
+  // sans cadre de navigateur factice ni hauteur figée — bord à bord, largeur
+  // et défilement naturels de la fenêtre, comme le vrai site le ferait.
+  pleinEcran?: boolean;
 }) {
   const { t } = useDashboardLangue();
   const { style, texte } = state;
+  // "Je commande" (case "infos"/"paiement" de SectionRendue) doit animer le
+  // panier de l'entête — deux instances séparées de SectionRendue (une par
+  // section), donc l'état du déclenchement vit ici et redescend en props
+  // plutôt que dans un state local à l'entête (cf. retour utilisateur du
+  // 2026-09-21, "le calque doit se faire au niveau du panier de la navbar").
+  const [panierPulseId, setPanierPulseId] = useState(0);
+  const declencherPulsePanier = () => setPanierPulseId((n) => n + 1);
+  // Recherche de l'entête (case "entete" ci-dessous) : même raison de la
+  // lever ici que panierPulseId — l'entête et la grille de produits sont deux
+  // instances séparées de SectionRendue, donc le texte tapé doit redescendre
+  // en props pour que la grille filtre réellement ses cartes (retour
+  // utilisateur : "la barre de recherche du navbar doit être fonctionnelle").
+  const [rechercheEntete, setRechercheEntete] = useState("");
   const visibles = state.sections
     .filter((s) => s.visible)
     .map((s) => s.id)
@@ -216,12 +603,31 @@ export default function BoutiquePreview({
         const sec = state.sections.find((s) => s.id === id)!;
         if (device === "phone" && !sec.visibleTelephone) return null;
         if (device === "desktop" && !sec.visibleOrdinateur) return null;
+        // "formulaire" est fusionné dans la carte "Finaliser ma commande" de
+        // "paiement" (cf. FormulaireChampsApercu) : pas de wrapper propre,
+        // sinon un espace vide (padding de section) apparaît à sa place.
+        if (id === "formulaire") return null;
+        // "infos" en mode ordinateur (capture du 2026-09-21) : rendue collée à
+        // "galerie" dans une même div à 2 colonnes (cf. plus bas, branche
+        // id === "galerie") plutôt que dans son propre wrapper pleine largeur.
+        if (device === "desktop" && id === "infos" && visibles[i - 1] === "galerie") {
+          const secGalerie = state.sections.find((s) => s.id === "galerie");
+          if (secGalerie?.visibleOrdinateur) return null;
+        }
         const selectionnee = id === sectionChoisie;
         // Bandeau ignore les réglages génériques (Largeur/Marges/Couleurs) :
         // toujours plein-bord, sans marge, avec sa propre couleur (cf. "Affichage"
         // dans Corps ci-dessus) — pas de "Pour cette section" pour lui non plus.
         // Bandeau, entête et pied-de-page : collés bord-à-bord, sans marge verticale ni section-gap.
         const CHROME_EDGE = new Set(["bandeau", "entete", "pied-de-page"]);
+        // Barre de confiance qui chevauche la grande image : son propre "-mt-6"
+        // (case "confiance" ci-dessous) ne peut remonter que jusqu'au bord de
+        // SA boîte — le paddingTop et le marginTop posés ici sur le wrapper
+        // restent en dehors de ce collapsing et laissaient un espace blanc
+        // entre le hero et la barre. On les annule dans ce cas précis pour
+        // qu'elle reste collée au hero, y compris juste après un chargement
+        // (avant toute interaction utilisateur).
+        const colleAuHero = id === "confiance" && state.confiance.chevaucheGrandeImage && visibles[i - 1] === "grande-image";
         const margeVerticale = CHROME_EDGE.has(id) ? 0 : MARGE_SECTION[sec.marges];
         // FULL_EDGE : toujours inset 0 latéralement (fond couvre tout).
         // Grande-image : la largeur "page" se gère en interne (maxWidth),
@@ -242,22 +648,87 @@ export default function BoutiquePreview({
               : sec.couleurs === "douces"
                 ? { background: "color-mix(in srgb, var(--ac) 6%, var(--bg))" }
                 : {};
+
+        // "galerie" + "infos" en mode ordinateur (capture du 2026-09-21) : une
+        // seule div "produit", 2 colonnes (galerie à gauche, infos à droite),
+        // comme sur une vraie fiche produit — plutôt que 2 blocs pleine
+        // largeur empilés (comportement conservé tel quel sur téléphone).
+        const secInfos = state.sections.find((s) => s.id === "infos");
+        const infosAccolee = id === "galerie" && device === "desktop" && visibles[i + 1] === "infos" && !!secInfos?.visibleOrdinateur;
+
+        const itemStyleCommun = {
+          marginTop: i > 0 && !CHROME_EDGE.has(id) && visibles[i - 1] !== "entete" && !colleAuHero ? "var(--section-gap)" : undefined,
+          marginLeft: largeurInset,
+          marginRight: largeurInset,
+        } as React.CSSProperties;
+
+        if (infosAccolee) {
+          const defInfos = SECTIONS_DEFAUT.find((d) => d.id === "infos")!;
+          const selectionneeInfos = "infos" === sectionChoisie;
+          const margeVerticaleInfos = MARGE_SECTION[secInfos!.marges];
+          const couleursOverrideInfos: React.CSSProperties =
+            secInfos!.couleurs === "nuit"
+              ? { background: "#141220", color: "#fff", ["--bg" as string]: "#141220", ["--tx" as string]: "#fff" }
+              : secInfos!.couleurs === "douces"
+                ? { background: "color-mix(in srgb, var(--ac) 6%, var(--bg))" }
+                : {};
+          return (
+            <div key="galerie-infos" className="grid grid-cols-2 items-start gap-8" style={itemStyleCommun}>
+              <div
+                onClick={onChoisirSection ? () => onChoisirSection("galerie") : undefined}
+                className={onChoisirSection ? "group/hl relative min-w-0 cursor-pointer" : "relative min-w-0"}
+                style={{ paddingTop: margeVerticale, paddingBottom: margeVerticale, ...couleursOverride }}
+              >
+                <SectionRendue id="galerie" state={state} device={device} page={page} boutiqueNom={boutiqueNom} logo={logo} t={t} panierPulseId={panierPulseId} onCommande={declencherPulsePanier} recherche={rechercheEntete} onRechercheChange={setRechercheEntete} />
+                {onChoisirSection && (
+                  <div
+                    className={`pointer-events-none absolute inset-0 z-20 rounded-[4px] border-[1.5px] border-[#E8207E] transition-opacity ${
+                      selectionnee ? "opacity-100" : "opacity-0 group-hover/hl:opacity-100"
+                    }`}
+                    style={{ boxShadow: "0 0 0 3px rgba(232,32,126,.18)" }}
+                  >
+                    <span className="absolute -left-[1.5px] -top-[19px] flex items-center gap-1 whitespace-nowrap rounded-t-[5px] bg-[#E8207E] px-[7px] py-[3px] text-[7.5px] font-semibold text-white">
+                      {t(def.label, def.labelEn)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div
+                onClick={onChoisirSection ? () => onChoisirSection("infos") : undefined}
+                className={onChoisirSection ? "group/hl relative min-w-0 cursor-pointer" : "relative min-w-0"}
+                style={{ paddingTop: margeVerticaleInfos, paddingBottom: margeVerticaleInfos, ...couleursOverrideInfos }}
+              >
+                <SectionRendue id="infos" state={state} device={device} page={page} boutiqueNom={boutiqueNom} logo={logo} t={t} panierPulseId={panierPulseId} onCommande={declencherPulsePanier} recherche={rechercheEntete} onRechercheChange={setRechercheEntete} />
+                {onChoisirSection && (
+                  <div
+                    className={`pointer-events-none absolute inset-0 z-20 rounded-[4px] border-[1.5px] border-[#E8207E] transition-opacity ${
+                      selectionneeInfos ? "opacity-100" : "opacity-0 group-hover/hl:opacity-100"
+                    }`}
+                    style={{ boxShadow: "0 0 0 3px rgba(232,32,126,.18)" }}
+                  >
+                    <span className="absolute -left-[1.5px] -top-[19px] flex items-center gap-1 whitespace-nowrap rounded-t-[5px] bg-[#E8207E] px-[7px] py-[3px] text-[7.5px] font-semibold text-white">
+                      {t(defInfos.label, defInfos.labelEn)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
         return (
           <div
             key={id}
             onClick={onChoisirSection ? () => onChoisirSection(id) : undefined}
             className={onChoisirSection ? "group/hl relative cursor-pointer" : "relative"}
             style={{
-              // Pas de section-gap avant le pied-de-page (collé en bas comme le bandeau en haut)
-              ...(i > 0 && !CHROME_EDGE.has(id) ? { marginTop: "var(--section-gap)" } : undefined),
-              paddingTop: margeVerticale,
+              ...itemStyleCommun,
+              paddingTop: colleAuHero ? 0 : margeVerticale,
               paddingBottom: margeVerticale,
-              marginLeft: largeurInset,
-              marginRight: largeurInset,
               ...couleursOverride,
             }}
           >
-            <SectionRendue id={id} state={state} device={device} page={page} boutiqueNom={boutiqueNom} logo={logo} t={t} />
+            <SectionRendue id={id} state={state} device={device} page={page} boutiqueNom={boutiqueNom} logo={logo} t={t} panierPulseId={panierPulseId} onCommande={declencherPulsePanier} recherche={rechercheEntete} onRechercheChange={setRechercheEntete} />
             {onChoisirSection && (
               <div
                 className={`pointer-events-none absolute inset-0 z-20 rounded-[4px] border-[1.5px] border-[#E8207E] transition-opacity ${
@@ -286,6 +757,18 @@ export default function BoutiquePreview({
           {contenu}
           <ElementsFlottantsApercu flottants={state.flottants} boutonTexte={state.paiement.boutonTexte} page={page} device={device} t={t} />
         </div>
+      </div>
+    );
+  }
+
+  // Vue plein écran (œil "Aperçu") : bord à bord, sans cadre de navigateur
+  // factice ni hauteur figée — la fenêtre réelle du visiteur fait défiler la
+  // page, comme sur le vrai site (cf. commentaire de `pleinEcran` ci-dessus).
+  if (pleinEcran) {
+    return (
+      <div className="relative w-full">
+        {contenu}
+        <ElementsFlottantsApercu flottants={state.flottants} boutonTexte={state.paiement.boutonTexte} page={page} device={device} t={t} pleinEcran />
       </div>
     );
   }
@@ -348,20 +831,25 @@ function ElementsFlottantsApercu({
   page,
   device,
   t,
+  pleinEcran,
 }: {
   flottants: EditeurState["flottants"];
   boutonTexte: EditeurState["paiement"]["boutonTexte"];
   page: PageId;
-  device: "phone" | "desktop";
+  device: Appareil;
   t: (fr: string, en: string) => string;
+  // Vue plein écran : ancré à la fenêtre réelle (fixed) plutôt qu'au bloc
+  // d'aperçu (absolute), pour suivre le défilement comme un vrai site.
+  pleinEcran?: boolean;
 }) {
   // Le bouton de commande fixe n'a de sens que sur téléphone, sur la page de
   // commande (cf. maquette, "Bouton de commande fixe sur téléphone") — sur
   // l'accueil ou sur ordinateur, rien à commander en bas de l'écran.
   const barreCommande = flottants.boutonCommandeTelephone && device === "phone" && page === "commande";
   const basReserve = barreCommande ? 58 : 12; // px laissés libres au-dessus de la barre de commande pour ne pas la recouvrir
+  const ancrage = pleinEcran ? "fixed" : "absolute";
   return (
-    <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[inherit]">
+    <div className={`pointer-events-none ${ancrage} inset-0 z-30 ${pleinEcran ? "" : "overflow-hidden rounded-[inherit]"}`}>
       {flottants.ongletAvisCote && (
         <span
           className="pointer-events-auto absolute right-0 top-1/2 origin-right -translate-y-1/2 -rotate-90 rounded-t-md bg-[#0B0E1C] px-2.5 py-1 text-[8px] font-semibold text-white"
@@ -417,28 +905,130 @@ function SectionRendue({
   boutiqueNom,
   logo,
   t,
+  panierPulseId,
+  onCommande,
+  recherche,
+  onRechercheChange,
 }: {
   id: SectionId;
   state: EditeurState;
-  device: "phone" | "desktop";
+  device: Appareil;
   page: PageId;
   boutiqueNom: string;
   logo: string | null;
   t: (fr: string, en: string) => string;
+  // Compteur incrémenté par le parent (BoutiquePreview) à chaque "Je
+  // commande" — l'entête et "infos"/"paiement" sont des instances séparées
+  // de SectionRendue, donc ce signal redescend en prop (cf. onCommande).
+  panierPulseId?: number;
+  onCommande?: () => void;
+  // Texte tapé dans la barre de recherche de l'entête, levé au parent pour la
+  // même raison que panierPulseId : la grille de produits (case "grille") est
+  // une instance séparée de SectionRendue et doit filtrer sur ce même texte.
+  recherche?: string;
+  onRechercheChange?: (value: string) => void;
 }) {
   const couleurEtoiles = state.style.etoilesCouleur === "principale" ? "var(--ac)" : "#F2A93B";
+  // Anime le panier de l'entête quand panierPulseId change (déclenché par un
+  // clic "Je commande" ailleurs) — ignore le premier rendu pour ne pas
+  // rejouer l'animation à chaque remontage (ex. changement de page) si un
+  // pulse a déjà eu lieu avant.
+  const [panierPulseVisible, setPanierPulseVisible] = useState(false);
+  const panierPulseMonte = useRef(false);
+  // Style "icone" (loupe seule) de la case "entete" ci-dessous : la barre ne
+  // se déplie qu'au clic, local à cette instance (contrairement au texte
+  // tapé, qui doit lui rester levé au parent — cf. prop `recherche`).
+  const [rechercheDepliee, setRechercheDepliee] = useState(false);
+  useEffect(() => {
+    if (!panierPulseMonte.current) {
+      panierPulseMonte.current = true;
+      return;
+    }
+    if (!panierPulseId) return;
+    setPanierPulseVisible(true);
+    const minuteur = setTimeout(() => setPanierPulseVisible(false), 1200);
+    return () => clearTimeout(minuteur);
+  }, [panierPulseId]);
 
-  // Démo interactive du bloc "formulaire" (case ci-dessous) : trois listes
-  // que le client ouvre au clic dans le vrai formulaire de commande.
-  const [communeOuverte, setCommuneOuverte] = useState(false);
-  const [communeRecherche, setCommuneRecherche] = useState("");
-  const [communeChoisie, setCommuneChoisie] = useState("");
-  const [geoloc, setGeoloc] = useState<"repos" | "recherche" | "trouvee" | "refusee">("repos");
-  const [adresseModifiable, setAdresseModifiable] = useState(false);
-  const [adressePrecise, setAdressePrecise] = useState("");
-  const [indicatifOuvert, setIndicatifOuvert] = useState(false);
-  const [indicatifChoisi, setIndicatifChoisi] = useState(INDICATIFS[0]);
-  const [telephone, setTelephone] = useState("");
+  // Démo interactive du bloc "Payer avec" (case "paiement" ci-dessous, cf.
+  // capture utilisateur du 2026-09-21) : Orange Money présélectionné, comme
+  // sur la capture — les mêmes logos que la carte "Reversé sur ce compte"
+  // (PIED_PAIEMENT_APERCU, en tête de fichier).
+  const [methodePaiementChoisie, setMethodePaiementChoisie] = useState(PIED_PAIEMENT_APERCU[0].label);
+
+  // Démo interactive de la carte "Finaliser ma commande" (case "paiement"
+  // ci-dessous) : "Mode de paiement", "Livraison" et le bouton final "Je
+  // commande" étaient des blocs figés (radios jamais cliquables, bouton sans
+  // onClick — cf. retour utilisateur du 2026-09-21, "les boutons ne
+  // fonctionnent pas"). État local (pas un réglage) pour les mêmes raisons
+  // que methodePaiementChoisie ci-dessus : ce sont des choix du visiteur.
+  const [modePaiementChoisi, setModePaiementChoisi] = useState<"en-ligne" | "a-la-livraison">(
+    state.paiement.payerEnLigne ? "en-ligne" : "a-la-livraison"
+  );
+  const [livraisonChoisie, setLivraisonChoisie] = useState<"standard" | "express">("standard");
+  const [commandeFinaliseeEnvoyee, setCommandeFinaliseeEnvoyee] = useState(false);
+  const finaliserCommande = () => {
+    setCommandeFinaliseeEnvoyee(true);
+    onCommande?.();
+    setTimeout(() => setCommandeFinaliseeEnvoyee(false), 1800);
+  };
+
+  // Démo interactive du bloc "faq" (case ci-dessous) : les +/− ouvrent/ferment
+  // la réponse au clic, indépendamment de state.faq (réglages, pas interaction).
+  const [faqOuvertes, setFaqOuvertes] = useState<Record<number, boolean>>({});
+
+  // Démo interactive du bloc "onglets-details" (case ci-dessous) : clic sur un
+  // onglet change le contenu affiché, indépendamment de state.ongletsDetails
+  // (réglages, pas interaction). Remis à 0 si la liste d'onglets change.
+  const [ongletDetailsActif, setOngletDetailsActif] = useState(0);
+
+  // Démo interactive du bloc "galerie" (case ci-dessous) : clic sur une
+  // vignette change la grande image, indépendamment de state.galerie (réglages, pas interaction).
+  const [imageActive, setImageActive] = useState(0);
+  // Démo interactive du bouton zoom (case "galerie" ci-dessous) : clic
+  // agrandit l'illustration dans le cadre existant (overflow-hidden du cadre
+  // sert de fenêtre de recadrage), reclic la remet à sa taille normale.
+  const [zoomActif, setZoomActif] = useState(false);
+  // Démo interactive du badge "Vidéo" (case "galerie" ci-dessous) : clic sur
+  // le bouton play bascule play/pause, purement visuel — pas de vraie vidéo
+  // dans l'aperçu, juste l'affordance attendue d'une vraie vidéo.
+  const [videoEnLecture, setVideoEnLecture] = useState(false);
+  // Démo interactive du bouton "Partager"/"Favoris" (case "infos" ci-dessous) :
+  // partage natif si dispo (mobile/HTTPS), sinon lien copié — comme sur la
+  // vraie fiche produit ; "favori" reste juste un état local basculé au clic.
+  const [favoriActif, setFavoriActif] = useState(false);
+  const [lienCopie, setLienCopie] = useState(false);
+  const partagerProduit = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const data = { title: PRODUIT_APERCU.nom, url };
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share(data);
+      } catch {
+        /* annulé par l'utilisateur — rien à faire */
+      }
+      return;
+    }
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(url);
+      setLienCopie(true);
+      setTimeout(() => setLienCopie(false), 1800);
+    }
+  };
+
+  // Démo interactive de "Contenance"/quantité/"Lire la suite"/"Je commande"
+  // (case "infos" ci-dessous, cf. capture utilisateur du 2026-09-21 : boutons
+  // non branchés) : état local (pas un réglage) puisque ce sont des choix du
+  // visiteur, pas de la boutique.
+  const [variantChoisie, setVariantChoisie] = useState(0);
+  const [quantiteChoisie, setQuantiteChoisie] = useState(1);
+  const [descriptionEtendue, setDescriptionEtendue] = useState(false);
+  const [commandeConfirmee, setCommandeConfirmee] = useState(false);
+  const commander = () => {
+    setCommandeConfirmee(true);
+    onCommande?.();
+    setTimeout(() => setCommandeConfirmee(false), 1800);
+  };
 
   switch (id) {
     case "bandeau": {
@@ -450,10 +1040,10 @@ function SectionRendue({
       };
       return (
         <div
-          className={`relative flex items-center justify-center gap-1.5 px-4 py-2 text-center text-[10.5px] font-medium ${b.resteVisibleEnDefilant ? "sticky top-0 z-10" : ""}`}
+          className={`relative flex items-center justify-center gap-1 px-3 py-1.5 text-center text-[9.5px] font-medium ${b.resteVisibleEnDefilant ? "sticky top-0 z-10" : ""}`}
           style={fondsCouleur[b.couleur]}
         >
-          {b.iconeDevantMessage && <MiniIcon path="M12 3l2 5 5 1-4 3.6 1 5-4.5-2.5L7 17.6l1-5-4-3.6 5-1Z" />}
+          {b.iconeDevantMessage && <MiniIcon path="M12 3l2 5 5 1-4 3.6 1 5-4.5-2.5L7 17.6l1-5-4-3.6 5-1Z" size={11} />}
           <span>{texteAvecChiffres((b.messages[b.messageActif] ?? b.messages[0]).texte)}</span>
           {b.compteARebours && <span className="font-figures-bold opacity-80">· 05:12:33</span>}
           {b.fermable && (
@@ -478,25 +1068,75 @@ function SectionRendue({
         <div
           className={`flex items-center gap-2 px-4 py-2.5 ${positionLogo === "centre" ? "justify-center" : ""} ${
             e.resteVisible !== "non" ? "sticky top-0 z-10" : ""
-          } ${transparent ? "" : "border-b"}`}
-          style={{ borderColor: "color-mix(in srgb, var(--tx) 08%, transparent)", background: transparent ? "transparent" : "var(--bg)" }}
+          }`}
+          style={{ background: transparent ? "transparent" : "var(--bg)" }}
         >
           <Marque logo={logo} taille={tailleLogoPx} />
           {e.nomAvecLogo && <span className="text-[12.5px] font-bold">{boutiqueNom}</span>}
           <div className="ml-auto flex items-center gap-2.5" style={{ color: "var(--tx)" }}>
             {e.rechercheStyle === "barre" ? (
-              <span className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9.5px]" style={{ background: "color-mix(in srgb, var(--tx) 5%, transparent)", color: "var(--tx)", opacity: 0.5 }}>
+              <label className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9.5px]" style={{ background: "color-mix(in srgb, var(--tx) 5%, transparent)", color: "var(--tx)" }}>
                 <MiniIcon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm9 16-4.35-4.35" />
-                {t("Rechercher…", "Search…")}
-              </span>
+                <input
+                  type="text"
+                  value={recherche ?? ""}
+                  onChange={(ev) => onRechercheChange?.(ev.target.value)}
+                  placeholder={t("Rechercher…", "Search…")}
+                  className="w-16 min-w-0 bg-transparent placeholder:opacity-50 focus:outline-none"
+                  style={{ color: "var(--tx)" }}
+                />
+                {recherche && (
+                  <button type="button" aria-label={t("Effacer", "Clear")} onClick={() => onRechercheChange?.("")}>
+                    <MiniIcon path="M6 6l12 12M18 6 6 18" />
+                  </button>
+                )}
+              </label>
+            ) : rechercheDepliee ? (
+              <label className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9.5px]" style={{ background: "color-mix(in srgb, var(--tx) 5%, transparent)", color: "var(--tx)" }}>
+                <MiniIcon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm9 16-4.35-4.35" />
+                <input
+                  type="text"
+                  autoFocus
+                  value={recherche ?? ""}
+                  onChange={(ev) => onRechercheChange?.(ev.target.value)}
+                  onBlur={() => {
+                    if (!recherche) setRechercheDepliee(false);
+                  }}
+                  placeholder={t("Rechercher…", "Search…")}
+                  className="w-16 min-w-0 bg-transparent placeholder:opacity-50 focus:outline-none"
+                  style={{ color: "var(--tx)" }}
+                />
+                <button
+                  type="button"
+                  aria-label={t("Fermer la recherche", "Close search")}
+                  onClick={() => {
+                    onRechercheChange?.("");
+                    setRechercheDepliee(false);
+                  }}
+                >
+                  <MiniIcon path="M6 6l12 12M18 6 6 18" />
+                </button>
+              </label>
             ) : (
-              <MiniIcon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm9 16-4.35-4.35" />
+              <button type="button" aria-label={t("Rechercher", "Search")} onClick={() => setRechercheDepliee(true)}>
+                <MiniIcon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm9 16-4.35-4.35" />
+              </button>
             )}
-            {e.panierStyle === "sac" ? (
-              <MiniIcon path="M5.5 8h13l-1 12.5h-11ZM9 8V6.5a3 3 0 0 1 6 0V8" />
-            ) : (
-              <MiniIcon path="M3 4h2l1.6 11.2A2 2 0 0 0 8.6 17H18a2 2 0 0 0 2-1.6L21.4 8H6" />
-            )}
+            <span className="relative flex items-center">
+              {e.panierStyle === "sac" ? (
+                <MiniIcon path="M5.5 8h13l-1 12.5h-11ZM9 8V6.5a3 3 0 0 1 6 0V8" />
+              ) : (
+                <MiniIcon path="M3 4h2l1.6 11.2A2 2 0 0 0 8.6 17H18a2 2 0 0 0 2-1.6L21.4 8H6" />
+              )}
+              {panierPulseVisible && (
+                <span className="pointer-events-none absolute -right-1 -top-1 flex h-3.5 w-3.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: "var(--ac)" }} />
+                  <span className="relative inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-[7px] font-bold text-white" style={{ background: "var(--ac)" }}>
+                    1
+                  </span>
+                </span>
+              )}
+            </span>
             {e.compte && <MiniIcon path="M12 12.5a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2Zm-6 6a6 6 0 0 1 12 0" />}
             {e.nousEcrire && (
               <span
@@ -541,10 +1181,17 @@ function SectionRendue({
         photo: "linear-gradient(160deg, rgba(11,14,28,.65), rgba(11,14,28,.35)), linear-gradient(135deg, #6B21D6, #0B0E1C)",
       };
       const imagePhone = device === "phone" && h.imageDifferenteSurTelephone;
+      // Photo réellement importée (cf. ReglagesSection.tsx > ChampImage) plutôt
+      // que le dégradé de secours ci-dessus, seulement utilisé tant qu'aucune
+      // photo n'a été choisie.
+      const styleFond: React.CSSProperties =
+        h.typeFond === "photo" && h.image
+          ? { backgroundImage: `linear-gradient(160deg, rgba(11,14,28,.55), rgba(11,14,28,.25)), url(${h.image})`, backgroundSize: "cover", backgroundPosition: "center" }
+          : { background: fonds[h.typeFond] };
       return (
-        <div className="relative overflow-hidden px-6 py-8" style={{ minHeight: minH, background: fonds[h.typeFond], color: textColor }}>
-          {h.courbesLumineuses && (isHalo ? <HaloRayons /> : <HaloCourbes ton={sombre ? "sombre" : "clair"} />)}
-          {/* largeur "page" : contenu centré avec maxWidth, fond reste plein-bord */}
+        <div className="relative overflow-hidden px-14 py-14" style={{ minHeight: minH, ...styleFond, color: textColor }}>
+          {h.courbesLumineuses && isHalo && <HaloRayons />}
+          {/* Contenu toujours centré avec maxWidth (plus étroit en "page" qu'en "pleine") pour que texte et image restent groupés ; le fond reste plein-bord */}
           <div
             className={`relative flex h-full gap-3 ${
               centree
@@ -553,7 +1200,10 @@ function SectionRendue({
                   ? "flex-col items-start"
                   : `items-center ${inverse ? "flex-row-reverse" : ""}`
             }`}
-            style={sec.largeur === "page" ? { maxWidth: device === "phone" ? "100%" : 520, margin: "0 auto" } : undefined}
+            style={{
+              maxWidth: device === "phone" ? "100%" : sec.largeur === "page" ? 520 : 960,
+              margin: "0 auto",
+            }}
           >
             <div className={`min-w-0 flex-1 ${centreTexte ? "flex flex-col items-center text-center" : ""}`}>
               <div className="flex flex-wrap items-center gap-1.5">
@@ -574,17 +1224,18 @@ function SectionRendue({
                 )}
               </div>
               <p
-                className="mt-2 text-[24px] leading-tight"
+                className={`mt-2 leading-tight ${device === "phone" ? "text-[36px]" : "text-[44px]"}`}
                 style={{
                   fontFamily: "var(--font-titre)",
                   fontWeight: "var(--titre-graisse)" as unknown as number,
                   letterSpacing: "var(--titre-espacement)",
                   textTransform: "var(--titre-majuscules)" as React.CSSProperties["textTransform"],
+                  textWrap: "pretty",
                 }}
               >
                 <TitreAvecMotValorise titre={h.titre} mot={h.motValorise} couleur={sombre ? "#FF7AC0" : "var(--ac)"} />
               </p>
-              <p className="mt-1 text-[10px]" style={{ opacity: sombre ? 0.85 : 0.6 }}>
+              <p className="mt-1 text-[10px]" style={{ opacity: sombre ? 0.85 : 0.6, textWrap: "pretty" }}>
                 {t("Des soins naturels pour le visage et le corps, choisis avec soin.", "Natural skincare for face and body, carefully chosen.")}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -611,7 +1262,7 @@ function SectionRendue({
                 )}
               </div>
             </div>
-            <div className="relative flex h-32 w-32 shrink-0 items-center justify-center">
+            <div className={`relative flex shrink-0 items-center justify-center ${device === "phone" ? "h-40 w-40" : "h-64 w-64"}`}>
               <div className="h-full w-full overflow-hidden rounded-2xl">
                 <img
                   src={imagePhone ? "/images/serum2.jpg" : "/images/serum1.avif"}
@@ -624,14 +1275,24 @@ function SectionRendue({
                 />
               </div>
               {h.badge && remise > 0 && (
-                <span className="absolute -top-2 -right-2 rounded-full bg-[#0B0E1C] px-1.5 py-0.5 text-[7.5px] font-figures-bold text-white shadow">
-                  −{remise}%
+                <span className="absolute -top-4 -right-4 flex h-24 w-24 flex-col items-center justify-center gap-0.5 rounded-full bg-white text-center shadow-[0_10px_24px_-6px_rgba(11,14,28,0.35)]">
+                  <span className="text-[16px] font-figures-bold leading-none" style={{ color: "var(--ac)" }}>
+                    −{remise} %
+                  </span>
+                  <span className="px-1.5 text-[8px] font-semibold leading-[1.15]" style={{ color: "color-mix(in srgb, var(--tx) 55%, transparent)" }}>
+                    {t("en payant en ligne", "when paying online")}
+                  </span>
                 </span>
               )}
               {h.note && (
-                <span className="absolute -bottom-2 -left-2 flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[8px] font-semibold text-[#0B0E1C] shadow-[0_8px_18px_-6px_rgba(11,14,28,0.4)]">
-                  <Etoiles note={PRODUIT_APERCU.note} taille={7} couleur={couleurEtoiles} />
-                  <span className="font-figures-bold">{PRODUIT_APERCU.note}</span>
+                <span className="absolute -bottom-4 -left-4 flex flex-col items-start gap-1 rounded-xl bg-white px-4 py-3 shadow-[0_10px_24px_-6px_rgba(11,14,28,0.35)]">
+                  <Etoiles note={PRODUIT_APERCU.note} taille={11} couleur={couleurEtoiles} />
+                  <span className="flex items-baseline gap-1.5 whitespace-nowrap">
+                    <span className="text-[13px] font-figures-bold text-[#0B0E1C]">{PRODUIT_APERCU.note}</span>
+                    <span className="text-[9px] font-medium" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
+                      {texteAvecChiffres(t(`${PRODUIT_APERCU.avisCount} avis clients`, `${PRODUIT_APERCU.avisCount} customer reviews`))}
+                    </span>
+                  </span>
                 </span>
               )}
             </div>
@@ -651,7 +1312,7 @@ function SectionRendue({
       const visibles2 = icones.slice(0, c.nombre).map((it, i) => ({ ...it, label: c.atouts[i] }));
       const enLigne = c.style === "ligne";
       return (
-        <div className={`relative z-10 px-4 ${c.chevaucheGrandeImage ? "-mt-6" : "py-3.5"}`}>
+        <div className={`relative z-10 mx-auto max-w-[820px] px-4 ${c.chevaucheGrandeImage ? "-mt-6" : "py-3.5"}`}>
           <div
             className={`bg-white px-2 ${enLigne ? "flex items-center justify-around gap-1 py-2.5 rounded-2xl" : "grid gap-1 rounded-2xl py-3"}`}
             style={{
@@ -700,7 +1361,7 @@ function SectionRendue({
         </div>
       );
       return (
-        <div className="px-4 py-3.5">
+        <div className="px-6 py-3.5">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-[11px] font-bold">{t(c.titre, c.titre)}</p>
             {c.lienToutVoir && <span className="text-[9px] font-semibold text-brand-pink">{t("Tout voir", "See all")}</span>}
@@ -722,15 +1383,15 @@ function SectionRendue({
       const phone = device === "phone";
       const fond = p.fond === "nuit" ? "linear-gradient(160deg,#170A22,#0B0E1C 65%)" : "linear-gradient(135deg,#6B21D6,#E8207E)";
       return (
-        <div className="px-4 py-3.5">
+        <div className="px-6 py-3.5">
           <div
             className={`overflow-hidden rounded-2xl px-5 py-5 text-white ${
-              phone ? "flex flex-col gap-3" : `flex min-h-[112px] items-center justify-center gap-4 py-6 ${inverse ? "flex-row-reverse" : ""}`
+              phone ? "flex flex-col gap-3" : `flex min-h-[140px] items-center justify-center gap-16 px-12 py-8 ${inverse ? "flex-row-reverse" : ""}`
             }`}
             style={{ background: fond }}
           >
             <div
-              className={phone ? "relative flex h-32 w-full items-end justify-center" : "flex h-28 w-28 shrink-0 items-end justify-center"}
+              className={`relative overflow-hidden rounded-xl ${phone ? "h-32 w-full" : "h-48 w-48 shrink-0"}`}
               style={{
                 maskImage: "radial-gradient(circle, #000 55%, transparent 100%)",
                 WebkitMaskImage: "radial-gradient(circle, #000 55%, transparent 100%)",
@@ -742,15 +1403,11 @@ function SectionRendue({
                   <FeuilleDecor className="absolute right-4 top-2 h-14 w-9 rotate-[18deg]" color="#F5C1DC" opacity={0.35} />
                 </>
               )}
-              {(["flacon", "pompe", "pot"] as const).map((variante, i) => (
-                <div key={variante} className={`h-full ${phone ? "w-24" : "w-1/3"} ${i > 0 ? "-ml-3" : ""}`}>
-                  <ProduitIllustration variante={variante} accent="#fff" />
-                </div>
-              ))}
+              <ProduitIllustration variante="flacon" accent="#fff" />
             </div>
             <div className={phone ? "min-w-0" : "min-w-0 max-w-[76%]"}>
               <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold">{p.petitTexte}</span>
-              <p className="mt-1.5 text-[19px] font-bold leading-tight">{texteAvecChiffres(p.titre)}</p>
+              <p className={`mt-1.5 font-bold leading-tight ${phone ? "text-[19px]" : "text-[24px]"}`}>{texteAvecChiffres(p.titre)}</p>
               {p.sousTitre && <p className="mt-1 text-[9px] leading-snug text-white/75">{p.sousTitre}</p>}
               {p.compteur && (
                 <div className="mt-2 flex gap-1.5">
@@ -783,32 +1440,45 @@ function SectionRendue({
       const dotsCouleurs = ["#0B0E1C", state.style.couleurPrincipale, "#F5C1DC"];
       const titreGrille =
         g.montrer === "meilleures-ventes" ? t("Meilleures ventes", "Best sellers") : g.montrer === "nouveautes" ? t("Nouveautés", "New arrivals") : t("Sélection", "Handpicked");
-      const meilleureVenteIndex = indexMeilleureVente(produits);
+      // Badge calculé sur le pool complet (avant filtre recherche) puis
+      // reporté par nom sur la liste affichée, pour ne pas sauter d'un
+      // produit à l'autre selon ce que le filtre laisse visible.
+      const meilleureVenteNom = produits[indexMeilleureVente(produits)]?.nom;
+      const q = (recherche ?? "").trim().toLowerCase();
+      const produitsAffiches = q
+        ? produits.filter((p) => p.nom.toLowerCase().includes(q) || p.nomEn.toLowerCase().includes(q))
+        : produits;
       return (
-        <div className="px-4 py-3.5">
+        <div className="px-6 py-3.5">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-[11px] font-bold">{titreGrille}</p>
             <span className="text-[9px] font-semibold" style={{ color: "var(--ac)" }}>{t("Tout voir", "See all")}</span>
           </div>
-          <div className={defilement ? `flex ${espace} overflow-x-auto` : `grid ${espace}`} style={defilement ? undefined : { gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
-            {produits.map((p, i) => (
-              <CarteProduit
-                key={p.nom}
-                p={p}
-                g={g}
-                c={c}
-                dotsCouleurs={dotsCouleurs}
-                rayon={rayon}
-                paddingTexte={paddingTexte}
-                couleurEtoiles={couleurEtoiles}
-                scroll={defilement}
-                variante={PRODUIT_ILLUSTRATIONS[i % PRODUIT_ILLUSTRATIONS.length]}
-                badge={i === meilleureVenteIndex ? "populaire" : p.ventes30j === 0 ? "nouveau" : undefined}
-                compact
-                t={t}
-              />
-            ))}
-          </div>
+          {produitsAffiches.length === 0 ? (
+            <p className="py-4 text-center text-[10px] opacity-50">
+              {t(`Aucun produit pour « ${recherche} ».`, `No product for “${recherche}”.`)}
+            </p>
+          ) : (
+            <div className={defilement ? `flex ${espace} overflow-x-auto` : `grid ${espace}`} style={defilement ? undefined : { gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
+              {produitsAffiches.map((p, i) => (
+                <CarteProduit
+                  key={p.nom}
+                  p={p}
+                  g={g}
+                  c={c}
+                  dotsCouleurs={dotsCouleurs}
+                  rayon={rayon}
+                  paddingTexte={paddingTexte}
+                  couleurEtoiles={couleurEtoiles}
+                  scroll={defilement}
+                  variante={PRODUIT_ILLUSTRATIONS[i % PRODUIT_ILLUSTRATIONS.length]}
+                  badge={p.nom === meilleureVenteNom ? "populaire" : p.ventes30j === 0 ? "nouveau" : undefined}
+                  compact
+                  t={t}
+                />
+              ))}
+            </div>
+          )}
         </div>
       );
     }
@@ -833,7 +1503,7 @@ function SectionRendue({
       // donc grille 2×2 (bordure haute sur la 2e rangée, bordure gauche sur la 2e colonne).
       const colsPhone = 2;
       return (
-        <div className="px-4 py-3.5">
+        <div className="px-6 py-3.5">
           <div
             className={device === "phone" ? "grid rounded-lg border px-2.5 py-2.5" : "flex items-stretch rounded-lg border px-2.5 py-2.5"}
             style={{
@@ -883,22 +1553,44 @@ function SectionRendue({
                 {[0, 1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="relative flex items-center justify-center overflow-hidden rounded-lg"
+                    onClick={() => {
+                      setImageActive(i);
+                      // Changer de vignette remet le bouton play (nouvelle "lecture" pas encore lancée).
+                      setVideoEnLecture(false);
+                    }}
+                    className="relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg"
                     style={{
                       aspectRatio: "1/1",
                       background: "color-mix(in srgb, var(--tx) 04%, transparent)",
-                      boxShadow: i === 0 ? "0 0 0 1.5px var(--ac)" : undefined,
+                      boxShadow: i === imageActive ? "0 0 0 1.5px var(--ac)" : undefined,
                     }}
                   >
                     <ProduitIllustration variante={PRODUIT_ILLUSTRATIONS[i % PRODUIT_ILLUSTRATIONS.length]} accent="var(--ac)" />
+                    {/* Seule la 1ère vignette est la vidéo (réglage "Vidéo en lecture
+                        automatique", cf. ReglagesSection.tsx) : les 3 autres sont des
+                        photos, pas d'icône play dessus. */}
+                    {i === 0 && g.lectureAuto && (
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/25">
+                        <MiniIcon path="M9 6l9 6-9 6V6Z" color="#fff" size={9} />
+                      </span>
+                    )}
                   </div>
                 ))}
+                {/* Indice de défilement sous les 4 vignettes (maquette du 2026-09-21) — purement
+                    décoratif ici, l'aperçu ne fait pas défiler d'autres photos que ces 4. */}
+                <span
+                  className="mx-auto flex h-4 w-4 shrink-0 items-center justify-center rounded-full"
+                  style={{ background: "color-mix(in srgb, var(--tx) 06%, transparent)" }}
+                >
+                  <MiniIcon path="M6 9l6 6 6-6" size={9} color="color-mix(in srgb, var(--tx) 40%, transparent)" />
+                </span>
               </div>
             )}
             <div
               className="relative flex flex-1 items-center justify-center overflow-hidden"
               style={{
                 aspectRatio: ratio,
+                maxWidth: 260,
                 background: isHalo
                   ? "linear-gradient(150deg, #F7D9EA, #E9DFF7 55%, #FCE9EF)"
                   : "linear-gradient(150deg, rgba(236,12,140,.10), rgba(58,29,138,.10))",
@@ -906,24 +1598,46 @@ function SectionRendue({
             >
               {/* courbes fines convergeant vers un point lumineux, motif Halo (maquette) */}
               {isHalo && <HaloCourbes />}
-              <div className="relative flex h-full w-full items-center justify-center">
-                <ProduitIllustration variante="flacon" accent="var(--ac)" />
+              <div
+                className="relative flex h-full w-full items-center justify-center transition-transform duration-300"
+                style={{ transform: zoomActif ? "scale(1.6)" : "scale(1)" }}
+              >
+                <ProduitIllustration variante={PRODUIT_ILLUSTRATIONS[imageActive % PRODUIT_ILLUSTRATIONS.length]} accent="var(--ac)" />
               </div>
-              {isHalo && (
-                <span className="absolute -bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[9.5px] font-semibold shadow-[0_10px_24px_-8px_rgba(11,14,28,0.35)]">
-                  <Etoiles note={PRODUIT_APERCU.note} taille={9} couleur={couleurEtoiles} />
-                  <span className="font-figures-bold">{PRODUIT_APERCU.note}</span>
-                </span>
-              )}
               {g.boutonZoom && (
-                <span className="absolute bottom-2.5 right-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/85">
-                  <MiniIcon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14ZM16 16l4 4" color="rgba(0,0,0,.6)" />
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setZoomActif((v) => !v)}
+                  aria-pressed={zoomActif}
+                  aria-label={zoomActif ? t("Dézoomer", "Zoom out") : t("Zoomer", "Zoom in")}
+                  className="absolute bottom-2.5 right-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/85"
+                >
+                  <MiniIcon
+                    path={zoomActif ? "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14ZM16 16l4 4M8 11h6" : "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14ZM16 16l4 4M11 8v6M8 11h6"}
+                    color="rgba(0,0,0,.6)"
+                  />
+                </button>
               )}
-              {g.lectureAuto && (
-                <span className="absolute left-2.5 top-2.5 rounded-full bg-black/45 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur">
-                  {t("Vidéo", "Video")}
-                </span>
+              {/* Badge + bouton play seulement sur la vignette vidéo (index 0)
+                  sélectionnée — les 3 autres sont des photos, pas de vidéo dessus.
+                  Le bouton play disparaît une fois la lecture lancée (comme une
+                  vraie vidéo) plutôt que de rester affiché en permanence. */}
+              {g.lectureAuto && imageActive === 0 && (
+                <>
+                  <span className="absolute left-2.5 top-2.5 rounded-full bg-black/45 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur">
+                    {t("Vidéo", "Video")}
+                  </span>
+                  {!videoEnLecture && (
+                    <button
+                      type="button"
+                      onClick={() => setVideoEnLecture(true)}
+                      aria-label={t("Lire la vidéo", "Play video")}
+                      className="absolute left-1/2 top-1/2 z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 backdrop-blur"
+                    >
+                      <MiniIcon path="M9 6l9 6-9 6V6Z" color="#fff" size={16} />
+                    </button>
+                  )}
+                </>
               )}
               {g.compteur && (
                 <span className="absolute right-2.5 top-2.5 rounded-full bg-black/45 px-2 py-1 text-[9px] font-semibold text-white backdrop-blur font-figures">
@@ -939,25 +1653,25 @@ function SectionRendue({
               )}
             </div>
           </div>
-          {/* barre de confiance qui chevauche le bas de l'image, motif Halo (maquette) */}
-          {isHalo && (
-            <div className="relative z-10 mx-4 -mt-5 flex items-center justify-around gap-1 rounded-2xl bg-white px-2 py-2.5 shadow-[0_14px_30px_-10px_rgba(11,14,28,0.28)]">
-              {CONFIANCE_ITEMS.map((item) => (
-                <div key={item.label} className="flex flex-col items-center gap-1 px-1 text-center">
-                  <MiniIcon path={item.icon} color="#E8207E" />
-                  <span className="text-[7.5px] font-semibold leading-tight" style={{ color: "rgba(0,0,0,.55)" }}>
-                    {t(item.label, item.labelEn)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       );
     }
 
     case "infos": {
       const isHalo = state.style.modele === "halo";
+      // "Bouton de commande" et sa mini barre de confiance vivent normalement
+      // dans la section "paiement" (plus bas, dans le bloc "Finaliser ma
+      // commande") ; la maquette du 2026-09-21 en montre une seconde
+      // occurrence ici, juste sous la quantité — un bouton d'achat rapide en
+      // haut de fiche, en plus du récapitulatif complet plus bas. Libellés
+      // propres à cette carte (délai réel, mode de livraison, remise en
+      // ligne) plutôt que ceux de CONFIANCE_ITEMS, cf. maquette.
+      const remiseEnLigne = state.paiement.remiseEnLignePct;
+      const confianceInfos = [
+        { icon: "M3 11l2-6h14l2 6v2H3Zm2 2v6h2v-6m8 0v6h2v-6", ligne1: t("Livraison 4 h", "4 h delivery"), ligne2: t("en moyenne", "on average"), actif: true },
+        { icon: "M4 7h16v10H4Zm0 3h16", ligne1: t("Paiement", "Payment"), ligne2: t("à la livraison", "on delivery"), actif: state.paiement.payerALaLivraison },
+        { icon: "M3 6.5h18v11H3zM3 10h18", ligne1: t(`−${remiseEnLigne} % en ligne`, `−${remiseEnLigne}% online`), ligne2: t("Mobile money", "Mobile money"), actif: state.paiement.payerEnLigne },
+      ].filter((it) => it.actif);
       return (
         <div className="px-4 py-3.5">
           {state.infos.badgeNouveaute && (
@@ -984,419 +1698,400 @@ function SectionRendue({
               <Etoiles note={PRODUIT_APERCU.note} couleur={couleurEtoiles} /> <span className="font-figures">{PRODUIT_APERCU.note}</span> · <span className="font-figures">{PRODUIT_APERCU.avisCount}</span> {t("avis", "reviews")}
             </p>
           )}
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          <div className="mt-2 flex items-center gap-2">
             <span className="text-[19px] font-figures-bold">{PRODUIT_APERCU.prixVente.toLocaleString("fr-FR")} F</span>
             {state.infos.ancienPrixBarre && (
-              <span className="text-[12px] line-through font-figures" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>
+              <span className="text-[12px] line-through font-figures" style={{ color: "color-mix(in srgb, var(--tx) 40%, transparent)" }}>
                 {PRODUIT_APERCU.prixConseille.toLocaleString("fr-FR")} F
               </span>
             )}
             {state.infos.badgeRemise && (
-              // fond nuit plutôt que rose plein pour le modèle Halo, cf. maquette ("badge de remise sombre")
-              <span className="rounded-full px-2 py-0.5 text-[9px] font-figures-bold text-white" style={{ background: isHalo ? "#0B0E1C" : "#D8347E" }}>
-                −{Math.round((1 - PRODUIT_APERCU.prixVente / PRODUIT_APERCU.prixConseille) * 100)} %
+              // Rectangle sombre "−X % en ligne" (maquette) plutôt que la pastille ronde
+              // précédente — pourcentage de state.paiement.remiseEnLignePct (le même que le
+              // bouton "Payer en ligne" plus bas) plutôt qu'un calcul prix vente/conseillé,
+              // pour rester cohérent avec ce que "en ligne" désigne réellement.
+              <span className="rounded-md px-2 py-1 text-[9.5px] font-figures-bold text-white" style={{ background: "#0B0E1C" }}>
+                −{remiseEnLigne} % {t("en ligne", "online")}
               </span>
             )}
           </div>
-          {/* "Stock restant · Afficher sous" (panneau "Informations produit") : le bloc ne
-              s'affiche que sous ce seuil, pas simplement quand le réglage est activé. */}
-          {state.infos.stockRestant && PRODUIT_APERCU.unitesDisponibles <= state.infos.stockAfficherSousUnites && (
-            <p className="mt-1.5 text-[10px]" style={{ color: "color-mix(in srgb, var(--tx) 5%, transparent)" }}>
-              {texteAvecChiffres(t(`Plus que ${PRODUIT_APERCU.unitesDisponibles} en stock`, `Only ${PRODUIT_APERCU.unitesDisponibles} left in stock`))}
-            </p>
-          )}
           <p className="mt-2 text-[10.5px] leading-relaxed" style={{ color: "color-mix(in srgb, var(--tx) 55%, transparent)" }}>
-            {state.infos.description === "complete"
+            {state.infos.description === "complete" || descriptionEtendue
               ? t(PRODUIT_APERCU.descriptionComplete, PRODUIT_APERCU.descriptionCompleteEn)
               : t(PRODUIT_APERCU.descriptionCourte, PRODUIT_APERCU.descriptionCourteEn)}
           </p>
-          {state.infos.lienConseilsUtilisation && (
-            <a href="#" className="mt-1 inline-block text-[9.5px] font-semibold underline" style={{ color: "var(--ac)" }}>
-              {t("Conseils d'utilisation", "How to use")}
-            </a>
+          {state.infos.description === "courte" && !descriptionEtendue && (
+            <button type="button" onClick={() => setDescriptionEtendue(true)} className="mt-0.5 text-[9.5px] font-semibold underline" style={{ color: "var(--tx)" }}>
+              {t("Lire la suite", "Read more")}
+            </button>
           )}
-          <div className="mt-3">
-            <VariantesApercu presentation={state.infos.variantesPresentation} variantes={PRODUIT_APERCU.variantes} t={t} />
-          </div>
-          {state.infos.quantite && (
-            <div className="mt-2.5 inline-flex items-center gap-3 rounded-full border px-3 py-1 text-[11px]" style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" }}>
-              <span>−</span>
-              <span className="font-figures-bold">1</span>
-              <span>+</span>
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    case "offres":
-      if (!state.offres.actif) return null;
-      return (
-        <div className="px-4 pb-3.5">
-          <p className="mb-1.5 text-[9.5px] font-semibold uppercase tracking-wide" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>
-            {t("Offres par quantité", "Quantity offers")}
-          </p>
-          <div className="flex flex-col gap-1.5">
-            {state.offres.paliers.map((p) => (
-              <div
-                key={p.unites}
-                className="flex items-center justify-between rounded-xl border px-3 py-2"
-                style={p.badge ? { borderColor: "var(--ac)", background: "color-mix(in srgb, var(--ac) 6%, transparent)" } : { borderColor: "color-mix(in srgb, var(--tx) 1%, transparent)" }}
-              >
-                <span className="text-[11px] font-semibold">
-                  <span className="font-figures">{p.unites}</span> {p.unites > 1 ? t("flacons", "bottles") : t("flacon", "bottle")}
-                  {p.badge && <span className="ml-1.5 text-[9px] font-bold" style={{ color: "var(--ac)" }}>· {p.badge}</span>}
-                </span>
-                <span className={p.remisePct > 0 ? "text-[11px] font-figures-bold" : "text-[11px] font-bold"}>{p.remisePct > 0 ? `−${p.remisePct} %` : t("Prix normal", "Regular price")}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-
-    case "formulaire": {
-      const f = state.formulaire;
-      const bordure = { borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" };
-      const boiteBase = f.styleChamps === "ligne" ? "rounded-none border-0 border-b" : f.styleChamps === "plein" ? "rounded-xl border-0" : "rounded-xl border";
-      const boiteClasses = `${boiteBase} px-3 py-2.5`;
-      const boiteStyle = (actif?: boolean): React.CSSProperties =>
-        f.styleChamps === "plein"
-          ? { background: actif ? "color-mix(in srgb, var(--ac) 8%, transparent)" : "color-mix(in srgb, var(--tx) 5%, transparent)" }
-          : { borderColor: actif ? "var(--ac)" : bordure.borderColor };
-      const libelleDansChamp = f.libellesPosition === "dans-le-champ";
-      const libelle = (texte: string) =>
-        libelleDansChamp && <p className="text-[7.5px]" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>{texte}</p>;
-      const labelExterne = (texte: string) =>
-        !libelleDansChamp && (
-          <p className="mb-1 text-[9px] font-medium" style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
-            {texte}
-          </p>
-        );
-      const iconeChamp = (chemin: string) =>
-        f.iconesDansChamps && <MiniIcon path={chemin} color="color-mix(in srgb, var(--tx) 30%, transparent)" />;
-      const iconePersonne = "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 20c0-3.3 3.6-6 8-6s8 2.7 8 6";
-      const iconeLieu = "M12 21s7-5.8 7-11a7 7 0 1 0-14 0c0 5.2 7 11 7 11Z";
-      const iconeTelephone = "M6.5 3h3l1.2 4.5-2 1.6a11 11 0 0 0 5.2 5.2l1.6-2 4.5 1.2v3a2 2 0 0 1-2.2 2A16 16 0 0 1 4.5 5.2 2 2 0 0 1 6.5 3Z";
-      const communesFiltrees = COMMUNES_CI.filter((c) => c.toLowerCase().includes(communeRecherche.toLowerCase()));
-      const localiser = () => {
-        if (typeof navigator === "undefined" || !navigator.geolocation) {
-          setGeoloc("refusee");
-          return;
-        }
-        setGeoloc("recherche");
-        navigator.geolocation.getCurrentPosition(
-          () => {
-            setGeoloc("trouvee");
-            setAdressePrecise(t("Position actuelle du téléphone", "Phone's current position"));
-          },
-          () => setGeoloc("refusee")
-        );
-      };
-      return (
-        <div className="px-4 py-3.5">
-          <p className="mb-2 text-[11px] font-bold">{t("Vos informations", "Your information")}</p>
-          <div className={`grid gap-2 ${f.colonnes === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
-            <div className="col-span-full">
-              {labelExterne(t("Nom et prénom", "Full name"))}
-              <div className={boiteClasses} style={boiteStyle()}>
-                <div className="flex items-center gap-1.5">
-                  {iconeChamp(iconePersonne)}
-                  <div className="min-w-0 flex-1">
-                    {libelleDansChamp ? (
-                      <>
-                        {libelle(t("Nom et prénom", "Full name"))}
-                        <p className="mt-0.5 h-2.5 w-2/3 rounded" style={{ background: "color-mix(in srgb, var(--tx) 08%, transparent)" }} />
-                      </>
-                    ) : (
-                      <p className="text-[10px]" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>{t("Nom et prénom", "Full name")}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 1. Commune — liste + recherche */}
-            <div className={f.colonnes === 2 ? "" : "col-span-full"}>
-              {labelExterne(t("Commune", "District"))}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setCommuneOuverte((v) => !v)}
-                  className={`w-full text-left ${boiteClasses}`}
-                  style={boiteStyle(communeOuverte)}
-                >
-                  <div className="flex items-center gap-1.5">
-                    {iconeChamp(iconeLieu)}
-                    <div className="min-w-0 flex-1">
-                      {libelle(t("Commune", "District"))}
-                      <span className="flex items-center justify-between gap-1">
-                        <span className="truncate text-[10px]" style={{ color: communeChoisie ? "var(--tx)" : "color-mix(in srgb, var(--tx) 4%, transparent)" }}>
-                          {communeChoisie || t("Choisir", "Select")}
-                        </span>
-                        <MiniIcon path="M6 9l6 6 6-6" color="color-mix(in srgb, var(--tx) 30%, transparent)" />
-                      </span>
-                    </div>
-                  </div>
-                </button>
-                {communeOuverte && (
-                  <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[170px] overflow-y-auto rounded-xl border shadow-lg" style={{ ...bordure, background: "var(--bg)" }}>
-                    <div className="flex items-center gap-1.5 border-b px-2.5 py-2" style={{ borderColor: "color-mix(in srgb, var(--tx) 8%, transparent)" }}>
-                      <MiniIcon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm9 16-4.35-4.35" color="color-mix(in srgb, var(--tx) 30%, transparent)" />
-                      <input
-                        value={communeRecherche}
-                        onChange={(e) => setCommuneRecherche(e.target.value)}
-                        placeholder={t("Rechercher une commune", "Search a district")}
-                        className="w-full bg-transparent text-[10px] outline-none"
-                        style={{ color: "var(--tx)" }}
-                      />
-                    </div>
-                    {communesFiltrees.map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => {
-                          setCommuneChoisie(c);
-                          setCommuneOuverte(false);
-                          setCommuneRecherche("");
-                        }}
-                        className="block w-full px-2.5 py-1.5 text-left text-[10px]"
-                        style={c === communeChoisie ? { background: "color-mix(in srgb, var(--ac) 10%, transparent)", color: "var(--ac)", fontWeight: 600 } : { color: "var(--tx)" }}
-                      >
-                        {c}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 2. Adresse précise — remplie/modifiable après "Me localiser" */}
-            <div className={f.colonnes === 2 ? "" : "col-span-full"}>
-              {labelExterne(f.libelleAdressePrecise)}
-              <div className={boiteClasses} style={boiteStyle()}>
-                <div className="flex items-center gap-1.5">
-                  {iconeChamp(iconeLieu)}
-                  <div className="min-w-0 flex-1">
-                    {geoloc === "trouvee" ? (
-                      <>
-                        {libelle(f.libelleAdressePrecise)}
-                        {adresseModifiable ? (
-                          <input
-                            value={adressePrecise}
-                            onChange={(e) => setAdressePrecise(e.target.value)}
-                            onBlur={() => setAdresseModifiable(false)}
-                            autoFocus
-                            placeholder={f.texteExempleAdressePrecise}
-                            className="mt-0.5 w-full bg-transparent text-[10px] outline-none"
-                            style={{ color: "var(--tx)" }}
-                          />
-                        ) : (
-                          <span className="mt-0.5 flex items-center justify-between gap-1">
-                            <span className="flex items-center gap-1 truncate text-[10px]" style={{ color: "var(--tx)" }}>
-                              {!f.iconesDansChamps && <MiniIcon path={iconeLieu} color="var(--ac)" />}
-                              {adressePrecise}
-                            </span>
-                            <button type="button" onClick={() => setAdresseModifiable(true)} className="shrink-0 text-[9.5px] font-semibold underline" style={{ color: "var(--ac)" }}>
-                              {t("Modifier", "Edit")}
-                            </button>
-                          </span>
-                        )}
-                      </>
-                    ) : libelleDansChamp ? (
-                      <>
-                        {libelle(f.libelleAdressePrecise)}
-                        <p className="mt-0.5 truncate text-[10px]" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>{f.texteExempleAdressePrecise}</p>
-                      </>
-                    ) : (
-                      <p className="text-[10px]" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>{f.libelleAdressePrecise}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 3. Téléphone — indicatif pays + numéro */}
-            <div className="col-span-full">
-              {labelExterne(t("Téléphone et indicatif", "Phone and dialing code"))}
-              <div className={`relative flex overflow-visible ${boiteBase}`} style={boiteStyle()}>
-                {f.iconesDansChamps && (
-                  <span className="flex shrink-0 items-center pl-2.5">
-                    <MiniIcon path={iconeTelephone} color="color-mix(in srgb, var(--tx) 30%, transparent)" />
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setIndicatifOuvert((v) => !v)}
-                  className="flex shrink-0 items-center gap-1 border-r px-2.5 py-2.5"
-                  style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" }}
-                >
-                  <span className="text-[12px]">{indicatifChoisi.drapeau}</span>
-                  <span className="text-[10px] font-semibold" style={{ color: "var(--tx)" }}>{indicatifChoisi.code}</span>
-                  <MiniIcon path="M6 9l6 6 6-6" color="color-mix(in srgb, var(--tx) 30%, transparent)" />
-                </button>
-                <input
-                  value={telephone}
-                  onChange={(e) => setTelephone(e.target.value.replace(/[^\d\s]/g, ""))}
-                  placeholder={t("Numéro de téléphone", "Phone number")}
-                  className="flex-1 bg-transparent px-3 py-2.5 text-[10px] outline-none"
-                  style={{ color: "var(--tx)" }}
+          {/* "Stock restant · Afficher sous" (panneau "Informations produit") : le bloc ne
+              s'affiche que sous ce seuil, pas simplement quand le réglage est activé. */}
+          {state.infos.stockRestant && PRODUIT_APERCU.unitesDisponibles <= state.infos.stockAfficherSousUnites && (
+            <div className="mt-2">
+              <p className="text-[10px]" style={{ color: "color-mix(in srgb, var(--tx) 5%, transparent)" }}>
+                {texteAvecChiffres(t(`Plus que ${PRODUIT_APERCU.unitesDisponibles} en stock`, `Only ${PRODUIT_APERCU.unitesDisponibles} left in stock`))}
+              </p>
+              <div className="mt-1 h-1 w-full overflow-hidden rounded-full" style={{ background: "color-mix(in srgb, var(--tx) 8%, transparent)" }}>
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.min(100, Math.round((PRODUIT_APERCU.unitesDisponibles / state.infos.stockAfficherSousUnites) * 100))}%`,
+                    background: "var(--ac)",
+                  }}
                 />
-                {indicatifOuvert && (
-                  <div className="absolute left-0 top-full z-30 mt-1 w-full min-w-[175px] overflow-hidden rounded-xl border shadow-lg" style={{ ...bordure, background: "var(--bg)" }}>
-                    {INDICATIFS.map((ind) => (
-                      <button
-                        key={ind.code}
-                        type="button"
-                        onClick={() => {
-                          setIndicatifChoisi(ind);
-                          setIndicatifOuvert(false);
-                        }}
-                        className="flex w-full items-center justify-between px-2.5 py-1.5 text-left text-[10px]"
-                        style={ind.code === indicatifChoisi.code ? { background: "color-mix(in srgb, var(--ac) 10%, transparent)", color: "var(--ac)", fontWeight: 600 } : { color: "var(--tx)" }}
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <span className="text-[12px]">{ind.drapeau}</span>
-                          {t(ind.pays, ind.paysEn)}
-                        </span>
-                        <span className="font-figures">{ind.code}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
-          </div>
-
-          {f.boutonLocaliser &&
-            (geoloc === "trouvee" ? (
-              <div
-                className="mt-2 flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-semibold"
-                style={{ borderColor: "#1E9E6A", color: "#1E9E6A", background: "color-mix(in srgb, #1E9E6A 6%, transparent)" }}
-              >
-                <MiniIcon path="M5 12l4 4 10-10" color="#1E9E6A" />
-                <span>
-                  {t("Position trouvée", "Position found")}
-                  <br />
-                  <span className="font-normal opacity-80">{t("Adresse précise remplie", "Precise address filled in")}</span>
-                </span>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={localiser}
-                className="mt-2 flex w-full items-center gap-2 rounded-xl border border-dashed px-3 py-2 text-[10.5px] font-semibold"
-                style={{ borderColor: "var(--ac)", color: "var(--ac)" }}
-              >
-                <MiniIcon path="M12 21s7-5.8 7-11a7 7 0 1 0-14 0c0 5.2 7 11 7 11Z" color="var(--ac)" />
-                {geoloc === "recherche" ? t("Recherche en cours…", "Locating…") : t("Me localiser maintenant", "Locate me now")}
-              </button>
-            ))}
-          {geoloc === "refusee" && (
-            <p className="mt-1.5 text-[9.5px]" style={{ color: "#D8347E" }}>
-              {t("Position indisponible, remplis l'adresse précise à la main.", "Location unavailable, fill in the precise address by hand.")}
+          )}
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <p className="text-[9.5px] font-semibold" style={{ color: "color-mix(in srgb, var(--tx) 55%, transparent)" }}>
+              {t("Contenance", "Size")} : {PRODUIT_APERCU.variantes[variantChoisie]}
             </p>
-          )}
-          {f.mentionSpecifique && (
-            <div className="mt-2 rounded-xl border px-3 py-2 text-[9.5px]" style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)", color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>
-              {f.mentionType === "choix"
-                ? t("Choisis une option pour le livreur (facultatif)", "Pick an option for the courier (optional)")
-                : f.mentionType === "date"
-                ? t("Une date à préciser pour le livreur ? (facultatif)", "A date for the courier? (optional)")
-                : t("Une précision pour le livreur ? (facultatif)", "Anything the courier should know? (optional)")}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    case "paiement": {
-      const remise = state.paiement.remiseEnLignePct;
-      const prixLigne = Math.round((PRODUIT_APERCU.prixVente * (100 - remise)) / 100);
-      return (
-        <div className="px-4 pb-3.5">
-          {state.paiement.payerEnLigne && (
-            <button
-              type="button"
-              className="mb-2 flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left"
-              style={{
-                borderWidth: "var(--btn-border)",
-                borderStyle: "solid",
-                borderColor: "var(--ac)",
-                background: "color-mix(in srgb, var(--ac) 6%, transparent)",
-                borderRadius: "var(--rad)",
-                textTransform: "var(--btn-uppercase)" as React.CSSProperties["textTransform"],
-              }}
-            >
-              <span className="text-[11px] font-semibold">{t("Payer en ligne", "Pay online")}</span>
-              <span className="text-[11.5px] font-figures-bold">
-                {prixLigne.toLocaleString("fr-FR")} F
-                {remise > 0 && <span className="ml-1 text-[9px] font-normal line-through font-figures" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>{PRODUIT_APERCU.prixVente.toLocaleString("fr-FR")} F</span>}
-              </span>
-            </button>
-          )}
-          {state.paiement.payerALaLivraison && (
-            <div className="mb-2 flex items-center justify-between gap-2 rounded-xl border px-3.5 py-2.5" style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" }}>
-              <span className="text-[11px] font-semibold">{t("Payer à la livraison", "Pay on delivery")}</span>
-              <span className="text-[11.5px] font-figures-bold">{PRODUIT_APERCU.prixVente.toLocaleString("fr-FR")} F</span>
-            </div>
-          )}
-          <div className="mb-2.5 flex items-center justify-between rounded-xl border px-3.5 py-2.5" style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" }}>
-            <div>
-              <p className="text-[11px] font-semibold">{t("Livraison standard", "Standard delivery")}</p>
-              <p className="text-[9px]" style={{ color: "rgba(0,0,0,.4)" }}>{texteAvecChiffres(t("4 h en moyenne", "4 h on average"))}</p>
-            </div>
-            <span className="text-[10.5px] font-semibold">{t("Incluse", "Included")}</span>
-          </div>
-          {state.paiement.livraisonExpress && (
-            <div className="mb-2.5 flex items-center justify-between rounded-xl border px-3.5 py-2.5" style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" }}>
-              <p className="text-[11px] font-semibold">{t("Livraison express", "Express delivery")}</p>
-              <span className="text-[10.5px] font-figures-bold">+2 000 F</span>
-            </div>
-          )}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className={`flex-1 py-3 text-center text-[12px] font-bold text-white transition hover:brightness-110 ${classeAnimationBoutonCommande(state.mouvements.boutonCommandeAnimation)}`}
-              style={{ background: style_boutonCommandeBg(state), borderRadius: "var(--rad)", textTransform: "var(--btn-uppercase)" as React.CSSProperties["textTransform"] }}
-            >
-              {t(...BOUTON_COMMANDE_LABELS[state.paiement.boutonTexte])}
-              {state.paiement.totalDansBouton && (
-                <>
-                  {" "}
-                  · <span className="font-figures-bold">{(state.paiement.payerEnLigne ? prixLigne : PRODUIT_APERCU.prixVente).toLocaleString("fr-FR")} F</span>
-                </>
-              )}
-            </button>
-            {state.paiement.boutonSecondaire !== "aucun" && (
-              <button
-                type="button"
-                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center border"
-                style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)", borderRadius: "12px" }}
-                aria-label={state.paiement.boutonSecondaire === "favori" ? t("Ajouter aux favoris", "Add to favorites") : t("Partager", "Share")}
-              >
-                <MiniIcon
-                  path={
-                    state.paiement.boutonSecondaire === "favori"
-                      ? "M12 20s-6.2-3.9-8.4-7.6C1.8 9.4 3.6 6 7 6c1.9 0 3.4 1 5 2.8C13.6 7 15.1 6 17 6c3.4 0 5.2 3.4 3.4 6.4C18.2 16.1 12 20 12 20Z"
-                      : "M18 8a3 3 0 1 0-2.8-4M18 16a3 3 0 1 0-2.8 4M6 13.5a3 3 0 1 0 0-3M8.7 11.2l6.6-3.7M8.7 14.8l6.2 3.5"
-                  }
-                  color="var(--tx)"
-                />
-              </button>
+            {state.infos.lienConseilsUtilisation && (
+              <a href="#" className="flex items-center gap-1 text-[9.5px] font-semibold underline" style={{ color: "var(--tx)" }}>
+                <MiniIcon path="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 8h.01M11 11h1v5h1" color="var(--tx)" size={11} />
+                {t("Conseils d'utilisation", "How to use")}
+              </a>
             )}
           </div>
-          {state.paiement.rangeeConfiance && (
-            <div className="mt-2.5 flex items-center justify-around gap-1">
-              {CONFIANCE_ITEMS.map((item) => (
-                <div key={item.label} className="flex flex-col items-center gap-1 px-1 text-center">
-                  <MiniIcon path={item.icon} color="var(--ac)" />
+          <div className="mt-1.5">
+            <VariantesApercu
+              presentation={state.infos.variantesPresentation}
+              variantes={PRODUIT_APERCU.variantes}
+              selectionnee={variantChoisie}
+              onChoisir={setVariantChoisie}
+              t={t}
+            />
+          </div>
+          {state.infos.quantite && (
+            <div className="mt-3 flex items-center gap-2.5">
+              <div className="inline-flex h-[42px] shrink-0 items-center gap-3 rounded-full border px-3.5 text-[11px]" style={{ borderColor: "color-mix(in srgb, var(--tx) 12%, transparent)" }}>
+                <button
+                  type="button"
+                  onClick={() => setQuantiteChoisie((q) => Math.max(1, q - 1))}
+                  aria-label={t("Retirer une unité", "Remove one")}
+                >
+                  −
+                </button>
+                <span className="font-figures-bold">{quantiteChoisie}</span>
+                <button
+                  type="button"
+                  onClick={() => setQuantiteChoisie((q) => Math.min(PRODUIT_APERCU.unitesDisponibles, q + 1))}
+                  aria-label={t("Ajouter une unité", "Add one")}
+                >
+                  +
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={commander}
+                className={`flex h-[42px] flex-1 items-center justify-center gap-2 rounded-full px-4 text-center text-[12px] font-bold text-white transition hover:brightness-110 ${classeAnimationBoutonCommande(state.mouvements.boutonCommandeAnimation)}`}
+                style={{ background: style_boutonCommandeBg(state), textTransform: "var(--btn-uppercase)" as React.CSSProperties["textTransform"] }}
+              >
+                <MiniIcon path="M3 4h2l1.6 11.2A2 2 0 0 0 8.6 17H18a2 2 0 0 0 2-1.6L21.4 8H6" color="#fff" size={14} />
+                {commandeConfirmee ? t("Ajouté !", "Added!") : t(...BOUTON_COMMANDE_LABELS[state.paiement.boutonTexte])}
+              </button>
+              {state.paiement.boutonSecondaire !== "aucun" && (
+                <div className="relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => (state.paiement.boutonSecondaire === "favori" ? setFavoriActif((v) => !v) : partagerProduit())}
+                    className="flex h-[42px] w-[42px] items-center justify-center rounded-full border transition"
+                    style={{
+                      borderColor:
+                        state.paiement.boutonSecondaire === "favori" && favoriActif
+                          ? "transparent"
+                          : "color-mix(in srgb, var(--tx) 12%, transparent)",
+                      background: state.paiement.boutonSecondaire === "favori" && favoriActif ? "#E8207E" : "transparent",
+                    }}
+                    aria-label={state.paiement.boutonSecondaire === "favori" ? t("Ajouter aux favoris", "Add to favorites") : t("Partager", "Share")}
+                    aria-pressed={state.paiement.boutonSecondaire === "favori" ? favoriActif : undefined}
+                  >
+                    <MiniIcon
+                      path={
+                        state.paiement.boutonSecondaire === "favori"
+                          ? "M12 20s-6.2-3.9-8.4-7.6C1.8 9.4 3.6 6 7 6c1.9 0 3.4 1 5 2.8C13.6 7 15.1 6 17 6c3.4 0 5.2 3.4 3.4 6.4C18.2 16.1 12 20 12 20Z"
+                          : "M18 8a3 3 0 1 0-2.8-4M18 16a3 3 0 1 0-2.8 4M6 13.5a3 3 0 1 0 0-3M8.7 11.2l6.6-3.7M8.7 14.8l6.2 3.5"
+                      }
+                      color={state.paiement.boutonSecondaire === "favori" && favoriActif ? "#fff" : "var(--tx)"}
+                    />
+                  </button>
+                  {lienCopie && (
+                    <span
+                      className="absolute right-0 top-[calc(100%+6px)] whitespace-nowrap rounded-lg px-2 py-1 text-[10px] font-semibold text-white"
+                      style={{ background: "#141220" }}
+                    >
+                      {t("Lien copié", "Link copied")}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          {state.paiement.rangeeConfiance && confianceInfos.length > 0 && (
+            <div className="mt-3 flex items-center justify-between gap-1">
+              {confianceInfos.map((it) => (
+                <div key={it.ligne1} className="flex items-center gap-1.5">
+                  <MiniIcon path={it.icon} color="var(--ac)" />
                   <span className="text-[7.5px] font-semibold leading-tight" style={{ color: "color-mix(in srgb, var(--tx) 55%, transparent)" }}>
-                    {t(item.label, item.labelEn)}
+                    {it.ligne1}
+                    <br />
+                    {it.ligne2}
                   </span>
                 </div>
               ))}
             </div>
           )}
+        </div>
+      );
+    }
+
+    // Fusionnée dans la carte "Finaliser ma commande" (case "paiement",
+    // colonne "Vos informations") — cf. commentaire de FormulaireChampsApercu
+    // en tête de fichier.
+    case "formulaire":
+      return null;
+
+    case "paiement": {
+      const remise = state.paiement.remiseEnLignePct;
+      const prixLigne = Math.round((PRODUIT_APERCU.prixVente * (100 - remise)) / 100);
+      const remiseMontant = PRODUIT_APERCU.prixVente - prixLigne;
+      const fraisExpress = 2000;
+      const totalCommande =
+        (modePaiementChoisi === "en-ligne" ? prixLigne : PRODUIT_APERCU.prixVente) +
+        (livraisonChoisie === "express" ? fraisExpress : 0);
+      const carteClasses = `rounded-xl bg-white ${device === "phone" ? "p-2" : "p-2.5"}`;
+      const carteStyle: React.CSSProperties = { boxShadow: "0 6px 16px -10px rgba(20,18,32,.22)" };
+
+      return (
+        <div className={device === "phone" ? "px-2.5 pb-3.5" : "px-4 pb-3.5"}>
+          <div className={device === "phone" ? "rounded-2xl p-2" : "rounded-2xl p-3"} style={{ background: "linear-gradient(180deg,#F6F0FA,#F9F5FC)" }}>
+            <p className="text-[13px] font-extrabold" style={{ color: "#141220" }}>{t("Finaliser ma commande", "Complete my order")}</p>
+            <p className="mt-0.5 text-[9px]" style={{ color: "rgba(20,18,32,.55)" }}>
+              {t("Payez en ligne ou à la livraison, puis indique où te livrer.", "Pay online or on delivery, then tell us where to deliver.")}
+            </p>
+
+            <div className={`mt-2.5 grid gap-2 ${device === "desktop" ? "grid-cols-2" : "grid-cols-1"}`}>
+              {/* Colonne gauche : paiement + livraison */}
+              <div className="flex flex-col gap-2">
+                {/* 1. Mode de paiement */}
+                <div className={carteClasses} style={carteStyle}>
+                  <TitreNumerote n={1} titre={t("Mode de paiement", "Payment method")} />
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {state.paiement.payerEnLigne && (
+                      <button
+                        type="button"
+                        onClick={() => setModePaiementChoisi("en-ligne")}
+                        className="relative flex flex-col items-start gap-0.5 rounded-lg border px-2 py-2 text-left"
+                        style={{
+                          borderWidth: modePaiementChoisi === "en-ligne" ? "var(--btn-border)" : "1px",
+                          borderColor: modePaiementChoisi === "en-ligne" ? "var(--ac)" : "rgba(20,18,32,.12)",
+                          background: modePaiementChoisi === "en-ligne" ? "color-mix(in srgb, var(--ac) 6%, transparent)" : "transparent",
+                        }}
+                      >
+                        {remise > 0 && (
+                          <span className="absolute -right-1 -top-1.5 rounded-full px-1.5 py-0.5 text-[6.5px] font-bold text-white" style={{ background: "var(--ac)" }}>
+                            −{remise} %
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1">
+                          <RadioCercle actif={modePaiementChoisi === "en-ligne"} />
+                          <span className="text-[9px] font-bold" style={{ color: "#141220" }}>{t("Payer en ligne", "Pay online")}</span>
+                        </span>
+                        <span className="pl-[17px] text-[6.5px] leading-tight" style={{ color: "rgba(20,18,32,.45)" }}>{state.paiement.texteRemiseOption}</span>
+                        <span className="pl-[17px] text-[9.5px] font-figures-bold" style={{ color: "#141220" }}>
+                          {prixLigne.toLocaleString("fr-FR")} F
+                          {remise > 0 && (
+                            <span className="ml-1 text-[6.5px] font-normal line-through font-figures" style={{ color: "rgba(20,18,32,.35)" }}>
+                              {PRODUIT_APERCU.prixVente.toLocaleString("fr-FR")} F
+                            </span>
+                          )}
+                        </span>
+                      </button>
+                    )}
+                    {state.paiement.payerALaLivraison && (
+                      <button
+                        type="button"
+                        onClick={() => setModePaiementChoisi("a-la-livraison")}
+                        className="flex flex-col items-start gap-0.5 rounded-lg border px-2 py-2 text-left"
+                        style={{
+                          borderWidth: modePaiementChoisi === "a-la-livraison" ? "var(--btn-border)" : "1px",
+                          borderColor: modePaiementChoisi === "a-la-livraison" ? "var(--ac)" : "rgba(20,18,32,.12)",
+                          background: modePaiementChoisi === "a-la-livraison" ? "color-mix(in srgb, var(--ac) 6%, transparent)" : "transparent",
+                        }}
+                      >
+                        <span className="flex items-center gap-1">
+                          <RadioCercle actif={modePaiementChoisi === "a-la-livraison"} />
+                          <span className="text-[9px] font-bold" style={{ color: "#141220" }}>{t("Payer à la livraison", "Pay on delivery")}</span>
+                        </span>
+                        <span className="pl-[17px] text-[6.5px] leading-tight" style={{ color: "rgba(20,18,32,.45)" }}>
+                          {t("Vous payez à réception", "You pay on receipt")}
+                        </span>
+                        <span className="pl-[17px] text-[9.5px] font-figures-bold" style={{ color: "#141220" }}>
+                          {PRODUIT_APERCU.prixVente.toLocaleString("fr-FR")} F
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. Payer avec */}
+                {state.paiement.payerEnLigne && modePaiementChoisi === "en-ligne" && (
+                  <div className={carteClasses} style={carteStyle}>
+                    <TitreNumerote n={2} titre={t("Payer avec", "Pay with")} />
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {PIED_PAIEMENT_APERCU.map((m) => {
+                        const selectionne = methodePaiementChoisie === m.label;
+                        return (
+                          <button
+                            key={m.label}
+                            type="button"
+                            onClick={() => setMethodePaiementChoisie(m.label)}
+                            className="relative flex flex-col items-center gap-1 rounded-lg border px-1 py-1.5"
+                            style={{
+                              borderWidth: selectionne ? "var(--btn-border)" : "1px",
+                              borderColor: selectionne ? "var(--ac)" : "rgba(20,18,32,.12)",
+                              background: selectionne ? "color-mix(in srgb, var(--ac) 4%, transparent)" : "transparent",
+                            }}
+                          >
+                            {selectionne && (
+                              <span
+                                className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full"
+                                style={{ background: "var(--ac)" }}
+                              >
+                                <MiniIcon path="M5 12l4 4 10-10" color="#fff" size={8} />
+                              </span>
+                            )}
+                            {/* eslint-disable-next-line @next/next/no-img-element -- aperçu, pas une image du domaine */}
+                            <img
+                              src={m.logo}
+                              alt=""
+                              className="h-3.5 w-3.5 object-contain"
+                              style={{ filter: selectionne ? "none" : "grayscale(1)", opacity: selectionne ? 1 : 0.45 }}
+                            />
+                            <span
+                              className="truncate text-center text-[6.5px] font-semibold leading-tight"
+                              style={{ color: selectionne ? "#141220" : "rgba(20,18,32,.45)" }}
+                            >
+                              {m.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Livraison */}
+                <div className={carteClasses} style={carteStyle}>
+                  <TitreNumerote n={3} titre={t("Livraison", "Delivery")} />
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setLivraisonChoisie("standard")}
+                      className="flex flex-col items-start gap-0.5 rounded-lg border px-2 py-2 text-left"
+                      style={{
+                        borderWidth: livraisonChoisie === "standard" ? "var(--btn-border)" : "1px",
+                        borderColor: livraisonChoisie === "standard" ? "var(--ac)" : "rgba(20,18,32,.12)",
+                        background: livraisonChoisie === "standard" ? "color-mix(in srgb, var(--ac) 6%, transparent)" : "transparent",
+                      }}
+                    >
+                      <span className="flex items-center gap-1">
+                        <RadioCercle actif={livraisonChoisie === "standard"} />
+                        <span className="text-[9px] font-bold" style={{ color: "#141220" }}>{t("Livraison standard", "Standard delivery")}</span>
+                      </span>
+                      <span className="pl-[17px] text-[6.5px] leading-tight" style={{ color: "rgba(20,18,32,.45)" }}>
+                        {texteAvecChiffres(t("4 h en moyenne", "4 h on average"))}
+                      </span>
+                      <span className="pl-[17px] text-[8.5px] font-semibold" style={{ color: "#141220" }}>{t("Incluse", "Included")}</span>
+                    </button>
+                    {state.paiement.livraisonExpress && (
+                      <button
+                        type="button"
+                        onClick={() => setLivraisonChoisie("express")}
+                        className="flex flex-col items-start gap-0.5 rounded-lg border px-2 py-2 text-left"
+                        style={{
+                          borderWidth: livraisonChoisie === "express" ? "var(--btn-border)" : "1px",
+                          borderColor: livraisonChoisie === "express" ? "var(--ac)" : "rgba(20,18,32,.12)",
+                          background: livraisonChoisie === "express" ? "color-mix(in srgb, var(--ac) 6%, transparent)" : "transparent",
+                        }}
+                      >
+                        <span className="flex items-center gap-1">
+                          <RadioCercle actif={livraisonChoisie === "express"} />
+                          <span className="text-[9px] font-bold" style={{ color: "#141220" }}>{t("Livraison express", "Express delivery")}</span>
+                        </span>
+                        <span className="pl-[17px] text-[6.5px] leading-tight" style={{ color: "rgba(20,18,32,.45)" }}>{state.paiement.texteExpress}</span>
+                        <span className="pl-[17px] text-[8.5px] font-figures-bold" style={{ color: "#141220" }}>+2 000 F</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Colonne droite : Vos informations + résumé + CTA */}
+              <div className={carteClasses} style={carteStyle}>
+                <TitreNumerote n={4} titre={t("Vos informations", "Your information")} />
+                <FormulaireChampsApercu f={state.formulaire} t={t} />
+
+                <div className="mt-2.5 rounded-lg p-2 text-[8.5px]" style={{ background: "rgba(20,18,32,.03)" }}>
+                  <div className="flex items-center justify-between">
+                    <span style={{ color: "rgba(20,18,32,.6)" }}>{t(PRODUIT_APERCU.nom, PRODUIT_APERCU.nomEn)} × 1</span>
+                    <span className="font-figures-bold" style={{ color: "#141220" }}>{PRODUIT_APERCU.prixVente.toLocaleString("fr-FR")} F</span>
+                  </div>
+                  {modePaiementChoisi === "en-ligne" && remise > 0 && (
+                    <div className="mt-1 flex items-center justify-between">
+                      <span style={{ color: "var(--ac)" }}>{t("Remise paiement en ligne", "Online payment discount")}</span>
+                      <span className="font-figures-bold" style={{ color: "var(--ac)" }}>−{remiseMontant.toLocaleString("fr-FR")} F</span>
+                    </div>
+                  )}
+                  <div className="mt-1 flex items-center justify-between">
+                    <span style={{ color: "rgba(20,18,32,.6)" }}>
+                      {livraisonChoisie === "express" ? t("Livraison express", "Express delivery") : t("Livraison standard", "Standard delivery")}
+                    </span>
+                    <span className="font-semibold font-figures" style={{ color: "#141220" }}>
+                      {livraisonChoisie === "express" ? `+${fraisExpress.toLocaleString("fr-FR")} F` : t("Incluse", "Included")}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 flex items-center justify-between border-t pt-1.5" style={{ borderColor: "rgba(20,18,32,.1)" }}>
+                    <span className="text-[9.5px] font-bold" style={{ color: "#141220" }}>{t("Total", "Total")}</span>
+                    <span className="text-[11.5px] font-figures-bold" style={{ color: "#141220" }}>{totalCommande.toLocaleString("fr-FR")} F</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={finaliserCommande}
+                  className={`mt-2.5 flex w-full items-center justify-center gap-1.5 py-2.5 text-[10.5px] font-bold text-white transition hover:brightness-110 ${classeAnimationBoutonCommande(state.mouvements.boutonCommandeAnimation)}`}
+                  style={{ background: style_boutonCommandeBg(state), borderRadius: "var(--rad)", textTransform: "var(--btn-uppercase)" as React.CSSProperties["textTransform"] }}
+                >
+                  <MiniIcon path="M3 4h2l1.6 11.2A2 2 0 0 0 8.6 17H18a2 2 0 0 0 2-1.6L21.4 8H6" color="#fff" size={12} />
+                  {commandeFinaliseeEnvoyee ? t("Commande envoyée !", "Order sent!") : t(...BOUTON_COMMANDE_LABELS[state.paiement.boutonTexte])} ·{" "}
+                  <span className="font-figures-bold">{totalCommande.toLocaleString("fr-FR")} F</span>
+                </button>
+                <p className="mt-1.5 text-center text-[7.5px]" style={{ color: "rgba(20,18,32,.4)" }}>
+                  {modePaiementChoisi === "en-ligne"
+                    ? t(
+                        `Paiement par ${methodePaiementChoisie} à l'étape suivante`,
+                        `Payment by ${methodePaiementChoisie} at the next step`
+                      )
+                    : t("Vous payez en espèces à réception du colis", "You pay in cash on receipt of the package")}
+                </p>
+              </div>
+            </div>
+
+            {state.paiement.rangeeConfiance && (
+              <div className="mt-3 flex items-center justify-around gap-1">
+                {CONFIANCE_ITEMS.map((item) => (
+                  <div key={item.label} className="flex flex-col items-center gap-1 px-1 text-center">
+                    <MiniIcon path={item.icon} color="var(--ac)" />
+                    <span className="text-[7.5px] font-semibold leading-tight" style={{ color: "rgba(20,18,32,.55)" }}>
+                      {t(item.label, item.labelEn)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       );
     }
@@ -1404,72 +2099,84 @@ function SectionRendue({
     case "onglets-details": {
       const o = state.ongletsDetails;
       const isHalo = state.style.modele === "halo";
-      const estLivraison = /livraison/i.test(o.onglets[0] ?? "");
-      const contenu = estLivraison ? (
-        <p className="text-[10.5px] leading-relaxed" style={{ color: "color-mix(in srgb, var(--tx) 55%, transparent)" }}>
-          {texteAvecChiffres(
-            t(
-              "Livraison en 4 h en moyenne partout en Côte d'Ivoire. Retours acceptés sous 7 jours.",
-              "Delivery in 4 h on average across Ivory Coast. Returns accepted within 7 days."
-            )
+      const actif = Math.min(ongletDetailsActif, o.onglets.length - 1);
+      const texteOnglet = (o.contenus ?? [])[actif];
+      const contenu = (
+        <>
+          {texteOnglet && (
+            <p className="text-[10.5px] leading-relaxed" style={{ color: "color-mix(in srgb, var(--tx) 55%, transparent)" }}>
+              {texteAvecChiffres(texteOnglet)}
+            </p>
           )}
-        </p>
-      ) : o.atoutsAvecIcones ? (
-        <ul className="space-y-1.5">
-          {o.atouts.slice(0, o.nombreAtouts).map((a) => (
-            <li key={a} className="flex items-start gap-1.5 text-[10.5px]" style={{ color: "color-mix(in srgb, var(--tx) 65%, transparent)" }}>
-              <span
-                className="mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full"
-                style={{ background: "color-mix(in srgb, var(--ac) 12%, transparent)" }}
-              >
-                <MiniIcon path="M5 12l4 4 10-10" color="var(--ac)" />
-              </span>
-              {a}
-            </li>
-          ))}
-        </ul>
-      ) : null;
+          {actif === 0 && o.atoutsAvecIcones && (
+            <ul className="space-y-1.5">
+              {o.atouts.slice(0, o.nombreAtouts).map((a) => (
+                <li key={a} className="flex items-start gap-1.5 text-[10.5px]" style={{ color: "color-mix(in srgb, var(--tx) 65%, transparent)" }}>
+                  <MiniIcon path="M5 12l4 4 10-10" color="var(--ac)" size={13} />
+                  {a}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      );
+      const image = o.grandeImage && (
+        <div
+          className="relative flex items-center justify-center overflow-hidden rounded-xl"
+          style={{
+            aspectRatio: device === "phone" ? "16/9" : "1/1",
+            background: isHalo ? "linear-gradient(150deg, #F7D9EA, #E9DFF7 55%, #FCE9EF)" : "color-mix(in srgb, var(--ac) 06%, transparent)",
+          }}
+        >
+          {isHalo && <HaloCourbes />}
+          <ProduitIllustration variante="flacon" accent="var(--ac)" />
+        </div>
+      );
+      const secOnglets = state.sections.find((s) => s.id === "onglets-details");
+      const paddingOnglets = secOnglets?.marges === "petites" ? 8 : secOnglets?.marges === "grandes" ? 24 : 16;
       return (
-        <div className="px-4 py-3.5">
+        <div style={{ padding: paddingOnglets }}>
           {o.presentation === "accordeon" ? (
             <div>
               {o.onglets.map((onglet, i) => (
                 <div key={i} className="border-t py-2 first:border-t-0" style={{ borderColor: "color-mix(in srgb, var(--tx) 08%, transparent)" }}>
-                  <div className="flex items-center justify-between text-[10.5px] font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setOngletDetailsActif(i === actif ? -1 : i)}
+                    className="flex w-full items-center justify-between text-left text-[10.5px] font-semibold"
+                  >
                     <span>{onglet}</span>
-                    <span style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>{i === 0 ? "−" : "+"}</span>
-                  </div>
-                  {i === 0 && <div className="mt-2">{contenu}</div>}
+                    <span style={{ color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}>{i === actif ? "−" : "+"}</span>
+                  </button>
+                  {i === actif && <div className="mt-2 space-y-2">{contenu}</div>}
                 </div>
               ))}
+              {image && <div className="mt-3">{image}</div>}
             </div>
           ) : (
             <>
-              <div className="flex gap-1 rounded-full p-1" style={{ background: "color-mix(in srgb, var(--tx) 05%, transparent)" }}>
+              <div className="flex gap-4 border-b" style={{ borderColor: "color-mix(in srgb, var(--tx) 08%, transparent)" }}>
                 {o.onglets.map((onglet, i) => (
-                  <span
+                  <button
                     key={i}
-                    className="flex-1 truncate rounded-full py-1.5 text-center text-[9.5px] font-semibold"
-                    style={i === 0 ? { background: "var(--ac)", color: "#fff" } : { color: "color-mix(in srgb, var(--tx) 45%, transparent)" }}
+                    type="button"
+                    onClick={() => setOngletDetailsActif(i)}
+                    className={`truncate border-b-2 pb-2 text-[9.5px] ${i === actif ? "font-bold" : "font-medium"}`}
+                    style={
+                      i === actif
+                        ? { color: "var(--tx)", borderColor: "var(--ac)" }
+                        : { color: "color-mix(in srgb, var(--tx) 35%, transparent)", borderColor: "transparent" }
+                    }
                   >
                     {onglet}
-                  </span>
+                  </button>
                 ))}
               </div>
-              <div className="mt-3">{contenu}</div>
+              <div className={device === "phone" ? "mt-3 flex flex-col gap-3" : "mt-3 grid grid-cols-[1fr_120px] items-start gap-3"}>
+                <div className="space-y-2">{contenu}</div>
+                {image}
+              </div>
             </>
-          )}
-          {o.grandeImage && (
-            <div
-              className="relative mt-3 flex items-center justify-center overflow-hidden rounded-xl"
-              style={{
-                aspectRatio: "16/9",
-                background: isHalo ? "linear-gradient(150deg, #F7D9EA, #E9DFF7 55%, #FCE9EF)" : "color-mix(in srgb, var(--tx) 04%, transparent)",
-              }}
-            >
-              {isHalo && <HaloCourbes />}
-              <MiniIcon path="M4 6h4l1.4-2h5.2L16 6h4v12H4Z" color="color-mix(in srgb, var(--tx) 25%, transparent)" />
-            </div>
           )}
         </div>
       );
@@ -1511,7 +2218,7 @@ function SectionRendue({
         </>
       );
       return (
-        <div className="px-4 py-3.5">
+        <div className="px-6 py-3.5">
           <div className="mb-3 flex items-center justify-between gap-2">
             <p className="text-[15px] font-bold">{t("Ce que disent nos clientes", "What our customers say")}</p>
             <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-semibold" style={{ color: "var(--ac)" }}>
@@ -1606,7 +2313,7 @@ function SectionRendue({
       const fq = state.faq;
       const colonnes = device === "phone" ? "grid-cols-1" : fq.colonnes === "deux" ? "grid-cols-2" : "grid-cols-1";
       return (
-        <div className="px-4 py-3.5">
+        <div className="px-6 py-3.5">
           <p className="mb-2 text-[11px] font-bold">{t("Questions fréquentes", "Frequently asked questions")}</p>
 
           {fq.rechercheActivee && (
@@ -1623,11 +2330,14 @@ function SectionRendue({
 
           <div className={`grid ${colonnes} gap-2`}>
             {fq.items.map((q, i) => {
-              const ouverte = i === 0 && fq.premiereOuverte ? true : !!q.ouverte;
+              const parDefaut = i === 0 && fq.premiereOuverte ? true : !!q.ouverte;
+              const ouverte = faqOuvertes[i] ?? parDefaut;
               return (
-                <div
+                <button
                   key={i}
-                  className="rounded-xl border px-2.5 py-2"
+                  type="button"
+                  onClick={() => setFaqOuvertes((s) => ({ ...s, [i]: !ouverte }))}
+                  className="rounded-xl border px-2.5 py-2 text-left"
                   style={{
                     borderColor: ouverte ? "color-mix(in srgb, var(--ac) 30%, transparent)" : "color-mix(in srgb, var(--tx) 08%, transparent)",
                   }}
@@ -1647,7 +2357,7 @@ function SectionRendue({
                       {texteAvecChiffres(q.reponse)}
                     </p>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
@@ -1708,20 +2418,32 @@ function SectionRendue({
       );
     }
 
-    case "vendu-par":
+    case "vendu-par": {
+      const traitVenduPar = "color-mix(in srgb, var(--tx) 10%, transparent)";
+      const iconeVenduPar = "color-mix(in srgb, var(--tx) 30%, transparent)";
       return (
         <div className="mx-4 mb-3.5 flex items-center gap-2.5 rounded-xl border px-3.5 py-3" style={{ borderColor: "color-mix(in srgb, var(--tx) 1%, transparent)", background: "color-mix(in srgb, var(--tx) 02%, transparent)" }}>
           <Marque logo={logo} taille={22} />
-          <div>
+          <div className="shrink-0">
             <p className="text-[8px] uppercase tracking-wide" style={{ color: "color-mix(in srgb, var(--tx) 4%, transparent)" }}>{t("Vendu par", "Sold by")}</p>
             <p className="text-[11.5px] font-bold">{boutiqueNom}</p>
           </div>
+          <div className="flex flex-1 items-center gap-2.5">
+            <span className="h-0 flex-1 border-t border-dashed" style={{ borderColor: traitVenduPar }} />
+            <PhoneIcon color={iconeVenduPar} />
+            <span className="h-0 flex-1 border-t border-dashed" style={{ borderColor: traitVenduPar }} />
+            <MailIcon color={iconeVenduPar} />
+            <span className="h-0 flex-1 border-t border-dashed" style={{ borderColor: traitVenduPar }} />
+            <MapPinIcon color={iconeVenduPar} />
+          </div>
         </div>
       );
+    }
 
     case "pied-de-page": {
       const p = state.piedDePage;
       const isHalo = state.style.modele === "halo";
+      const h = state.grandeImage;
       const fondsPied: Record<EditeurState["piedDePage"]["couleur"], { background: string; color: string; sousTexte: string }> = {
         nuit: { background: isHalo ? "#0B0E1C" : "#1F1328", color: "#CFC6D8", sousTexte: "rgba(255,255,255,.4)" },
         clair: { background: "var(--bg)", color: "var(--tx)", sousTexte: "rgba(0,0,0,.4)" },
@@ -1742,81 +2464,87 @@ function SectionRendue({
       const colsGrille = device === "phone" ? (p.colonnesRepliablesTelephone ? 1 : Math.min(2, nbColonnes)) : nbColonnes;
       return (
         <div className="relative overflow-hidden px-4 py-4 text-[10px]" style={{ background: fond.background, color: fond.color }}>
-          {/* mêmes courbes que la grande image, convergeant vers un point lumineux — motif Halo (maquette) */}
+          {/* Halo : courbes du pied de page nuit (maquette). Autres modèles : reprend
+              ici la même courbe que la grande image, contrôlée par le même
+              interrupteur "Courbes lumineuses" (onglet grande image). */}
           {isHalo && sombreFond && <HaloCourbes ton="sombre" />}
+          {!isHalo && h.courbesLumineuses && <HaloCourbes ton={sombreFond ? "sombre" : "clair"} />}
 
           <div
-            className="relative overflow-hidden rounded-2xl border px-2.5 py-2"
+            className="relative block w-full overflow-hidden rounded-lg border px-4 py-3"
             style={{ borderColor: traitCouleur, background: sombreFond ? "rgba(255,255,255,.03)" : "rgba(0,0,0,.02)" }}
           >
-            <div className={`flex items-start gap-2.5 ${centre ? "flex-col items-center text-center" : ""}`}>
-              {p.logoAffiche && <Marque logo={logo} taille={tailleLogoPx} />}
-              <div className="min-w-0 flex-1">
-                <b className="block text-[12px]" style={{ color: sombreFond ? "#fff" : "var(--tx)" }}>
-                  {boutiqueNom}
-                </b>
-                {p.presentation && (
-                  <p className="mt-0.5 text-[9px] leading-relaxed" style={{ opacity: 0.6 }}>
-                    {t(
-                      "Des soins naturels pour le visage et le corps, préparés avec des recettes sûres.",
-                      "Natural skincare for face and body, made with safe recipes."
+            <div className={`flex gap-4 ${centre ? "flex-col items-center text-center" : "flex-wrap items-start justify-between"}`}>
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <div className={`flex items-start gap-1.5 ${centre ? "flex-col items-center text-center" : ""}`}>
+                  {p.logoAffiche && <Marque logo={logo} taille={tailleLogoPx} />}
+                  <div className="min-w-0">
+                    <b className="block text-[10px]" style={{ color: sombreFond ? "#fff" : "var(--tx)" }}>
+                      {boutiqueNom}
+                    </b>
+                    {p.presentation && (
+                      <p className="mt-0.5 max-w-[220px] text-[7.5px] leading-snug" style={{ opacity: 0.6 }}>
+                        {t(
+                          "Des soins naturels pour le visage et le corps, préparés avec des recettes sûres.",
+                          "Natural skincare for face and body, made with safe recipes."
+                        )}
+                      </p>
                     )}
-                  </p>
+                  </div>
+                </div>
+
+                {p.reseaux && (
+                  <div className={`flex items-center gap-1 ${centre ? "justify-center" : ""}`}>
+                    {PIED_RESEAUX_ICONES.map((path, i) => (
+                      <span
+                        key={i}
+                        className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full"
+                        style={{ background: sombreFond ? "rgba(255,255,255,.1)" : "rgba(0,0,0,.06)" }}
+                      >
+                        <MiniIcon path={path} color={sombreFond ? "#fff" : "var(--tx)"} />
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
+
+              {nbColonnes > 0 && (
+                <div
+                  className="grid gap-x-5 gap-y-2"
+                  style={{
+                    gridTemplateColumns: `repeat(${colsGrille}, max-content)`,
+                    justifyContent: centre ? "center" : "start",
+                  }}
+                >
+                  {groupes.map((g) => (
+                    <div key={g.titre[0]} className={centre ? "text-center" : ""}>
+                      <p className="text-[8.5px] font-bold">{t(...g.titre)}</p>
+                      <div className="mt-0.5 flex flex-col gap-0.5">
+                        {g.liens.map((lien) => (
+                          <span key={lien[0]} className="truncate text-[8px]" style={{ opacity: 0.6 }}>
+                            {t(...lien)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  {p.moyensPaiement && (
+                    <div className={centre ? "text-center" : ""}>
+                      <p className="text-[8.5px] font-bold">{t("Paiement", "Payment")}</p>
+                      <div className={`mt-0.5 grid grid-cols-2 gap-1 ${centre ? "justify-items-center" : ""}`}>
+                        {PIED_PAIEMENT_APERCU.map((m) => (
+                          <span key={m.label} className="flex items-center gap-1 rounded-md px-1 py-0.5" style={{ background: puceCouleur }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element -- aperçu, pas une image du domaine */}
+                            <img src={m.logo} alt="" className="h-2.5 w-2.5 shrink-0 rounded-[3px] object-contain" />
+                            <span className="truncate text-[6.5px] font-semibold">{m.label}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-
-            {p.reseaux && (
-              <div className={`mt-2 flex items-center gap-1.5 ${centre ? "justify-center" : ""}`}>
-                {PIED_RESEAUX_ICONES.map((path, i) => (
-                  <span
-                    key={i}
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
-                    style={{ background: sombreFond ? "rgba(255,255,255,.1)" : "rgba(0,0,0,.06)" }}
-                  >
-                    <MiniIcon path={path} color={sombreFond ? "#fff" : "var(--tx)"} />
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {nbColonnes > 0 && (
-              <div
-                className="mt-2.5 grid gap-x-8 gap-y-2.5 border-t pt-2.5"
-                style={{
-                  gridTemplateColumns: `repeat(${colsGrille}, max-content)`,
-                  justifyContent: centre ? "center" : "start",
-                  borderColor: traitCouleur,
-                }}
-              >
-                {groupes.map((g) => (
-                  <div key={g.titre[0]} className={centre ? "text-center" : ""}>
-                    <p className="text-[9.5px] font-bold">{t(...g.titre)}</p>
-                    <div className="mt-1.5 flex flex-col gap-1">
-                      {g.liens.map((lien) => (
-                        <span key={lien[0]} className="truncate text-[9px]" style={{ opacity: 0.6 }}>
-                          {t(...lien)}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                {p.moyensPaiement && (
-                  <div className={centre ? "text-center" : ""}>
-                    <p className="text-[9.5px] font-bold">{t("Paiement", "Payment")}</p>
-                    <div className={`mt-1.5 grid grid-cols-2 gap-1.5 ${centre ? "justify-items-center" : ""}`}>
-                      {PIED_PAIEMENT_APERCU.map((m) => (
-                        <span key={m.label} className="flex items-center gap-1 rounded-lg px-1.5 py-1" style={{ background: puceCouleur }}>
-                          {/* eslint-disable-next-line @next/next/no-img-element -- aperçu, pas une image du domaine */}
-                          <img src={m.logo} alt="" className="h-3.5 w-3.5 shrink-0 rounded-[3px] object-contain" />
-                          <span className="truncate text-[7.5px] font-semibold">{m.label}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           <div className={`relative mt-3 flex flex-wrap items-center gap-2 ${centre ? "justify-center text-center" : "justify-between"}`}>
@@ -1843,17 +2571,49 @@ function SectionRendue({
     case "bouton-commande-fixe":
       return null;
 
-    // Sections de bibliothèque (cf. AjouterSectionModal.tsx) : pas de mise en
-    // page dédiée pour chacune (18 blocs génériques), un aperçu de type
-    // "espace réservé" suffit à confirmer l'ajout et la position choisie —
-    // "Pour cette section" (largeur/marges/couleurs, cf. SectionRendue plus
-    // haut) et Monter/Descendre/Masquer restent, eux, pleinement fonctionnels.
+    // Sections de bibliothèque (cf. AjouterSectionModal.tsx) : un seul bloc
+    // de contenu générique (titre/texte/image/bouton, réglé dans
+    // ReglagesSection.tsx > case "default") plutôt qu'une mise en page par
+    // type — remplace l'ancien espace réservé qui ne menait à aucun réglage
+    // réel. "Pour cette section" (largeur/marges/couleurs) et
+    // Monter/Descendre/Masquer restent, eux, gérés par SectionRendue plus haut.
     default: {
       const def = SECTIONS_DEFAUT.find((d) => d.id === id)!;
+      const sec = state.sections.find((s) => s.id === id);
+      const titre = sec?.contenuTitre?.trim() || t(def.label, def.labelEn);
+      const texte = sec?.contenuTexte?.trim() ?? "";
+      const image = sec?.contenuImage ?? null;
+      const boutonTexte = sec?.contenuBoutonTexte?.trim() ?? "";
       return (
-        <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-current/20 px-4 py-8 text-center opacity-60">
-          <p className="text-[11px] font-semibold">{t(def.label, def.labelEn)}</p>
-          <p className="text-[9px]">{t("Contenu à personnaliser depuis le panneau de droite.", "Content to customize from the right-hand panel.")}</p>
+        <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
+          {image && (
+            // eslint-disable-next-line @next/next/no-img-element -- aperçu local (data URL), pas une image du domaine
+            <img src={image} alt="" className="max-h-56 w-full max-w-md rounded-2xl object-cover" />
+          )}
+          <p
+            className="text-[15px] leading-tight"
+            style={{
+              fontFamily: "var(--font-titre)",
+              fontWeight: "var(--titre-graisse)" as unknown as number,
+              letterSpacing: "var(--titre-espacement)",
+              textTransform: "var(--titre-majuscules)" as React.CSSProperties["textTransform"],
+            }}
+          >
+            {titre}
+          </p>
+          {texte && (
+            <p className="max-w-md text-[10.5px] leading-relaxed" style={{ opacity: 0.65 }}>
+              {texte}
+            </p>
+          )}
+          {boutonTexte && (
+            <span
+              className={`mt-1 inline-flex items-center whitespace-nowrap px-4 py-2 text-[10.5px] font-semibold text-white ${classeEffetSurvol(state.mouvements.effetSurvol, "hover:brightness-110")}`}
+              style={{ background: "var(--ac)", borderRadius: "var(--rad)", textTransform: "var(--btn-uppercase)" as React.CSSProperties["textTransform"] }}
+            >
+              {boutonTexte}
+            </span>
+          )}
         </div>
       );
     }
@@ -1866,6 +2626,37 @@ function style_boutonCommandeBg(state: EditeurState): string {
   if (boutonCommandeCouleur === "violet") return "linear-gradient(100deg,#6B21D6,#3A1D8A)";
   if (boutonRemplissage === "degrade") return `linear-gradient(100deg, ${couleurPrincipale}, #3A1D8A)`;
   return couleurPrincipale;
+}
+
+function PhoneIcon({ color = "currentColor" }: { color?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3 shrink-0" aria-hidden>
+      <path
+        d="M6 3.5h3l1.3 4-2 1.5a10.5 10.5 0 0 0 5.7 5.7l1.5-2 4 1.3v3a1.5 1.5 0 0 1-1.6 1.5C11.5 18 6 12.5 5.5 6.1A1.5 1.5 0 0 1 6 3.5Z"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function MailIcon({ color = "currentColor" }: { color?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3 shrink-0" aria-hidden>
+      <rect x="3.5" y="5.5" width="17" height="13" rx="2" stroke={color} strokeWidth="1.5" />
+      <path d="m4.5 7 7.5 6 7.5-6" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function MapPinIcon({ color = "currentColor" }: { color?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3 shrink-0" aria-hidden>
+      <path d="M12 21s6.5-6 6.5-11A6.5 6.5 0 0 0 5.5 10c0 5 6.5 11 6.5 11Z" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+      <circle cx="12" cy="10" r="2.2" stroke={color} strokeWidth="1.5" />
+    </svg>
+  );
 }
 
 function Marque({ logo, taille }: { logo: string | null; taille: number }) {
@@ -1934,20 +2725,33 @@ function HaloRayons() {
 }
 
 function TitreAvecMotValorise({ titre, mot, couleur }: { titre: string; mot: string; couleur: string }) {
-  const idx = mot ? titre.toLowerCase().indexOf(mot.toLowerCase()) : -1;
-  if (idx === -1) return <>{titre}</>;
+  const lignes = titre.split("\n");
   return (
     <>
-      {titre.slice(0, idx)}
-      <span style={{ color: couleur }}>{titre.slice(idx, idx + mot.length)}</span>
-      {titre.slice(idx + mot.length)}
+      {lignes.map((ligne, i) => {
+        const idx = mot ? ligne.toLowerCase().indexOf(mot.toLowerCase()) : -1;
+        return (
+          <Fragment key={i}>
+            {i > 0 && <br />}
+            {idx === -1 ? (
+              ligne
+            ) : (
+              <>
+                {ligne.slice(0, idx)}
+                <span style={{ color: couleur }}>{ligne.slice(idx, idx + mot.length)}</span>
+                {ligne.slice(idx + mot.length)}
+              </>
+            )}
+          </Fragment>
+        );
+      })}
     </>
   );
 }
 
-function MiniIcon({ path, color = "currentColor" }: { path: string; color?: string }) {
+function MiniIcon({ path, color = "currentColor", size = 14 }: { path: string; color?: string; size?: number }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-[14px] w-[14px]" aria-hidden>
+    <svg viewBox="0 0 24 24" fill="none" style={{ height: size, width: size }} aria-hidden>
       <path d={path} stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -2002,14 +2806,20 @@ function Etoiles({ note, taille = 10, couleur = "#F2A93B" }: { note: number; tai
 }
 
 // "Variantes · Présentation" (panneau "Informations produit", cf. ReglagesSection.tsx) —
-// première variante toujours mise en avant (choix par défaut), comme l'ancien rendu "cases".
+// `selectionnee`/`onChoisir` (état local du parent, cf. `variantChoisie` dans
+// SectionRendue) plutôt qu'un choix figé sur l'index 0 : cliquable comme sur
+// une vraie fiche produit (cf. capture utilisateur du 2026-09-21).
 function VariantesApercu({
   presentation,
   variantes,
+  selectionnee,
+  onChoisir,
   t,
 }: {
   presentation: EditeurState["infos"]["variantesPresentation"];
   variantes: readonly string[];
+  selectionnee: number;
+  onChoisir: (i: number) => void;
   t: (fr: string, en: string) => string;
 }) {
   const bordureClaire = "color-mix(in srgb, var(--tx) 12%, transparent)";
@@ -2018,19 +2828,21 @@ function VariantesApercu({
     return (
       <div className="flex flex-col gap-1.5">
         {variantes.map((v, i) => (
-          <div
+          <button
             key={v}
-            className="flex items-center gap-2 rounded-xl border px-3 py-2 text-[10.5px] font-semibold"
-            style={i === 0 ? styleChoisi : { borderColor: bordureClaire }}
+            type="button"
+            onClick={() => onChoisir(i)}
+            className="flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-left text-[10.5px] font-semibold"
+            style={i === selectionnee ? styleChoisi : { borderColor: bordureClaire }}
           >
             <span
               className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-[1.5px]"
-              style={i === 0 ? { borderColor: "var(--ac)" } : { borderColor: bordureClaire }}
+              style={i === selectionnee ? { borderColor: "var(--ac)" } : { borderColor: bordureClaire }}
             >
-              {i === 0 && <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--ac)" }} />}
+              {i === selectionnee && <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--ac)" }} />}
             </span>
             {v}
-          </div>
+          </button>
         ))}
       </div>
     );
@@ -2039,13 +2851,15 @@ function VariantesApercu({
     return (
       <div className="flex flex-wrap gap-2">
         {variantes.map((v, i) => (
-          <span
+          <button
             key={v}
+            type="button"
+            onClick={() => onChoisir(i)}
             className="flex h-9 w-9 items-center justify-center rounded-full border text-[8.5px] font-figures-bold leading-tight"
-            style={i === 0 ? styleChoisi : { borderColor: bordureClaire }}
+            style={i === selectionnee ? styleChoisi : { borderColor: bordureClaire }}
           >
             {v.split(" ")[0]}
-          </span>
+          </button>
         ))}
       </div>
     );
@@ -2053,9 +2867,15 @@ function VariantesApercu({
   return (
     <div className="flex flex-wrap gap-1.5">
       {variantes.map((v, i) => (
-        <span key={v} className="rounded-lg border px-3 py-1 text-[10px] font-figures-bold" style={i === 0 ? styleChoisi : { borderColor: bordureClaire }}>
+        <button
+          key={v}
+          type="button"
+          onClick={() => onChoisir(i)}
+          className="rounded-lg border px-3 py-1 text-[10px] font-figures-bold"
+          style={i === selectionnee ? styleChoisi : { borderColor: bordureClaire }}
+        >
           {v}
-        </span>
+        </button>
       ))}
     </div>
   );
@@ -2104,6 +2924,21 @@ function CarteProduit({
   compact?: boolean;
   t: (fr: string, en: string) => string;
 }) {
+  // Démo interactive du coeur "favoris" et du bouton "Commander" de la carte
+  // (grille accueil et "Vous aimerez aussi") : état local par carte, pas un
+  // réglage (state.grille/produitsLies) — ce sont des choix du visiteur, même
+  // logique que favoriActif/commander sur la fiche produit ci-dessus.
+  const [favori, setFavori] = useState(false);
+  const [ajoutee, setAjoutee] = useState(false);
+  const basculerFavori = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFavori((v) => !v);
+  };
+  const commander = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAjoutee(true);
+    setTimeout(() => setAjoutee(false), 1500);
+  };
   const enPromo = g.prixAffiche === "en-ligne" && p.prixNormal > p.prix;
   const etiquette = badge && (
     <span
@@ -2139,9 +2974,19 @@ function CarteProduit({
         )}
         {g.badges && c.positionBadges === "coin" && etiquette && <span className="absolute left-1.5 top-1.5">{etiquette}</span>}
         {g.coeurFavoris && (
-          <span className={`absolute right-1.5 top-1.5 flex items-center justify-center rounded-full bg-white/85 ${iconeTaille}`}>
-            <MiniIcon path="M12 20s-6.2-3.9-8.4-7.6C1.8 9.4 3.6 6 7 6c1.9 0 3.4 1 5 2.8C13.6 7 15.1 6 17 6c3.4 0 5.2 3.4 3.4 6.4C18.2 16.1 12 20 12 20Z" color="var(--ac)" />
-          </span>
+          <button
+            type="button"
+            onClick={basculerFavori}
+            aria-label={favori ? t("Retirer des favoris", "Remove from favorites") : t("Ajouter aux favoris", "Add to favorites")}
+            aria-pressed={favori}
+            className={`absolute right-1.5 top-1.5 flex items-center justify-center rounded-full transition ${iconeTaille}`}
+            style={{ background: favori ? "#E8207E" : "rgba(255,255,255,0.85)" }}
+          >
+            <MiniIcon
+              path="M12 20s-6.2-3.9-8.4-7.6C1.8 9.4 3.6 6 7 6c1.9 0 3.4 1 5 2.8C13.6 7 15.1 6 17 6c3.4 0 5.2 3.4 3.4 6.4C18.2 16.1 12 20 12 20Z"
+              color={favori ? "#fff" : "var(--ac)"}
+            />
+          </button>
         )}
         {c.commandeRapide && (
           <span
@@ -2187,15 +3032,26 @@ function CarteProduit({
           {enPromo && <p className="text-[6px]" style={{ color: "color-mix(in srgb, var(--tx) 40%, transparent)" }}>{t("en payant en ligne", "when paying online")}</p>}
         </div>
         {g.bouton === "texte" && (
-          <span className="mx-2 mt-1 flex items-center justify-center gap-1 rounded-full py-1 text-[7px] font-semibold text-white" style={{ background: "var(--ac)" }}>
+          <button
+            type="button"
+            onClick={commander}
+            className="mx-2 mt-1 flex items-center justify-center gap-1 rounded-full py-1 text-[7px] font-semibold text-white transition hover:brightness-110"
+            style={{ background: "var(--ac)" }}
+          >
             <MiniIcon path="M5.5 8h13l-1 12.5h-11ZM9 8V6.5a3 3 0 0 1 6 0V8" color="#fff" />
-            {t("Commander", "Order")}
-          </span>
+            {ajoutee ? t("Ajoutée !", "Added!") : t("Commander", "Order")}
+          </button>
         )}
         {g.bouton === "icone" && (
-          <span className="mt-1 flex h-4 w-4 items-center justify-center rounded-full" style={{ background: "color-mix(in srgb, var(--ac) 12%, transparent)" }}>
-            <MiniIcon path="M5.5 8h13l-1 12.5h-11ZM9 8V6.5a3 3 0 0 1 6 0V8" color="var(--ac)" />
-          </span>
+          <button
+            type="button"
+            onClick={commander}
+            aria-label={t("Commander", "Order")}
+            className="mt-1 flex h-4 w-4 items-center justify-center rounded-full transition"
+            style={{ background: ajoutee ? "var(--ac)" : "color-mix(in srgb, var(--ac) 12%, transparent)" }}
+          >
+            <MiniIcon path="M5.5 8h13l-1 12.5h-11ZM9 8V6.5a3 3 0 0 1 6 0V8" color={ajoutee ? "#fff" : "var(--ac)"} />
+          </button>
         )}
       </div>
     </div>
