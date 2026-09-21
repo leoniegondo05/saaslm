@@ -665,38 +665,6 @@ function ElementsFlottants({
       </div>
 
       <div>
-        <GroupeTitre label={t("Fenêtre promotionnelle", "Promotional pop-up")} />
-        <div className="mt-1.5 space-y-3">
-          <Ligne label={t("Afficher", "Show")}>
-            <Interrupteur checked={f.popupAfficher} onChange={(v) => maj({ popupAfficher: v })} />
-          </Ligne>
-          <div>
-            <p className="mb-1.5 text-[10.5px] font-medium text-[var(--dashboard-text)]">{t("Apparition", "Trigger")}</p>
-            <SegmentPills
-              options={[
-                ["10s", t("Après 10 s", "After 10s")],
-                ["mi-page", t("À mi-page", "Halfway down")],
-                ["sortie", t("En quittant", "On exit")],
-              ]}
-              value={f.popupApparition}
-              onChange={(v) => maj({ popupApparition: v })}
-            />
-          </div>
-          <div>
-            <p className="mb-1.5 text-[10.5px] font-medium text-[var(--dashboard-text)]">{t("Fréquence", "Frequency")}</p>
-            <SegmentPills
-              options={[
-                ["une-fois", t("Une fois", "Once")],
-                ["chaque-visite", t("Chaque visite", "Every visit")],
-              ]}
-              value={f.popupFrequence}
-              onChange={(v) => maj({ popupFrequence: v })}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div>
         <GroupeTitre label={t("Autres", "Other")} />
         <div className="mt-1.5 space-y-2.5">
           <Ligne label={t('Onglet « Avis » sur le côté', '"Reviews" tab on the side')}>

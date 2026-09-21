@@ -12,23 +12,24 @@ import { useDashboardLangue } from "./DashboardLanguageProvider";
   `position: fixed` sur toute la page, en continu) : ici la scène est
   CONTENUE dans son propre cadre et joue une séquence d'entrée une fois au
   montage (l'astre se lève depuis l'horizon, rayons, reflet qui ondule) avant
-  de retomber dans une respiration ambiante discrète — inspirée de
-  public/images/soleil.png (dégradé jaune→orange, reflet en vaguelettes,
-  oiseaux en chevron), redessinée en CSS pour rester nette à toute taille et
-  suivre les couleurs de la charte (cf. mémoire
+  de retomber dans une respiration ambiante discrète. L'astre lui-même est
+  la vraie photo public/images/soleil.png (jour/aube) ou
+  public/images/lune.png (nuit, disque plein — pas de phase lunaire), recadrée
+  à ras de la sphère (cf. script de crop dans l'historique) et animée en
+  rotation continue lente sur elle-même ; le reste de la scène (halo, rayons,
+  oiseaux/nuages/étoiles) reste dessiné en CSS pour rester net à toute taille
+  et suivre les couleurs de la charte (cf. mémoire
   [[charte-graphique-livre-moi]]).
 
   Change avec l'heure locale du navigateur (cf. getPhaseForHour ci-dessous) :
     - 5h–7h59  "dawn"  : aube — nuages qui dérivent devant un soleil pâle,
                          rayons discrets qui percent dessous/autour.
     - 8h–17h59 "day"   : plein jour — soleil franc, rayons vifs, oiseaux.
-    - 18h–4h59 "night" : nuit — l'astre devient une lune dont la FORME suit
-                         le vrai cycle lunaire du jour (croissant, quartier,
-                         gibbeuse, pleine lune... cf. buildMoonPath), pas
-                         toujours un disque plein, avec cratères sur la
-                         partie éclairée ; pas de rayons, juste un halo
-                         froid ; étoiles qui scintillent au lieu des
-                         oiseaux. Signale "la nuit commence" dès 18h.
+    - 18h–4h59 "night" : nuit — l'astre devient la lune (public/images/lune.png,
+                         disque plein, pas de croissant/quartier) ; pas de
+                         rayons, juste un halo froid ; étoiles qui
+                         scintillent au lieu des oiseaux. Signale "la nuit
+                         commence" dès 18h.
   Recalculé au montage puis toutes les 5 min (PHASE_CHECK_MS) pour suivre un
   changement d'heure si le dashboard reste ouvert — pas de tick seconde par
   seconde, inutile pour un changement qui n'arrive qu'à l'heure pile.
@@ -61,53 +62,6 @@ function getPhaseForHour(hour: number): Phase {
   return "night"; // 18h–4h59 : couvre toute la nuit, pas seulement la soirée
 }
 
-/*
-  Forme réelle de la lune (nuit) : elle n'est pas toujours ronde, elle passe
-  par les phases du cycle synodique (nouvelle lune → croissant → quartier →
-  gibbeuse → pleine lune → ...) — d'où le "souvent en forme de banane"
-  (croissant) demandé. Calculée à partir de la date/heure du navigateur, pas
-  du hasard, donc cohérente avec la vraie lune du jour.
-
-  synodicMonth : durée moyenne d'un cycle lunaire complet (nouvelle lune à
-  nouvelle lune), ~29,53 jours. knownNewMoonUtc : une nouvelle lune de
-  référence connue (6 janv. 2000, 18:14 UTC) — le nombre de cycles écoulés
-  depuis cette date, modulo synodicMonth, donne la phase actuelle (0 =
-  nouvelle lune, 0.5 = pleine lune).
-
-  buildMoonPath dessine le contour de la partie éclairée avec la technique
-  classique "deux arcs" (utilisée par la plupart des générateurs d'icônes de
-  phase lunaire) : un cercle plein de rayon 48 découpé en deux demi-arcs
-  entre le haut (50,2) et le bas (50,98) du viewBox 0-100 ; le second arc a
-  un rayon horizontal `r` qui varie avec cos(phase·2π) et un sens (`sweep`)
-  qui bascule selon le signe — validé aux 4 points de repère : phase 0 (r=48,
-  même sens que le 1er arc) => les deux arcs se superposent, aire nette
-  nulle => nouvelle lune invisible ; phase 0,25 (r=0) => 2e arc dégénère en
-  ligne droite => demi-disque => premier quartier ; phase 0,5 (r=48, sens
-  opposé) => les deux demi-disques opposés recomposent un disque complet =>
-  pleine lune ; entre les deux, la largeur du croissant/de la bosse varie en
-  continu avec |r|.
-*/
-const MOON_SYNODIC_DAYS = 29.530588853;
-const MOON_KNOWN_NEW_MOON_UTC = Date.UTC(2000, 0, 6, 18, 14, 0);
-
-function getMoonPhaseFraction(date: Date): number {
-  const diffDays = (date.getTime() - MOON_KNOWN_NEW_MOON_UTC) / 86_400_000;
-  const cycles = diffDays / MOON_SYNODIC_DAYS;
-  return cycles - Math.floor(cycles); // 0..1, 0 = nouvelle lune, 0.5 = pleine
-}
-
-function buildMoonPath(phaseFraction: number): { path: string; illuminated: number } {
-  const angle = phaseFraction * 2 * Math.PI;
-  const rSigned = 48 * Math.cos(angle);
-  const r = Math.abs(rSigned);
-  const sweep1 = 1;
-  const sweep2 = rSigned >= 0 ? sweep1 : 1 - sweep1;
-  return {
-    path: `M50,2 A48,48 0 1,${sweep1} 50,98 A${r.toFixed(2)},48 0 1,${sweep2} 50,2 Z`,
-    illuminated: (1 - Math.cos(angle)) / 2, // 0 = nouvelle lune, 1 = pleine
-  };
-}
-
 const PHASE_CHECK_MS = 5 * 60 * 1000;
 
 // Couleurs par phase. "day" reprend telles quelles les couleurs déjà
@@ -121,7 +75,6 @@ const PHASE_STYLES: Record<
     haloColor: string;
     rayColor: string;
     rayOpacity: number;
-    orbGradient: string;
     orbGlow: string;
     ariaFr: string;
     ariaEn: string;
@@ -131,7 +84,6 @@ const PHASE_STYLES: Record<
     haloColor: "255,178,150",
     rayColor: "255,190,150",
     rayOpacity: 0.18,
-    orbGradient: "linear-gradient(180deg, #ffe4bb 0%, #ffb199 55%, #ff8f70 100%)",
     orbGlow: "0 0 40px 8px rgba(255,150,140,0.35), 0 0 90px 24px rgba(255,150,140,0.16)",
     ariaFr: "Le jour se lève, un nuage passe : votre journée commence tout doucement.",
     ariaEn: "Dawn is breaking, a cloud drifts by: your day is starting gently.",
@@ -140,7 +92,6 @@ const PHASE_STYLES: Record<
     haloColor: "255,157,31",
     rayColor: "255,176,32",
     rayOpacity: 0.32,
-    orbGradient: "linear-gradient(180deg, #ffcf3d 0%, #ff9d1f 55%, #f9670e 100%)",
     orbGlow: "0 0 60px 10px rgba(255,157,31,0.45), 0 0 110px 30px rgba(255,157,31,0.2)",
     ariaFr: "Le soleil est haut : votre journée bat son plein.",
     ariaEn: "The sun is high: your day is in full swing.",
@@ -149,7 +100,6 @@ const PHASE_STYLES: Record<
     haloColor: "140,150,235",
     rayColor: "170,180,240",
     rayOpacity: 0.1,
-    orbGradient: "linear-gradient(160deg, #eef2fb 0%, #cfd8ea 55%, #9aa5c9 100%)",
     orbGlow: "0 0 40px 8px rgba(140,160,255,0.35), 0 0 90px 24px rgba(140,160,255,0.15)",
     ariaFr: "La lune se lève : la nuit commence.",
     ariaEn: "The moon is rising: night is falling.",
@@ -170,10 +120,6 @@ export default function DashboardDayWelcome() {
   // ci-dessous ; évite un mismatch d'hydratation (même rendu serveur/client
   // au premier passage).
   const [phase, setPhase] = useState<Phase>("day");
-  // Forme de la lune (nuit uniquement) — valeur par défaut arbitraire, sans
-  // effet tant que phase !== "night" (donc jamais visible avant le premier
-  // sync côté client, pas de souci d'hydratation ici).
-  const [moon, setMoon] = useState(() => buildMoonPath(0.5));
   const style = PHASE_STYLES[phase];
 
   const pointerX = useMotionValue(0);
@@ -193,7 +139,6 @@ export default function DashboardDayWelcome() {
     const sync = () => {
       const now = new Date();
       setPhase(getPhaseForHour(now.getHours()));
-      setMoon(buildMoonPath(getMoonPhaseFraction(now)));
     };
     sync();
     const id = setInterval(sync, PHASE_CHECK_MS);
@@ -432,12 +377,17 @@ export default function DashboardDayWelcome() {
             />
           ))}
 
-        {/* Astre : soleil (jour/aube) ou lune (nuit) — se lève depuis
-            l'horizon puis respire doucement. La nuit, le disque plein est
-            remplacé par le croissant/la forme réelle du jour (SVG, cf.
-            buildMoonPath) : le fond de ce cadre passe donc à transparent
-            pour la nuit (sinon le disque plein resterait visible derrière
-            le croissant et annulerait l'effet) — le halo (boxShadow) reste,
+        {/* Astre : photo réelle (public/images/soleil.png jour/aube,
+            public/images/lune.png nuit), recadrée à ras de la sphère à
+            l'import (cf. script de crop) pour que la rotation continue
+            tourne bien AUTOUR du centre de la boule, pas en orbite excentrée
+            dans son cadre carré. Se lève depuis l'horizon puis respire
+            doucement (mêmes animations qu'avant, seul le contenu du disque
+            change). La nuit, l'image est découpée par le même croissant/la
+            même forme réelle du jour (SVG clipPath, cf. buildMoonPath) —
+            fond transparent pour ne rien montrer derrière le croissant — et
+            tourne À L'INTÉRIEUR de ce contour fixe (le clipPath ne tourne
+            pas, seule la texture en dessous) ; le halo (boxShadow) reste,
             rond, comme un vrai halo lunaire indépendant de la forme. */}
         <motion.div
           aria-hidden
@@ -446,14 +396,8 @@ export default function DashboardDayWelcome() {
           initial={reducedMotion ? undefined : { y: 90, opacity: 0, scale: 0.7 }}
           animate={
             reducedMotion
-              ? {
-                  background: phase === "night" ? "transparent" : style.orbGradient,
-                  boxShadow: style.orbGlow,
-                  opacity: 1,
-                  scale: 1,
-                }
+              ? { boxShadow: style.orbGlow, opacity: 1, scale: 1 }
               : {
-                  background: phase === "night" ? "transparent" : style.orbGradient,
                   boxShadow: style.orbGlow,
                   y: risen ? [90, -6, 0] : 90,
                   opacity: risen ? 1 : 0,
@@ -462,45 +406,31 @@ export default function DashboardDayWelcome() {
           }
           transition={
             reducedMotion
-              ? { background: { duration: 0.8 }, boxShadow: { duration: 0.8 } }
+              ? { boxShadow: { duration: 0.8 } }
               : { duration: 1.3, ease: [0.16, 1, 0.3, 1] }
           }
         >
-          {/* Croissant/forme lunaire du jour (nuit) ou reflet chaud (soleil) */}
-          {phase === "night" ? (
-            <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden>
-              <defs>
-                <linearGradient id="moonLit" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#eef2fb" />
-                  <stop offset="55%" stopColor="#cfd8ea" />
-                  <stop offset="100%" stopColor="#9aa5c9" />
-                </linearGradient>
-                <clipPath id="moonClip">
-                  <path d={moon.path} />
-                </clipPath>
-              </defs>
-              {/* Contour discret du disque complet : reste visible même à
-                  la nouvelle lune (illuminated ~0, path quasi invisible)
-                  pour qu'on comprenne "il y a une lune ici", pas un bug. */}
-              <circle cx={50} cy={50} r={48} fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
-              <path d={moon.path} fill="url(#moonLit)" />
-              {/* Cratères, uniquement sur la portion éclairée (clip = même
-                  contour que la partie lumineuse). */}
-              <g clipPath="url(#moonClip)">
-                <circle cx={62} cy={30} r={7} fill="#9aa5c9" opacity={0.5} />
-                <circle cx={32} cy={58} r={5} fill="#9aa5c9" opacity={0.4} />
-                <circle cx={60} cy={68} r={4} fill="#9aa5c9" opacity={0.45} />
-              </g>
-            </svg>
-          ) : (
-            <motion.div
-              aria-hidden
-              className="absolute inset-0 rounded-full"
-              animate={
+          <div className="absolute inset-0 overflow-hidden rounded-full">
+            <motion.img
+              src={phase === "night" ? "/images/lune.png" : "/images/soleil.png"}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+              animate={reducedMotion ? undefined : { rotate: 360 }}
+              transition={
                 reducedMotion
                   ? undefined
-                  : { scale: [1, 1.035, 1] }
+                  : { duration: phase === "night" ? 140 : 90, repeat: Infinity, ease: "linear" }
               }
+            />
+            {/* Voile pâle à l'aube (soleil moins franc que le plein jour,
+                même photo pour les deux phases). */}
+            {phase === "dawn" && <div className="absolute inset-0 rounded-full bg-white/30" />}
+            {/* Reflet fixe (ne tourne pas avec la texture — c'est la lumière
+                ambiante, pas la surface de l'astre) : chaud le jour/l'aube,
+                froid et discret la nuit. */}
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              animate={reducedMotion ? undefined : { scale: [1, 1.035, 1] }}
               transition={
                 reducedMotion
                   ? undefined
@@ -508,10 +438,12 @@ export default function DashboardDayWelcome() {
               }
               style={{
                 background:
-                  "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55), transparent 55%)",
+                  phase === "night"
+                    ? "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.25), transparent 55%)"
+                    : "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55), transparent 55%)",
               }}
             />
-          )}
+          </div>
         </motion.div>
       </motion.div>
     </div>

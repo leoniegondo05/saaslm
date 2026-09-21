@@ -647,6 +647,7 @@ function Corps({
           <GroupeTitre label={t("Contenu", "Content")} />
           <Champ label={t("Petit texte", "Small text")} value={p.petitTexte} onChange={(v) => majPromo({ petitTexte: v })} />
           <Champ label={t("Titre", "Title")} value={p.titre} onChange={(v) => majPromo({ titre: v })} />
+          <Champ label={t("Sous-titre", "Subtitle")} value={p.sousTitre} onChange={(v) => majPromo({ sousTitre: v })} />
           <Champ label={t("Fin de l'offre", "Offer ends")} value={p.finOffre} onChange={(v) => majPromo({ finOffre: v })} />
           <Champ label={t("Bouton", "Button")} value={p.boutonTexte} onChange={(v) => majPromo({ boutonTexte: v })} />
           <Selecteur
