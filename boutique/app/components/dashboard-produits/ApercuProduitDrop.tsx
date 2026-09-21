@@ -35,14 +35,17 @@ export default function ApercuProduitDrop({ produit }: { produit: DropProduit })
         {categorieLabel}
       </Link>
 
-      <div className="relative mt-4 flex min-h-[70vh] flex-col justify-end overflow-hidden rounded-3xl bg-[var(--dashboard-card-bg)] p-6 text-white">
-        <ProduitCarousel images={produit.images ?? []} />
-        {/* Dégradé produit : fondu vers le noir pour la lisibilité du texte.
-            Vide tant que le produit n'a pas de photos, cf.
-            [[dashboard-mock-data-pending-laravel-api]]. */}
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(217,217,217,0)_40%,#000000_92%)]" />
-        <div className="relative">
-          <div className="mb-2.5 flex flex-wrap gap-1.5">
+      {/* ── Galerie + infos côte à côte ── */}
+      <div className="mt-4 grid items-start gap-8" style={{ gridTemplateColumns: 'minmax(0, 1fr) 340px' }}>
+
+        {/* Galerie (colonne gauche) */}
+        <div className="min-w-0">
+          <ProduitCarousel images={produit.images ?? []} />
+        </div>
+
+        {/* Infos produit (colonne droite) */}
+        <div>
+          <div className="flex flex-wrap gap-1.5">
             <Tag tone="pink">{produit.source === "L" ? t("Drop LM", "LM drop") : t("Partenaire", "Partner")}</Tag>
             {produit.unitesDisponibles !== undefined && (
               <Tag tone="neutral">
@@ -50,24 +53,24 @@ export default function ApercuProduitDrop({ produit }: { produit: DropProduit })
               </Tag>
             )}
           </div>
-          <p className="text-3xl font-semibold tracking-tight">{texteAvecChiffres(t(produit.nom, produit.nomEn ?? produit.nom))}</p>
-          <p className="mt-1 text-xs text-white/60">
+          <p className="mt-3 text-2xl font-semibold tracking-tight">{texteAvecChiffres(t(produit.nom, produit.nomEn ?? produit.nom))}</p>
+          <p className="mt-1 text-xs text-[var(--dashboard-text)]/50">
             {texteAvecChiffres([categorieLabel, conditionnementLabel, produit.contenance].filter(Boolean).join(" · "))}
           </p>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+          <div className="mt-5 flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setInteresse(true)}
               disabled={interesse}
               aria-pressed={interesse}
               className={`rounded-full px-5 py-3 text-sm font-semibold transition ${
-                interesse ? "bg-white/15 text-white" : "bg-white text-[#141220] hover:brightness-95"
+                interesse ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)]/60" : "bg-[#141220] text-white hover:brightness-95 dark:bg-brand-pink"
               }`}
             >
               {interesse ? t("Intérêt enregistré", "Interest saved") : t("Je suis intéressé", "I'm interested")}
             </button>
           </div>
-          <p className="mt-2 text-[11px] text-white/50">
+          <p className="mt-2 text-[11px] text-[var(--dashboard-text)]/50">
             {t("Ce sont des articles à venir : dites que ça vous intéresse.", "These are upcoming products: let us know you're interested.")}
           </p>
         </div>

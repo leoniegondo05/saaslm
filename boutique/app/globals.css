@@ -61,6 +61,26 @@
 }
 
 /*
+  Mise en page deux colonnes : galerie produit (gauche, flex) + infos (droite,
+  340 px fixe). Utilisée dans ApercuProduitDrop et FicheProduitDrop.
+  Classe CSS native pour contourner les limites de génération JIT des
+  grid-cols arbitraires en Tailwind v4.
+*/
+.product-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  align-items: start;
+}
+@media (min-width: 768px) {
+  .product-layout {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 2rem;
+  }
+}
+
+/*
   Filet de sécurité : garantit que TOUT chiffre affiché n'importe où dans le
   dashboard utilise la même police système "SF Pro Display" que ci-dessus,
   même sur un élément où personne n'a pensé à poser la classe "font-figures"

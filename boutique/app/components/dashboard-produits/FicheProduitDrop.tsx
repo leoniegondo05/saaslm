@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Card, ProduitCarousel, Tag, texteAvecChiffres } from "../dashboard-accueil/shared";
 import type { DropProduit } from "./dropCatalogue";
 import { getCategoryLabelEn } from "./dropCatalogue";
@@ -26,8 +26,7 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
   const { t, langue } = useDashboardLangue();
   const F = (n: number) => `${Math.round(n).toLocaleString(langue === "EN" ? "en-US" : "fr-FR")} F`;
   const [monPrix, setMonPrix] = useState(produit.prixVenteActuel ?? produit.prixConseille ?? produit.prixDrop ?? 0);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoProgressPct, setVideoProgressPct] = useState(0);
+
   const [produitChoisi, setProduitChoisi] = useState(false);
   const [misDeCote, setMisDeCote] = useState(false);
   const commission = Math.round(monPrix * TAUX_COMMISSION);
@@ -53,39 +52,17 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
         {categorieLabel}
       </Link>
 
-      <div className="relative mt-4 flex min-h-[280px] flex-col justify-end overflow-hidden rounded-3xl bg-[var(--dashboard-card-bg)] p-6 text-white">
-        {/* Vidéo produit en arrière-plan (upload partenaire, cf.
-            ajouter-produit/MediaProduit.tsx). Aucune pour l'instant, cf.
-            [[dashboard-mock-data-pending-laravel-api]] : la carte reste alors
-            juste le dégradé, comme avant. */}
-        {produit.videoUrl && (
-          <video
-            ref={videoRef}
-            src={produit.videoUrl}
-            className="absolute inset-0 h-full w-full object-cover"
-            muted
-            loop
-            autoPlay
-            playsInline
-            onTimeUpdate={(e) => {
-              const v = e.currentTarget;
-              setVideoProgressPct(v.duration ? (v.currentTime / v.duration) * 100 : 0);
-            }}
-          />
-        )}
-        {/* Photo produit devant la vidéo (carousel, cf. shared.tsx). Vide tant
-            que le produit n'a pas de photos, cf.
-            [[dashboard-mock-data-pending-laravel-api]]. */}
-        <ProduitCarousel images={produit.images ?? []} />
-        {/* Dégradé produit : fondu vers le noir pour la lisibilité du texte. */}
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(217,217,217,0)_40%,#000000_92%)]" />
-        {produit.videoUrl && (
-          <div className="pointer-events-none absolute inset-x-4 bottom-0 h-[3px] overflow-hidden rounded-full bg-white/90">
-            <span className="absolute inset-y-0 left-0 rounded-full bg-brand-pink" style={{ width: `${videoProgressPct}%` }} />
-          </div>
-        )}
-        <div className="relative">
-          <div className="mb-2.5 flex flex-wrap gap-1.5">
+      {/* ── Galerie + infos côte à côte ── */}
+      <div className="mt-4 grid items-start gap-8" style={{ gridTemplateColumns: 'minmax(0, 1fr) 340px' }}>
+
+        {/* Galerie (colonne gauche) */}
+        <div className="min-w-0">
+          <ProduitCarousel images={produit.images ?? []} videoUrl={produit.videoUrl} />
+        </div>
+
+        {/* Infos produit (colonne droite) */}
+        <div>
+          <div className="flex flex-wrap items-center gap-1.5">
             <Tag tone="pink">{produit.source === "L" ? t("Drop LM", "LM drop") : t("Partenaire", "Partner")}</Tag>
             {produit.unitesDisponibles !== undefined && (
               <Tag tone="neutral">
@@ -94,8 +71,8 @@ export default function FicheProduitDrop({ produit }: { produit: DropProduit }) 
             )}
             <Tag tone="neutral">{t("Réf.", "Ref.")} {produit.slug.slice(0, 8).toUpperCase()}</Tag>
           </div>
-          <p className="text-3xl font-semibold tracking-tight">{texteAvecChiffres(t(produit.nom, produit.nomEn ?? produit.nom))}</p>
-          <p className="mt-1 text-xs text-white/60">
+          <p className="mt-3 text-2xl font-semibold tracking-tight">{texteAvecChiffres(t(produit.nom, produit.nomEn ?? produit.nom))}</p>
+          <p className="mt-1 text-xs text-[var(--dashboard-text)]/50">
             {texteAvecChiffres([categorieLabel, conditionnementLabel, produit.contenance].filter(Boolean).join(" · "))}
           </p>
         </div>

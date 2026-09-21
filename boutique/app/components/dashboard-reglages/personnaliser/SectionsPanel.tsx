@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
 import AjouterSectionModal from "./AjouterSectionModal";
-import { SECTIONS_DEFAUT, ajouterSection, appartientPage, deplacerSection, supprimerSection } from "./types";
+import { SECTIONS_DEFAUT, ajouterSection, appartientPage, deplacerSection, reordonnerSections, supprimerSection } from "./types";
 import type { EditeurState, PageId, SectionId } from "./types";
 import type { BoutiqueReglageId } from "./ReglagesBoutique";
 import { BOUTIQUE_REGLAGES_DEFAUT } from "./ReglagesBoutique";
@@ -72,6 +73,14 @@ export default function SectionsPanel({
   // "commande" est repliable (chevron dans la maquette), "produit" reste
   // toujours ouvert.
   const [groupesReplies, setGroupesReplies] = useState<Partial<Record<"produit" | "commande", boolean>>>({});
+  // Glisser-déposer (cf. reordonnerSections dans types.ts) : `dragId` est la
+  // section en cours de déplacement, `survolId` celle actuellement survolée
+  // (affiche une ligne d'insertion juste au-dessus). Les boutons Monter/
+  // Descendre restent à côté — plus fiables au clavier/tactile, le
+  // glisser-déposer ne les remplace pas.
+  const [dragId, setDragId] = useState<SectionId | null>(null);
+  const [survolId, setSurvolId] = useState<SectionId | null>(null);
+  const estDeplacable = (id: SectionId) => id !== "pied-de-page" && id !== "bouton-commande-fixe";
 
   const toggleVisible = (id: SectionId) =>
     setState((s) => ({
@@ -127,8 +136,12 @@ export default function SectionsPanel({
             const nouvellePaire = !!cle && cle !== clePrecedente;
             const pere = cle ? PARENT_ENFANTS[cle] : null;
             const replie = !!(pere?.repliable && cle && groupesReplies[cle]);
+            const cetteSectionDeplacable = estDeplacable(sec.id);
             return (
-              <div key={sec.id}>
+              <motion.div key={sec.id} layout="position" transition={{ type: "spring", stiffness: 600, damping: 45 }}>
+                {survolId === sec.id && dragId && dragId !== sec.id && (
+                  <div className="mx-1 h-0.5 rounded-full bg-brand-pink" />
+                )}
                 {nouvellePaire && pere && (
                   <div className="mb-1 mt-3 flex items-center gap-1.5 rounded-xl bg-[var(--dashboard-text)]/[0.05] px-2 py-1.5 first:mt-0">
                     <span className="shrink-0 text-[var(--dashboard-text)]/45">
@@ -159,12 +172,42 @@ export default function SectionsPanel({
                 )}
                 {!replie && (
                 <div
+                  draggable={cetteSectionDeplacable}
+                  onDragStart={(e) => {
+                    if (!cetteSectionDeplacable) return;
+                    setDragId(sec.id);
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragOver={(e) => {
+                    if (!dragId || !cetteSectionDeplacable || dragId === sec.id) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    setSurvolId(sec.id);
+                  }}
+                  onDragLeave={() => setSurvolId((s) => (s === sec.id ? null : s))}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (dragId && dragId !== sec.id) {
+                      setState((s) => ({ ...s, sections: reordonnerSections(s.sections, page, dragId, sec.id) }));
+                    }
+                    setDragId(null);
+                    setSurvolId(null);
+                  }}
+                  onDragEnd={() => {
+                    setDragId(null);
+                    setSurvolId(null);
+                  }}
                   className={`group flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-left transition ${cle ? "ml-3" : ""} ${
                     sectionChoisie === sec.id
                       ? "bg-brand-pink/10 ring-1 ring-brand-pink/40"
                       : "hover:bg-[var(--dashboard-text)]/[0.04]"
-                  } ${!sec.visible ? "opacity-45" : ""}`}
+                  } ${!sec.visible ? "opacity-45" : ""} ${dragId === sec.id ? "opacity-40" : ""}`}
                 >
+                  {cetteSectionDeplacable && (
+                    <span className="shrink-0 cursor-grab text-[var(--dashboard-text)]/25 active:cursor-grabbing" aria-hidden>
+                      <PoigneeIcon />
+                    </span>
+                  )}
                   <button
                     type="button"
                     onClick={() => setSectionChoisie(sec.id)}
@@ -225,7 +268,7 @@ export default function SectionsPanel({
                   )}
                 </div>
                 )}
-              </div>
+              </motion.div>
             );
           })}
 
@@ -323,6 +366,19 @@ function BoutiqueMenu({
         })}
       </div>
     </div>
+  );
+}
+
+function PoigneeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 shrink-0" aria-hidden>
+      <circle cx="9" cy="6.5" r="1.4" />
+      <circle cx="9" cy="12" r="1.4" />
+      <circle cx="9" cy="17.5" r="1.4" />
+      <circle cx="15" cy="6.5" r="1.4" />
+      <circle cx="15" cy="12" r="1.4" />
+      <circle cx="15" cy="17.5" r="1.4" />
+    </svg>
   );
 }
 

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
 import { useDashboardBoutiqueLogo } from "../../DashboardBoutiqueLogoProvider";
-import type { EditeurState, SectionId } from "./types";
+import { ICONE_PAGE_LIBRE } from "./types";
+import type { EditeurState, PageEntree, PixelRegieId, SectionId, VersionSnapshot } from "./types";
 
 /*
   Onglet "Boutique" de l'éditeur (troisième onglet à côté de "Sections" et
@@ -72,12 +73,17 @@ export default function ReglagesBoutique({
   onOuvrirSection,
   state,
   setState,
+  versions,
+  onRestaurerVersion,
 }: {
   reglageBoutique: BoutiqueReglageId;
   /** Bascule l'éditeur sur l'onglet "Sections" et sélectionne cette section (ex. "Grande image" de l'accueil) — cf. PersonnaliserBoutique.tsx. */
   onOuvrirSection?: (sectionId: SectionId) => void;
   state: EditeurState;
   setState: (updater: (s: EditeurState) => EditeurState) => void;
+  /** Instantanés pris à chaque "Enregistrer" (cf. PersonnaliserBoutique.tsx) — le plus récent en premier. */
+  versions: VersionSnapshot[];
+  onRestaurerVersion: (id: string) => void;
 }) {
   const { t } = useDashboardLangue();
   const def = BOUTIQUE_REGLAGES_DEFAUT.find((r) => r.id === reglageBoutique)!;
@@ -98,19 +104,19 @@ export default function ReglagesBoutique({
       </div>
       <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-0.5">
         {reglageBoutique === "identite" ? (
-          <IdentiteReglages />
+          <IdentiteReglages state={state} setState={setState} onOuvrirSection={onOuvrirSection} />
         ) : reglageBoutique === "pages" ? (
-          <PagesEtModeles onOuvrirSection={onOuvrirSection} />
+          <PagesEtModeles state={state} setState={setState} onOuvrirSection={onOuvrirSection} />
         ) : reglageBoutique === "flottants" ? (
           <ElementsFlottants state={state} setState={setState} />
         ) : reglageBoutique === "apres-commande" ? (
-          <ApresLaCommande />
+          <ApresLaCommande state={state} setState={setState} />
         ) : reglageBoutique === "referencement" ? (
-          <ReferencementEtPartage />
+          <ReferencementEtPartage state={state} setState={setState} />
         ) : reglageBoutique === "versions" ? (
-          <VersionsEtProgrammation />
+          <VersionsEtProgrammation state={state} setState={setState} versions={versions} onRestaurerVersion={onRestaurerVersion} />
         ) : reglageBoutique === "pixels" ? (
-          <PixelsPublicitaires />
+          <PixelsPublicitaires state={state} setState={setState} />
         ) : (
           <Placeholder />
         )}
@@ -167,15 +173,21 @@ function Ligne({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function IdentiteReglages() {
+function IdentiteReglages({
+  state,
+  setState,
+  onOuvrirSection,
+}: {
+  state: EditeurState;
+  setState: (updater: (s: EditeurState) => EditeurState) => void;
+  /** Ouvre l'onglet "Sections" sur l'en-tête — nom et taille du logo se règlent là, pas ici (un seul réglage réel par notion). */
+  onOuvrirSection?: (sectionId: SectionId) => void;
+}) {
   const { t } = useDashboardLangue();
   const { logo, setLogo } = useDashboardBoutiqueLogo();
-  const [taille, setTaille] = useState<"petite" | "moyenne" | "grande">("moyenne");
-  const [nomACoteDuLogo, setNomACoteDuLogo] = useState(true);
-  const [versionClaireFondsSombres, setVersionClaireFondsSombres] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const iconeInputRef = useRef<HTMLInputElement>(null);
-  const [iconeOnglet, setIconeOnglet] = useState<string | null>(null);
+  const iconeOnglet = state.identite.iconeOnglet;
 
   const choisirLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fichier = e.target.files?.[0];
@@ -189,7 +201,7 @@ function IdentiteReglages() {
     const fichier = e.target.files?.[0];
     if (!fichier) return;
     const lecteur = new FileReader();
-    lecteur.onload = () => setIconeOnglet(lecteur.result as string);
+    lecteur.onload = () => setState((s) => ({ ...s, identite: { ...s.identite, iconeOnglet: lecteur.result as string } }));
     lecteur.readAsDataURL(fichier);
   };
 
@@ -212,33 +224,19 @@ function IdentiteReglages() {
         <input ref={fileInputRef} type="file" accept="image/*" onChange={choisirLogo} className="hidden" />
       </div>
 
-      <Ligne label={t("Taille", "Size")}>
-        <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-[var(--dashboard-text)]/10 p-0.5">
-          {([
-            ["petite", t("Petite", "Small")],
-            ["moyenne", t("Moyenne", "Medium")],
-            ["grande", t("Grande", "Large")],
-          ] as const).map(([v, label]) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setTaille(v)}
-              className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[9.5px] font-semibold transition ${
-                taille === v ? "bg-white text-[#141220] shadow-sm" : "text-[var(--dashboard-text)]/50"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </Ligne>
-
-      <Ligne label={t("Nom à côté du logo", "Name next to logo")}>
-        <Interrupteur checked={nomACoteDuLogo} onChange={setNomACoteDuLogo} />
-      </Ligne>
-      <Ligne label={t("Version claire pour les fonds sombres", "Light version for dark backgrounds")}>
-        <Interrupteur checked={versionClaireFondsSombres} onChange={setVersionClaireFondsSombres} />
-      </Ligne>
+      <div>
+        <GroupeTitre label={t("Nom et taille du logo", "Logo name and size")} />
+        <p className="mt-1.5 text-[10px] leading-relaxed text-[var(--dashboard-text)]/45">
+          {t("Réglés depuis l'en-tête de la boutique, visibles sur l'aperçu en direct.", "Set from the shop header, visible right away in the live preview.")}
+        </p>
+        <button
+          type="button"
+          onClick={() => onOuvrirSection?.("entete")}
+          className="mt-1.5 text-[10px] font-semibold text-brand-pink transition hover:brightness-90"
+        >
+          {t("Ouvrir les réglages de l'en-tête", "Open header settings")}
+        </button>
+      </div>
 
       <div>
         <GroupeTitre label={t("Icône de l'onglet", "Tab icon")} />
@@ -324,39 +322,21 @@ function CadenasIcon() {
   );
 }
 
-type PageEntree = {
-  id: string;
-  label: string;
-  labelEn: string;
-  sousTitre?: string;
-  sousTitreEn?: string;
-  icone: string;
-};
-
-const PAGES_DEFAUT: PageEntree[] = [
-  { id: "accueil", label: "Accueil", labelEn: "Home", sousTitre: "Construite en sections", sousTitreEn: "Built with sections", icone: "M4 11 12 4l8 7M6 10v9h5v-5h2v5h5v-9" },
-  { id: "commande-commun", label: "Page de commande", labelEn: "Checkout page", sousTitre: "Modèle commun · tous les produits", sousTitreEn: "Common template · all products", icone: "M7 3h8l4 4v14H7Zm8 0v4h4M9.5 11h5M9.5 15h5" },
-  { id: "commande-coffrets", label: "Page de commande", labelEn: "Checkout page", sousTitre: "Modèle « Coffrets » · 3 produits", sousTitreEn: "“Coffrets” template · 3 products", icone: "M7 3h8l4 4v14H7Zm8 0v4h4M9.5 11h5M9.5 15h5" },
-  { id: "rayon", label: "Rayon", labelEn: "Category page", sousTitre: "Grille, filtres, tri", sousTitreEn: "Grid, filters, sorting", icone: "M4 4h6.5v6.5H4Zm9.5 0H20v6.5h-6.5ZM4 13.5h6.5V20H4Zm9.5 0H20V20h-6.5Z" },
-  { id: "recherche", label: "Recherche", labelEn: "Search", icone: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm10 17-5.6-5.6" },
-  { id: "confirmation", label: "Confirmation de commande", labelEn: "Order confirmation", icone: "M4.5 12.5 9.5 17.5 19.5 6.5" },
-  { id: "suivi", label: "Suivi de commande", labelEn: "Order tracking", icone: "M3 6.5h11v8H3Zm11 2.5h4l3 3v2.5h-7ZM6.5 17.5a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2Zm11 0a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2Z" },
-  { id: "avis", label: "Tous les avis", labelEn: "All reviews", icone: "M12 3.5l2.6 5.5 6 .6-4.5 4 1.3 6-5.4-3.1-5.4 3.1 1.3-6-4.5-4 6-.6Z" },
-  { id: "a-propos", label: "À propos", labelEn: "About", sousTitre: "Page libre", sousTitreEn: "Free page", icone: "M7 3h8l4 4v14H7Zm8 0v4h4M9.5 11h5M9.5 15h5" },
-  { id: "livraison", label: "Livraison et retours", labelEn: "Shipping and returns", sousTitre: "Page libre", sousTitreEn: "Free page", icone: "M3 6h10v8H3Zm10 2.5h4l3 3V16h-7ZM6 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm10.5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" },
-];
-
-const ICONE_PAGE_LIBRE = "M7 3h8l4 4v14H7Zm8 0v4h4M9.5 11h5M9.5 15h5";
-
-function PagesEtModeles({ onOuvrirSection }: { onOuvrirSection?: (sectionId: SectionId) => void }) {
+function PagesEtModeles({
+  state,
+  setState,
+  onOuvrirSection,
+}: {
+  state: EditeurState;
+  setState: (updater: (s: EditeurState) => EditeurState) => void;
+  onOuvrirSection?: (sectionId: SectionId) => void;
+}) {
   const { t } = useDashboardLangue();
-  const [pages, setPages] = useState<PageEntree[]>(PAGES_DEFAUT);
-  const [pageChoisie, setPageChoisie] = useState<string>("accueil");
-  const [produitsParPage, setProduitsParPage] = useState(24);
-  const [suiteDeLaListe, setSuiteDeLaListe] = useState<"numeros" | "voir-plus" | "automatique">("numeros");
-  const [filtresEtTri, setFiltresEtTri] = useState(false);
+  const { liste: pages, pageChoisie, produitsParPage, suiteDeLaListe, filtresEtTri } = state.pages;
   const [creation, setCreation] = useState<"page" | "modele" | null>(null);
-  const [pageOuverte, setPageOuverte] = useState<PageEntree | null>(null);
+  const [pageOuverteId, setPageOuverteId] = useState<string | null>(null);
+
+  const majPages = (patch: Partial<EditeurState["pages"]>) => setState((s) => ({ ...s, pages: { ...s.pages, ...patch } }));
 
   // "Accueil" est "construite en sections" (cf. PAGES_DEFAUT) : l'ouvrir
   // n'a pas de réglages propres à afficher ici, ça bascule direct sur le
@@ -367,32 +347,36 @@ function PagesEtModeles({ onOuvrirSection }: { onOuvrirSection?: (sectionId: Sec
       onOuvrirSection("grande-image");
       return;
     }
-    setPageOuverte(page);
+    setPageOuverteId(page.id);
   };
 
   const creerEntree = (nom: string) => {
     const id = `${creation}-${Date.now()}`;
-    setPages((p) => [
-      ...p,
-      {
-        id,
-        label: nom,
-        labelEn: nom,
-        sousTitre: creation === "modele" ? "Modèle" : "Page libre",
-        sousTitreEn: creation === "modele" ? "Template" : "Free page",
-        icone: ICONE_PAGE_LIBRE,
-      },
-    ]);
-    setPageChoisie(id);
+    majPages({
+      liste: [
+        ...pages,
+        {
+          id,
+          label: nom,
+          labelEn: nom,
+          sousTitre: creation === "modele" ? "Modèle" : "Page libre",
+          sousTitreEn: creation === "modele" ? "Template" : "Free page",
+          icone: ICONE_PAGE_LIBRE,
+        },
+      ],
+      pageChoisie: id,
+    });
     setCreation(null);
   };
+
+  const pageOuverte = pageOuverteId ? pages.find((p) => p.id === pageOuverteId) ?? null : null;
 
   if (pageOuverte) {
     return (
       <>
         <button
           type="button"
-          onClick={() => setPageOuverte(null)}
+          onClick={() => setPageOuverteId(null)}
           className="flex items-center gap-1.5 text-[10.5px] font-semibold text-[var(--dashboard-text)]/60 transition hover:text-[var(--dashboard-text)]"
         >
           <span className="rotate-180"><ChevronIcon /></span> {t("Pages", "Pages")}
@@ -428,12 +412,12 @@ function PagesEtModeles({ onOuvrirSection }: { onOuvrirSection?: (sectionId: Sec
                 role="button"
                 tabIndex={0}
                 onClick={() => {
-                  setPageChoisie(page.id);
+                  majPages({ pageChoisie: page.id });
                   if (page.id === "accueil") ouvrirPage(page);
                 }}
                 onKeyDown={(e) => {
                   if (e.key !== "Enter" && e.key !== " ") return;
-                  setPageChoisie(page.id);
+                  majPages({ pageChoisie: page.id });
                   if (page.id === "accueil") ouvrirPage(page);
                 }}
                 className={`flex cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition ${
@@ -492,7 +476,7 @@ function PagesEtModeles({ onOuvrirSection }: { onOuvrirSection?: (sectionId: Sec
               type="number"
               min={1}
               value={produitsParPage}
-              onChange={(e) => setProduitsParPage(Number(e.target.value) || 1)}
+              onChange={(e) => majPages({ produitsParPage: Number(e.target.value) || 1 })}
               className="w-12 rounded-lg border border-[var(--dashboard-text)]/15 bg-transparent px-1.5 py-0.5 text-right text-[10.5px] font-semibold text-[var(--dashboard-text)]"
             />
           </Ligne>
@@ -508,7 +492,7 @@ function PagesEtModeles({ onOuvrirSection }: { onOuvrirSection?: (sectionId: Sec
                 <button
                   key={v}
                   type="button"
-                  onClick={() => setSuiteDeLaListe(v)}
+                  onClick={() => majPages({ suiteDeLaListe: v })}
                   className={`rounded-lg py-1.5 text-[10px] font-semibold transition ${
                     suiteDeLaListe === v ? "bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)] shadow-sm" : "text-[var(--dashboard-text)]/50"
                   }`}
@@ -520,7 +504,7 @@ function PagesEtModeles({ onOuvrirSection }: { onOuvrirSection?: (sectionId: Sec
           </div>
 
           <Ligne label={t("Filtres et tri", "Filters and sorting")}>
-            <Interrupteur checked={filtresEtTri} onChange={setFiltresEtTri} />
+            <Interrupteur checked={filtresEtTri} onChange={(v) => majPages({ filtresEtTri: v })} />
           </Ligne>
         </div>
       </div>
@@ -780,38 +764,28 @@ function Select({ label, value, onChange, options }: { label: string; value: str
   );
 }
 
-function ApresLaCommande() {
+function ApresLaCommande({ state, setState }: { state: EditeurState; setState: (updater: (s: EditeurState) => EditeurState) => void }) {
   const { t } = useDashboardLangue();
-  const [titre, setTitre] = useState("Merci, votre commande est enregistrée");
-  const [message, setMessage] = useState("Nous vous appelons pour confirmer la livraison.");
-  const [recapitulatif, setRecapitulatif] = useState(true);
-  const [lienDeSuivi, setLienDeSuivi] = useState(true);
-  const [boutonWhatsapp, setBoutonWhatsapp] = useState(true);
-
-  const [proposerAvantExpedition, setProposerAvantExpedition] = useState(true);
-  const [produitOffre, setProduitOffre] = useState(PRODUITS_OFFRE_MOCK[0]);
-  const [remise, setRemise] = useState(10);
-
-  const [envoyePar, setEnvoyePar] = useState<"sms" | "whatsapp">("whatsapp");
-  const [texteClient, setTexteClient] = useState("Bonjour Nom, votre commande Numéro est bien reçue.");
+  const c = state.apresCommande;
+  const maj = (patch: Partial<EditeurState["apresCommande"]>) => setState((s) => ({ ...s, apresCommande: { ...s.apresCommande, ...patch } }));
 
   return (
     <>
       <div>
         <GroupeTitre label={t("Page de confirmation", "Confirmation page")} />
         <div className="mt-1.5 space-y-2.5">
-          <Champ label={t("Titre", "Title")} value={titre} onChange={setTitre} />
-          <Champ label={t("Message", "Message")} value={message} onChange={setMessage} multiline />
+          <Champ label={t("Titre", "Title")} value={c.titre} onChange={(v) => maj({ titre: v })} />
+          <Champ label={t("Message", "Message")} value={c.message} onChange={(v) => maj({ message: v })} multiline />
         </div>
         <div className="mt-2.5 space-y-2.5">
           <Ligne label={t("Récapitulatif", "Order summary")}>
-            <Interrupteur checked={recapitulatif} onChange={setRecapitulatif} />
+            <Interrupteur checked={c.recapitulatif} onChange={(v) => maj({ recapitulatif: v })} />
           </Ligne>
           <Ligne label={t("Lien de suivi", "Tracking link")}>
-            <Interrupteur checked={lienDeSuivi} onChange={setLienDeSuivi} />
+            <Interrupteur checked={c.lienDeSuivi} onChange={(v) => maj({ lienDeSuivi: v })} />
           </Ligne>
           <Ligne label={t("Bouton WhatsApp", "WhatsApp button")}>
-            <Interrupteur checked={boutonWhatsapp} onChange={setBoutonWhatsapp} />
+            <Interrupteur checked={c.boutonWhatsapp} onChange={(v) => maj({ boutonWhatsapp: v })} />
           </Ligne>
         </div>
       </div>
@@ -820,9 +794,9 @@ function ApresLaCommande() {
         <GroupeTitre label={t("Offre complémentaire", "Add-on offer")} />
         <div className="mt-1.5 space-y-2.5">
           <Ligne label={t("Proposer avant expédition", "Offer before shipping")}>
-            <Interrupteur checked={proposerAvantExpedition} onChange={setProposerAvantExpedition} />
+            <Interrupteur checked={c.proposerAvantExpedition} onChange={(v) => maj({ proposerAvantExpedition: v })} />
           </Ligne>
-          <Select label={t("Produit", "Product")} value={produitOffre} onChange={setProduitOffre} options={PRODUITS_OFFRE_MOCK} />
+          <Select label={t("Produit", "Product")} value={c.produitOffre} onChange={(v) => maj({ produitOffre: v })} options={PRODUITS_OFFRE_MOCK} />
           <div>
             <p className="text-[9px] uppercase tracking-[0.1em] text-[var(--dashboard-text)]/40">{t("Remise", "Discount")}</p>
             <div className="mt-1.5 flex items-center gap-1.5">
@@ -830,8 +804,8 @@ function ApresLaCommande() {
                 type="number"
                 min={0}
                 max={100}
-                value={remise}
-                onChange={(e) => setRemise(Number(e.target.value) || 0)}
+                value={c.remise}
+                onChange={(e) => maj({ remise: Number(e.target.value) || 0 })}
                 className="w-14 rounded-lg border border-[var(--dashboard-text)]/15 bg-transparent px-2 py-1.5 text-right text-[10.5px] font-semibold text-[var(--dashboard-text)]"
               />
               <span className="text-[10.5px] font-semibold text-[var(--dashboard-text)]/60">%</span>
@@ -849,11 +823,11 @@ function ApresLaCommande() {
                 ["sms", t("SMS", "SMS")],
                 ["whatsapp", t("WhatsApp", "WhatsApp")],
               ]}
-              value={envoyePar}
-              onChange={setEnvoyePar}
+              value={c.envoyePar}
+              onChange={(v) => maj({ envoyePar: v })}
             />
           </Ligne>
-          <Champ label={t("Texte", "Text")} value={texteClient} onChange={setTexteClient} multiline />
+          <Champ label={t("Texte", "Text")} value={c.texteClient} onChange={(v) => maj({ texteClient: v })} multiline />
         </div>
       </div>
     </>
@@ -869,21 +843,18 @@ function ApresLaCommande() {
   disponible pour l'instant (cf. [[dashboard-mock-data-pending-laravel-api]]),
   d'où la vignette en dégradé de marque plutôt qu'une image inventée.
 */
-function ReferencementEtPartage() {
+function ReferencementEtPartage({ state, setState }: { state: EditeurState; setState: (updater: (s: EditeurState) => EditeurState) => void }) {
   const { t } = useDashboardLangue();
-  const [titreSeo, setTitreSeo] = useState("Sérum éclat 30 ml · Awa Beauté");
-  const [descriptionSeo, setDescriptionSeo] = useState(
-    t("Sérum concentré pour un teint lumineux. Livraison en 4 h en moyenne.", "Concentrated serum for a radiant complexion. Delivered in 4h on average.")
-  );
-  const [visible, setVisible] = useState(true);
+  const s = state.seo;
+  const maj = (patch: Partial<EditeurState["seo"]>) => setState((st) => ({ ...st, seo: { ...st.seo, ...patch } }));
   const lienProduit = ".../awa-beaute/serum-eclat-30-ml";
-  const descriptionCourte = descriptionSeo.split(".")[0].trim() + ".";
+  const descriptionCourte = s.description.split(".")[0].trim() + ".";
 
   return (
     <>
       <div className="space-y-2.5">
-        <Champ label={t("Titre dans les moteurs de recherche", "Title in search engines")} value={titreSeo} onChange={setTitreSeo} />
-        <Champ label={t("Description", "Description")} value={descriptionSeo} onChange={setDescriptionSeo} multiline />
+        <Champ label={t("Titre dans les moteurs de recherche", "Title in search engines")} value={s.titre} onChange={(v) => maj({ titre: v })} />
+        <Champ label={t("Description", "Description")} value={s.description} onChange={(v) => maj({ description: v })} multiline />
         <Champ label={t("Lien du produit", "Product link")} value={lienProduit} readOnly />
       </div>
 
@@ -899,7 +870,7 @@ function ReferencementEtPartage() {
             </span>
           </div>
           <div className="bg-[var(--dashboard-card-bg)] p-2.5">
-            <p className="truncate text-[10.5px] font-bold text-[var(--dashboard-text)]">{titreSeo}</p>
+            <p className="truncate text-[10.5px] font-bold text-[var(--dashboard-text)]">{s.titre}</p>
             <p className="truncate text-[9.5px] text-[var(--dashboard-text)]/55">{descriptionCourte}</p>
             <p className="mt-0.5 truncate text-[8.5px] uppercase tracking-[0.06em] text-[var(--dashboard-text)]/35">.../awa-beaute</p>
           </div>
@@ -907,25 +878,21 @@ function ReferencementEtPartage() {
       </div>
 
       <Ligne label={t("Visible dans les moteurs de recherche", "Visible in search engines")}>
-        <Interrupteur checked={visible} onChange={setVisible} />
+        <Interrupteur checked={s.visible} onChange={(v) => maj({ visible: v })} />
       </Ligne>
     </>
   );
 }
 
 /*
-  Versions et programmation : revenir à une version précédemment mise en
-  ligne (mock — pas d'historique réel tant que la sauvegarde des versions
-  n'existe pas côté API), préparer un brouillon, et programmer une mise en
-  ligne à date/heure donnée. Cf. [[dashboard-mock-data-pending-laravel-api]].
+  Versions et programmation : revenir à une version réellement enregistrée
+  (instantané pris à chaque clic sur "Enregistrer", cf. `versions` fourni
+  par PersonnaliserBoutique.tsx — plus de liste figée), préparer un
+  brouillon, et régler une date de mise en ligne. Le brouillon et la
+  programmation restent des intentions persistées (localStorage) plutôt que
+  des actions réellement exécutées : aucune API ne peut encore les déclencher,
+  cf. [[dashboard-mock-data-pending-laravel-api]].
 */
-const VERSIONS_MOCK = [
-  { id: "v1", label: "15 sept. · 18 h 20", sousTitre: "Version en ligne", enLigne: true },
-  { id: "v2", label: "12 sept. · 9 h 05", sousTitre: "Ajout de la section Avis" },
-  { id: "v3", label: "6 sept. · 16 h 40", sousTitre: "Changement de palette" },
-  { id: "v4", label: "28 août · 11 h 15", sousTitre: "Refonte de l'accueil" },
-];
-
 function formatDateHeure(date: Date, t: (fr: string, en: string) => string) {
   const jour = date.getDate();
   const moisFr = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."][date.getMonth()];
@@ -939,37 +906,50 @@ function formatDateHeure(date: Date, t: (fr: string, en: string) => string) {
   );
 }
 
-function VersionsEtProgrammation() {
+function VersionsEtProgrammation({
+  state,
+  setState,
+  versions,
+  onRestaurerVersion,
+}: {
+  state: EditeurState;
+  setState: (updater: (s: EditeurState) => EditeurState) => void;
+  versions: VersionSnapshot[];
+  onRestaurerVersion: (id: string) => void;
+}) {
   const { t } = useDashboardLangue();
-  const [brouillon, setBrouillon] = useState(false);
-  const [programmationActive, setProgrammationActive] = useState(false);
-  const [programmationDate, setProgrammationDate] = useState(() => new Date(2026, 11, 20, 0, 0));
+  const prog = state.programmation;
+  const majProg = (patch: Partial<EditeurState["programmation"]>) => setState((s) => ({ ...s, programmation: { ...s.programmation, ...patch } }));
   const [choixOuvert, setChoixOuvert] = useState(false);
   const [dateModalOuverte, setDateModalOuverte] = useState(false);
 
-  const versionEnLigne = VERSIONS_MOCK.find((v) => v.enLigne)!;
+  const derniereVersion = versions[0];
+  const dateProgrammation = new Date(prog.dateIso);
 
   return (
     <>
       <div>
         <GroupeTitre label={t("Versions", "Versions")} />
         <div className="mt-1.5 space-y-3">
-          <Ligne label={t("Version en ligne", "Live version")}>
-            <span className="text-[10.5px] font-semibold text-brand-pink">{versionEnLigne.label}</span>
+          <Ligne label={t("Dernière sauvegarde", "Last saved version")}>
+            <span className="text-[10.5px] font-semibold text-brand-pink">
+              {derniereVersion ? formatDateHeure(new Date(derniereVersion.horodatage), t) : t("Aucune pour l'instant", "None yet")}
+            </span>
           </Ligne>
 
           <Ligne label={t("Revenir à une version", "Revert to a version")}>
             <button
               type="button"
               onClick={() => setChoixOuvert(true)}
-              className="text-[10px] font-semibold text-brand-pink transition hover:brightness-90"
+              disabled={versions.length === 0}
+              className="text-[10px] font-semibold text-brand-pink transition hover:brightness-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t("Choisir", "Choose")}
             </button>
           </Ligne>
 
           <Ligne label={t("Préparer un brouillon", "Prepare a draft")}>
-            <Interrupteur checked={brouillon} onChange={setBrouillon} />
+            <Interrupteur checked={prog.brouillon} onChange={(v) => majProg({ brouillon: v })} />
           </Ligne>
         </div>
       </div>
@@ -978,33 +958,40 @@ function VersionsEtProgrammation() {
         <GroupeTitre label={t("Programmation", "Scheduling")} />
         <div className="mt-1.5 space-y-2.5">
           <Ligne label={t("Mettre en ligne à une date", "Publish on a date")}>
-            <Interrupteur checked={programmationActive} onChange={setProgrammationActive} />
+            <Interrupteur checked={prog.active} onChange={(v) => majProg({ active: v })} />
           </Ligne>
 
           <button
             type="button"
-            onClick={() => programmationActive && setDateModalOuverte(true)}
-            disabled={!programmationActive}
+            onClick={() => prog.active && setDateModalOuverte(true)}
+            disabled={!prog.active}
             className={`w-full rounded-xl border border-[var(--dashboard-text)]/10 bg-[var(--dashboard-text)]/[0.04] px-3 py-2.5 text-left transition ${
-              programmationActive ? "hover:bg-[var(--dashboard-text)]/[0.07]" : "cursor-not-allowed opacity-40"
+              prog.active ? "hover:bg-[var(--dashboard-text)]/[0.07]" : "cursor-not-allowed opacity-40"
             }`}
           >
             <p className="text-[9px] uppercase tracking-[0.1em] text-[var(--dashboard-text)]/40">{t("Date", "Date")}</p>
-            <p className="text-[11px] font-semibold text-[var(--dashboard-text)]">{formatDateHeure(programmationDate, t)}</p>
+            <p className="text-[11px] font-semibold text-[var(--dashboard-text)]">{formatDateHeure(dateProgrammation, t)}</p>
           </button>
         </div>
       </div>
 
       {choixOuvert && (
-        <ChoisirVersionModal onFermer={() => setChoixOuvert(false)} />
+        <ChoisirVersionModal
+          versions={versions}
+          onFermer={() => setChoixOuvert(false)}
+          onRestaurer={(id) => {
+            onRestaurerVersion(id);
+            setChoixOuvert(false);
+          }}
+        />
       )}
 
       {dateModalOuverte && (
         <ProgrammerDateModal
-          date={programmationDate}
+          date={dateProgrammation}
           onFermer={() => setDateModalOuverte(false)}
           onValider={(d) => {
-            setProgrammationDate(d);
+            majProg({ dateIso: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}` });
             setDateModalOuverte(false);
           }}
         />
@@ -1013,7 +1000,15 @@ function VersionsEtProgrammation() {
   );
 }
 
-function ChoisirVersionModal({ onFermer }: { onFermer: () => void }) {
+function ChoisirVersionModal({
+  versions,
+  onFermer,
+  onRestaurer,
+}: {
+  versions: VersionSnapshot[];
+  onFermer: () => void;
+  onRestaurer: (id: string) => void;
+}) {
   const { t } = useDashboardLangue();
 
   useEffect(() => {
@@ -1033,21 +1028,21 @@ function ChoisirVersionModal({ onFermer }: { onFermer: () => void }) {
           {t("La boutique reprendra l'apparence de la version choisie.", "The shop will switch back to the appearance of the chosen version.")}
         </p>
 
-        <div className="mt-3.5 flex flex-col gap-1">
-          {VERSIONS_MOCK.map((v) => (
+        <div className="mt-3.5 flex max-h-64 flex-col gap-1 overflow-y-auto">
+          {versions.map((v, i) => (
             <button
               key={v.id}
               type="button"
-              onClick={onFermer}
+              onClick={() => onRestaurer(v.id)}
               className="flex items-center justify-between gap-3 rounded-xl px-2.5 py-2 text-left transition hover:bg-[var(--dashboard-text)]/[0.05]"
             >
               <span>
-                <p className="text-[11px] font-semibold text-[var(--dashboard-text)]">{v.label}</p>
-                <p className="text-[9px] text-[var(--dashboard-text)]/45">{t(v.sousTitre, v.sousTitre)}</p>
+                <p className="text-[11px] font-semibold text-[var(--dashboard-text)]">{formatDateHeure(new Date(v.horodatage), t)}</p>
+                <p className="text-[9px] text-[var(--dashboard-text)]/45">{v.label}</p>
               </span>
-              {v.enLigne && (
+              {i === 0 && (
                 <span className="shrink-0 rounded-full bg-brand-pink/10 px-2 py-0.5 text-[8.5px] font-semibold text-brand-pink">
-                  {t("En ligne", "Live")}
+                  {t("Plus récente", "Most recent")}
                 </span>
               )}
             </button>
@@ -1160,11 +1155,10 @@ const REGIES_PIXELS = [
   { id: "youtube", nom: "YouTube", identifiantMock: "UC-8f0a2c9d41", actifParDefaut: false },
 ] as const;
 
-function PixelsPublicitaires() {
+function PixelsPublicitaires({ state, setState }: { state: EditeurState; setState: (updater: (s: EditeurState) => EditeurState) => void }) {
   const { t } = useDashboardLangue();
-  const [actives, setActives] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(REGIES_PIXELS.map((r) => [r.id, r.actifParDefaut]))
-  );
+  const actives = state.pixels.actives;
+  const setActif = (id: PixelRegieId, v: boolean) => setState((s) => ({ ...s, pixels: { actives: { ...s.pixels.actives, [id]: v } } }));
 
   return (
     <>
@@ -1187,7 +1181,7 @@ function PixelsPublicitaires() {
                     {actif ? regie.identifiantMock : t("Aucun identifiant", "No ID")}
                   </p>
                 </div>
-                <Interrupteur checked={actif} onChange={(v) => setActives((a) => ({ ...a, [regie.id]: v }))} />
+                <Interrupteur checked={actif} onChange={(v) => setActif(regie.id, v)} />
               </div>
             );
           })}

@@ -145,71 +145,222 @@ export function openBrandedReport(title: string, subtitle: string, sections: Exp
 }
 
 /*
-  Carousel image d'un produit : utilisé sur la fiche "Prochain produit" du
-  partenaire agréé (PartenaireAgree.tsx) et sur la fiche produit du
-  catalogue drop (FicheProduitDrop.tsx). Flèches restent visibles même sans
-  aucune image (produit pas encore photographié) : le carousel doit se voir
-  prêt, cf. [[dashboard-mock-data-pending-laravel-api]]. Les flèches sont
-  alors décoratives (rien à faire défiler) mais ne cassent rien : le calcul
-  d'index se protège de la division par zéro.
-
-  Défilement auto (2,5 s) quand plus d'une image ; interagir avec les
-  flèches ou les points ne fait qu'avancer l'image, l'intervalle continue
-  derrière (pas besoin de le relancer/pauser pour un carousel aussi court).
+  Galerie image d'un produit style e-commerce : miniatures verticales à
+  gauche (desktop) / horizontales en bas (mobile), grande image principale
+  au centre avec fond sombre violet, badge "Vidéo" + compteur N/total +
+  icône loupe + points de navigation. Utilisé sur la fiche produit du
+  catalogue drop (FicheProduitDrop.tsx) et l'aperçu partenaire.
+  Défilement auto (3 s) quand plus d'une image.
 */
-export function ProduitCarousel({ images }: { images: string[] }) {
+export function ProduitCarousel({ images, videoUrl }: { images: string[]; videoUrl?: string }) {
   const { t } = useDashboardLangue();
   const [index, setIndex] = useState(0);
+  const [thumbStart, setThumbStart] = useState(0);
+  const [zoomed, setZoomed] = useState(false);
   const count = images.length;
+  const totalSlides = (videoUrl ? 1 : 0) + count;
+  const THUMBS_VISIBLE = 4;
 
   useEffect(() => {
-    if (count <= 1) return;
-    const id = setInterval(() => setIndex((i) => (i + 1) % count), 2500);
+    if (totalSlides <= 1) return;
+    const id = setInterval(() => setIndex((i) => (i + 1) % totalSlides), 3000);
     return () => clearInterval(id);
-  }, [count]);
+  }, [totalSlides]);
+
+  // Slides : vidéo en premier si présente, puis images
+  const slides: Array<{ type: "video"; src: string } | { type: "image"; src: string }> = [
+    ...(videoUrl ? [{ type: "video" as const, src: videoUrl }] : []),
+    ...images.map((src) => ({ type: "image" as const, src })),
+  ];
+
+  const currentSlide = slides[index];
+
+  const scrollThumbs = (dir: 1 | -1) => {
+    setThumbStart((s) => Math.max(0, Math.min(s + dir, Math.max(0, slides.length - THUMBS_VISIBLE))));
+  };
 
   return (
-    <>
-      {images.map((src, i) => (
-        <div
-          key={src}
-          aria-hidden={i !== index}
-          className="absolute inset-6 bg-contain bg-no-repeat bg-right transition-opacity duration-500"
-          style={{
-            backgroundImage: `url(${src})`,
-            opacity: i === index ? 1 : 0,
-          }}
-        />
-      ))}
+    <div className="overflow-hidden flex flex-col gap-3 sm:flex-row sm:gap-4">
+      {/* ── Miniatures verticales (desktop : colonne gauche) ── */}
+      <div className="order-2 flex flex-row gap-2 sm:order-1 sm:flex-col">
+        {/* Flèche haut — desktop seulement */}
+        <button
+          type="button"
+          onClick={() => scrollThumbs(-1)}
+          disabled={thumbStart === 0}
+          aria-label={t("Monter", "Scroll up")}
+          className="hidden sm:flex h-7 w-16 items-center justify-center rounded-lg bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)]/40 transition hover:text-[var(--dashboard-text)] disabled:opacity-20"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 -rotate-90 sm:rotate-0">
+            <path d="m5 15 7-7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
 
-      <button
-        type="button"
-        onClick={() => count > 0 && setIndex((i) => (i - 1 + count) % count)}
-        aria-label={t("Image précédente", "Previous image")}
-        className="absolute left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md"
-      >
-        ‹
-      </button>
-      <button
-        type="button"
-        onClick={() => count > 0 && setIndex((i) => (i + 1) % count)}
-        aria-label={t("Image suivante", "Next image")}
-        className="absolute right-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md"
-      >
-        ›
-      </button>
-      <div className="absolute bottom-3 right-3 z-10 flex gap-1.5">
-        {images.map((src, i) => (
-          <button
-            key={src}
-            type="button"
-            onClick={() => setIndex(i)}
-            aria-label={t(`Aller à l'image ${i + 1}`, `Go to image ${i + 1}`)}
-            className={`h-1.5 rounded-full transition-all ${i === index ? "w-4 bg-white" : "w-1.5 bg-white/40"}`}
-          />
-        ))}
+        {/* Vignettes */}
+        <div className="flex flex-row gap-2 sm:flex-col">
+          {slides.slice(thumbStart, thumbStart + THUMBS_VISIBLE).map((slide, i) => {
+            const realIdx = thumbStart + i;
+            const active = realIdx === index;
+            return (
+              <button
+                key={realIdx}
+                type="button"
+                onClick={() => setIndex(realIdx)}
+                aria-label={slide.type === "video" ? t("Vidéo", "Video") : t(`Image ${realIdx + 1}`, `Image ${realIdx + 1}`)}
+                className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all sm:h-[72px] sm:w-[72px] ${
+                  active
+                    ? "border-brand-pink shadow-[0_0_0_1px_#EC0C8C]"
+                    : "border-[var(--dashboard-text)]/10 opacity-60 hover:opacity-90"
+                }`}
+                style={
+                  slide.type === "image"
+                    ? { backgroundImage: `url(${slide.src})`, backgroundSize: "cover", backgroundPosition: "center" }
+                    : { background: "linear-gradient(135deg, #3B1FA8 0%, #1B1E72 60%, #0A0E28 100%)" }
+                }
+              >
+                {slide.type === "video" && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/30">
+                    <svg viewBox="0 0 24 24" fill="white" className="h-5 w-5 drop-shadow">
+                      <path d="M8 5v14l11-7L8 5Z" />
+                    </svg>
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Flèche bas — desktop seulement */}
+        <button
+          type="button"
+          onClick={() => scrollThumbs(1)}
+          disabled={thumbStart + THUMBS_VISIBLE >= slides.length}
+          aria-label={t("Descendre", "Scroll down")}
+          className="hidden sm:flex h-7 w-16 items-center justify-center rounded-lg bg-[var(--dashboard-card-bg)] text-[var(--dashboard-text)]/40 transition hover:text-[var(--dashboard-text)] disabled:opacity-20"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 -rotate-90 sm:rotate-0">
+            <path d="m19 9-7 7-7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
-    </>
+
+      {/* ── Grande image principale ── */}
+      <div className="relative order-1 flex-1 overflow-hidden rounded-2xl bg-[linear-gradient(135deg,#3B1FA8_0%,#1B1E72_50%,#0A0E28_100%)] sm:order-2">
+        {/* Slide actif */}
+        {currentSlide?.type === "image" && (
+          <img
+            key={index}
+            src={currentSlide.src}
+            alt={t(`Image du produit ${index + 1}`, `Product image ${index + 1}`)}
+            className="h-64 w-full object-contain sm:h-[340px]"
+            draggable={false}
+          />
+        )}
+        {currentSlide?.type === "video" && (
+          <video
+            src={currentSlide.src}
+            className="h-64 w-full object-cover sm:h-[340px]"
+            muted
+            loop
+            autoPlay
+            playsInline
+          />
+        )}
+        {!currentSlide && (
+          <div className="flex h-64 w-full items-center justify-center sm:h-[340px]">
+            <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 text-white/20">
+              <rect x="6" y="10" width="36" height="28" rx="4" stroke="currentColor" strokeWidth="2" />
+              <circle cx="18" cy="21" r="4" stroke="currentColor" strokeWidth="2" />
+              <path d="m6 33 10-8 8 6 6-5 12 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        )}
+
+        {/* Badge Vidéo (coin haut gauche) */}
+        {currentSlide?.type === "video" && (
+          <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3">
+              <path d="M8 5v14l11-7L8 5Z" />
+            </svg>
+            {t("Vidéo", "Video")}
+          </span>
+        )}
+
+        {/* Compteur N/total (coin haut droit) */}
+        {totalSlides > 1 && (
+          <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+            {index + 1}/{totalSlides}
+          </span>
+        )}
+
+        {/* Loupe (coin bas droit) */}
+        <button
+          type="button"
+          onClick={() => setZoomed(true)}
+          aria-label={t("Agrandir", "Zoom in")}
+          className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#141220] shadow transition hover:bg-white"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+            <path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+
+        {/* Points de navigation (bas centre) */}
+        {totalSlides > 1 && (
+          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setIndex(i)}
+                aria-label={t(`Aller à la slide ${i + 1}`, `Go to slide ${i + 1}`)}
+                className={`h-1.5 rounded-full transition-all ${i === index ? "w-5 bg-white" : "w-1.5 bg-white/40"}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Lightbox zoom ── */}
+      {zoomed && currentSlide && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("Vue agrandie", "Zoomed view")}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          onClick={() => setZoomed(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setZoomed(false)}
+            aria-label={t("Fermer", "Close")}
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+          >
+            ✕
+          </button>
+          {currentSlide.type === "image" ? (
+            <img
+              src={currentSlide.src}
+              alt={t("Vue agrandie du produit", "Zoomed product view")}
+              className="max-h-full max-w-full rounded-2xl object-contain"
+              onClick={(e) => e.stopPropagation()}
+              draggable={false}
+            />
+          ) : (
+            <video
+              src={currentSlide.src}
+              className="max-h-full max-w-full rounded-2xl object-contain"
+              muted
+              loop
+              autoPlay
+              playsInline
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
