@@ -91,7 +91,7 @@ export default function ProduitDetailClient({
     <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
         {/* Galerie */}
-        <div className={`flex gap-3 ${g.vignettesOrdinateur === "gauche" ? "lg:flex-row" : "lg:flex-col"} ${g.position === "droite" ? "lg:order-2" : ""}`}>
+        <div className={`flex gap-2 ${g.vignettesOrdinateur === "gauche" ? "lg:flex-row" : "lg:flex-col"} ${g.position === "droite" ? "lg:order-2" : ""}`}>
           {g.vignettesOrdinateur === "gauche" && images.length > 1 && (
             <div className="hidden w-16 shrink-0 flex-col gap-2 lg:flex">
               {images.map((img, i) => (
@@ -111,7 +111,7 @@ export default function ProduitDetailClient({
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <div className="relative mx-auto w-full max-w-sm overflow-hidden bg-[var(--tx)]/5" style={{ aspectRatio: ratio, borderRadius: "var(--card-rad)" }}>
+            <div className="relative w-full max-w-sm overflow-hidden bg-[var(--tx)]/5" style={{ aspectRatio: ratio, borderRadius: "var(--card-rad)" }}>
               {images.length > 0 ? (
                 <div className="h-full w-full overflow-hidden transition-transform duration-300" style={{ transform: zoomActif ? "scale(1.6)" : "scale(1)" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -192,6 +192,17 @@ export default function ProduitDetailClient({
               </span>
             )}
           </div>
+          {paiement.rangeeConfiance && confianceInfos.length > 0 && (
+            <div className="mt-3 flex items-center justify-between gap-2 border-t border-[var(--tx)]/8 pt-3">
+              {confianceInfos.map((it) => (
+                <div key={it.texte} className="flex items-center gap-1.5">
+                  <it.icon color="var(--ac)" size={16} />
+                  <span className="text-[11px] font-medium leading-tight text-[var(--tx)]/60">{it.texte}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {produit.description && (
             <div className="mt-3">
               <p className="text-[14px] leading-relaxed text-[var(--tx)]/75">{descriptionAffichee}</p>
@@ -257,17 +268,6 @@ export default function ProduitDetailClient({
                   {lienCopie && <span className="absolute right-0 top-[calc(100%+6px)] whitespace-nowrap rounded-lg bg-[#141220] px-2.5 py-1.5 text-[11px] font-semibold text-white">Lien copié</span>}
                 </div>
               )}
-            </div>
-          )}
-
-          {paiement.rangeeConfiance && confianceInfos.length > 0 && (
-            <div className="mt-4 flex items-center justify-between gap-2 border-t border-[var(--tx)]/8 pt-4">
-              {confianceInfos.map((it) => (
-                <div key={it.texte} className="flex items-center gap-1.5">
-                  <it.icon color="var(--ac)" size={16} />
-                  <span className="text-[11px] font-medium leading-tight text-[var(--tx)]/60">{it.texte}</span>
-                </div>
-              ))}
             </div>
           )}
         </div>

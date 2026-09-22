@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import type { BoutiqueDonnees, BoutiqueIdentite } from "./boutique-types";
+import type { AvisClient, BoutiqueDonnees, BoutiqueIdentite } from "./boutique-types";
 import { ETAT_DEFAUT } from "../app/components/dashboard-reglages/personnaliser/types";
 
 export type { BoutiqueIdentite, ProduitPublic, CategoriePublique, BoutiqueDonnees } from "./boutique-types";
@@ -96,6 +96,18 @@ export async function fusionnerBoutique(slug: string, patch: Partial<Omit<Boutiq
     avis: patch.avis ?? existant?.avis ?? [],
   };
   return ecrireBoutique(slug, base);
+}
+
+/** Ajoute un avis client réel à la boutique (formulaire public, cf.
+ *  app/api/boutique/[slug]/avis/route.ts) sans toucher au reste — contrairement
+ *  à fusionnerBoutique(), qui remplacerait tout le tableau `avis` par celui
+ *  du patch, ce qui effacerait les avis déjà là si l'appelant n'en connaît
+ *  qu'un seul (cas ici). `null` si la boutique n'existe pas (slug inconnu). */
+export async function ajouterAvis(slug: string, avis: AvisClient): Promise<BoutiqueDonnees | null> {
+  const existant = await lireBoutique(slug);
+  if (!existant) return null;
+  const { misAJour: _misAJour, ...base } = existant;
+  return ecrireBoutique(slug, { ...base, avis: [avis, ...base.avis] });
 }
 
 const IDENTITE_VIDE: BoutiqueIdentite = {
