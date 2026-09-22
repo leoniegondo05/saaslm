@@ -5,15 +5,6 @@
   (liste des sections + onglet Style) et BoutiquePreview.tsx (aperçu en
   direct) partagent la même forme sans se réimporter en boucle.
 
-  Le produit d'aperçu reprend tel quel "Sérum éclat 30 ml" du catalogue drop
-  (dropCatalogue.ts : prixVenteActuel 12000, prixConseille 14000,
-  unitesDisponibles 340) plutôt qu'un produit inventé — même boutique
-  "Awa Beauté" que MaBoutique.tsx. `images` reste vide comme dans la vraie
-  fiche : aucune photo n'a encore été déposée pour ce produit (pas un mock
-  provisoire à combler, un vrai état vide, cf. MediaProduit.tsx "Aucune
-  photo") donc l'aperçu montre un espace réservé plutôt qu'une fausse photo.
-  Même logique pour PRODUITS_GRILLE_APERCU/CATEGORIES_APERCU plus bas.
-
   Deux pages simulées (maquette fournie) : "accueil" et "commande" (celle
   déjà décrite ci-dessus). Une seule liste de sections plutôt que deux
   objets parallèles — chaque SectionDef porte `page` pour dire à quelle(s)
@@ -23,8 +14,6 @@
   'faq'). Ça évite de dupliquer sections/hid/x dans EditeurState pour une
   différence qui n'est, au fond, qu'un filtre d'affichage.
 */
-
-import { DROP_PRODUITS } from "../../dashboard-produits/dropCatalogue";
 
 export type SectionGroupe = "Haut de page" | "Produit" | "Commande" | "Contenu" | "Sections personnalisées" | "Bas de page" | "Par-dessus la page";
 
@@ -661,8 +650,12 @@ export type HeroState = {
   titre: string;
   /** Sous-chaîne de `titre` mise en couleur (1re occurrence, insensible à la casse). */
   motValorise: string;
+  /** Phrase sous le titre. */
+  sousTitre: string;
   bouton1Texte: string;
   bouton2Texte: string;
+  /** Photo produit à droite/gauche du texte (data URL, cf. ChampImage) — `null` tant que rien n'est importé, l'aperçu retombe alors sur une photo d'exemple. */
+  imageProduit: string | null;
 };
 
 export type PositionConfiance = "apres-grande-image" | "apres-categories" | "apres-produits" | "avant-pied-de-page";
@@ -766,6 +759,11 @@ export type PromoState = {
   finOffre: string;
   boutonTexte: string;
   lienBouton: "rayon-offres" | "accueil" | "tous-les-produits" | "personnalise";
+  /** URL saisie par le marchand quand `lienBouton === "personnalise"` — sans
+   *  ça le bouton n'avait nulle part où aller (cf. rapport de tâche). */
+  lienPersonnalise: string;
+  /** Photo produit (data URL, cf. ChampImage) — `null` tant que rien n'est importé, l'aperçu retombe alors sur une illustration d'exemple. */
+  image: string | null;
 };
 
 /** Même logique que positionConfianceActuelle/placerConfiance ci-dessus : pas
@@ -1150,8 +1148,10 @@ export const ETAT_DEFAUT: EditeurState = {
     petitTexte: "Livraison en 4 h en moyenne",
     titre: "Une peau qui\nrayonne, chaque jour.",
     motValorise: "rayonne",
+    sousTitre: "Des soins naturels pour le visage et le corps, choisis avec soin.",
     bouton1Texte: "Découvrir les soins",
     bouton2Texte: "Voir les offres",
+    imageProduit: null,
   },
   confiance: {
     nombre: 4,
@@ -1178,6 +1178,8 @@ export const ETAT_DEFAUT: EditeurState = {
     finOffre: "30 sept. 2026 · 23 h 59",
     boutonTexte: "J'en profite",
     lienBouton: "rayon-offres",
+    lienPersonnalise: "",
+    image: null,
   },
   grille: {
     montrer: "meilleures-ventes",
@@ -1410,125 +1412,10 @@ export function fusionnerEtatPersiste(sauvegarde: Partial<EditeurState> | undefi
   return fusion;
 }
 
-/* Produit d'aperçu — voir dropCatalogue.ts (source unique du catalogue drop) */
-export const PRODUIT_APERCU = {
-  nom: "Sérum éclat 30 ml",
-  nomEn: "Radiance serum 30 ml",
-  prixVente: 12000,
-  prixConseille: 14000,
-  unitesDisponibles: 340,
-  note: 4.7,
-  avisCount: 126,
-  variantes: ["30 ml", "50 ml"],
-  descriptionCourte: "Sérum concentré en actifs éclat, pour un teint unifié au quotidien.",
-  descriptionCourteEn: "A brightening-actives concentrate for an even, radiant complexion.",
-  descriptionComplete:
-    "Sérum concentré en actifs éclat qui unifie le teint et repulpe la peau dès les premières semaines. Texture légère à absorption rapide, convient aux peaux sensibles, sans paraben ni sulfate.",
-  descriptionCompleteEn:
-    "A brightening-actives concentrate that evens out skin tone and plumps the skin from the first few weeks. Lightweight, fast-absorbing texture, suitable for sensitive skin, paraben- and sulfate-free.",
-};
-
-export type AvisApercuItem = {
-  initiales: string;
-  nom: string;
-  note: number;
-  texte: string;
-  texteEn: string;
-  verifie: boolean;
-  jour: number;
-  photos: boolean;
-  reponse?: string;
-  reponseEn?: string;
-  produit?: { nom: string; nomEn: string; illustration: "flacon" | "pot" | "tube" | "pompe" };
-};
-
-export const AVIS_APERCU: AvisApercuItem[] = [
-  {
-    initiales: "AK",
-    nom: "Aya K.",
-    note: 5,
-    texte: "Texture légère, ma peau est plus lumineuse après deux semaines.",
-    texteEn: "Lightweight texture, my skin is brighter after two weeks.",
-    verifie: true,
-    jour: 12,
-    photos: true,
-    produit: { nom: "Sérum éclat 30 ml", nomEn: "Radiance serum 30 ml", illustration: "flacon" as const },
-  },
-  {
-    initiales: "FB",
-    nom: "Fatou B.",
-    note: 5,
-    texte: "Le savon noir est doux, il ne tire pas la peau. J'en ai repris deux.",
-    texteEn: "The black soap is gentle, it doesn't tighten the skin. I bought two more.",
-    verifie: true,
-    jour: 7,
-    photos: false,
-    produit: { nom: "Savon noir 100 g", nomEn: "Black soap 100 g", illustration: "tube" as const },
-  },
-  {
-    initiales: "MD",
-    nom: "Mariam D.",
-    note: 4,
-    texte: "Reçu très vite et bien emballé. Je recommande.",
-    texteEn: "Received very quickly and well packaged. I recommend it.",
-    verifie: true,
-    jour: 10,
-    photos: false,
-    reponse: "Merci Mariam, à très bientôt !",
-    reponseEn: "Thank you Mariam, see you soon!",
-    produit: { nom: "Crème de jour 50 g", nomEn: "Day cream 50 g", illustration: "pot" as const },
-  },
-];
-
-/* Distribution des notes (résumé "4,7 · 126 avis") — mock au même titre que
-   AVIS_APERCU ci-dessus, en attendant l'API Laravel. */
-export const AVIS_DISTRIBUTION_APERCU = [
-  { etoiles: 5, pourcent: 82 },
-  { etoiles: 4, pourcent: 12 },
-  { etoiles: 3, pourcent: 4 },
-  { etoiles: 2, pourcent: 1 },
-  { etoiles: 1, pourcent: 1 },
-];
-
-/* Note moyenne + nombre d'avis par référence de la grille — mock au même
-   titre que PRODUIT_APERCU/AVIS_APERCU ci-dessus (aucune agrégation d'avis
-   par produit côté API pour l'instant), cf. [[dashboard-mock-data-pending-laravel-api]]. */
-const NOTES_GRILLE_APERCU: Record<string, { note: number; avisCount: number }> = {
-  "serum-eclat-30ml": { note: 4.7, avisCount: 126 },
-  "masque-argile": { note: 4.5, avisCount: 64 },
-  "huile-de-ricin": { note: 4.8, avisCount: 212 },
-  "beurre-de-karite": { note: 4.9, avisCount: 98 },
-  "lotion-tonique": { note: 4.3, avisCount: 74 },
-  "coffret-soin-nuit": { note: 4.6, avisCount: 41 },
-};
-
-/* Grille de produits de la page d'accueil — même source que PRODUIT_APERCU
-   ci-dessus (dropCatalogue.ts), pas une liste inventée : les produits
-   "Beauté et soins" du catalogue drop, seule catégorie peuplée à ce jour.
-   `ventes30j` (vosVentes30j du catalogue, 0 si absent) sert à distinguer, à
-   l'affichage, la référence "Meilleure vente" (la plus vendue du lot) des
-   références "Nouveauté" (pas encore de ventes) — cf. BoutiquePreview.tsx. */
-export const PRODUITS_GRILLE_APERCU = DROP_PRODUITS.filter((p) => p.categorie === "Beauté et soins").slice(0, 6).map((p) => ({
-  nom: p.nom,
-  nomEn: p.nomEn ?? p.nom,
-  prix: p.prixVenteActuel ?? p.prixConseille ?? 0,
-  prixNormal: p.prixConseille ?? p.prixVenteActuel ?? 0,
-  contenance: p.contenance ?? p.poidsEmballe ?? "",
-  ventes30j: p.vosVentes30j ?? 0,
-  note: NOTES_GRILLE_APERCU[p.slug]?.note ?? 4.5,
-  avisCount: NOTES_GRILLE_APERCU[p.slug]?.avisCount ?? 0,
-}));
-
-/* Catégories de navigation de la page d'accueil — pas une donnée métier
-   réelle (aucun découpage en sous-catégories de boutique n'existe encore
-   côté API), juste des cartes d'accès rapide comme dans la maquette,
-   nommées d'après les familles de produits déjà présentes dans le
-   catalogue drop "Beauté et soins" ci-dessus. */
-export const CATEGORIES_APERCU = [
-  { label: "Soins visage", labelEn: "Face care", count: 12, icon: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM9 10h.01M15 10h.01M8 15c1.5 1.5 6.5 1.5 8 0" },
-  { label: "Crèmes", labelEn: "Creams", count: 8, icon: "M6 6h12v3H6ZM9 6V4h6v2M7 9h10v10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V9Z" },
-  { label: "Lotions", labelEn: "Lotions", count: 6, icon: "M10 2h4v2h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V2Z" },
-  { label: "Savons", labelEn: "Soaps", count: 9, icon: "M4 9a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V9ZM9 12c1-1 2-1 3 0s2 1 3 0" },
-  { label: "Coffrets", labelEn: "Gift sets", count: 4, icon: "M4 8h16v12H4V8ZM2 5h20v3H2V5ZM12 5v15M12 5c-1.5-3-5-3-5 0s3.5 3 5 0M12 5c1.5-3 5-3 5 0s-3.5 3-5 0" },
-  { label: "Huiles", labelEn: "Oils", count: 5, icon: "M12 2c3 4 6 8 6 12a6 6 0 0 1-12 0c0-4 3-8 6-12Z" },
-];
+/* Fixtures d'aperçu (produit/produits/catégories/avis de démonstration) :
+   déplacées vers lib/boutique-demo.ts, typées ProduitPublic[]/
+   CategoriePublique[]/AvisClient[] — les mêmes types que la vraie boutique
+   (BoutiqueDonnees, cf. lib/boutique-types.ts) — pour que BoutiquePreview.tsx
+   alimente les composants de app/components/boutique-publique/* avec ces
+   fixtures exactement comme il les alimenterait avec les vraies données
+   d'une boutique, sans conversion de forme séparée. */

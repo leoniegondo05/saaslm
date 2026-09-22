@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 
 import { Tag, texteAvecChiffres } from "../../dashboard-accueil/shared";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
-import { CATEGORIES_APERCU, SECTIONS_DEFAUT, appartientPage, deplacerSection, placerAvis, placerCategories, placerConfiance, placerEngagements, placerFaq, placerGrille, placerOngletsDetails, placerProduitsLies, placerPromo, placerVenduPar, positionAvisActuelle, positionCategoriesActuelle, positionConfianceActuelle, positionEngagementsActuelle, positionFaqActuelle, positionGrilleActuelle, positionOngletsDetailsActuelle, positionProduitsLiesActuelle, positionPromoActuelle, positionVenduParActuelle } from "./types";
+import { CATEGORIES_DEMO } from "@/lib/boutique-demo";
+import { SECTIONS_DEFAUT, appartientPage, deplacerSection, placerAvis, placerCategories, placerConfiance, placerEngagements, placerFaq, placerGrille, placerOngletsDetails, placerProduitsLies, placerPromo, placerVenduPar, positionAvisActuelle, positionCategoriesActuelle, positionConfianceActuelle, positionEngagementsActuelle, positionFaqActuelle, positionGrilleActuelle, positionOngletsDetailsActuelle, positionProduitsLiesActuelle, positionPromoActuelle, positionVenduParActuelle } from "./types";
 import type { BandeauMessage, EditeurState, FaqItem, FormulaireState, GalerieState, MenuLien, OngletsDetailsState, PageId, PositionAvis, PositionCategories, PositionConfiance, PositionEngagements, PositionFaq, PositionGrille, PositionOngletsDetails, PositionProduitsLies, PositionPromo, PositionVenduPar, SectionId, SectionState } from "./types";
 
 /*
@@ -483,6 +484,18 @@ function Corps({
             onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, motValorise: v } }))}
           />
           <Champ
+            label={t("Sous-titre", "Subtitle")}
+            value={h.sousTitre}
+            onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, sousTitre: v } }))}
+            multiline
+            rows={2}
+          />
+          <ChampImage
+            label={t("Photo produit", "Product photo")}
+            value={h.imageProduit}
+            onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, imageProduit: v } }))}
+          />
+          <Champ
             label={t("Bouton 1", "Button 1")}
             value={h.bouton1Texte}
             onChange={(v) => setState((s) => ({ ...s, grandeImage: { ...s.grandeImage, bouton1Texte: v } }))}
@@ -608,9 +621,9 @@ function Corps({
 
           <GroupeTitre label={t("Catégories", "Categories")} />
           <div className="flex flex-wrap gap-1.5">
-            {CATEGORIES_APERCU.map((cat) => (
-              <Tag key={cat.label} tone="pink">
-                {t(cat.label, cat.labelEn)}
+            {CATEGORIES_DEMO.map((cat) => (
+              <Tag key={cat.id} tone="pink">
+                {t(cat.nom, cat.nomEn)}
               </Tag>
             ))}
           </div>
@@ -660,6 +673,7 @@ function Corps({
           </Ligne>
 
           <GroupeTitre label={t("Contenu", "Content")} />
+          <ChampImage label={t("Photo produit", "Product photo")} value={p.image} onChange={(v) => majPromo({ image: v })} />
           <Champ label={t("Petit texte", "Small text")} value={p.petitTexte} onChange={(v) => majPromo({ petitTexte: v })} />
           <Champ label={t("Titre", "Title")} value={p.titre} onChange={(v) => majPromo({ titre: v })} />
           <Champ label={t("Sous-titre", "Subtitle")} value={p.sousTitre} onChange={(v) => majPromo({ sousTitre: v })} />
@@ -676,6 +690,14 @@ function Corps({
             ]}
             onChange={(v) => majPromo({ lienBouton: v as typeof p.lienBouton })}
           />
+          {p.lienBouton === "personnalise" && (
+            <Champ
+              label={t("URL du lien", "Link URL")}
+              value={p.lienPersonnalise}
+              placeholder="https://…"
+              onChange={(v) => majPromo({ lienPersonnalise: v })}
+            />
+          )}
 
           <SegmenteGrille
             label={t("Position dans la page", "Position on the page")}
@@ -1781,20 +1803,22 @@ function Champ({
   onChange,
   multiline = false,
   rows = 2,
+  placeholder,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   multiline?: boolean;
   rows?: number;
+  placeholder?: string;
 }) {
   return (
     <div>
       <p className="text-[9.5px] uppercase tracking-[0.1em] text-[var(--dashboard-text)]/40">{label}</p>
       {multiline ? (
-        <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} className={`${champBoxClasses} resize-none leading-relaxed`} />
+        <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} placeholder={placeholder} className={`${champBoxClasses} resize-none leading-relaxed`} />
       ) : (
-        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} className={champBoxClasses} />
+        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={champBoxClasses} />
       )}
     </div>
   );

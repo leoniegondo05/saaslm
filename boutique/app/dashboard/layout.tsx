@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { DashboardThemeProvider } from "../components/DashboardThemeProvider";
 import { DashboardLanguageProvider, LANG_STORAGE_KEY, type Langue } from "../components/DashboardLanguageProvider";
 import { DashboardBoutiqueLogoProvider } from "../components/DashboardBoutiqueLogoProvider";
+import { DashboardBoutiqueIdentityProvider } from "../components/DashboardBoutiqueIdentityProvider";
 import ScrollToTop from "../components/ScrollToTop";
 
 /*
@@ -42,6 +43,7 @@ export default async function DashboardLayout({
     <DashboardThemeProvider>
       <DashboardLanguageProvider initialLangue={initialLangue}>
         <DashboardBoutiqueLogoProvider>
+        <DashboardBoutiqueIdentityProvider>
         {/* Script anti-flash déplacé dans app/layout.tsx (head du root layout,
             Server Component) pour respecter la contrainte React 19 qui interdit
             les <script> dans le rendu client. */}
@@ -53,6 +55,7 @@ export default async function DashboardLayout({
             {children}
           </div>
           <ScrollToTop />
+        </DashboardBoutiqueIdentityProvider>
         </DashboardBoutiqueLogoProvider>
       </DashboardLanguageProvider>
     </DashboardThemeProvider>

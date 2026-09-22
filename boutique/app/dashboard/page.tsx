@@ -4,10 +4,12 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import DashboardDayWelcome from "../components/DashboardDayWelcome";
 import DashboardHeader, { ChevronIcon } from "../components/DashboardHeader";
+import DashboardSearchBar from "../components/DashboardSearchBar";
 import DashboardSidebar from "../components/DashboardSidebar";
 import QrCode from "../components/QrCode";
 import { useDashboardLangue } from "../components/DashboardLanguageProvider";
 import { texteAvecChiffres } from "../components/dashboard-accueil/shared";
+import { Filtrable, RechercheProvider } from "../components/DashboardRecherche";
 
 /*
   Tableau de bord (dashboard) affiché après connexion, reproduction exacte
@@ -32,8 +34,24 @@ const COMMUNES_EXPOSEES = [
   { label: "Port-Bouët", variant: "highlight" },
 ] as const;
 
+// Blocs de la page "Ma journée", chacun rendu filtrable via Filtrable
+// (DashboardRecherche.tsx) — même mécanisme plein texte que l'onglet
+// Accueil (cf. app/dashboard/accueil/page.tsx) : pas de forme de donnée
+// commune entre météo/conditions locales/recommandation/événements/
+// ventes+identité pour un filtrage structuré, donc chaque bloc se juge
+// sur son propre texte rendu.
+const MA_JOURNEE_BLOCS = ["meteo", "conditions", "recommandation", "evenements", "journee", "ventes"] as const;
+type MaJourneeBloc = (typeof MA_JOURNEE_BLOCS)[number];
+
 export default function DashboardPage() {
   const { t } = useDashboardLangue();
+  const [recherche, setRecherche] = useState("");
+  const [visibles, setVisibles] = useState<Record<MaJourneeBloc, boolean>>(() =>
+    Object.fromEntries(MA_JOURNEE_BLOCS.map((bloc) => [bloc, true])) as Record<MaJourneeBloc, boolean>
+  );
+  const aucunResultat = recherche.trim() !== "" && MA_JOURNEE_BLOCS.every((bloc) => !visibles[bloc]);
+  const onMatchChange = (bloc: MaJourneeBloc) => (match: boolean) =>
+    setVisibles((v) => (v[bloc] === match ? v : { ...v, [bloc]: match }));
   return (
     <div className="min-h-screen w-full bg-[var(--dashboard-bg)] font-sans text-[var(--dashboard-text)] antialiased transition-colors">
       <div className="mx-auto flex max-w-[1620px] flex-col gap-6 px-4 pb-28 pt-6 sm:px-6 md:px-10 lg:flex-row lg:pb-10 lg:pl-3 lg:pt-8">
@@ -43,6 +61,7 @@ export default function DashboardPage() {
 
         <div className="min-w-0 flex-1 lg:px-6">
           <DashboardHeader />
+          <DashboardSearchBar onChange={setRecherche} />
 
           {/* ── Salutation ── */}
           <h1 className="mt-10 text-3xl font-semibold leading-[1.15] tracking-tight sm:text-4xl">
@@ -52,41 +71,62 @@ export default function DashboardPage() {
             <span className="text-brand-pink">{t("journée.", "day.")}</span>
           </h1>
 
+          {aucunResultat && (
+            <p className="mt-6 text-center text-xs text-[var(--dashboard-text)]/40">
+              {t(`Rien pour « ${recherche} ».`, `Nothing for “${recherche}”.`)}
+            </p>
+          )}
+
           {/* ── Grille principale ── */}
+          <RechercheProvider value={recherche}>
           <div className="relative mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-[290px_1fr_320px]">
             {/* Colonne gauche : météo + recommandation + événements à venir */}
             <div className="flex flex-col gap-3">
-              <WeatherCard />
+              <Filtrable onMatchChange={onMatchChange("meteo")}>
+                <WeatherCard />
+              </Filtrable>
 
-              <LocalConditionsCard />
+              <Filtrable onMatchChange={onMatchChange("conditions")}>
+                <LocalConditionsCard />
+              </Filtrable>
 
-              <div className="flex items-center gap-3 rounded-2xl card-tint border border-[var(--dashboard-text)]/10 p-3 pr-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink">
-                  <WarningIcon />
-                </span>
-                <span>
-                  <span className="block text-xs text-[var(--dashboard-text)]/50">
-                    {t("Recommandation", "Recommendation")}
+              <Filtrable onMatchChange={onMatchChange("recommandation")}>
+                <div className="flex items-center gap-3 rounded-2xl card-tint border border-[var(--dashboard-text)]/10 p-3 pr-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink">
+                    <WarningIcon />
                   </span>
-                  <span className="block whitespace-nowrap text-sm font-semibold">
-                    {texteAvecChiffres(t("Livrer à yopougon avant 23h", "Deliver to Yopougon before 11pm"))}
+                  <span>
+                    <span className="block text-xs text-[var(--dashboard-text)]/50">
+                      {t("Recommandation", "Recommendation")}
+                    </span>
+                    <span className="block whitespace-nowrap text-sm font-semibold">
+                      {texteAvecChiffres(t("Livrer à yopougon avant 23h", "Deliver to Yopougon before 11pm"))}
+                    </span>
                   </span>
-                </span>
-              </div>
+                </div>
+              </Filtrable>
 
-              <EventsCard />
+              <Filtrable onMatchChange={onMatchChange("evenements")}>
+                <EventsCard />
+              </Filtrable>
             </div>
 
             {/* Colonne centrale : entre la carte "Aujourd'hui" (gauche) et la
                 carte ventes "Hier · aujourd'hui · demain" (droite) —
                 DashboardDayWelcome vit ici, pas sous le titre. */}
-            <div className="relative order-3 sm:col-span-2 lg:order-none lg:col-span-1">
+            <Filtrable
+              className="relative order-3 sm:col-span-2 lg:order-none lg:col-span-1"
+              onMatchChange={onMatchChange("journee")}
+            >
               <DashboardDayWelcome />
-            </div>
+            </Filtrable>
 
             {/* Colonne droite : ventes + identité — une seule carte, les deux
                 sections sont liées (pas deux cartes séparées par un gap) */}
-            <div className="order-2 flex flex-col rounded-2xl card-tint border border-[var(--dashboard-text)]/10 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] lg:order-none">
+            <Filtrable
+              className="order-2 flex flex-col rounded-2xl card-tint border border-[var(--dashboard-text)]/10 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)] lg:order-none"
+              onMatchChange={onMatchChange("ventes")}
+            >
               <div className="p-3">
                 <span className="inline-flex items-center gap-2 text-xs text-[var(--dashboard-text)]/50">
                   <TrendUpIcon />
@@ -178,8 +218,9 @@ export default function DashboardPage() {
                   )}
                 </p>
               </div>
-            </div>
+            </Filtrable>
           </div>
+          </RechercheProvider>
         </div>
       </div>
     </div>

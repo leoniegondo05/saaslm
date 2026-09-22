@@ -32,6 +32,13 @@ export function proxy(request: NextRequest) {
   const isDev = process.env.NODE_ENV === "development";
   const apiOrigin = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
 
+  // Routes brouillon /boutique/[slug]/apercu/** : chargées en iframe par le
+  // dashboard (même domaine). frame-ancestors 'self' + SAMEORIGIN ici
+  // uniquement — le site public réel garde frame-ancestors 'none' + DENY.
+  const estApercu = /^\/boutique\/[^/]+\/apercu(\/|$)/.test(request.nextUrl.pathname);
+  const frameAncestors = estApercu ? "'self'" : "'none'";
+  const xFrameOptions = estApercu ? "SAMEORIGIN" : "DENY";
+
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""};
@@ -42,7 +49,7 @@ export function proxy(request: NextRequest) {
     object-src 'none';
     base-uri 'self';
     form-action 'self';
-    frame-ancestors 'none';
+    frame-ancestors ${frameAncestors};
     upgrade-insecure-requests;
   `
     .replace(/\s{2,}/g, " ")
@@ -56,6 +63,7 @@ export function proxy(request: NextRequest) {
     request: { headers: requestHeaders },
   });
   response.headers.set("Content-Security-Policy", cspHeader);
+  response.headers.set("X-Frame-Options", xFrameOptions);
 
   return response;
 }
