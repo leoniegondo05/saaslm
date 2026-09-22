@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { LienBoutique } from "./PreviewMode";
 import type { CategoriesState } from "@/app/components/dashboard-reglages/personnaliser/types";
 import type { CategoriePublique, ProduitPublic } from "@/lib/boutique-types";
@@ -24,8 +23,10 @@ const COLS_ORDI: Record<CategoriesState["colonnesOrdinateur"], string> = {
   (boutiques enregistrées avant cette fonctionnalité, cf. CategoriePublique
   dans boutique-types.ts), sinon pastille à l'initiale. Forme ronde/carrée,
   compteur produits, et défilement horizontal sur téléphone
-  (`colonnesTelephone === "defilement"`) ou automatiquement sur ordinateur
-  dès qu'il y a plus de catégories que de colonnes (`carrouselOrdinateur`).
+  (`colonnesTelephone === "defilement"`, ou automatiquement si le nombre de
+  catégories dépasse "2"/"3" colonnes). Sur ordinateur, toujours une grille
+  qui retombe à la ligne (jamais de carrousel), limitée à 5 catégories —
+  au-delà, "Tout voir" prend le relais.
 */
 export default function SectionCategories({
   slug,
@@ -40,13 +41,17 @@ export default function SectionCategories({
 }) {
   if (!categories.length) return null;
   const rond = config.formeImages === "rond";
-  // Beaucoup de catégories (plus que de colonnes) : passage automatique en
-  // carrousel (défilement horizontal) plutôt que de retomber à la ligne —
-  // même logique que colonnesTelephone === "defilement" (déjà un choix
-  // manuel), mais sans réglage à ajouter côté ordinateur, et en forçant le
-  // défilement côté téléphone même si "2" ou "3" colonnes est choisi.
-  const carrouselOrdinateur = categories.length > config.colonnesOrdinateur;
-  const carrouselTelephone = config.colonnesTelephone !== "defilement" && categories.length > Number(config.colonnesTelephone);
+  // Vitrine limitée à 5 catégories : au-delà, "Tout voir" prend le relais
+  // plutôt que d'allonger la section (ou de forcer un carrousel) à chaque
+  // catégorie ajoutée.
+  const categoriesAffichees = categories.slice(0, 5);
+  // Beaucoup de catégories (plus que de colonnes) sur téléphone : passage
+  // automatique en carrousel (défilement horizontal) plutôt que de retomber
+  // à la ligne, même si "2" ou "3" colonnes est choisi. Sur ordinateur on
+  // repasse toujours à la ligne (grid-cols standard) — un carrousel calculé
+  // en pourcentage de la largeur de l'écran ("cols" configurable de 3 à 6)
+  // agrandissait démesurément les images dès qu'il se déclenchait.
+  const carrouselTelephone = config.colonnesTelephone !== "defilement" && categoriesAffichees.length > Number(config.colonnesTelephone);
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -65,14 +70,9 @@ export default function SectionCategories({
           carrouselTelephone
             ? "grid-flow-col auto-cols-[42%] overflow-x-auto snap-x snap-mandatory"
             : COLS_TEL[config.colonnesTelephone] ?? COLS_TEL["2"]
-        } ${
-          carrouselOrdinateur
-            ? "sm:grid-flow-col sm:auto-cols-[calc((100%_-_3*0.75rem)/var(--cols))] sm:overflow-x-auto sm:snap-x sm:snap-mandatory"
-            : `sm:grid-flow-row sm:auto-cols-auto sm:overflow-visible ${COLS_ORDI[config.colonnesOrdinateur] ?? COLS_ORDI[4]}`
-        }`}
-        style={carrouselOrdinateur ? ({ "--cols": config.colonnesOrdinateur } as CSSProperties) : undefined}
+        } sm:grid-flow-row sm:auto-cols-auto sm:overflow-visible ${COLS_ORDI[config.colonnesOrdinateur] ?? COLS_ORDI[4]}`}
       >
-        {categories.map((cat) => {
+        {categoriesAffichees.map((cat) => {
           const produitsCategorie = produits.filter((p) => p.categorieId === cat.id);
           const photo = cat.image || produitsCategorie.find((p) => p.images[0])?.images[0];
           const nombre = produitsCategorie.length;
