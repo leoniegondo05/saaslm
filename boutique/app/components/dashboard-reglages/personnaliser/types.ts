@@ -362,12 +362,10 @@ export type EnteteState = {
   positionLogo: "gauche" | "centre"; // sur ordinateur
   positionLogoMobile: "centre" | "gauche"; // sur téléphone — centré par défaut, contrairement à l'ordinateur
   tailleLogo: "s" | "m" | "l";
-  /** Fond transparent tant que l'en-tête chevauche la grande image — n'a
-   *  de sens que sur l'accueil, seule page à avoir une grande image. */
   transparentSurHero: boolean;
   rechercheStyle: "barre" | "icone";
   panierStyle: "sac" | "chariot";
-  compte: boolean;
+  compte?: boolean;
   nousEcrire: boolean;
   grandMenuAvecImages: boolean;
   resteVisible: "non" | "toujours" | "en-remontant";

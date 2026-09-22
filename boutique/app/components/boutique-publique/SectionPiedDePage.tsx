@@ -3,7 +3,9 @@ import type { CSSProperties } from "react";
 import type { PiedDePageState, StyleState, HeroState } from "@/app/components/dashboard-reglages/personnaliser/types";
 import type { AvisClient, BoutiqueIdentite } from "@/lib/boutique-types";
 import { texteAvecChiffres } from "@/lib/boutique-format";
-import { HaloCourbes, Icon } from "./Icons";
+import { HaloCourbes } from "./Icons";
+import { LuCamera, LuCheck, LuMessageCircle, LuPlay } from "react-icons/lu";
+import type { IconType } from "react-icons";
 
 const TAILLE_LOGO: Record<PiedDePageState["tailleLogo"], number> = { petite: 32, moyenne: 40, grande: 52 };
 
@@ -21,11 +23,7 @@ const MOYENS_PAIEMENT: { label: string; logo: string }[] = [
 // PIED_RESEAUX_ICONES : `piedDePage.reseaux` reste un simple booléen, sans
 // champ pour choisir quels réseaux relier ni leur lien, donc ces icônes
 // restent décoratives (pas de href) plutôt que des liens morts.
-const RESEAUX_ICONES = [
-  "M4 8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4Z M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z",
-  "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z M10 9l5 3-5 3Z",
-  "M4 4h16v12H8l-4 4Z",
-];
+const RESEAUX_ICONES: IconType[] = [LuCamera, LuPlay, LuMessageCircle];
 
 /*
   Groupes de liens du pied de page — `piedDePage.colonnesLiens` choisit
@@ -112,7 +110,10 @@ export default function SectionPiedDePage({
       {!isHalo && grandeImage.courbesLumineuses && <HaloCourbes ton={fond.sombre ? "sombre" : "clair"} />}
 
       <div className={`relative mx-auto flex max-w-6xl flex-col gap-6 px-4 py-12 sm:px-6 ${centre ? "items-center text-center" : "items-start"}`}>
-        <div className={`flex w-full flex-col gap-6 ${centre ? "items-center" : "sm:flex-row sm:items-start sm:justify-between"}`}>
+        <div
+          className={`flex w-full flex-col gap-6 rounded-2xl border p-4 sm:p-6 ${centre ? "items-center" : "sm:flex-row sm:items-start sm:justify-between"}`}
+          style={{ borderColor: fond.sombre ? "rgba(255,255,255,.14)" : "rgba(0,0,0,.08)", background: fond.sombre ? "rgba(255,255,255,.05)" : "rgba(0,0,0,.03)" }}
+        >
           <div className={`flex min-w-0 flex-col gap-3 ${centre ? "items-center" : ""}`}>
             <div className={`flex items-start gap-3 ${centre ? "flex-col items-center text-center" : ""}`}>
               {piedDePage.logoAffiche &&
@@ -139,9 +140,9 @@ export default function SectionPiedDePage({
 
             {piedDePage.reseaux && (
               <div className={`flex items-center gap-2 ${centre ? "justify-center" : ""}`}>
-                {RESEAUX_ICONES.map((path, i) => (
+                {RESEAUX_ICONES.map((ReseauIcon, i) => (
                   <span key={i} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: fond.sombre ? "rgba(255,255,255,.1)" : "rgba(0,0,0,.06)" }}>
-                    <Icon path={path} color={fond.color} size={15} />
+                    <ReseauIcon color={fond.color} size={15} />
                   </span>
                 ))}
               </div>
@@ -192,7 +193,7 @@ export default function SectionPiedDePage({
           </p>
           {achatsVerifies > 0 && (
             <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold" style={{ background: "rgba(63,203,142,.16)", color: "#5FE0AA" }}>
-              <Icon path="M5 12l4 4 10-10" color="#5FE0AA" size={13} />
+              <LuCheck color="#5FE0AA" size={13} />
               {texteAvecChiffres(`${achatsVerifies} achat${achatsVerifies > 1 ? "s" : ""} vérifié${achatsVerifies > 1 ? "s" : ""}`)}
             </span>
           )}

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { BoutonCommandeTexte, FlottantsState } from "@/app/components/dashboard-reglages/personnaliser/types";
-import { Icon, WhatsappIcon } from "./Icons";
+import { WhatsappIcon } from "./Icons";
+import { LuArrowUp } from "react-icons/lu";
 import { LienBoutique } from "./PreviewMode";
 
 const LABELS: Record<BoutonCommandeTexte, string> = { "je-commande": "Je commande", commander: "Commander", acheter: "Acheter" };
@@ -69,7 +70,7 @@ export default function ElementsFlottants({
             }`}
             style={{ bottom: basReserve, background: "var(--ac)" }}
           >
-            <Icon path="M12 19V5M5 12l7-7 7 7" color="#fff" size={18} />
+            <LuArrowUp color="#fff" size={18} />
           </button>
         )}
         {flottants.whatsappAfficher && (

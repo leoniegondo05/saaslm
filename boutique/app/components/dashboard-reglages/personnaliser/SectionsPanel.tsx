@@ -197,10 +197,10 @@ export default function SectionsPanel({
                     setDragId(null);
                     setSurvolId(null);
                   }}
-                  className={`group flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-left transition ${cle ? "ml-3" : ""} ${
+                  className={`group flex items-center gap-1.5 rounded-xl border px-2 py-1.5 text-left transition ${cle ? "ml-3" : ""} ${
                     sectionChoisie === sec.id
-                      ? "bg-brand-pink/10 ring-1 ring-brand-pink/40"
-                      : "hover:bg-[var(--dashboard-text)]/[0.04]"
+                      ? "border-brand-pink/50 bg-transparent"
+                      : "border-transparent hover:bg-[var(--dashboard-text)]/[0.04]"
                   } ${!sec.visible ? "opacity-45" : ""} ${dragId === sec.id ? "opacity-40" : ""}`}
                 >
                   {cetteSectionDeplacable && (
@@ -214,14 +214,14 @@ export default function SectionsPanel({
                     className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-[11.5px] font-semibold text-[var(--dashboard-text)]"
                   >
                     {def.icone && (
-                      <span className="shrink-0 text-[var(--dashboard-text)]/45">
+                      <span className={`shrink-0 ${sectionChoisie === sec.id ? "text-brand-pink" : "text-[var(--dashboard-text)]/45"}`}>
                         <MiniIcon path={def.icone} />
                       </span>
                     )}
                     <span className="truncate">{t(def.label, def.labelEn)}</span>
                   </button>
                   {sec.id !== "pied-de-page" && sec.id !== "bouton-commande-fixe" && (
-                    <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
+                    <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100">
                       <button
                         type="button"
                         disabled={i === 0}

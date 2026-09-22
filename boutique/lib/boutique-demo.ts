@@ -63,12 +63,12 @@ export const PRODUITS_DEMO: ProduitPublic[] = PRODUITS_BEAUTE.slice(0, 6).map((p
 export const PRODUIT_DEMO: ProduitPublic = PRODUITS_DEMO[0];
 
 export const CATEGORIES_DEMO: CategoriePublique[] = [
-  { id: "demo-soins-visage", nom: "Soins visage", nomEn: "Face care" },
-  { id: "demo-cremes", nom: "Crèmes", nomEn: "Creams" },
-  { id: "demo-lotions", nom: "Lotions", nomEn: "Lotions" },
-  { id: "demo-savons", nom: "Savons", nomEn: "Soaps" },
-  { id: "demo-coffrets", nom: "Coffrets", nomEn: "Gift sets" },
-  { id: "demo-huiles", nom: "Huiles", nomEn: "Oils" },
+  { id: "demo-soins-visage", nom: "Soins visage", nomEn: "Face care", image: "/images/serum1.avif" },
+  { id: "demo-cremes", nom: "Crèmes", nomEn: "Creams", image: "/images/5.png" },
+  { id: "demo-lotions", nom: "Lotions", nomEn: "Lotions", image: "/images/7.jpg" },
+  { id: "demo-savons", nom: "Savons", nomEn: "Soaps", image: "/images/1.jpg" },
+  { id: "demo-coffrets", nom: "Coffrets", nomEn: "Gift sets", image: "/images/2.jpg" },
+  { id: "demo-huiles", nom: "Huiles", nomEn: "Oils", image: "/images/4.jpg" },
 ];
 
 type AvisDemoSource = {

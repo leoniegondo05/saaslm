@@ -43,6 +43,10 @@ export type Categorie = {
   id: string;
   nom: string;
   nomEn: string;
+  /** Data URL (FileReader), même mécanique que le logo boutique (cf.
+   *  MaBoutique.tsx) — obligatoire : une catégorie sans image ne peut plus
+   *  être créée depuis le dashboard. */
+  image: string;
 };
 
 /** Charge complète du formulaire — ce qui partira vers l'API à la publication. */

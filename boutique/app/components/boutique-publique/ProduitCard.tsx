@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { CartesProduitState, GrilleState, MouvementsState } from "@/app/components/dashboard-reglages/personnaliser/types";
 import type { ProduitPublic } from "@/lib/boutique-types";
-import { Icon } from "./Icons";
+import { LuHeart, LuImage, LuPlus, LuShoppingCart } from "react-icons/lu";
 import { useCart } from "./CartProvider";
 import { LienBoutique } from "./PreviewMode";
+import { volerVersPanier } from "./volerVersPanier";
 
 const EFFET_SURVOL: Record<MouvementsState["effetSurvol"], string> = {
   aucun: "",
@@ -40,6 +41,7 @@ export default function ProduitCard({
   const { ajouter } = useCart();
   const [ajoute, setAjoute] = useState(false);
   const [favori, setFavori] = useState(false);
+  const imageRef = useRef<HTMLImageElement>(null);
   const image = produit.images[0];
   const enPromo = produit.prixNormal != null && produit.prixNormal > produit.prix;
   const rupture = produit.stock <= 0;
@@ -49,6 +51,7 @@ export default function ProduitCard({
     e.preventDefault();
     e.stopPropagation();
     if (rupture) return;
+    volerVersPanier(imageRef.current);
     ajouter(produit.id, 1);
     setAjoute(true);
     setTimeout(() => setAjoute(false), 1400);
@@ -76,15 +79,14 @@ export default function ProduitCard({
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
+            ref={imageRef}
             src={image}
             alt={produit.nom}
             className={`h-full w-full object-cover ${mouvements.effetSurvol === "zoom" ? "transition duration-300 group-hover:scale-110" : "transition duration-300 group-hover:scale-105"}`}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-[var(--tx)]/25">
-            <svg viewBox="0 0 24 24" className="h-10 w-10" fill="none" stroke="currentColor" strokeWidth="1.3">
-              <path d="M4 5.5h16v13H4zM4 15l4.5-4.5L12 14l3-3 5 5.5M9 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" />
-            </svg>
+            <LuImage size={40} />
           </div>
         )}
         {grille.badges && (enPromo || nouveau) && (
@@ -104,11 +106,7 @@ export default function ProduitCard({
             className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full transition"
             style={{ background: favori ? "var(--ac)" : "rgba(255,255,255,0.85)" }}
           >
-            <Icon
-              path="M12 20s-6.2-3.9-8.4-7.6C1.8 9.4 3.6 6 7 6c1.9 0 3.4 1 5 2.8C13.6 7 15.1 6 17 6c3.4 0 5.2 3.4 3.4 6.4C18.2 16.1 12 20 12 20Z"
-              color={favori ? "#fff" : "var(--ac)"}
-              size={14}
-            />
+            <LuHeart color={favori ? "#fff" : "var(--ac)"} size={14} />
           </button>
         )}
         {rupture && <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-[12px] font-semibold text-white">Rupture de stock</span>}
@@ -138,11 +136,12 @@ export default function ProduitCard({
             aria-label={grille.bouton === "icone" ? `Ajouter ${produit.nom} au panier` : undefined}
           >
             {rupture ? "Indisponible" : ajoute ? "Ajouté !" : grille.bouton === "icone" ? (
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-              </svg>
+              <LuPlus size={16} />
             ) : (
-              "Ajouter au panier"
+              <>
+                <LuShoppingCart size={15} />
+                Ajouter au panier
+              </>
             )}
           </button>
         )}

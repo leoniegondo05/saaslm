@@ -5,7 +5,7 @@ import type { ProduitPublic } from "@/lib/boutique-types";
 import type { BoutonCommandeTexte, EditeurState } from "@/app/components/dashboard-reglages/personnaliser/types";
 import { boutonCommandeFond } from "@/lib/boutique-style";
 import { texteAvecChiffres } from "@/lib/boutique-format";
-import { Icon } from "./Icons";
+import { LuCheck, LuCreditCard, LuRotateCcw, LuShoppingCart, LuTruck } from "react-icons/lu";
 import FormulaireChamps, { VALEURS_FORMULAIRE_VIDES, type ValeursFormulaire } from "./FormulaireChamps";
 import { useCart, type CartItem } from "./CartProvider";
 import { useBoutiqueRouter } from "./PreviewMode";
@@ -31,11 +31,11 @@ function RadioCercle({ actif }: { actif: boolean }) {
 
 function TitreNumerote({ n, titre }: { n: number; titre: string }) {
   return (
-    <div className="mb-2.5 flex items-center gap-2">
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white" style={{ background: "var(--ac)" }}>
+    <div className="mb-2.5 flex items-center gap-2 lg:mb-1.5">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white lg:h-5 lg:w-5" style={{ background: "var(--ac)" }}>
         {n}
       </span>
-      <span className="text-[14px] font-bold">{titre}</span>
+      <span className="text-[14px] font-bold lg:text-[13px]">{titre}</span>
     </div>
   );
 }
@@ -88,21 +88,21 @@ export default function CommandeClient({ slug, produits, editeur }: { slug: stri
   }
 
   return (
-    <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <h1 className="mb-6 text-[22px] font-bold" style={{ fontFamily: "var(--font-titre)" }}>
+    <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:py-5">
+      <h1 className="mb-6 text-[22px] font-bold lg:mb-3 lg:text-[19px]" style={{ fontFamily: "var(--font-titre)" }}>
         Finaliser ma commande
       </h1>
-      <form onSubmit={soumettre} className="grid gap-4 lg:grid-cols-2">
+      <form onSubmit={soumettre} className="grid gap-4 lg:grid-cols-2 lg:gap-3">
         {/* Colonne gauche : paiement + livraison */}
-        <div className="flex flex-col gap-4">
-          <div className="rounded-2xl border border-[var(--tx)]/8 p-4 shadow-sm">
+        <div className="flex flex-col gap-4 lg:gap-3">
+          <div className="rounded-2xl border border-[var(--tx)]/8 p-4 shadow-sm lg:p-3">
             <TitreNumerote n={1} titre="Mode de paiement" />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 lg:gap-1.5">
               {editeur.paiement.payerEnLigne && (
                 <button
                   type="button"
                   onClick={() => setModePaiement("en-ligne")}
-                  className="relative flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2.5 text-left"
+                  className="relative flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2.5 text-left lg:py-2"
                   style={{
                     borderWidth: modePaiement === "en-ligne" ? "var(--btn-border)" : "1px",
                     borderColor: modePaiement === "en-ligne" ? "var(--ac)" : "color-mix(in srgb, var(--tx) 12%, transparent)",
@@ -129,7 +129,7 @@ export default function CommandeClient({ slug, produits, editeur }: { slug: stri
                 <button
                   type="button"
                   onClick={() => setModePaiement("a-la-livraison")}
-                  className="flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2.5 text-left"
+                  className="flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2.5 text-left lg:py-2"
                   style={{
                     borderWidth: modePaiement === "a-la-livraison" ? "var(--btn-border)" : "1px",
                     borderColor: modePaiement === "a-la-livraison" ? "var(--ac)" : "color-mix(in srgb, var(--tx) 12%, transparent)",
@@ -148,9 +148,9 @@ export default function CommandeClient({ slug, produits, editeur }: { slug: stri
           </div>
 
           {editeur.paiement.payerEnLigne && modePaiement === "en-ligne" && (
-            <div className="rounded-2xl border border-[var(--tx)]/8 p-4 shadow-sm">
+            <div className="rounded-2xl border border-[var(--tx)]/8 p-4 shadow-sm lg:p-3">
               <TitreNumerote n={2} titre="Payer avec" />
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-2 lg:gap-1.5">
                 {MOYENS_PAIEMENT.map((m) => {
                   const selectionne = methodePaiement === m.label;
                   return (
@@ -158,7 +158,7 @@ export default function CommandeClient({ slug, produits, editeur }: { slug: stri
                       key={m.label}
                       type="button"
                       onClick={() => setMethodePaiement(m.label)}
-                      className="relative flex flex-col items-center gap-1.5 rounded-xl border px-1.5 py-2.5"
+                      className="relative flex flex-col items-center gap-1.5 rounded-xl border px-1.5 py-2.5 lg:py-2"
                       style={{
                         borderWidth: selectionne ? "var(--btn-border)" : "1px",
                         borderColor: selectionne ? "var(--ac)" : "color-mix(in srgb, var(--tx) 12%, transparent)",
@@ -167,7 +167,7 @@ export default function CommandeClient({ slug, produits, editeur }: { slug: stri
                     >
                       {selectionne && (
                         <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full" style={{ background: "var(--ac)" }}>
-                          <Icon path="M5 12l4 4 10-10" color="#fff" size={10} />
+                          <LuCheck color="#fff" size={10} />
                         </span>
                       )}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -182,13 +182,13 @@ export default function CommandeClient({ slug, produits, editeur }: { slug: stri
             </div>
           )}
 
-          <div className="rounded-2xl border border-[var(--tx)]/8 p-4 shadow-sm">
+          <div className="rounded-2xl border border-[var(--tx)]/8 p-4 shadow-sm lg:p-3">
             <TitreNumerote n={3} titre="Livraison" />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 lg:gap-1.5">
               <button
                 type="button"
                 onClick={() => setLivraison("standard")}
-                className="flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2.5 text-left"
+                className="flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2.5 text-left lg:py-2"
                 style={{
                   borderWidth: livraison === "standard" ? "var(--btn-border)" : "1px",
                   borderColor: livraison === "standard" ? "var(--ac)" : "color-mix(in srgb, var(--tx) 12%, transparent)",
@@ -206,7 +206,7 @@ export default function CommandeClient({ slug, produits, editeur }: { slug: stri
                 <button
                   type="button"
                   onClick={() => setLivraison("express")}
-                  className="flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2.5 text-left"
+                  className="flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2.5 text-left lg:py-2"
                   style={{
                     borderWidth: livraison === "express" ? "var(--btn-border)" : "1px",
                     borderColor: livraison === "express" ? "var(--ac)" : "color-mix(in srgb, var(--tx) 12%, transparent)",
@@ -226,11 +226,11 @@ export default function CommandeClient({ slug, produits, editeur }: { slug: stri
         </div>
 
         {/* Colonne droite : coordonnées + récapitulatif + CTA */}
-        <div className="rounded-2xl border border-[var(--tx)]/8 p-4 shadow-sm">
+        <div className="rounded-2xl border border-[var(--tx)]/8 p-4 shadow-sm lg:p-3">
           <TitreNumerote n={4} titre="Vos informations" />
           <FormulaireChamps f={editeur.formulaire} valeurs={valeurs} onChange={setValeurs} />
 
-          <div className="mt-4 rounded-xl bg-[var(--tx)]/[.03] p-3.5 text-[13px]">
+          <div className="mt-4 rounded-xl bg-[var(--tx)]/[.03] p-3.5 text-[13px] lg:mt-3 lg:p-3">
             {lignes.map(({ item, produit }) => (
               <div key={produit.id} className="flex items-center justify-between gap-3">
                 <span className="truncate text-[var(--tx)]/65">
@@ -260,24 +260,31 @@ export default function CommandeClient({ slug, produits, editeur }: { slug: stri
           <button
             type="submit"
             disabled={envoi === "envoi"}
-            className="mt-4 flex w-full items-center justify-center gap-2 py-3.5 text-[14px] font-bold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70"
+            className="mt-4 flex w-full items-center justify-center gap-2 py-3.5 text-[14px] font-bold text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70 lg:mt-3 lg:py-3"
             style={{ background: boutonCommandeFond(editeur), borderRadius: "var(--rad)", textTransform: "var(--btn-uppercase)" as React.CSSProperties["textTransform"] }}
           >
-            {envoi === "envoi" ? "Envoi en cours…" : LABELS[editeur.paiement.boutonTexte]} · <span className="font-figures-bold">{total.toLocaleString("fr-FR")} F</span>
+            {envoi === "envoi" ? (
+              "Envoi en cours…"
+            ) : (
+              <>
+                <LuShoppingCart size={16} />
+                {LABELS[editeur.paiement.boutonTexte]} · <span className="font-figures-bold">{total.toLocaleString("fr-FR")} F</span>
+              </>
+            )}
           </button>
-          <p className="mt-2 text-center text-[11px] text-[var(--tx)]/45">
+          <p className="mt-2 text-center text-[11px] text-[var(--tx)]/45 lg:mt-1.5">
             {modePaiement === "en-ligne" ? `Paiement par ${methodePaiement} à l'étape suivante` : "Vous payez en espèces à réception du colis"}
           </p>
 
           {editeur.paiement.rangeeConfiance && (
-            <div className="mt-4 flex items-center justify-around gap-1 border-t border-[var(--tx)]/8 pt-4">
+            <div className="mt-4 flex items-center justify-around gap-1 border-t border-[var(--tx)]/8 pt-4 lg:mt-3 lg:pt-3">
               {[
-                { icon: "M3 11l2-6h14l2 6v2H3Zm2 2v6h2v-6m8 0v6h2v-6", label: "Livraison rapide" },
-                { icon: "M4 7h16v10H4Zm0 3h16", label: "Paiement sécurisé" },
-                { icon: "M12 21s6.5-6 6.5-11A6.5 6.5 0 0 0 5.5 10c0 5 6.5 11 6.5 11Z", label: "Retour facile" },
+                { icon: LuTruck, label: "Livraison rapide" },
+                { icon: LuCreditCard, label: "Paiement sécurisé" },
+                { icon: LuRotateCcw, label: "Retour facile" },
               ].map((it) => (
                 <div key={it.label} className="flex flex-col items-center gap-1 px-1 text-center">
-                  <Icon path={it.icon} color="var(--ac)" size={16} />
+                  <it.icon color="var(--ac)" size={16} />
                   <span className="text-[10.5px] font-semibold leading-tight text-[var(--tx)]/60">{it.label}</span>
                 </div>
               ))}

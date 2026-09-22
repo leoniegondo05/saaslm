@@ -3,6 +3,7 @@
 import type { ProduitPublic } from "@/lib/boutique-types";
 import type { EditeurState } from "@/app/components/dashboard-reglages/personnaliser/types";
 import { boutonCommandeFond } from "@/lib/boutique-style";
+import { LuX } from "react-icons/lu";
 import { useCart, type CartItem } from "./CartProvider";
 import { LienBoutique } from "./PreviewMode";
 
@@ -83,9 +84,7 @@ export default function PanierClient({ slug, produits, editeur }: { slug: string
               className="shrink-0 p-1.5 text-[var(--tx)]/40 transition hover:text-[var(--ac)]"
               aria-label={`Retirer ${produit.nom} du panier`}
             >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6">
-                <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-              </svg>
+              <LuX size={20} />
             </button>
           </div>
         ))}

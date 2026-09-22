@@ -32,7 +32,12 @@ export type ProduitPublic = {
   description?: string;
 };
 
-export type CategoriePublique = { id: string; nom: string; nomEn: string };
+/** `image` optionnel (pas `string`) pour rester compatible avec une
+ *  boutique enregistrée avant cette fonctionnalité (.data/boutiques/*.json
+ *  sans ce champ) — voir SectionCategories.tsx pour le repli affiché
+ *  quand absent. Le dashboard, lui, rend l'image obligatoire à la
+ *  création/modification (voir Categorie dans ajouter-produit/types.ts). */
+export type CategoriePublique = { id: string; nom: string; nomEn: string; image?: string | null };
 
 /** Avis client réel — pas de modèle de données avant cette tâche (la
  *  section "avis" de BoutiquePreview.tsx tourne sur des données de

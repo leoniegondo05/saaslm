@@ -3,7 +3,7 @@
 import { useParams, useSearchParams } from "next/navigation";
 import AccueilContenu from "@/app/components/boutique-publique/AccueilContenu";
 import { CartProvider } from "@/app/components/boutique-publique/CartProvider";
-import { ApercuChargement, PreviewNavigationProvider, useApercuDonnees } from "@/app/components/boutique-publique/PreviewMode";
+import { ApercuChargement, PreviewNavigationProvider, useApercuDonnees, useSelectionApercu } from "@/app/components/boutique-publique/PreviewMode";
 import { variablesBoutique } from "@/lib/boutique-style";
 
 /*
@@ -21,12 +21,14 @@ export default function ApercuAccueilPage() {
   const { slug } = useParams<{ slug: string }>();
   const searchParams = useSearchParams();
   const donnees = useApercuDonnees();
+  const edition = searchParams.get("edition") === "1";
+  useSelectionApercu(edition);
 
   if (!donnees) return <ApercuChargement />;
 
   return (
     <div style={variablesBoutique(donnees.editeur)} className="min-h-screen">
-      <PreviewNavigationProvider value={{ actif: true }}>
+      <PreviewNavigationProvider value={{ actif: true, edition }}>
         <CartProvider slug={slug} previsualisation>
           <AccueilContenu donnees={donnees} slug={slug} recherche={searchParams.get("q") ?? ""} categorieActiveId={searchParams.get("cat")} />
         </CartProvider>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { LuCheck } from "react-icons/lu";
 import { lireBoutique } from "@/lib/boutique-store";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -20,9 +21,7 @@ export default async function ConfirmationPage({ params }: Params) {
   return (
     <section className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center gap-5 px-4 py-20 text-center sm:px-6">
       <span className="flex h-16 w-16 items-center justify-center rounded-full text-white" style={{ background: "var(--ac)" }}>
-        <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M4.5 12.5 9.5 17.5 19.5 6.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <LuCheck size={32} strokeWidth={2.5} />
       </span>
       <h1 className="text-[23px] font-bold" style={{ fontFamily: "var(--font-titre)" }}>
         {titre || "Merci, votre commande est enregistrée"}

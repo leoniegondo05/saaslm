@@ -5,7 +5,8 @@ import type { ProduitPublic } from "@/lib/boutique-types";
 import type { BoutonCommandeTexte, EditeurState } from "@/app/components/dashboard-reglages/personnaliser/types";
 import { boutonCommandeFond } from "@/lib/boutique-style";
 import { texteAvecChiffres } from "@/lib/boutique-format";
-import { Icon, ShareIcon } from "./Icons";
+import { ShareIcon } from "./Icons";
+import { LuCreditCard, LuHeart, LuImage, LuPercent, LuTruck, LuZoomIn, LuZoomOut } from "react-icons/lu";
 import { useCart } from "./CartProvider";
 import { useBoutiqueRouter } from "./PreviewMode";
 
@@ -58,9 +59,9 @@ export default function ProduitDetailClient({
     infos.description === "complete" || descriptionEtendue || !descriptionLongue ? produit.description : `${(produit.description ?? "").slice(0, 160)}…`;
 
   const confianceInfos = [
-    { icon: "M3 11l2-6h14l2 6v2H3Zm2 2v6h2v-6m8 0v6h2v-6", texte: "Livraison 4 h en moyenne", actif: true },
-    { icon: "M4 7h16v10H4Zm0 3h16", texte: "Paiement à la livraison", actif: paiement.payerALaLivraison },
-    { icon: "M3 6.5h18v11H3zM3 10h18", texte: `−${paiement.remiseEnLignePct} % en ligne`, actif: paiement.payerEnLigne },
+    { icon: LuTruck, texte: "Livraison 4 h en moyenne", actif: true },
+    { icon: LuCreditCard, texte: "Paiement à la livraison", actif: paiement.payerALaLivraison },
+    { icon: LuPercent, texte: `−${paiement.remiseEnLignePct} % en ligne`, actif: paiement.payerEnLigne },
   ].filter((it) => it.actif);
 
   function handleCommander() {
@@ -118,9 +119,7 @@ export default function ProduitDetailClient({
                 </div>
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-[var(--tx)]/25">
-                  <svg viewBox="0 0 24 24" className="h-16 w-16" fill="none" stroke="currentColor" strokeWidth="1.2">
-                    <path d="M4 5.5h16v13H4zM4 15l4.5-4.5L12 14l3-3 5 5.5M9 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" />
-                  </svg>
+                  <LuImage size={64} />
                 </div>
               )}
               {g.boutonZoom && images.length > 0 && (
@@ -131,7 +130,7 @@ export default function ProduitDetailClient({
                   aria-label={zoomActif ? "Dézoomer" : "Zoomer"}
                   className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow"
                 >
-                  <Icon path={zoomActif ? "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14ZM16 16l4 4M8 11h6" : "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14ZM16 16l4 4M11 8v6M8 11h6"} color="rgba(0,0,0,.65)" />
+                  {zoomActif ? <LuZoomOut color="rgba(0,0,0,.65)" /> : <LuZoomIn color="rgba(0,0,0,.65)" />}
                 </button>
               )}
               {g.compteur && images.length > 1 && (
@@ -250,11 +249,7 @@ export default function ProduitDetailClient({
                     aria-label={paiement.boutonSecondaire === "favori" ? "Ajouter aux favoris" : "Partager"}
                   >
                     {paiement.boutonSecondaire === "favori" ? (
-                      <Icon
-                        path="M12 20s-6.2-3.9-8.4-7.6C1.8 9.4 3.6 6 7 6c1.9 0 3.4 1 5 2.8C13.6 7 15.1 6 17 6c3.4 0 5.2 3.4 3.4 6.4C18.2 16.1 12 20 12 20Z"
-                        color={favori ? "#fff" : "var(--tx)"}
-                        size={20}
-                      />
+                      <LuHeart color={favori ? "#fff" : "var(--tx)"} size={20} />
                     ) : (
                       <ShareIcon color="var(--tx)" size={20} />
                     )}
@@ -269,7 +264,7 @@ export default function ProduitDetailClient({
             <div className="mt-4 flex items-center justify-between gap-2 border-t border-[var(--tx)]/8 pt-4">
               {confianceInfos.map((it) => (
                 <div key={it.texte} className="flex items-center gap-1.5">
-                  <Icon path={it.icon} color="var(--ac)" size={16} />
+                  <it.icon color="var(--ac)" size={16} />
                   <span className="text-[11px] font-medium leading-tight text-[var(--tx)]/60">{it.texte}</span>
                 </div>
               ))}
