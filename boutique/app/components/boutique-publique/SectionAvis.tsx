@@ -5,6 +5,7 @@ import type { AvisApercuState } from "@/app/components/dashboard-reglages/person
 import type { AvisClient, ProduitPublic } from "@/lib/boutique-types";
 import { texteAvecChiffres } from "@/lib/boutique-format";
 import { Etoiles } from "./Icons";
+import FormulaireAvis from "./FormulaireAvis";
 import { LuCheck, LuStar } from "react-icons/lu";
 
 const COLS_ORDI: Record<AvisApercuState["colonnesOrdinateur"], string> = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-3", 4: "sm:grid-cols-4" };
@@ -18,41 +19,56 @@ function formatDate(iso: string): string {
 }
 
 /*
-  Avis clients — port de la case "avis". Aucun modèle de données n'existait
-  avant cette tâche (AVIS_APERCU de BoutiquePreview.tsx est une démonstration
-  figée) : `avis` (lib/boutique-types.ts, AvisClient[]) part d'un tableau
-  vide tant qu'aucun avis réel n'a été laissé — la section reste affichée
-  (comme demandé) avec un état vide honnête plutôt que masquée, résumé/notes
-  calculés sur les vrais avis (moyenne, distribution, compteur vérifié).
+  Avis clients — port de la case "avis". `avis` (lib/boutique-types.ts,
+  AvisClient[]) part d'un tableau vide tant qu'aucun avis réel n'a été
+  laissé — la section reste affichée (comme demandé) avec un état vide
+  honnête plutôt que masquée, résumé/notes calculés sur les vrais avis
+  (moyenne, distribution, compteur vérifié). `slug`+`produitId` optionnels :
+  sans eux (ex. rendu depuis un endroit qui n'a pas encore ce contexte),
+  FormulaireAvis n'est simplement pas affiché plutôt que de planter sur un
+  slug manquant.
+
+  État local `avisAffiches` initialisé depuis la prop puis complété
+  optimistiquement par onEnvoye : la page reste un Server Component (avis
+  lus par lireBoutique), un nouvel avis posté n'est donc pas revalidé côté
+  serveur ici — il apparaît immédiatement pour l'auteur, un futur chargement
+  de page le retrouvera via l'API (déjà écrit sur disque par ajouterAvis).
 */
 export default function SectionAvis({
   avis,
   config,
   couleurEtoiles,
   produits,
+  slug,
+  produitId,
 }: {
   avis: AvisClient[];
   config: AvisApercuState;
   couleurEtoiles: string;
   produits?: ProduitPublic[];
+  slug?: string;
+  produitId?: string | null;
 }) {
   const [filtre, setFiltre] = useState<"tous" | "photos" | 5 | 4>("tous");
+  const [avisAffiches, setAvisAffiches] = useState(avis);
   const cols = config.colonnesOrdinateur;
 
-  const moyenne = avis.length ? avis.reduce((s, a) => s + a.note, 0) / avis.length : null;
+  const moyenne = avisAffiches.length ? avisAffiches.reduce((s, a) => s + a.note, 0) / avisAffiches.length : null;
   const distribution = [5, 4, 3, 2, 1].map((etoiles) => ({
     etoiles,
-    pourcent: avis.length ? Math.round((avis.filter((a) => Math.round(a.note) === etoiles).length / avis.length) * 100) : 0,
+    pourcent: avisAffiches.length
+      ? Math.round((avisAffiches.filter((a) => Math.round(a.note) === etoiles).length / avisAffiches.length) * 100)
+      : 0,
   }));
-  const achatsVerifies = avis.filter((a) => a.verifie).length;
+  const achatsVerifies = avisAffiches.filter((a) => a.verifie).length;
 
   const tries = useMemo(() => {
-    const copie = [...avis];
+    const copie = [...avisAffiches];
     if (config.ordre === "mieux-notes") copie.sort((a, b) => b.note - a.note);
     else if (config.ordre === "recents") copie.sort((a, b) => +new Date(b.date) - +new Date(a.date));
     else if (config.ordre === "photos") copie.sort((a, b) => Number(!!b.photo) - Number(!!a.photo));
     return copie;
-  }, [avis, config.ordre]);
+  }, [avisAffiches, config.ordre]);
 
   const filtres = tries.filter((a) => {
     if (filtre === "photos") return !!a.photo;
@@ -70,7 +86,16 @@ export default function SectionAvis({
         </h2>
       </div>
 
-      {avis.length === 0 ? (
+      {slug && (
+        <FormulaireAvis
+          slug={slug}
+          produitId={produitId}
+          couleurEtoiles={couleurEtoiles}
+          onEnvoye={(cree) => setAvisAffiches((prev) => [cree, ...prev])}
+        />
+      )}
+
+      {avisAffiches.length === 0 ? (
         <div className="flex flex-col items-center gap-2 border border-dashed border-[var(--tx)]/20 px-6 py-14 text-center" style={{ borderRadius: "var(--card-rad)" }}>
           <LuStar color="color-mix(in srgb, var(--tx) 30%, transparent)" size={26} />
           <p className="text-[15px] font-semibold">Aucun avis pour le moment</p>
@@ -105,7 +130,7 @@ export default function SectionAvis({
                 <div className="mt-1.5 flex justify-center sm:justify-start">
                   <Etoiles note={moyenne} taille={16} couleur={couleurEtoiles} />
                 </div>
-                <p className="mt-1.5 text-[12.5px] text-[var(--tx)]/50">{texteAvecChiffres(`${avis.length} avis`)}</p>
+                <p className="mt-1.5 text-[12.5px] text-[var(--tx)]/50">{texteAvecChiffres(`${avisAffiches.length} avis`)}</p>
                 <div className="mt-4 flex flex-col gap-1.5">
                   {distribution.map((d) => (
                     <div key={d.etoiles} className="flex items-center gap-2">

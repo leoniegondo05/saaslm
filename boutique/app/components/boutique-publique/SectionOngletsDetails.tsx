@@ -42,7 +42,7 @@ export default function SectionOngletsDetails({ config, produit }: { config: Ong
   );
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <section className="mx-auto max-w-6xl px-4 pb-6 pt-10 sm:px-6">
       {config.presentation === "accordeon" ? (
         <div>
           {config.onglets.map((onglet, i) => (
@@ -71,7 +71,7 @@ export default function SectionOngletsDetails({ config, produit }: { config: Ong
               </button>
             ))}
           </div>
-          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
+          <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start">
             <div className="flex-1">{contenu}</div>
             {bloc}
           </div>

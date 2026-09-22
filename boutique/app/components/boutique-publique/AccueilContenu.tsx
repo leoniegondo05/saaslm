@@ -115,7 +115,7 @@ export default function AccueilContenu({
             );
             break;
           case "avis":
-            contenu = <SectionAvis avis={avis} config={editeur.avis} couleurEtoiles={couleurEtoiles} produits={produits} />;
+            contenu = <SectionAvis avis={avis} config={editeur.avis} couleurEtoiles={couleurEtoiles} produits={produits} slug={slug} />;
             break;
           case "faq":
             contenu = <SectionFaq faq={editeur.faq} />;

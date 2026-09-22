@@ -46,6 +46,12 @@ export default function BoutiqueHeader({
   const [defile, setDefile] = useState(false);
   const [rechercheDepliee, setRechercheDepliee] = useState(false);
   const rechercheRef = useRef<HTMLInputElement>(null);
+  // Feedback tactile au clic sur un lien du menu — sans ça les liens
+  // (Accueil/Soins visage/...) pointent tous vers la même ancre #grille,
+  // rien ne signalait visuellement lequel venait d'être cliqué.
+  const [lienActif, setLienActif] = useState<string | null>(
+    page === "accueil" ? "Accueil" : null
+  );
 
   // Un seul des 3 rendus de champ recherche existe à la fois (barre fixe /
   // icône dépliée / bouton icône seul, cf. `entete.rechercheStyle` plus bas) :
@@ -128,23 +134,34 @@ export default function BoutiqueHeader({
 
         {entete.menuLiens.length > 0 && (
           <nav className="ml-4 hidden items-center gap-4 md:flex">
-            {entete.menuLiens.map((lien) => (
-              <LienBoutique
-                key={lien.label}
-                href={lien.label.trim().toLowerCase() === "accueil" ? `/boutique/${slug}` : `/boutique/${slug}#grille`}
-                className="flex items-center gap-1 whitespace-nowrap text-[13.5px] font-medium opacity-90 transition hover:opacity-100"
-              >
-                {lien.label}
-                {typeof lien.compteur === "number" && (
-                  <span
-                    className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                    style={{ background: transparentActif ? "rgba(255,255,255,.2)" : "color-mix(in srgb, var(--ac) 14%, transparent)", color: transparentActif ? "#fff" : "var(--ac)" }}
-                  >
-                    {lien.compteur}
-                  </span>
-                )}
-              </LienBoutique>
-            ))}
+            {entete.menuLiens.map((lien) => {
+              const actif = lienActif === lien.label;
+              return (
+                <LienBoutique
+                  key={lien.label}
+                  href={lien.label.trim().toLowerCase() === "accueil" ? `/boutique/${slug}` : `/boutique/${slug}#grille`}
+                  onClick={() => setLienActif(lien.label)}
+                  className={`relative flex items-center gap-1 whitespace-nowrap px-0.5 py-1 text-[13.5px] font-medium opacity-90 transition-all duration-150 hover:opacity-100 active:scale-95 after:absolute after:left-0.5 after:right-0.5 after:-bottom-1 after:h-[2px] after:rounded-full after:content-[''] after:transition-all after:duration-200 ${
+                    transparentActif ? "after:bg-white" : "after:bg-[var(--ac)]"
+                  } ${actif ? "after:scale-x-100 after:opacity-100" : "after:scale-x-0 after:opacity-0"}`}
+                  style={{
+                    opacity: actif ? 1 : undefined,
+                    fontWeight: actif ? 600 : undefined,
+                    color: actif ? (transparentActif ? "#fff" : "var(--ac)") : undefined,
+                  }}
+                >
+                  {lien.label}
+                  {typeof lien.compteur === "number" && (
+                    <span
+                      className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+                      style={{ background: transparentActif ? "rgba(255,255,255,.2)" : "color-mix(in srgb, var(--ac) 14%, transparent)", color: transparentActif ? "#fff" : "var(--ac)" }}
+                    >
+                      {lien.compteur}
+                    </span>
+                  )}
+                </LienBoutique>
+              );
+            })}
           </nav>
         )}
 

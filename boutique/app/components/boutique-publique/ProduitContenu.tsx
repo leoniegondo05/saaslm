@@ -38,7 +38,14 @@ export default function ProduitContenu({ donnees, slug, produit }: { donnees: Bo
       )}
       {visible("avis") && (
         <div data-section-id="avis">
-          <SectionAvis avis={avisProduit} config={editeur.avis} couleurEtoiles={editeur.style.etoilesCouleur === "principale" ? "var(--ac)" : "#F2A93B"} produits={donnees.produits} />
+          <SectionAvis
+            avis={avisProduit}
+            config={editeur.avis}
+            couleurEtoiles={editeur.style.etoilesCouleur === "principale" ? "var(--ac)" : "#F2A93B"}
+            produits={donnees.produits}
+            slug={slug}
+            produitId={produit.id}
+          />
         </div>
       )}
       {visible("produits-lies") && (
