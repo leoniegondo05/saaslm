@@ -30,6 +30,17 @@ const NOTES_DEMO: Record<string, { note: number; avisCount: number }> = {
   "coffret-soin-nuit": { note: 4.6, avisCount: 41 },
 };
 
+const IMAGES_DEMO: Record<string, string[]> = {
+  "serum-eclat-30ml": ["/images/serum1.avif", "/images/serum2.jpg"],
+  "masque-argile": ["/images/1.jpg"],
+  "huile-de-ricin": ["/images/4.jpg"],
+  "beurre-de-karite": ["/images/5.png"],
+  "lotion-tonique": ["/images/7.jpg"],
+  "coffret-soin-nuit": ["/images/2.jpg"],
+  "gel-nettoyant": ["/images/8.webp"],
+  "creme-de-jour": ["/images/3.jpg"],
+};
+
 export const PRODUITS_DEMO: ProduitPublic[] = PRODUITS_BEAUTE.slice(0, 6).map((p) => ({
   id: `demo-${p.slug}`,
   slug: p.slug,
@@ -38,8 +49,8 @@ export const PRODUITS_DEMO: ProduitPublic[] = PRODUITS_BEAUTE.slice(0, 6).map((p
   prix: p.prixVenteActuel ?? p.prixConseille ?? 0,
   prixNormal: p.prixConseille ?? p.prixVenteActuel ?? undefined,
   categorieId: null,
-  images: p.images ?? [],
-  stock: 0,
+  images: (p.images && p.images.length > 0) ? p.images : (IMAGES_DEMO[p.slug] ?? ["/images/serum1.avif"]),
+  stock: 120,
   note: NOTES_DEMO[p.slug]?.note ?? 4.5,
   avisCount: NOTES_DEMO[p.slug]?.avisCount ?? 0,
   description: p.description,

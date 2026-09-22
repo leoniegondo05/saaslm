@@ -30,24 +30,50 @@ function cheminFichier(slug: string): string {
   return path.join(DOSSIER, `${sûr}.json`);
 }
 
+import { PRODUITS_DEMO, CATEGORIES_DEMO, fabriquerAvisDemo } from "./boutique-demo";
+
+function boutiqueParDefaut(slug: string): BoutiqueDonnees {
+  return {
+    identite: {
+      nom: slug === "awa-beaute" ? "Awa Beauté" : slug,
+      slug,
+      secteur: "Beauté et soins",
+      presentation: "Cosmétiques et soins naturels, préparés et conditionnés à Abidjan. Livraison dans tout le district.",
+      logo: null,
+      ouverte: true,
+    },
+    editeur: ETAT_DEFAUT,
+    produits: PRODUITS_DEMO,
+    categories: CATEGORIES_DEMO,
+    avis: fabriquerAvisDemo(),
+    misAJour: Date.now(),
+  };
+}
+
 export async function lireBoutique(slug: string): Promise<BoutiqueDonnees | null> {
   try {
     const brut = await fs.readFile(cheminFichier(slug), "utf-8");
     const donnees = JSON.parse(brut) as BoutiqueDonnees;
-    // `avis` ajouté après coup (cf. AvisClient dans boutique-types.ts) : un
-    // fichier .json déjà écrit par une boutique existante ne l'a pas encore
-    // — tableau vide plutôt qu'`undefined` pour que SectionAvis.tsx n'ait
-    // jamais à se soucier d'un champ manquant.
     return { ...donnees, avis: donnees.avis ?? [] };
   } catch {
+    // Si aucun fichier n'existe sur le disque (ex: sur une autre machine après un git clone
+    // ou sur Vercel où .data/ n'est pas versionné), renvoyer une boutique initiale complète
+    // avec les produits et images de démonstration plutôt qu'un échec 404 sans images.
+    if (slug === "awa-beaute" || slug === "maboutique") {
+      return boutiqueParDefaut(slug);
+    }
     return null;
   }
 }
 
 export async function ecrireBoutique(slug: string, donnees: Omit<BoutiqueDonnees, "misAJour">): Promise<BoutiqueDonnees> {
-  await fs.mkdir(DOSSIER, { recursive: true });
   const complet: BoutiqueDonnees = { ...donnees, misAJour: Date.now() };
-  await fs.writeFile(cheminFichier(slug), JSON.stringify(complet, null, 2), "utf-8");
+  try {
+    await fs.mkdir(DOSSIER, { recursive: true });
+    await fs.writeFile(cheminFichier(slug), JSON.stringify(complet, null, 2), "utf-8");
+  } catch {
+    // Échec silencieux si environnement sans écriture disque (ex: Vercel)
+  }
   return complet;
 }
 
