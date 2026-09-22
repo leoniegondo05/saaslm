@@ -2,17 +2,18 @@ import { LienBoutique } from "./PreviewMode";
 import type { PromoState } from "@/app/components/dashboard-reglages/personnaliser/types";
 import type { ProduitPublic } from "@/lib/boutique-types";
 import { texteAvecChiffres } from "@/lib/boutique-format";
-import { FeuilleDecor } from "./Icons";
+import { parseFinOffre } from "@/lib/boutique-compte-a-rebours";
+import { FeuilleDecor, ChevronRightIcon } from "./Icons";
+import CompteARebours from "./CompteARebours";
 
 /*
   Bannière d'offre — port de la case "promo" : illustration produit (photo
   réelle du produit vedette, masque radial), feuilles décoratives, "Jusqu'au
-  <finOffre>". Le compte à rebours chiffré de l'éditeur (`compteur`, "02
-  jours 14 h 36 min 08 s") est une démonstration statique dans
-  BoutiquePreview.tsx, pas une vraie donnée temporelle exploitable ici
-  (`finOffre` est un texte libre, pas une date structurée) — plutôt que
-  d'afficher un décompte figé et trompeur sur le site public, ce réglage
-  n'ajoute ici que le texte "Jusqu'au…" déjà présent, cf. rapport de tâche.
+  <finOffre>". Le compte à rebours (`promo.compteur`) tente de parser
+  `finOffre` (texte libre, ex: "30 sept. 2026 · 23 h 59") via
+  `parseFinOffre` ; s'il ne matche pas le format attendu ou que la date est
+  déjà passée, on retombe silencieusement sur le simple texte "Jusqu'au…"
+  plutôt que d'afficher un décompte figé ou "NaN".
   `promo.image`, quand le marchand en a importé une, prime sur la photo du
   produit vedette — même priorité que hero.imageProduit (SectionHero.tsx).
 */
@@ -30,17 +31,16 @@ export default function SectionPromo({ slug, promo, produitVedette }: { slug: st
         ? promo.lienPersonnalise || `/boutique/${slug}#grille`
         : `/boutique/${slug}#grille`;
   const image = promo.image ?? produitVedette?.images?.[0];
+  const dateFin = promo.compteur && promo.finOffre ? parseFinOffre(promo.finOffre) : null;
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
       <div
-        className={`flex flex-col items-start gap-6 overflow-hidden p-7 text-left text-white sm:p-10 md:items-center md:gap-14 ${
-          inverse ? "md:flex-row-reverse" : "md:flex-row"
-        }`}
+        className="grid grid-cols-1 items-center gap-6 overflow-hidden p-7 text-left text-white sm:p-10 md:grid-cols-2 md:gap-14"
         style={{ borderRadius: "var(--card-rad)", background: fond }}
       >
         {image && (
-          <div className="relative h-40 w-40 shrink-0 overflow-hidden rounded-2xl sm:h-52 sm:w-52">
+          <div className={`relative aspect-square w-full max-w-[280px] shrink-0 justify-self-start overflow-hidden rounded-2xl sm:max-w-[320px] ${inverse ? "md:order-2 md:justify-self-end" : "md:order-1"}`}>
             <FeuilleDecor className="absolute left-2 top-0 h-20 w-12 -rotate-12" opacity={0.18} />
             <FeuilleDecor className="absolute right-2 top-3 h-16 w-10 rotate-[18deg]" color="#F5C1DC" opacity={0.35} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -52,20 +52,22 @@ export default function SectionPromo({ slug, promo, produitVedette }: { slug: st
             />
           </div>
         )}
-        <div className={`min-w-0 flex-1 ${inverse ? "md:text-right" : "md:text-left"}`}>
+        <div className={`min-w-0 ${inverse ? "md:order-1 md:text-right" : "md:order-2 md:text-left"}`}>
           {promo.petitTexte && <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-white/85">{promo.petitTexte}</span>}
           <h3 className="mt-2 max-w-xl text-[24px] font-extrabold leading-tight sm:text-[29px]" style={{ fontFamily: "var(--font-titre)" }}>
             {texteAvecChiffres(promo.titre)}
           </h3>
           {promo.sousTitre && <p className="mt-1.5 max-w-lg text-[14px] text-white/85">{promo.sousTitre}</p>}
           {promo.finOffre && <p className="mt-1 text-[12px] text-white/65">{texteAvecChiffres(`Jusqu'au ${promo.finOffre}`)}</p>}
+          {dateFin && <CompteARebours cibleMs={dateFin.getTime()} />}
           {promo.boutonTexte && (
             <LienBoutique
               href={lien}
-              className="mt-4 inline-flex items-center px-5 py-2.5 text-[13.5px] font-bold transition hover:brightness-95"
-              style={{ background: "#fff", color: "var(--ac)", borderRadius: "var(--rad)" }}
+              className="mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[12px] font-bold transition hover:brightness-95"
+              style={{ background: "#fff", color: "var(--ac)" }}
             >
               {promo.boutonTexte}
+              <ChevronRightIcon color="var(--ac)" size={13} />
             </LienBoutique>
           )}
         </div>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { OngletsDetailsState } from "@/app/components/dashboard-reglages/personnaliser/types";
 import type { ProduitPublic } from "@/lib/boutique-types";
-import { Icon } from "./Icons";
+import { LuCheck } from "react-icons/lu";
 
 /*
   Onglets détails — port de la case "onglets-details" : présentation onglets
@@ -25,7 +25,7 @@ export default function SectionOngletsDetails({ config, produit }: { config: Ong
         <ul className="mt-2 flex flex-col gap-2">
           {config.atouts.slice(0, config.nombreAtouts).map((a) => (
             <li key={a} className="flex items-start gap-2 text-[13.5px] text-[var(--tx)]/75">
-              <Icon path="M5 12l4 4 10-10" color="var(--ac)" size={15} className="mt-0.5 shrink-0" />
+              <LuCheck color="var(--ac)" size={15} className="mt-0.5 shrink-0" />
               {a}
             </li>
           ))}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { BandeauState } from "@/app/components/dashboard-reglages/personnaliser/types";
 import { texteAvecChiffres } from "@/lib/boutique-format";
-import { Icon } from "./Icons";
+import { LuMegaphone, LuX } from "react-icons/lu";
 
 const CLASSES: Record<BandeauState["couleur"], string> = {
   nuit: "bg-[#0B0E1C] text-white",
@@ -40,12 +40,12 @@ export default function SectionBandeau({ bandeau }: { bandeau: BandeauState }) {
   return (
     <div className={`relative px-4 py-2 text-center text-[12.5px] font-medium ${CLASSES[bandeau.couleur]} ${bandeau.resteVisibleEnDefilant ? "sticky top-0 z-40" : ""}`} style={style}>
       <p className="mx-auto flex max-w-6xl items-center justify-center gap-2">
-        {bandeau.iconeDevantMessage && <Icon path="M3 10v4h4l6 4V6l-6 4H3zM16 9a3 3 0 0 1 0 6" size={14} />}
+        {bandeau.iconeDevantMessage && <LuMegaphone size={16} />}
         {texteAvecChiffres(message.texte)}
       </p>
       {bandeau.fermable && (
         <button type="button" onClick={() => setFerme(true)} aria-label="Fermer" className="absolute right-3 top-1/2 -translate-y-1/2">
-          <Icon path="M6 6l12 12M18 6 6 18" size={14} />
+          <LuX size={16} />
         </button>
       )}
     </div>

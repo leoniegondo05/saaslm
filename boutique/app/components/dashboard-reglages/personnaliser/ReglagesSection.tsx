@@ -325,9 +325,7 @@ function Corps({
               onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, panierStyle: v as typeof s.entete.panierStyle } }))}
             />
           </Ligne>
-          <Ligne label={t("Compte client", "Customer account")}>
-            <Interrupteur checked={state.entete.compte} onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, compte: v } }))} />
-          </Ligne>
+
           <Ligne label={t('Bouton « Nous écrire »', 'Button "Message us"')}>
             <Interrupteur checked={state.entete.nousEcrire} onChange={(v) => setState((s) => ({ ...s, entete: { ...s.entete, nousEcrire: v } }))} />
           </Ligne>
@@ -1337,22 +1335,33 @@ function Corps({
           </Ligne>
 
           <GroupeTitre label={t("Gérer les avis", "Manage reviews")} />
+          {/* Gestion des avis (ajouter/importer/répondre) touche aux données
+              (avis réels), pas au réglage d'affichage de cet écran — nécessite
+              l'API avis (cf. mémoire [[dashboard-mock-data-pending-laravel-api]]).
+              Désactivés avec infobulle plutôt que boutons muets sans handler :
+              on ne feint pas une action qui n'existe pas encore. */}
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-full border border-dashed border-brand-pink/40 px-3 py-1.5 text-[10px] font-semibold text-brand-pink"
+              disabled
+              title={t("Bientôt disponible — arrive avec l'API avis", "Coming soon — arrives with the reviews API")}
+              className="inline-flex cursor-not-allowed items-center gap-1 rounded-full border border-dashed border-brand-pink/40 px-3 py-1.5 text-[10px] font-semibold text-brand-pink opacity-50"
             >
               + {t("Ajouter un avis", "Add a review")}
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[10px] font-semibold text-[var(--dashboard-text)]/70"
+              disabled
+              title={t("Bientôt disponible — arrive avec l'API avis", "Coming soon — arrives with the reviews API")}
+              className="inline-flex cursor-not-allowed items-center gap-1 rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[10px] font-semibold text-[var(--dashboard-text)]/70 opacity-50"
             >
               {t("Importer", "Import")}
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[10px] font-semibold text-[var(--dashboard-text)]/70"
+              disabled
+              title={t("Bientôt disponible — arrive avec l'API avis", "Coming soon — arrives with the reviews API")}
+              className="inline-flex cursor-not-allowed items-center gap-1 rounded-full border border-[var(--dashboard-text)]/15 px-3 py-1.5 text-[10px] font-semibold text-[var(--dashboard-text)]/70 opacity-50"
             >
               {t("Répondre", "Reply")}
             </button>
@@ -1360,8 +1369,20 @@ function Corps({
           <Ligne label={t("Demander un avis après la livraison", "Ask for a review after delivery")}>
             <Interrupteur checked={a.demanderAvisApresLivraison} onChange={(v) => majAvis({ demanderAvisApresLivraison: v })} />
           </Ligne>
+          {/* Pas de bloc "questions clients" côté site public pour l'instant
+              (contrairement à la FAQ, cf. SectionFaq.tsx) — ce réglage
+              n'aurait aucun effet visible tant que ce bloc n'existe pas.
+              Désactivé plutôt que muet, même logique que "Gérer les avis"
+              ci-dessus. */}
           <Ligne label={t("Questions des clients sous le produit", "Customer questions under the product")}>
-            <Interrupteur checked={a.questionsClientsSousProduit} onChange={(v) => majAvis({ questionsClientsSousProduit: v })} />
+            <span
+              title={t("Bientôt disponible — arrive avec le bloc questions clients", "Coming soon — arrives with the customer questions block")}
+              className="inline-block opacity-50"
+            >
+              <span className="pointer-events-none">
+                <Interrupteur checked={a.questionsClientsSousProduit} onChange={(v) => majAvis({ questionsClientsSousProduit: v })} />
+              </span>
+            </span>
           </Ligne>
           <Ligne label={t('Badge « Achat vérifié »', '"Verified purchase" badge')}>
             <span className="rounded-full bg-[var(--dashboard-text)]/[0.06] px-2.5 py-1 text-[9.5px] font-semibold text-[var(--dashboard-text)]/55">

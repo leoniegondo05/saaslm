@@ -10,6 +10,7 @@ import MargeCard from "./MargeCard";
 import VariantesProduit from "./VariantesProduit";
 import { recalculerCombinaisons } from "./combinaisons";
 import { CATEGORIES_DEFAUT } from "./categoriesDefaut";
+import CreerCategorieModal from "../CreerCategorieModal";
 import type { Attribut, Categorie, Combinaison, NouveauProduit } from "./types";
 
 /*
@@ -106,6 +107,7 @@ export default function AjouterProduitModal({
   const [photos, setPhotos] = useState<File[]>([]);
   const [attributs, setAttributs] = useState<Attribut[]>([]);
   const [combinaisons, setCombinaisons] = useState<Combinaison[]>([]);
+  const [categorieModalOuverte, setCategorieModalOuverte] = useState(false);
 
   // Référence et date figées à l'ouverture du formulaire, pas recalculées
   // à chaque frappe (cf. maquette : "Elle ne change plus ensuite").
@@ -150,9 +152,9 @@ export default function AjouterProduitModal({
     setCombinaisons((prev) => prev.map((c) => ({ ...c, misEnAvant: c.id === id })));
   };
 
-  const creerCategorie = (nomCategorie: string) => {
+  const creerCategorie = (nomCategorie: string, image: string) => {
     const id = idAleatoire("cat");
-    const categorie: Categorie = { id, nom: nomCategorie, nomEn: nomCategorie };
+    const categorie: Categorie = { id, nom: nomCategorie, nomEn: nomCategorie, image };
     setCategories((prev) => [...prev, categorie]);
     setCategorieId(id);
     onCategorieCreee?.(categorie);
@@ -269,7 +271,7 @@ export default function AjouterProduitModal({
           categories={categories}
           categorieId={categorieId}
           onCategorieChange={setCategorieId}
-          onCreerCategorie={creerCategorie}
+          onOuvrirCreationCategorie={() => setCategorieModalOuverte(true)}
           description={description}
           onDescriptionChange={setDescription}
         />
@@ -374,6 +376,17 @@ export default function AjouterProduitModal({
           </>
         )}
       </div>
+
+      {categorieModalOuverte && (
+        <CreerCategorieModal
+          categories={categories}
+          onFermer={() => setCategorieModalOuverte(false)}
+          onCreer={(nomCategorie, image) => {
+            creerCategorie(nomCategorie, image);
+            setCategorieModalOuverte(false);
+          }}
+        />
+      )}
     </>
   );
 }

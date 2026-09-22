@@ -1,9 +1,9 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import CommandeContenu from "@/app/components/boutique-publique/CommandeContenu";
 import { CartProvider } from "@/app/components/boutique-publique/CartProvider";
-import { ApercuChargement, PreviewNavigationProvider, useApercuDonnees } from "@/app/components/boutique-publique/PreviewMode";
+import { ApercuChargement, PreviewNavigationProvider, useApercuDonnees, useSelectionApercu } from "@/app/components/boutique-publique/PreviewMode";
 import { variablesBoutique } from "@/lib/boutique-style";
 
 /*
@@ -20,7 +20,10 @@ import { variablesBoutique } from "@/lib/boutique-style";
 */
 export default function ApercuCommandePage() {
   const { slug } = useParams<{ slug: string }>();
+  const searchParams = useSearchParams();
   const donnees = useApercuDonnees();
+  const edition = searchParams.get("edition") === "1";
+  useSelectionApercu(edition);
 
   if (!donnees) return <ApercuChargement />;
 
@@ -31,7 +34,7 @@ export default function ApercuCommandePage() {
 
   return (
     <div style={variablesBoutique(donnees.editeur)} className="min-h-screen">
-      <PreviewNavigationProvider value={{ actif: true }}>
+      <PreviewNavigationProvider value={{ actif: true, edition }}>
         <CartProvider slug={slug} previsualisation itemsInitiaux={itemsInitiaux}>
           <CommandeContenu donnees={donnees} slug={slug} />
         </CartProvider>

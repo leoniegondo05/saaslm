@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import * as DrapeauxSvg from "country-flag-icons/react/3x2";
 import { getCountries, getCountryCallingCode } from "libphonenumber-js/min";
 import type { FormulaireState } from "@/app/components/dashboard-reglages/personnaliser/types";
-import { Icon } from "./Icons";
+import { LuCheck, LuChevronDown, LuMapPin, LuPhone, LuSearch, LuUser } from "react-icons/lu";
+import type { IconType } from "react-icons";
 
 /*
   Champs "Vos informations" (nom, commune, adresse précise, téléphone) —
@@ -21,6 +22,7 @@ import { Icon } from "./Icons";
 */
 
 const COMMUNES_CI = ["Abobo", "Adjamé", "Anyama", "Attécoubé", "Bingerville", "Cocody", "Koumassi", "Marcory"];
+const VILLES_HORS_ABIDJAN = ["Bouaké", "Yamoussoukro", "Daloa", "San-Pédro", "Korhogo", "Man", "Gagnoa", "Abengourou"];
 const NOMS_PAYS_FR = new Intl.DisplayNames(["fr"], { type: "region" });
 const INDICATIFS = getCountries()
   .filter((code) => code in DrapeauxSvg)
@@ -33,10 +35,15 @@ function IconeDrapeau({ code, className }: { code: string; className: string }) 
   return Drapeau ? <Drapeau className={className} /> : null;
 }
 
+export type ZoneLivraison = "" | "abidjan" | "hors-abidjan";
+
 export type ValeursFormulaire = {
   nomPrenom: string;
+  zone: ZoneLivraison;
   commune: string;
   adressePrecise: string;
+  ville: string;
+  nomGare: string;
   indicatif: string;
   telephone: string;
   note: string;
@@ -44,8 +51,11 @@ export type ValeursFormulaire = {
 
 export const VALEURS_FORMULAIRE_VIDES: ValeursFormulaire = {
   nomPrenom: "",
+  zone: "",
   commune: "",
   adressePrecise: "",
+  ville: "",
+  nomGare: "",
   indicatif: INDICATIF_DEFAUT.code,
   telephone: "",
   note: "",
@@ -62,6 +72,8 @@ export default function FormulaireChamps({
 }) {
   const [communeOuverte, setCommuneOuverte] = useState(false);
   const [communeRecherche, setCommuneRecherche] = useState("");
+  const [villeOuverte, setVilleOuverte] = useState(false);
+  const [villeRecherche, setVilleRecherche] = useState("");
   const [geoloc, setGeoloc] = useState<"repos" | "recherche" | "trouvee" | "refusee">("repos");
   const [adresseModifiable, setAdresseModifiable] = useState(false);
   const [indicatifOuvert, setIndicatifOuvert] = useState(false);
@@ -74,11 +86,12 @@ export default function FormulaireChamps({
     return INDICATIFS.filter((ind) => ind.pays.toLowerCase().includes(q) || ind.code.includes(q));
   }, [indicatifRecherche]);
   const communesFiltrees = COMMUNES_CI.filter((c) => c.toLowerCase().includes(communeRecherche.toLowerCase()));
+  const villesFiltrees = VILLES_HORS_ABIDJAN.filter((v) => v.toLowerCase().includes(villeRecherche.toLowerCase()));
 
   const maj = (patch: Partial<ValeursFormulaire>) => onChange({ ...valeurs, ...patch });
 
   const boiteBase = f.styleChamps === "ligne" ? "rounded-none border-0 border-b" : f.styleChamps === "plein" ? "rounded-xl border-0" : "rounded-xl border";
-  const boiteClasses = `${boiteBase} px-3.5 py-3`;
+  const boiteClasses = `${boiteBase} px-3.5 py-3 lg:px-3 lg:py-2`;
   const boiteStyle = (actif?: boolean): React.CSSProperties =>
     f.styleChamps === "plein"
       ? { background: actif ? "color-mix(in srgb, var(--ac) 8%, transparent)" : "color-mix(in srgb, var(--tx) 5%, transparent)" }
@@ -86,10 +99,9 @@ export default function FormulaireChamps({
   const libelleDansChamp = f.libellesPosition === "dans-le-champ";
   const libelle = (texte: string) => libelleDansChamp && <p className="text-[10.5px] text-[var(--tx)]/45">{texte}</p>;
   const labelExterne = (texte: string) => !libelleDansChamp && <p className="mb-1 text-[12.5px] font-medium text-[var(--tx)]/60">{texte}</p>;
-  const iconeChamp = (chemin: string) => f.iconesDansChamps && <Icon path={chemin} color="color-mix(in srgb, var(--tx) 35%, transparent)" size={15} />;
-  const iconePersonne = "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 20c0-3.3 3.6-6 8-6s8 2.7 8 6";
-  const iconeLieu = "M12 21s7-5.8 7-11a7 7 0 1 0-14 0c0 5.2 7 11 7 11Z";
-  const iconeTelephone = "M6.5 3h3l1.2 4.5-2 1.6a11 11 0 0 0 5.2 5.2l1.6-2 4.5 1.2v3a2 2 0 0 1-2.2 2A16 16 0 0 1 4.5 5.2 2 2 0 0 1 6.5 3Z";
+  const iconeChamp = (IconeChamp: IconType) => f.iconesDansChamps && <IconeChamp color="color-mix(in srgb, var(--tx) 35%, transparent)" size={15} />;
+  const iconePersonne = LuUser;
+  const iconeLieu = LuMapPin;
 
   function localiser() {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -108,7 +120,7 @@ export default function FormulaireChamps({
 
   return (
     <>
-      <div className={`grid gap-3 ${f.colonnes === 2 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+      <div className={`grid gap-3 lg:gap-2 ${f.colonnes === 2 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
         <div className="col-span-full">
           {labelExterne("Nom et prénom")}
           <div className={boiteClasses} style={boiteStyle()}>
@@ -129,99 +141,194 @@ export default function FormulaireChamps({
           </div>
         </div>
 
-        <div className={f.colonnes === 2 ? "" : "col-span-full"}>
-          {labelExterne("Commune")}
-          <div className="relative">
-            <button type="button" onClick={() => setCommuneOuverte((v) => !v)} className={`w-full text-left ${boiteClasses}`} style={boiteStyle(communeOuverte)}>
-              <div className="flex items-center gap-2">
-                {iconeChamp(iconeLieu)}
-                <div className="min-w-0 flex-1">
-                  {libelle("Commune")}
-                  <span className="flex items-center justify-between gap-1">
-                    <span className="truncate text-[13.5px]" style={{ color: valeurs.commune ? "var(--tx)" : "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
-                      {valeurs.commune || "Choisir"}
-                    </span>
-                    <Icon path="M6 9l6 6 6-6" color="color-mix(in srgb, var(--tx) 30%, transparent)" size={14} />
-                  </span>
-                </div>
-              </div>
+        <div className="col-span-full grid grid-cols-2 gap-3">
+          {(
+            [
+              ["abidjan", "Je suis à Abidjan"],
+              ["hors-abidjan", "Je suis hors Abidjan"],
+            ] as const
+          ).map(([valeurZone, texte]) => (
+            <button
+              key={valeurZone}
+              type="button"
+              onClick={() => maj({ zone: valeurZone, commune: "", adressePrecise: "", ville: "", nomGare: "" })}
+              className={`${boiteClasses} text-center text-[13px] font-semibold`}
+              style={boiteStyle(valeurs.zone === valeurZone)}
+            >
+              {texte}
             </button>
-            {communeOuverte && (
-              <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[220px] overflow-y-auto rounded-xl border border-[var(--tx)]/10 bg-[var(--bg)] shadow-lg">
-                <div className="flex items-center gap-2 border-b border-[var(--tx)]/8 px-3 py-2.5">
-                  <Icon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm9 16-4.35-4.35" color="color-mix(in srgb, var(--tx) 30%, transparent)" size={15} />
-                  <input
-                    value={communeRecherche}
-                    onChange={(e) => setCommuneRecherche(e.target.value)}
-                    placeholder="Rechercher une commune"
-                    className="w-full bg-transparent text-[13px] outline-none"
-                    autoFocus
-                  />
-                </div>
-                {communesFiltrees.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => {
-                      maj({ commune: c });
-                      setCommuneOuverte(false);
-                      setCommuneRecherche("");
-                    }}
-                    className="block w-full px-3 py-2 text-left text-[13px]"
-                    style={c === valeurs.commune ? { background: "color-mix(in srgb, var(--ac) 10%, transparent)", color: "var(--ac)", fontWeight: 600 } : undefined}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          ))}
         </div>
 
-        <div className={f.colonnes === 2 ? "" : "col-span-full"}>
-          {labelExterne(f.libelleAdressePrecise)}
-          <div className={boiteClasses} style={boiteStyle()}>
-            <div className="flex items-center gap-2">
-              {iconeChamp(iconeLieu)}
-              <div className="min-w-0 flex-1">
-                {libelleDansChamp && libelle(f.libelleAdressePrecise)}
-                {adresseModifiable || geoloc !== "trouvee" ? (
-                  <input
-                    required
-                    value={valeurs.adressePrecise}
-                    onChange={(e) => maj({ adressePrecise: e.target.value })}
-                    onBlur={() => setAdresseModifiable(false)}
-                    placeholder={f.texteExempleAdressePrecise}
-                    className={`w-full bg-transparent text-[13.5px] outline-none ${libelleDansChamp ? "mt-0.5" : ""}`}
-                  />
-                ) : (
-                  <span className="mt-0.5 flex items-center justify-between gap-1">
-                    <span className="flex items-center gap-1.5 truncate text-[13.5px]">
-                      {!f.iconesDansChamps && <Icon path={iconeLieu} color="var(--ac)" size={14} />}
-                      {valeurs.adressePrecise}
-                    </span>
-                    <button type="button" onClick={() => setAdresseModifiable(true)} className="shrink-0 text-[12px] font-semibold underline" style={{ color: "var(--ac)" }}>
-                      Modifier
-                    </button>
-                  </span>
+        {valeurs.zone === "abidjan" && (
+          <>
+            <div className={f.colonnes === 2 ? "" : "col-span-full"}>
+              {labelExterne("Commune")}
+              <div className="relative">
+                <button type="button" onClick={() => setCommuneOuverte((v) => !v)} className={`w-full text-left ${boiteClasses}`} style={boiteStyle(communeOuverte)}>
+                  <div className="flex items-center gap-2">
+                    {iconeChamp(iconeLieu)}
+                    <div className="min-w-0 flex-1">
+                      {libelle("Commune")}
+                      <span className="flex items-center justify-between gap-1">
+                        <span className="truncate text-[13.5px]" style={{ color: valeurs.commune ? "var(--tx)" : "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
+                          {valeurs.commune || "Choisir"}
+                        </span>
+                        <LuChevronDown color="color-mix(in srgb, var(--tx) 30%, transparent)" size={14} />
+                      </span>
+                    </div>
+                  </div>
+                </button>
+                {communeOuverte && (
+                  <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[220px] overflow-y-auto rounded-xl border border-[var(--tx)]/10 bg-[var(--bg)] shadow-lg">
+                    <div className="flex items-center gap-2 border-b border-[var(--tx)]/8 px-3 py-2.5">
+                      <LuSearch color="color-mix(in srgb, var(--tx) 30%, transparent)" size={15} />
+                      <input
+                        value={communeRecherche}
+                        onChange={(e) => setCommuneRecherche(e.target.value)}
+                        placeholder="Rechercher une commune"
+                        className="w-full bg-transparent text-[13px] outline-none"
+                        autoFocus
+                      />
+                    </div>
+                    {communesFiltrees.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => {
+                          maj({ commune: c });
+                          setCommuneOuverte(false);
+                          setCommuneRecherche("");
+                        }}
+                        className="block w-full px-3 py-2 text-left text-[13px]"
+                        style={c === valeurs.commune ? { background: "color-mix(in srgb, var(--ac) 10%, transparent)", color: "var(--ac)", fontWeight: 600 } : undefined}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
-          </div>
-        </div>
+
+            <div className={f.colonnes === 2 ? "" : "col-span-full"}>
+              {labelExterne(f.libelleAdressePrecise)}
+              <div className={boiteClasses} style={boiteStyle()}>
+                <div className="flex items-center gap-2">
+                  {iconeChamp(iconeLieu)}
+                  <div className="min-w-0 flex-1">
+                    {libelleDansChamp && libelle(f.libelleAdressePrecise)}
+                    {adresseModifiable || geoloc !== "trouvee" ? (
+                      <input
+                        required
+                        value={valeurs.adressePrecise}
+                        onChange={(e) => maj({ adressePrecise: e.target.value })}
+                        onBlur={() => setAdresseModifiable(false)}
+                        placeholder={f.texteExempleAdressePrecise}
+                        className={`w-full bg-transparent text-[13.5px] outline-none ${libelleDansChamp ? "mt-0.5" : ""}`}
+                      />
+                    ) : (
+                      <span className="mt-0.5 flex items-center justify-between gap-1">
+                        <span className="flex items-center gap-1.5 truncate text-[13.5px]">
+                          {!f.iconesDansChamps && <LuMapPin color="var(--ac)" size={14} />}
+                          {valeurs.adressePrecise}
+                        </span>
+                        <button type="button" onClick={() => setAdresseModifiable(true)} className="shrink-0 text-[12px] font-semibold underline" style={{ color: "var(--ac)" }}>
+                          Modifier
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {valeurs.zone === "hors-abidjan" && (
+          <>
+            <div className={f.colonnes === 2 ? "" : "col-span-full"}>
+              {labelExterne("Ville")}
+              <div className="relative">
+                <button type="button" onClick={() => setVilleOuverte((v) => !v)} className={`w-full text-left ${boiteClasses}`} style={boiteStyle(villeOuverte)}>
+                  <div className="flex items-center gap-2">
+                    {iconeChamp(iconeLieu)}
+                    <div className="min-w-0 flex-1">
+                      {libelle("Ville")}
+                      <span className="flex items-center justify-between gap-1">
+                        <span className="truncate text-[13.5px]" style={{ color: valeurs.ville ? "var(--tx)" : "color-mix(in srgb, var(--tx) 45%, transparent)" }}>
+                          {valeurs.ville || "Choisir"}
+                        </span>
+                        <LuChevronDown color="color-mix(in srgb, var(--tx) 30%, transparent)" size={14} />
+                      </span>
+                    </div>
+                  </div>
+                </button>
+                {villeOuverte && (
+                  <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[220px] overflow-y-auto rounded-xl border border-[var(--tx)]/10 bg-[var(--bg)] shadow-lg">
+                    <div className="flex items-center gap-2 border-b border-[var(--tx)]/8 px-3 py-2.5">
+                      <LuSearch color="color-mix(in srgb, var(--tx) 30%, transparent)" size={15} />
+                      <input
+                        value={villeRecherche}
+                        onChange={(e) => setVilleRecherche(e.target.value)}
+                        placeholder="Rechercher une ville"
+                        className="w-full bg-transparent text-[13px] outline-none"
+                        autoFocus
+                      />
+                    </div>
+                    {villesFiltrees.map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => {
+                          maj({ ville: v });
+                          setVilleOuverte(false);
+                          setVilleRecherche("");
+                        }}
+                        className="block w-full px-3 py-2 text-left text-[13px]"
+                        style={v === valeurs.ville ? { background: "color-mix(in srgb, var(--ac) 10%, transparent)", color: "var(--ac)", fontWeight: 600 } : undefined}
+                      >
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className={f.colonnes === 2 ? "" : "col-span-full"}>
+              {labelExterne("Nom de la gare")}
+              <div className={boiteClasses} style={boiteStyle()}>
+                <div className="flex items-center gap-2">
+                  {iconeChamp(iconeLieu)}
+                  <div className="min-w-0 flex-1">
+                    {libelleDansChamp && libelle("Nom de la gare")}
+                    <input
+                      required
+                      value={valeurs.nomGare}
+                      onChange={(e) => maj({ nomGare: e.target.value })}
+                      placeholder={libelleDansChamp ? "" : "Nom de la gare"}
+                      className={`w-full bg-transparent text-[13.5px] outline-none ${libelleDansChamp ? "mt-0.5" : ""}`}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="col-span-full">
           {labelExterne("Téléphone")}
           <div className={`relative flex ${boiteBase}`} style={boiteStyle()}>
             {f.iconesDansChamps && (
               <span className="flex shrink-0 items-center pl-3">
-                <Icon path={iconeTelephone} color="color-mix(in srgb, var(--tx) 30%, transparent)" size={15} />
+                <LuPhone color="color-mix(in srgb, var(--tx) 30%, transparent)" size={15} />
               </span>
             )}
-            <button type="button" onClick={() => setIndicatifOuvert((v) => !v)} className="flex shrink-0 items-center gap-1.5 border-r border-[var(--tx)]/12 px-3 py-3">
+            <button type="button" onClick={() => setIndicatifOuvert((v) => !v)} className="flex shrink-0 items-center gap-1.5 border-r border-[var(--tx)]/12 px-3 py-3 lg:px-2.5 lg:py-2">
               <IconeDrapeau code={indicatifChoisi.drapeau} className="h-[11px] w-4 rounded-[2px] object-cover" />
               <span className="text-[13px] font-semibold">{indicatifChoisi.code}</span>
-              <Icon path="M6 9l6 6 6-6" color="color-mix(in srgb, var(--tx) 30%, transparent)" size={13} />
+              <LuChevronDown color="color-mix(in srgb, var(--tx) 30%, transparent)" size={13} />
             </button>
             <input
               required
@@ -230,12 +337,12 @@ export default function FormulaireChamps({
               onChange={(e) => maj({ telephone: e.target.value.replace(/[^\d\s]/g, "") })}
               placeholder="Numéro de téléphone"
               autoComplete="tel"
-              className="flex-1 bg-transparent px-3.5 py-3 text-[13.5px] outline-none"
+              className="flex-1 bg-transparent px-3.5 py-3 text-[13.5px] outline-none lg:px-3 lg:py-2"
             />
             {indicatifOuvert && (
               <div className="absolute left-0 top-full z-30 mt-1 w-[260px] overflow-hidden rounded-xl border border-[var(--tx)]/10 bg-[var(--bg)] shadow-lg">
                 <div className="flex items-center gap-2 border-b border-[var(--tx)]/8 px-3 py-2.5">
-                  <Icon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm9 16-4.35-4.35" color="color-mix(in srgb, var(--tx) 30%, transparent)" size={15} />
+                  <LuSearch color="color-mix(in srgb, var(--tx) 30%, transparent)" size={15} />
                   <input
                     value={indicatifRecherche}
                     onChange={(e) => setIndicatifRecherche(e.target.value)}
@@ -271,7 +378,7 @@ export default function FormulaireChamps({
         </div>
       </div>
 
-      {f.boutonLocaliser &&
+      {valeurs.zone === "abidjan" && f.boutonLocaliser &&
         (geoloc === "trouvee" ? (
           <>
             <div className="relative mt-2.5 overflow-hidden rounded-xl" style={{ height: 84 }}>
@@ -293,7 +400,7 @@ export default function FormulaireChamps({
               </svg>
             </div>
             <div className="mt-2.5 flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[12.5px] font-semibold" style={{ borderColor: "#1E9E6A", color: "#1E9E6A", background: "color-mix(in srgb, #1E9E6A 6%, transparent)" }}>
-              <Icon path="M5 12l4 4 10-10" color="#1E9E6A" size={15} />
+              <LuCheck color="#1E9E6A" size={15} />
               <span>
                 Position trouvée
                 <br />
@@ -305,14 +412,14 @@ export default function FormulaireChamps({
           <button
             type="button"
             onClick={localiser}
-            className="mt-2.5 flex w-full items-center gap-2 rounded-xl border border-dashed px-3.5 py-2.5 text-[13px] font-semibold"
+            className="mt-2.5 flex w-full items-center gap-2 rounded-xl border border-dashed px-3.5 py-2.5 text-[13px] font-semibold lg:px-3 lg:py-2"
             style={{ borderColor: "var(--ac)", color: "var(--ac)" }}
           >
-            <Icon path="M12 21s7-5.8 7-11a7 7 0 1 0-14 0c0 5.2 7 11 7 11Z" color="var(--ac)" size={16} />
+            <LuMapPin color="var(--ac)" size={16} />
             {geoloc === "recherche" ? "Recherche en cours…" : "Me localiser maintenant"}
           </button>
         ))}
-      {geoloc === "refusee" && <p className="mt-2 text-[12px]" style={{ color: "#D8347E" }}>Position indisponible, remplis l&apos;adresse précise à la main.</p>}
+      {valeurs.zone === "abidjan" && geoloc === "refusee" && <p className="mt-2 text-[12px]" style={{ color: "#D8347E" }}>Position indisponible, remplis l&apos;adresse précise à la main.</p>}
       {f.mentionSpecifique && (
         <label className="mt-2.5 block">
           <input
@@ -321,7 +428,7 @@ export default function FormulaireChamps({
             placeholder={
               f.mentionType === "choix" ? "Une précision pour le livreur (facultatif)" : f.mentionType === "date" ? "Une date à préciser pour le livreur ? (facultatif)" : "Une précision pour le livreur ? (facultatif)"
             }
-            className="w-full rounded-xl border border-[var(--tx)]/12 px-3.5 py-2.5 text-[13px] outline-none placeholder:text-[var(--tx)]/45"
+            className="w-full rounded-xl border border-[var(--tx)]/12 px-3.5 py-2.5 text-[13px] outline-none placeholder:text-[var(--tx)]/45 lg:px-3 lg:py-2"
           />
         </label>
       )}

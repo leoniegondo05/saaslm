@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { useDashboardLangue } from "../../DashboardLanguageProvider";
 import { texteAvecChiffres } from "../../dashboard-accueil/shared";
 import type { Categorie } from "./types";
 
 /*
   Bloc "Nom / catégorie / description" (Écran 08, + Écran 10 pour la
-  création de catégorie, réduite ici à une petite ligne de saisie inline
-  plutôt qu'un panneau séparé — même résultat, moins de code à maintenir
-  tant qu'il n'y a pas d'API catégories à respecter).
+  création de catégorie). La création ouvre désormais le même panneau que
+  la page Produits (CreerCategorieModal.tsx, voir AjouterProduitModal.tsx)
+  au lieu d'une petite ligne de saisie inline : l'image de catégorie est
+  obligatoire, et ce panneau est le seul endroit qui sait la demander —
+  pas de formulaire dupliqué ici qui la contournerait.
 */
 
 // Sécurité front : chaque champ texte est plafonné en longueur *avant*
@@ -18,7 +19,6 @@ import type { Categorie } from "./types";
 // import ou un copier-coller qui dépasse la limite.
 const NOM_MAX = 120;
 const DESCRIPTION_MAX = 1000;
-const CATEGORIE_NOM_MAX = 60;
 
 export default function IdentiteProduit({
   nom,
@@ -26,7 +26,7 @@ export default function IdentiteProduit({
   categories,
   categorieId,
   onCategorieChange,
-  onCreerCategorie,
+  onOuvrirCreationCategorie,
   description,
   onDescriptionChange,
 }: {
@@ -35,21 +35,12 @@ export default function IdentiteProduit({
   categories: Categorie[];
   categorieId: string | null;
   onCategorieChange: (id: string) => void;
-  onCreerCategorie: (nom: string) => void;
+  /** Ouvre CreerCategorieModal côté parent (voir AjouterProduitModal.tsx) — l'image y est obligatoire. */
+  onOuvrirCreationCategorie: () => void;
   description: string;
   onDescriptionChange: (v: string) => void;
 }) {
   const { t } = useDashboardLangue();
-  const [creation, setCreation] = useState(false);
-  const [nomCategorie, setNomCategorie] = useState("");
-
-  const validerCreation = () => {
-    const propre = nomCategorie.trim().slice(0, CATEGORIE_NOM_MAX);
-    if (!propre) return;
-    onCreerCategorie(propre);
-    setNomCategorie("");
-    setCreation(false);
-  };
 
   return (
     <div className="rounded-[28px] bg-[var(--dashboard-card-bg)] p-4 shadow-[0_6px_16px_-4px_rgba(20,18,32,0.18)]">
@@ -82,29 +73,13 @@ export default function IdentiteProduit({
           </button>
         ))}
 
-        {!creation ? (
-          <button
-            type="button"
-            onClick={() => setCreation(true)}
-            className="rounded-full border border-dashed border-brand-pink/50 px-3.5 py-2 text-[11px] font-semibold text-brand-pink"
-          >
-            + {t("Créer une catégorie", "Create a category")}
-          </button>
-        ) : (
-          <span className="flex items-center gap-1.5">
-            <input
-              value={nomCategorie}
-              onChange={(e) => setNomCategorie(e.target.value.slice(0, CATEGORIE_NOM_MAX))}
-              onKeyDown={(e) => e.key === "Enter" && validerCreation()}
-              autoFocus
-              placeholder={t("Nom de la catégorie", "Category name")}
-              className="rounded-full border border-brand-pink/40 bg-transparent px-3 py-2 text-[11px] outline-none"
-            />
-            <button type="button" onClick={validerCreation} className="rounded-full bg-brand-pink px-3 py-2 text-[11px] font-semibold text-white">
-              {t("Ajouter", "Add")}
-            </button>
-          </span>
-        )}
+        <button
+          type="button"
+          onClick={onOuvrirCreationCategorie}
+          className="rounded-full border border-dashed border-brand-pink/50 px-3.5 py-2 text-[11px] font-semibold text-brand-pink"
+        >
+          + {t("Créer une catégorie", "Create a category")}
+        </button>
       </div>
 
       <p className="mt-4 text-[10px] uppercase tracking-[0.08em] text-[var(--dashboard-text)]/40">{t("Description", "Description")}</p>

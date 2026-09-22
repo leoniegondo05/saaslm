@@ -9,9 +9,9 @@ import type { Categorie } from "./types";
   catégories plutôt que deux copies qui divergent.
 */
 export const CATEGORIES_DEFAUT: Categorie[] = [
-  { id: "mode-femme", nom: "Mode femme", nomEn: "Women's fashion" },
-  { id: "chaussures", nom: "Chaussures", nomEn: "Shoes" },
-  { id: "accessoires", nom: "Accessoires", nomEn: "Accessories" },
-  { id: "beaute", nom: "Beauté", nomEn: "Beauty" },
-  { id: "maison", nom: "Maison", nomEn: "Home" },
+  { id: "mode-femme", nom: "Mode femme", nomEn: "Women's fashion", image: "/images/1.jpg" },
+  { id: "chaussures", nom: "Chaussures", nomEn: "Shoes", image: "/images/6.png" },
+  { id: "accessoires", nom: "Accessoires", nomEn: "Accessories", image: "/images/2.jpg" },
+  { id: "beaute", nom: "Beauté", nomEn: "Beauty", image: "/images/serum1.avif" },
+  { id: "maison", nom: "Maison", nomEn: "Home", image: "/images/7.jpg" },
 ];

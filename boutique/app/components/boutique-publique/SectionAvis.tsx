@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import type { AvisApercuState } from "@/app/components/dashboard-reglages/personnaliser/types";
 import type { AvisClient, ProduitPublic } from "@/lib/boutique-types";
 import { texteAvecChiffres } from "@/lib/boutique-format";
-import { Etoiles, Icon } from "./Icons";
+import { Etoiles } from "./Icons";
+import { LuCheck, LuStar } from "react-icons/lu";
 
 const COLS_ORDI: Record<AvisApercuState["colonnesOrdinateur"], string> = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-3", 4: "sm:grid-cols-4" };
 
@@ -71,7 +72,7 @@ export default function SectionAvis({
 
       {avis.length === 0 ? (
         <div className="flex flex-col items-center gap-2 border border-dashed border-[var(--tx)]/20 px-6 py-14 text-center" style={{ borderRadius: "var(--card-rad)" }}>
-          <Icon path="M12 3.5l2.6 5.4 5.9.8-4.3 4.2 1 6-5.2-2.8-5.2 2.8 1-6-4.3-4.2 5.9-.8z" color="color-mix(in srgb, var(--tx) 30%, transparent)" size={26} />
+          <LuStar color="color-mix(in srgb, var(--tx) 30%, transparent)" size={26} />
           <p className="text-[15px] font-semibold">Aucun avis pour le moment</p>
           <p className="max-w-sm text-[13.5px] text-[var(--tx)]/55">Les premiers avis client de cette boutique apparaîtront ici.</p>
         </div>
@@ -120,7 +121,7 @@ export default function SectionAvis({
                     className="mt-4 inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[12px] font-bold"
                     style={{ background: "color-mix(in srgb, #1E9E6A 12%, transparent)", color: "#1F8A5B" }}
                   >
-                    <Icon path="M5 12l4 4 10-10" color="#1E9E6A" size={13} />
+                    <LuCheck color="#1E9E6A" size={13} />
                     {texteAvecChiffres(`${achatsVerifies} achats vérifiés`)}
                   </span>
                 )}

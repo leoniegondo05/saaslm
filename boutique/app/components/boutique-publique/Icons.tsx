@@ -1,43 +1,30 @@
+import { LuChevronRight, LuGrid2X2, LuMail, LuMapPin, LuPhone, LuShare2 } from "react-icons/lu";
+import { FaWhatsapp } from "react-icons/fa6";
+
 /*
   Petites icônes/décors partagés par les sections publiques — portés
-  fidèlement depuis BoutiquePreview.tsx (MiniIcon, Etoiles, HaloRayons,
-  HaloCourbes, FeuilleDecor, WhatsappIcon, PhoneIcon/MailIcon/MapPinIcon) pour
-  que le rendu final reste visuellement identique à l'aperçu de l'éditeur.
+  fidèlement depuis BoutiquePreview.tsx (Etoiles, HaloRayons, HaloCourbes,
+  FeuilleDecor) pour que le rendu final reste visuellement identique à
+  l'aperçu de l'éditeur. Les icônes fonctionnelles (recherche, coche,
+  chevrons, etc.) viennent de react-icons/lu (Lucide) directement dans
+  chaque composant appelant plutôt que d'un chemin SVG maison — cf. demande
+  du 2026-09-22 ("les icônes ne me plaisent pas, installe react-icons").
   Composants purs (pas de "use client" : aucun hook), donc utilisables aussi
   bien depuis des Server Components que des Client Components.
 */
 
-export function Icon({ path, color = "currentColor", size = 16, strokeWidth = 1.6, className }: { path: string; color?: string; size?: number; strokeWidth?: number; className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" style={{ height: size, width: size }} className={className} aria-hidden>
-      <path d={path} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-/** Icône "partager" à 3 nœuds reliés (maquette utilisateur du 2026-09-22) —
- *  dessinée avec <circle>/<line> plutôt qu'un path à arcs pour des ronds
- *  parfaitement réguliers, contrairement à Icon (path seul). */
-export function ShareIcon({ size = 20, color = "currentColor", strokeWidth = 2.6 }: { size?: number; color?: string; strokeWidth?: number }) {
-  return (
-    <svg viewBox="0 0 24 24" style={{ height: size, width: size }} aria-hidden>
-      <circle cx="7" cy="12" r="3.2" fill="none" stroke={color} strokeWidth={strokeWidth} />
-      <circle cx="18" cy="6" r="3.2" fill="none" stroke={color} strokeWidth={strokeWidth} />
-      <circle cx="18" cy="18" r="3.2" fill="none" stroke={color} strokeWidth={strokeWidth} />
-      <line x1="9.81" y1="10.47" x2="15.19" y2="7.53" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
-      <line x1="9.81" y1="13.53" x2="15.19" y2="16.47" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
-    </svg>
-  );
+export function ShareIcon({ size = 20, color = "currentColor" }: { size?: number; color?: string }) {
+  return <LuShare2 size={size} color={color} aria-hidden />;
 }
 
 /** Chevron ">" — icône du bouton principal du hero ("Découvrir les soins"). */
 export function ChevronRightIcon({ color = "currentColor", size = 14 }: { color?: string; size?: number }) {
-  return <Icon path="M9 18l6-6-6-6" color={color} size={size} strokeWidth={2} />;
+  return <LuChevronRight size={size} color={color} aria-hidden />;
 }
 
 /** Grille 2x2 — icône du bouton secondaire du hero ("Voir les offres"). */
 export function GridIcon({ color = "currentColor", size = 14 }: { color?: string; size?: number }) {
-  return <Icon path="M3 3h7v7h-7z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7h-7z" color={color} size={size} strokeWidth={1.8} />;
+  return <LuGrid2X2 size={size} color={color} aria-hidden />;
 }
 
 export function Etoiles({ note, taille = 14, couleur = "#F2A93B" }: { note: number; taille?: number; couleur?: string }) {
@@ -114,40 +101,17 @@ export function FeuilleDecor({ className, color = "#fff", opacity = 0.2 }: { cla
 }
 
 export function WhatsappIcon({ size = 18 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 24 24" style={{ height: size, width: size }} fill="#fff" aria-hidden>
-      <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm5.8 14.2c-.24.7-1.4 1.3-1.9 1.4-.5.1-1.1.2-3.5-.7-2.9-1.1-4.8-4-5-4.2-.14-.2-1.2-1.6-1.2-3s.75-2.1 1-2.4c.26-.3.57-.36.76-.36h.55c.18 0 .42-.07.65.5.24.6.82 2 .9 2.15.07.15.12.32.02.5-.1.2-.15.32-.3.5l-.44.5c-.15.15-.3.32-.13.6.16.3.73 1.2 1.57 1.95 1.08 1 2 1.3 2.28 1.44.28.15.44.13.6-.08.17-.2.7-.82.9-1.1.2-.28.4-.23.66-.14.28.1 1.75.83 2.05 1 .3.14.5.2.57.33.08.13.08.72-.16 1.42Z" />
-    </svg>
-  );
+  return <FaWhatsapp size={size} color="#fff" aria-hidden />;
 }
 
 export function PhoneIcon({ color = "currentColor", className = "h-3.5 w-3.5" }: { color?: string; className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path
-        d="M6 3.5h3l1.3 4-2 1.5a10.5 10.5 0 0 0 5.7 5.7l1.5-2 4 1.3v3a1.5 1.5 0 0 1-1.6 1.5C11.5 18 6 12.5 5.5 6.1A1.5 1.5 0 0 1 6 3.5Z"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <LuPhone color={color} className={className} aria-hidden />;
 }
 
 export function MailIcon({ color = "currentColor", className = "h-3.5 w-3.5" }: { color?: string; className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <rect x="3.5" y="5.5" width="17" height="13" rx="2" stroke={color} strokeWidth="1.5" />
-      <path d="m4.5 7 7.5 6 7.5-6" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <LuMail color={color} className={className} aria-hidden />;
 }
 
 export function MapPinIcon({ color = "currentColor", className = "h-3.5 w-3.5" }: { color?: string; className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path d="M12 21s6.5-6 6.5-11A6.5 6.5 0 0 0 5.5 10c0 5 6.5 11 6.5 11Z" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
-      <circle cx="12" cy="10" r="2.2" stroke={color} strokeWidth="1.5" />
-    </svg>
-  );
+  return <LuMapPin color={color} className={className} aria-hidden />;
 }

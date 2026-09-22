@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { BoutiqueIdentite } from "@/lib/boutique-types";
 import type { EnteteState, PageId } from "@/app/components/dashboard-reglages/personnaliser/types";
-import { Icon } from "./Icons";
+import { LuSearch } from "react-icons/lu";
 import CartBadge from "./CartBadge";
 import { LienBoutique, useBoutiqueRouter } from "./PreviewMode";
 
@@ -150,9 +150,9 @@ export default function BoutiqueHeader({
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
           {entete.rechercheStyle === "barre" ? (
-            <label className="relative hidden max-w-[220px] sm:block">
+            <label className="relative block max-w-[120px] sm:max-w-[220px]">
               <span className="sr-only">Rechercher un produit</span>
-              <Icon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm9 16-4.35-4.35" color={transparentActif ? "rgba(255,255,255,.7)" : "var(--tx)"} size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 opacity-60" />
+              <LuSearch color={transparentActif ? "rgba(255,255,255,.7)" : "var(--tx)"} size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 opacity-60" />
               <input
                 ref={rechercheRef}
                 type="search"
@@ -167,7 +167,7 @@ export default function BoutiqueHeader({
               />
             </label>
           ) : rechercheDepliee ? (
-            <label className="relative hidden sm:block">
+            <label className="relative block">
               <input
                 ref={rechercheRef}
                 autoFocus
@@ -176,7 +176,7 @@ export default function BoutiqueHeader({
                 onKeyDown={lancerRecherche}
                 onBlur={() => setRechercheDepliee(false)}
                 placeholder="Rechercher…"
-                className="w-40 rounded-full px-3 py-2 text-[13px] outline-none"
+                className="w-28 rounded-full px-3 py-2 text-[13px] outline-none sm:w-40"
                 style={{ background: "color-mix(in srgb, var(--tx) 5%, transparent)", color: texteCouleur }}
               />
             </label>
@@ -185,17 +185,13 @@ export default function BoutiqueHeader({
               type="button"
               aria-label="Rechercher"
               onClick={() => setRechercheDepliee(true)}
-              className="hidden h-10 w-10 items-center justify-center rounded-full transition hover:bg-[var(--tx)]/5 sm:flex"
+              className="flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-[var(--tx)]/5"
             >
-              <Icon path="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm9 16-4.35-4.35" color={texteCouleur} />
+              <LuSearch color={texteCouleur} size={16} />
             </button>
           )}
 
-          {entete.compte && (
-            <span className="hidden h-10 w-10 items-center justify-center rounded-full sm:flex" aria-hidden>
-              <Icon path="M12 12.5a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2Zm-6 6a6 6 0 0 1 12 0" color={texteCouleur} />
-            </span>
-          )}
+
 
           {entete.nousEcrire && (
             <span

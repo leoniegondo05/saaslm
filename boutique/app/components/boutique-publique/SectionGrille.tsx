@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { CartesProduitState, GrilleState, MouvementsState } from "@/app/components/dashboard-reglages/personnaliser/types";
 import type { CategoriePublique, ProduitPublic } from "@/lib/boutique-types";
 import ProduitCard from "./ProduitCard";
@@ -52,10 +55,12 @@ export default function SectionGrille({
    *  voir" (aucun filtre), le cas par défaut. */
   categorieActive?: CategoriePublique | null;
 }) {
+  const [voirTout, setVoirTout] = useState(false);
   const terme = recherche.trim().toLowerCase();
   const filtresRecherche = terme ? produits.filter((p) => p.nom.toLowerCase().includes(terme)) : produits;
   const filtres = categorieActive ? filtresRecherche.filter((p) => p.categorieId === categorieActive.id) : filtresRecherche;
-  const liste = filtres.slice(0, config.nombre);
+  const tronque = !categorieActive && !terme && filtres.length > config.nombre;
+  const liste = voirTout ? filtres : filtres.slice(0, config.nombre);
   const defilement = config.defilementTelephone;
   const espace = cartes.densite === "compacte" ? "gap-2.5" : "gap-4";
   const titre = terme ? `Résultats pour « ${recherche.trim()} »` : categorieActive ? categorieActive.nom : TITRES[config.montrer];
@@ -70,6 +75,16 @@ export default function SectionGrille({
           <LienBoutique href={`/boutique/${slug}#grille`} className="shrink-0 text-[13.5px] font-medium hover:underline" style={{ color: "var(--ac)" }}>
             Tout voir
           </LienBoutique>
+        )}
+        {tronque && !voirTout && (
+          <button
+            type="button"
+            onClick={() => setVoirTout(true)}
+            className="shrink-0 text-[13.5px] font-medium hover:underline"
+            style={{ color: "var(--ac)" }}
+          >
+            Tout voir
+          </button>
         )}
       </div>
       {liste.length === 0 ? (

@@ -83,7 +83,15 @@ const LARGEUR_PANNEAU_DEFAUT = 288;
 // Cadre "Ordinateur" de l'aperçu, redimensionnable librement à la souris
 // (cf. poignées ci-dessous) — le contenu suit les mêmes réglages
 // "Ordinateur" que la boutique réelle, seule la largeur du cadre change.
-const LARGEUR_APERCU_MIN = 420;
+// Plancher aligné sur le breakpoint `sm` (640px) de Tailwind : toutes les
+// grilles "Ordinateur" du site public (SectionEngagements, SectionConfiance,
+// SectionCategories, SectionGrille, SectionAvis, SectionProduitsLies…)
+// basculent en 2 colonnes sous ce seuil comme en mode "Téléphone" — sans
+// détection JS d'appareil (cf. AccueilContenu.tsx, classeVisibilite). Sous
+// 640px le cadre "Ordinateur" retomberait donc sur la mise en page
+// téléphone alors qu'il est censé la représenter ; on ne permet pas de le
+// rétrécir en dessous.
+const LARGEUR_APERCU_MIN = 660;
 const LARGEUR_APERCU_MAX = 1600;
 const LARGEUR_ORDINATEUR_DEFAUT = 1180;
 
@@ -155,7 +163,7 @@ export default function PersonnaliserBoutique() {
         if (sauvegarde.styleReglage) setStyleReglage(sauvegarde.styleReglage);
         if (sauvegarde.largeurPanneauGauche) setLargeurPanneauGauche(sauvegarde.largeurPanneauGauche);
         if (sauvegarde.device) setDevice(sauvegarde.device);
-        if (sauvegarde.largeurOrdinateur) setLargeurApercu(sauvegarde.largeurOrdinateur);
+        if (sauvegarde.largeurOrdinateur) setLargeurApercu(Math.min(LARGEUR_APERCU_MAX, Math.max(LARGEUR_APERCU_MIN, sauvegarde.largeurOrdinateur)));
       }
       const versionsBrut = localStorage.getItem(CLE_STOCKAGE_VERSIONS);
       if (versionsBrut) setVersions(JSON.parse(versionsBrut) as VersionSnapshot[]);
@@ -192,20 +200,20 @@ export default function PersonnaliserBoutique() {
   // vite de la poignée pendant un drag rapide, sinon le mouvement se perd.
   useEffect(() => {
     if (!redimensionnement) return;
-    const onMouseMove = (e: MouseEvent) => {
+    const onPointerMove = (e: PointerEvent) => {
       const conteneur = document.getElementById("personnaliser-trois-colonnes");
       if (!conteneur) return;
       const largeur = e.clientX - conteneur.getBoundingClientRect().left;
       setLargeurPanneauGauche(Math.min(LARGEUR_PANNEAU_MAX, Math.max(LARGEUR_PANNEAU_MIN, largeur)));
     };
-    const onMouseUp = () => setRedimensionnement(false);
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    const onPointerUp = () => setRedimensionnement(false);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
     document.body.style.userSelect = "none";
     document.body.style.cursor = "col-resize";
     return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
       document.body.style.userSelect = "";
       document.body.style.cursor = "";
     };
@@ -218,7 +226,7 @@ export default function PersonnaliserBoutique() {
   // côtés à la fois plutôt que de le décaler.
   useEffect(() => {
     if (!redimensionnementApercu) return;
-    const onMouseMove = (e: MouseEvent) => {
+    const onPointerMove = (e: PointerEvent) => {
       const cadre = document.getElementById("apercu-cadre-bureau");
       if (!cadre) return;
       const rect = cadre.getBoundingClientRect();
@@ -226,14 +234,14 @@ export default function PersonnaliserBoutique() {
       const largeur = Math.abs(e.clientX - centre) * 2;
       setLargeurApercu(Math.min(LARGEUR_APERCU_MAX, Math.max(LARGEUR_APERCU_MIN, largeur)));
     };
-    const onMouseUp = () => setRedimensionnementApercu(false);
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    const onPointerUp = () => setRedimensionnementApercu(false);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
     document.body.style.userSelect = "none";
     document.body.style.cursor = "col-resize";
     return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
       document.body.style.userSelect = "";
       document.body.style.cursor = "";
     };
@@ -332,6 +340,13 @@ export default function PersonnaliserBoutique() {
 
   const pending = past.length;
 
+  // `misAJour` posé via effet plutôt que Date.now() dans le corps du useMemo
+  // ci-dessous : Date.now() pendant le rendu est impur (règle react-hooks/
+  // purity) — ce marqueur n'est qu'informatif (horodatage du dernier paquet
+  // envoyé à l'iframe), un effet qui le met à jour après coup suffit.
+  const [misAJour, setMisAJour] = useState(() => Date.now());
+  useEffect(() => setMisAJour(Date.now()), [identite, logo, state, donneesReelles]);
+
   // Données effectives pour l'aperçu iframe : réelles si disponibles, sinon
   // fixtures de démo. Fallback par tableau (boutique avec vrais produits mais
   // zéro avis encore = fixtures d'avis seulement, pas tout-ou-rien).
@@ -341,8 +356,8 @@ export default function PersonnaliserBoutique() {
     produits: donneesReelles?.produits?.length ? donneesReelles.produits : PRODUITS_DEMO,
     categories: donneesReelles?.categories?.length ? donneesReelles.categories : CATEGORIES_DEMO,
     avis: donneesReelles?.avis?.length ? donneesReelles.avis : fabriquerAvisDemo(),
-    misAJour: Date.now(),
-  }), [identite, logo, state, donneesReelles]);
+    misAJour,
+  }), [identite, logo, state, donneesReelles, misAJour]);
 
 
   return (
@@ -480,10 +495,10 @@ export default function PersonnaliserBoutique() {
             role="separator"
             aria-orientation="vertical"
             aria-label={t("Redimensionner le panneau", "Resize panel")}
-            onMouseDown={() => setRedimensionnement(true)}
+            onPointerDown={() => setRedimensionnement(true)}
             onDoubleClick={() => setLargeurPanneauGauche(LARGEUR_PANNEAU_DEFAUT)}
             title={t("Glisser pour redimensionner, double-clic pour réinitialiser", "Drag to resize, double-click to reset")}
-            className="hidden cursor-col-resize items-center justify-center lg:flex lg:h-[calc(100vh-160px)]"
+            className="hidden cursor-col-resize items-center justify-center lg:flex lg:h-[calc(100vh-160px)] [touch-action:none]"
           >
             <div className={`h-10 w-1 rounded-full transition ${redimensionnement ? "bg-brand-pink" : "bg-[var(--dashboard-text)]/15 hover:bg-[var(--dashboard-text)]/30"}`} />
           </div>
@@ -491,27 +506,37 @@ export default function PersonnaliserBoutique() {
           <div className={`${ongletMobile === "apercu" ? "flex" : "hidden"} lg:flex items-start justify-center overflow-y-auto rounded-2xl border border-dashed border-[var(--dashboard-text)]/10 bg-[radial-gradient(circle_at_50%_0%,rgba(236,12,140,0.06),transparent_60%)] p-5 lg:h-[calc(100vh-160px)]`}>
             {device === "phone" ? (
               <BoutiquePreview
-                state={state}
                 device={device}
                 page={page}
                 boutiqueNom={NOM_BOUTIQUE}
                 logo={logo}
                 donnees={donneesApercu}
                 slug={identite.slug}
+                sectionActive={onglet === "sections" ? sectionChoisie : null}
+                onSelectionnerSection={(id) => {
+                  setOnglet("sections");
+                  setSectionChoisie(id);
+                  setOngletMobile("reglages");
+                }}
               />
             ) : (
               <div id="apercu-cadre-bureau" className="relative" style={{ width: largeurApercu, maxWidth: "100%" }}>
                 <BoutiquePreview
-                  state={state}
                   device={device}
                   page={page}
                   boutiqueNom={NOM_BOUTIQUE}
                   logo={logo}
                   donnees={donneesApercu}
                   slug={identite.slug}
+                  sectionActive={onglet === "sections" ? sectionChoisie : null}
+                  onSelectionnerSection={(id) => {
+                    setOnglet("sections");
+                    setSectionChoisie(id);
+                    setOngletMobile("reglages");
+                  }}
                 />
-                <PoigneeCadre cote="gauche" actif={redimensionnementApercu} onMouseDown={() => setRedimensionnementApercu(true)} t={t} />
-                <PoigneeCadre cote="droite" actif={redimensionnementApercu} onMouseDown={() => setRedimensionnementApercu(true)} t={t} />
+                <PoigneeCadre cote="gauche" actif={redimensionnementApercu} onPointerDown={() => setRedimensionnementApercu(true)} t={t} />
+                <PoigneeCadre cote="droite" actif={redimensionnementApercu} onPointerDown={() => setRedimensionnementApercu(true)} t={t} />
                 <p className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9.5px] font-medium text-[var(--dashboard-text)]/40">
                   {texteAvecChiffres(`${Math.round(largeurApercu)} px`)}
                 </p>
@@ -624,7 +649,7 @@ export default function PersonnaliserBoutique() {
           </div>
 
           <div className={`flex flex-1 overflow-y-auto ${device === "phone" ? "items-start justify-center p-6" : ""}`}>
-            <BoutiquePreview state={state} device={device} page={page} boutiqueNom={NOM_BOUTIQUE} logo={logo} donnees={donneesApercu} slug={identite.slug} pleinEcran={device === "desktop"} />
+            <BoutiquePreview device={device} page={page} boutiqueNom={NOM_BOUTIQUE} logo={logo} donnees={donneesApercu} slug={identite.slug} pleinEcran={device === "desktop"} />
           </div>
         </div>
       )}
@@ -667,12 +692,12 @@ function SelecteurAppareil({
 function PoigneeCadre({
   cote,
   actif,
-  onMouseDown,
+  onPointerDown,
   t,
 }: {
   cote: "gauche" | "droite";
   actif: boolean;
-  onMouseDown: () => void;
+  onPointerDown: () => void;
   t: (fr: string, en: string) => string;
 }) {
   return (
@@ -680,9 +705,9 @@ function PoigneeCadre({
       role="separator"
       aria-orientation="vertical"
       aria-label={t("Redimensionner l'aperçu", "Resize the preview")}
-      onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown}
       title={t("Glisser pour redimensionner", "Drag to resize")}
-      className={`absolute top-1/2 hidden -translate-y-1/2 cursor-col-resize items-center justify-center lg:flex ${cote === "gauche" ? "-left-3" : "-right-3"}`}
+      className={`absolute top-1/2 hidden -translate-y-1/2 cursor-col-resize items-center justify-center lg:flex [touch-action:none] ${cote === "gauche" ? "-left-3" : "-right-3"}`}
     >
       <div className={`h-12 w-1.5 rounded-full transition ${actif ? "bg-brand-pink" : "bg-[var(--dashboard-text)]/15 hover:bg-[var(--dashboard-text)]/30"}`} />
     </div>

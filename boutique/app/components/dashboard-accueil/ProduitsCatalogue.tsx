@@ -178,9 +178,16 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
 
   // Une catégorie créée depuis le formulaire "Ajouter un produit" doit
   // aussi apparaître ici : source unique de vérité pour les catégories de
-  // la boutique, pas une copie qui divergerait des deux côtés.
-  const ajouterCategorie = (nom: string) => {
-    setCategories((prev) => [...prev, { id: `cat-${Math.random().toString(36).slice(2, 9)}`, nom, nomEn: nom }]);
+  // la boutique, pas une copie qui divergerait des deux côtés. Image
+  // obligatoire (data URL) — cf. CreerCategorieModal.tsx.
+  const ajouterCategorie = (nom: string, image: string) => {
+    setCategories((prev) => [...prev, { id: `cat-${Math.random().toString(36).slice(2, 9)}`, nom, nomEn: nom, image }]);
+  };
+
+  // "Modifier" une catégorie existante (nom et/ou image) depuis le même
+  // panneau que la création, cf. CreerCategorieModal.tsx.
+  const modifierCategorie = (id: string, nom: string, image: string) => {
+    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, nom, nomEn: nom, image } : c)));
   };
 
   // Dépôt validé : incrémente le stock du produit choisi. Reste local tant
@@ -270,7 +277,7 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
           avisCount: 0,
         };
       }),
-      categories: categories.map((c) => ({ id: c.id, nom: c.nom, nomEn: c.nomEn })),
+      categories: categories.map((c) => ({ id: c.id, nom: c.nom, nomEn: c.nomEn, image: c.image })),
     };
     fetch(`/api/boutique/${identite.slug}`, {
       method: "PUT",
@@ -600,8 +607,12 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
         <CreerCategorieModal
           categories={categoriesAvecCompte}
           onFermer={() => setCategorieModalOuverte(false)}
-          onCreer={(nom) => {
-            ajouterCategorie(nom);
+          onCreer={(nom, image) => {
+            ajouterCategorie(nom, image);
+            setCategorieModalOuverte(false);
+          }}
+          onModifier={(id, nom, image) => {
+            modifierCategorie(id, nom, image);
             setCategorieModalOuverte(false);
           }}
         />

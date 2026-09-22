@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { LienBoutique } from "./PreviewMode";
 import type { CategoriesState } from "@/app/components/dashboard-reglages/personnaliser/types";
 import type { CategoriePublique, ProduitPublic } from "@/lib/boutique-types";
@@ -17,12 +18,14 @@ const COLS_ORDI: Record<CategoriesState["colonnesOrdinateur"], string> = {
 
 /*
   Catégories réelles (donnees.categories, pas de mock) — port de la case
-  "categories" : vraie photo du premier produit de la catégorie (au lieu
-  d'une pastille à l'initiale) quand disponible, forme ronde/carrée, compteur
-  produits, et défilement horizontal sur téléphone (`colonnesTelephone ===
-  "defilement"`). CategoriePublique n'a toujours pas de champ image propre —
-  utiliser la photo d'un produit réel de la catégorie reste plus fidèle
-  qu'une image inventée ou qu'un champ ajouté sans écran pour le renseigner.
+  "categories" : image propre de la catégorie (cat.image, saisie
+  obligatoirement à la création/modification depuis CreerCategorieModal.tsx)
+  quand disponible, sinon repli sur la photo du premier produit rattaché
+  (boutiques enregistrées avant cette fonctionnalité, cf. CategoriePublique
+  dans boutique-types.ts), sinon pastille à l'initiale. Forme ronde/carrée,
+  compteur produits, et défilement horizontal sur téléphone
+  (`colonnesTelephone === "defilement"`) ou automatiquement sur ordinateur
+  dès qu'il y a plus de catégories que de colonnes (`carrouselOrdinateur`).
 */
 export default function SectionCategories({
   slug,
@@ -37,6 +40,13 @@ export default function SectionCategories({
 }) {
   if (!categories.length) return null;
   const rond = config.formeImages === "rond";
+  // Beaucoup de catégories (plus que de colonnes) : passage automatique en
+  // carrousel (défilement horizontal) plutôt que de retomber à la ligne —
+  // même logique que colonnesTelephone === "defilement" (déjà un choix
+  // manuel), mais sans réglage à ajouter côté ordinateur, et en forçant le
+  // défilement côté téléphone même si "2" ou "3" colonnes est choisi.
+  const carrouselOrdinateur = categories.length > config.colonnesOrdinateur;
+  const carrouselTelephone = config.colonnesTelephone !== "defilement" && categories.length > Number(config.colonnesTelephone);
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -50,10 +60,21 @@ export default function SectionCategories({
           </LienBoutique>
         )}
       </div>
-      <div className={`grid gap-3 pb-1 ${COLS_TEL[config.colonnesTelephone]} ${COLS_ORDI[config.colonnesOrdinateur]}`}>
+      <div
+        className={`grid gap-3 pb-1 ${
+          carrouselTelephone
+            ? "grid-flow-col auto-cols-[42%] overflow-x-auto snap-x snap-mandatory"
+            : COLS_TEL[config.colonnesTelephone]
+        } ${
+          carrouselOrdinateur
+            ? "sm:grid-flow-col sm:auto-cols-[calc((100%_-_3*0.75rem)/var(--cols))] sm:overflow-x-auto sm:snap-x sm:snap-mandatory"
+            : `sm:grid-flow-row sm:auto-cols-auto sm:overflow-visible ${COLS_ORDI[config.colonnesOrdinateur]}`
+        }`}
+        style={carrouselOrdinateur ? ({ "--cols": config.colonnesOrdinateur } as CSSProperties) : undefined}
+      >
         {categories.map((cat) => {
           const produitsCategorie = produits.filter((p) => p.categorieId === cat.id);
-          const photo = produitsCategorie.find((p) => p.images[0])?.images[0];
+          const photo = cat.image || produitsCategorie.find((p) => p.images[0])?.images[0];
           const nombre = produitsCategorie.length;
           return (
             <LienBoutique

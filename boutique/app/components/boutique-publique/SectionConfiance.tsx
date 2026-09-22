@@ -1,14 +1,15 @@
 import type { ConfianceState } from "@/app/components/dashboard-reglages/personnaliser/types";
-import { Icon } from "./Icons";
+import { LuCreditCard, LuMessageCircle, LuShieldCheck, LuTruck } from "react-icons/lu";
+import type { IconType } from "react-icons";
 
 // Mêmes 4 icônes que la case "confiance" de BoutiquePreview.tsx (bouclier,
 // camion, carte, enveloppe) — un sous-texte fixe par position complète le
 // libellé personnalisable, comme dans l'éditeur.
-const ICONES: { icon: string; sub: string }[] = [
-  { icon: "M12 3 4 6.5V11c0 4.8 3.4 8.9 8 10 4.6-1.1 8-5.2 8-10V6.5Z", sub: "Choisis par la boutique" },
-  { icon: "M3 11l2-6h14l2 6v2H3Zm2 2v6h2v-6m8 0v6h2v-6", sub: "4 h en moyenne" },
-  { icon: "M4 7h16v10H4Zm0 3h16", sub: "Ou en ligne, avec remise" },
-  { icon: "M4 4h16v12H8l-4 4Z", sub: "Par message ou appel" },
+const ICONES: { icon: IconType; sub: string }[] = [
+  { icon: LuShieldCheck, sub: "Choisis par la boutique" },
+  { icon: LuTruck, sub: "4 h en moyenne" },
+  { icon: LuCreditCard, sub: "Ou en ligne, avec remise" },
+  { icon: LuMessageCircle, sub: "Par message ou appel" },
 ];
 
 /*
@@ -45,10 +46,10 @@ export default function SectionConfiance({ confiance, chevaucheActif }: { confia
                 className="flex h-8 w-8 sm:h-8.5 sm:w-8.5 shrink-0 items-center justify-center rounded-full"
                 style={{ background: "color-mix(in srgb, var(--ac) 12%, transparent)" }}
               >
-                <Icon path={it.icon} color="var(--ac)" size={16} />
+                <it.icon color="var(--ac)" size={16} />
               </span>
             ) : (
-              <Icon path={it.icon} color="var(--ac)" size={19} />
+              <it.icon color="var(--ac)" size={19} />
             )}
             <span className={enLigne ? "contents" : "flex flex-col"}>
               <span className="text-[12.5px] sm:text-[13px] font-semibold leading-tight text-[#1a1a1a]">{it.label}</span>
