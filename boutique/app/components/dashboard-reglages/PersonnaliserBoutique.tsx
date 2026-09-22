@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import { useDashboardBoutiqueLogo } from "../DashboardBoutiqueLogoProvider";
+import { useDashboardBoutiqueIdentity } from "../DashboardBoutiqueIdentityProvider";
 import { texteAvecChiffres } from "../dashboard-accueil/shared";
 import BoutiquePreview from "./personnaliser/BoutiquePreview";
 import ReglagesBoutique from "./personnaliser/ReglagesBoutique";
@@ -16,6 +17,8 @@ import { ETAT_DEFAUT, SECTIONS_DEFAUT, fusionnerEtatPersiste } from "./personnal
 import type { Appareil, EditeurState, PageId, SectionId, VersionSnapshot } from "./personnaliser/types";
 import type { BoutiqueReglageId } from "./personnaliser/ReglagesBoutique";
 import type { StyleReglageId } from "./personnaliser/StyleReglages";
+import { PRODUITS_DEMO, CATEGORIES_DEMO, fabriquerAvisDemo } from "@/lib/boutique-demo";
+import type { BoutiqueDonnees } from "@/lib/boutique-types";
 
 /*
   Écran "Personnaliser ma boutique" — ouvert depuis le bouton en bas de la
@@ -25,19 +28,21 @@ import type { StyleReglageId } from "./personnaliser/StyleReglages";
   direct au centre, réglages de la section choisie à droite — comme décrit
   dans la maquette fournie.
 
-  "Nom de la boutique" reste celui posé en dur dans MaBoutique.tsx
-  (IDENTITE_INIT.nom, "Awa Beauté") : aucun store partagé pour l'identité de
-  la boutique n'existe encore (seul le logo l'est, via
-  DashboardBoutiqueLogoProvider) — cf. mémoire
-  [[dashboard-mock-data-pending-laravel-api]].
+  "Nom de la boutique" vient maintenant de DashboardBoutiqueIdentityProvider,
+  partagé avec MaBoutique.tsx (identité) — cf. mémoire
+  [[dashboard-mock-data-pending-laravel-api]] pour le stockage fichier
+  provisoire (lib/boutique-store.ts) qui tient lieu d'API Laravel.
+
+  "Enregistrer" pousse maintenant aussi { identite, editeur: state } vers
+  /api/boutique/[slug] (fire-and-forget, cf. `enregistrer` ci-dessous) : la
+  boutique publique (/boutique/[slug]) lit ce même fichier côté serveur —
+  c'est le pont réel entre cet éditeur et le site que voit un client.
 
   Annuler/rétablir : chaque changement empile l'état précédent dans `past`
   (vidé au chargement et à chaque Enregistrer/Annuler) ; la maquette
   n'attend rien de plus fin qu'un aller-retour par clic. Le compteur de
   "modifications en attente" est simplement `past.length`.
 */
-
-const NOM_BOUTIQUE = "Awa Beauté";
 
 // Persistance locale (pas encore d'API Laravel pour cet écran, cf. mémoire
 // [[dashboard-mock-data-pending-laravel-api]]) : sans ça, actualiser la page
@@ -85,6 +90,8 @@ const LARGEUR_ORDINATEUR_DEFAUT = 1180;
 export default function PersonnaliserBoutique() {
   const { t } = useDashboardLangue();
   const { logo } = useDashboardBoutiqueLogo();
+  const { identite } = useDashboardBoutiqueIdentity();
+  const NOM_BOUTIQUE = identite.nom;
 
   const [state, setStateRaw] = useState<EditeurState>(ETAT_DEFAUT);
   const [baseline, setBaseline] = useState<EditeurState>(ETAT_DEFAUT);
@@ -106,13 +113,19 @@ export default function PersonnaliserBoutique() {
   const [versions, setVersions] = useState<VersionSnapshot[]>([]);
   const [largeurPanneauGauche, setLargeurPanneauGauche] = useState(LARGEUR_PANNEAU_DEFAUT);
   const [redimensionnement, setRedimensionnement] = useState(false);
-  // Œil "aperçu" de la maquette : ouvre la vitrine en plein écran, sans
-  // aucun contour de sélection ni panneau, telle qu'un client la verrait.
   const [apercuOuvert, setApercuOuvert] = useState(false);
 
-  // Section par défaut à afficher à droite quand on bascule de page, si la
-  // section choisie jusque-là n'existe pas sur l'autre page (bandeau,
-  // en-tête, avis, faq et pied de page restent valables sur les deux).
+  // Données réelles de la boutique (produits/catégories/avis sauvegardés).
+  // Null tant que le fetch n'a pas répondu — fallback sur fixtures de démo.
+  const [donneesReelles, setDonneesReelles] = useState<BoutiqueDonnees | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/boutique/${identite.slug}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: BoutiqueDonnees | null) => setDonneesReelles(d))
+      .catch(() => setDonneesReelles(null));
+  }, [identite.slug]);
+
   const SECTION_PAR_DEFAUT: Record<PageId, SectionId> = { accueil: "grande-image", commande: "infos" };
   // Chargement une fois montée : remplace aussi la référence "baseline" pour
   // que le badge reparte de "Tout est enregistré" plutôt que de compter les
@@ -268,6 +281,16 @@ export default function PersonnaliserBoutique() {
   const enregistrer = () => {
     if (saveStatus === "saving") return;
     setSaveStatus("saving");
+    // Pont vers la boutique publique (/boutique/[slug]) : fire-and-forget,
+    // n'affecte pas le statut "Enregistrement…"/"Tout est enregistré" côté
+    // éditeur (fichier local, pas de vraie API à attendre, cf. commentaire
+    // d'en-tête). Échec silencieux volontaire — la personnalisation reste
+    // utilisable même si ce PUT échoue (navigation privée, etc.).
+    fetch(`/api/boutique/${identite.slug}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identite: { ...identite, logo }, editeur: state }),
+    }).catch(() => {});
     setTimeout(() => {
       setBaseline(state);
       setPast([]);
@@ -308,6 +331,19 @@ export default function PersonnaliserBoutique() {
   };
 
   const pending = past.length;
+
+  // Données effectives pour l'aperçu iframe : réelles si disponibles, sinon
+  // fixtures de démo. Fallback par tableau (boutique avec vrais produits mais
+  // zéro avis encore = fixtures d'avis seulement, pas tout-ou-rien).
+  const donneesApercu: BoutiqueDonnees = useMemo(() => ({
+    identite: { ...identite, logo },
+    editeur: state,
+    produits: donneesReelles?.produits?.length ? donneesReelles.produits : PRODUITS_DEMO,
+    categories: donneesReelles?.categories?.length ? donneesReelles.categories : CATEGORIES_DEMO,
+    avis: donneesReelles?.avis?.length ? donneesReelles.avis : fabriquerAvisDemo(),
+    misAJour: Date.now(),
+  }), [identite, logo, state, donneesReelles]);
+
 
   return (
     <div className="min-h-screen w-full bg-[var(--dashboard-bg)] font-sans text-[var(--dashboard-text)] antialiased transition-colors">
@@ -460,12 +496,8 @@ export default function PersonnaliserBoutique() {
                 page={page}
                 boutiqueNom={NOM_BOUTIQUE}
                 logo={logo}
-                sectionChoisie={sectionChoisie}
-                onChoisirSection={(id) => {
-                  setSectionChoisie(id);
-                  setOnglet("sections");
-                  setOngletMobile("reglages");
-                }}
+                donnees={donneesApercu}
+                slug={identite.slug}
               />
             ) : (
               <div id="apercu-cadre-bureau" className="relative" style={{ width: largeurApercu, maxWidth: "100%" }}>
@@ -475,12 +507,8 @@ export default function PersonnaliserBoutique() {
                   page={page}
                   boutiqueNom={NOM_BOUTIQUE}
                   logo={logo}
-                  sectionChoisie={sectionChoisie}
-                  onChoisirSection={(id) => {
-                    setSectionChoisie(id);
-                    setOnglet("sections");
-                    setOngletMobile("reglages");
-                  }}
+                  donnees={donneesApercu}
+                  slug={identite.slug}
                 />
                 <PoigneeCadre cote="gauche" actif={redimensionnementApercu} onMouseDown={() => setRedimensionnementApercu(true)} t={t} />
                 <PoigneeCadre cote="droite" actif={redimensionnementApercu} onMouseDown={() => setRedimensionnementApercu(true)} t={t} />
@@ -596,7 +624,7 @@ export default function PersonnaliserBoutique() {
           </div>
 
           <div className={`flex flex-1 overflow-y-auto ${device === "phone" ? "items-start justify-center p-6" : ""}`}>
-            <BoutiquePreview state={state} device={device} page={page} boutiqueNom={NOM_BOUTIQUE} logo={logo} pleinEcran={device === "desktop"} />
+            <BoutiquePreview state={state} device={device} page={page} boutiqueNom={NOM_BOUTIQUE} logo={logo} donnees={donneesApercu} slug={identite.slug} pleinEcran={device === "desktop"} />
           </div>
         </div>
       )}

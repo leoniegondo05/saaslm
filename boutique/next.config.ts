@@ -10,7 +10,9 @@ const nextConfig: NextConfig = {
         source: "/(.*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
+          // X-Frame-Options géré par requête dans proxy.ts : DENY sur le site
+          // public réel, SAMEORIGIN sur /boutique/[slug]/apercu/** (iframe éditeur).
+
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
             key: "Permissions-Policy",

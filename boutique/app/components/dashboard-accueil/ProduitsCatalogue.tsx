@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Btn, Card, Divider, HeaderActionBtn, Nature, ProductSelector, SectionHeader, StatRow, Tag, texteAvecChiffres, Trend } from "./shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
+import { useDashboardBoutiqueIdentity } from "../DashboardBoutiqueIdentityProvider";
+import { slugifier, type ProduitPublic } from "../../../lib/boutique-types";
 import CreerCategorieModal from "../dashboard-produits/CreerCategorieModal";
 import type { DepotValide } from "../dashboard-produits/DeposerStockModal";
 import { CATEGORIES_DEFAUT } from "../dashboard-produits/ajouter-produit/categoriesDefaut";
@@ -147,6 +149,7 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
   const { t, langue } = useDashboardLangue();
   const numberLocale = langue === "EN" ? "en-US" : "fr-FR";
   const F = (n: number) => `${n.toLocaleString(numberLocale)} F`;
+  const { identite } = useDashboardBoutiqueIdentity();
   const [produits, setProduits] = useState<Produit[]>(PRODUITS_INITIAUX);
   const [categories, setCategories] = useState<Categorie[]>(CATEGORIES_DEFAUT);
   // Visibilité côté boutique — mock local (pas encore d'endpoint, cf.
@@ -238,6 +241,43 @@ export default function ProduitsCatalogue({ first = true, recherche = "" }: { fi
     if (editionEnAttente) appliquerEdition(editionEnAttente.nomOriginal, editionEnAttente.produit, editionEnAttente.statut);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Pont vers la boutique publique (/boutique/[slug]) : à chaque changement
+  // de produits/visibilité/catégories, republie la liste "visible côté
+  // boutique" vers /api/boutique/[slug] (lib/boutique-store.ts, fichier
+  // local en attendant l'API Laravel, cf. mémoire
+  // [[dashboard-mock-data-pending-laravel-api]]) — même fichier que lit la
+  // page publique, donc ajouter/masquer un produit ici le répercute
+  // vraiment. Les photos choisies via URL.createObjectURL (blob:, voir
+  // produitDepuisFormulaire ci-dessus) ne survivent pas hors de cet onglet
+  // et sont filtrées : la fiche publique retombe sur son espace-réservé
+  // plutôt qu'un lien d'image mort.
+  useEffect(() => {
+    const produitsVisibles = produits.filter((_, i) => visibles[i]);
+    const payload = {
+      produits: produitsVisibles.map((p): ProduitPublic => {
+        const id = slugifier(p.nom);
+        return {
+          id,
+          slug: id,
+          nom: p.nom,
+          nomEn: p.nomEn,
+          prix: p.vente,
+          categorieId: p.categorieId ?? null,
+          images: (p.images ?? []).filter((src) => !src.startsWith("blob:")),
+          stock: p.stock,
+          note: p.avis,
+          avisCount: 0,
+        };
+      }),
+      categories: categories.map((c) => ({ id: c.id, nom: c.nom, nomEn: c.nomEn })),
+    };
+    fetch(`/api/boutique/${identite.slug}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+  }, [produits, visibles, categories, identite.slug]);
 
   // Toujours en page à part (voir app/dashboard/produits/deposer/page.tsx),
   // y compris en desktop : le formulaire à deux colonnes + talon se présente

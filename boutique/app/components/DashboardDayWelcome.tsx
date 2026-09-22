@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  useAnimationFrame,
+  type PanInfo,
+} from "framer-motion";
 import { useDashboardLangue } from "./DashboardLanguageProvider";
 
 /*
@@ -16,7 +23,10 @@ import { useDashboardLangue } from "./DashboardLanguageProvider";
   vraie photo public/images/soleil.png (jour/aube) ou public/images/lune.png
   (nuit, disque plein — pas de phase lunaire), recadrée à ras de la sphère
   (cf. script de crop dans l'historique) et animée en rotation continue lente
-  sur elle-même ; le reste de la scène (halo, oiseaux/nuages/étoiles) reste
+  sur elle-même — rotation qu'on peut aussi pousser à la main en faisant
+  glisser l'astre (souris ou doigt/stylet en mode tablette, via `onPan` sur
+  la motion value `orbSpin`, cf. plus bas) ; le reste de la scène (halo,
+  oiseaux/nuages/étoiles) reste
   dessiné en CSS pour rester net à toute taille et suivre les couleurs de la
   charte (cf. mémoire [[charte-graphique-livre-moi]]). Pas de rayons — retirés
   autour du soleil, l'image suffit.
@@ -118,6 +128,22 @@ export default function DashboardDayWelcome() {
   const smoothY = useSpring(pointerY, { stiffness: 60, damping: 18, mass: 0.6 });
   const rotateY = useTransform(smoothX, [-0.5, 0.5], [-8, 8]);
   const rotateX = useTransform(smoothY, [-0.5, 0.5], [6, -6]);
+
+  // Rotation de l'astre sur lui-même : une seule motion value cumule la
+  // rotation continue (auto, pilotée frame par frame ci-dessous) ET celle
+  // ajoutée par l'utilisateur en faisant glisser l'astre (souris ou
+  // doigt/stylet en mode tablette, via onPan — fonctionne pointer/touch/pen
+  // sans avoir besoin de `drag`). Additionner les deux sur la même valeur
+  // évite tout conflit entre une boucle `animate` et un geste manuel.
+  const orbSpin = useMotionValue(0);
+  useAnimationFrame((_, delta) => {
+    if (reducedMotion) return;
+    const degreesPerMs = 360 / (phase === "night" ? 140000 : 90000);
+    orbSpin.set(orbSpin.get() + degreesPerMs * delta);
+  });
+  const handleOrbPan = (_: PointerEvent | MouseEvent | TouchEvent, info: PanInfo) => {
+    orbSpin.set(orbSpin.get() + (info.delta.x + info.delta.y) * 0.6);
+  };
 
   useEffect(() => {
     if (reducedMotion) return;
@@ -348,10 +374,22 @@ export default function DashboardDayWelcome() {
           aria-hidden
           className={
             phase === "night"
-              ? "absolute left-1/2 h-[146px] w-[146px] -translate-x-1/2 rounded-full sm:h-[172px] sm:w-[172px]"
-              : "absolute left-1/2 h-[132px] w-[132px] -translate-x-1/2 rounded-full sm:h-[156px] sm:w-[156px]"
+              ? "absolute left-1/2 h-[182px] w-[182px] -translate-x-1/2 rounded-full sm:h-[212px] sm:w-[212px]"
+              : "absolute left-1/2 h-[164px] w-[164px] -translate-x-1/2 rounded-full sm:h-[192px] sm:w-[192px]"
           }
-          style={{ bottom: "48%", transform: "translateZ(10px)" }}
+          style={{
+            bottom: "48%",
+            transform: "translateZ(10px)",
+            cursor: reducedMotion ? undefined : "grab",
+            touchAction: "none",
+          }}
+          drag={!reducedMotion}
+          dragConstraints={frameRef}
+          dragElastic={0.4}
+          dragMomentum={false}
+          dragSnapToOrigin
+          onPan={reducedMotion ? undefined : handleOrbPan}
+          whileDrag={reducedMotion ? undefined : { scale: 1.06, cursor: "grabbing" }}
           initial={reducedMotion ? undefined : { y: 90, opacity: 0, scale: 0.7 }}
           animate={
             reducedMotion
@@ -374,12 +412,10 @@ export default function DashboardDayWelcome() {
               src={phase === "night" ? "/images/lune.png" : "/images/soleil.png"}
               alt=""
               className="absolute inset-0 h-full w-full object-cover"
-              animate={reducedMotion ? undefined : { rotate: 360 }}
-              transition={
-                reducedMotion
-                  ? undefined
-                  : { duration: phase === "night" ? 140 : 90, repeat: Infinity, ease: "linear" }
-              }
+              // scale 1.12 : soleil.png/lune.png ont un fin liseré blanc
+              // (anti-aliasing du détourage) au bord du disque, poussé hors
+              // du masque circulaire (overflow-hidden du parent) par ce zoom.
+              style={{ rotate: orbSpin, scale: 1.12 }}
             />
             {/* Voile pâle à l'aube (soleil moins franc que le plein jour,
                 même photo pour les deux phases). */}

@@ -2,19 +2,25 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { SectionHeader, Tag, useMockSave } from "../dashboard-accueil/shared";
+import { SectionHeader, Tag, texteAvecChiffres, useMockSave } from "../dashboard-accueil/shared";
 import { useDashboardLangue } from "../DashboardLanguageProvider";
 import { useDashboardBoutiqueLogo } from "../DashboardBoutiqueLogoProvider";
+import { useDashboardBoutiqueIdentity } from "../DashboardBoutiqueIdentityProvider";
 
 /*
   Écran 25 "Réglages · Ma boutique" : identité, adresse d'enlèvement, ce qui
   reste toujours visible par les clients, et l'accès à la personnalisation
   (PersonnaliserBoutique.tsx, route /dashboard/reglages/personnaliser). Les
   champs sont éditables directement, sans passer par un mode "Modifier" au
-  préalable — seul "Enregistrer" fige l'état courant. Aucun endpoint
-  Laravel n'existe encore pour persister (cf. mémoire
-  [[dashboard-mock-data-pending-laravel-api]]) : "Enregistrer" ne fait donc
-  que confirmer visuellement.
+  préalable — seul "Enregistrer" fige l'état courant.
+
+  Identité (nom, slug, secteur, présentation, ouverte) partagée avec
+  PersonnaliserBoutique.tsx via DashboardBoutiqueIdentityProvider — plus de
+  IDENTITE_INIT local. "Enregistrer" pousse { identite, logo } vers
+  /api/boutique/[slug] (lib/boutique-store.ts, fichier local en attendant
+  l'API Laravel, cf. mémoire [[dashboard-mock-data-pending-laravel-api]]) :
+  c'est ce même fichier que lit /boutique/[slug], donc ce bouton rend
+  vraiment la boutique publique à jour, pas seulement l'affichage ici.
 
   Retour utilisateur du 2026-09-17 ("j'aime vraiment pas" le design) : cet
   écran est maintenant atteint seul depuis le logo boutique du header (plus
@@ -35,29 +41,12 @@ const SECTEURS = [
   { value: "Maison et déco", label: "Maison et déco", labelEn: "Home and decor" },
 ];
 
-type Identite = {
-  nom: string;
-  secteur: string;
-  presentation: string;
-  adresse: string;
-  ouverte: boolean;
-};
-
 type Enlevement = {
   commune: string;
   quartier: string;
   adressePrecise: string;
   telephone: string;
   contact: string;
-};
-
-const IDENTITE_INIT: Identite = {
-  nom: "Awa Beauté",
-  secteur: "Beauté et soins",
-  presentation:
-    "Cosmétiques et soins naturels, préparés et conditionnés à Abidjan. Livraison dans tout le district.",
-  adresse: "awa-beaute.liivremoi.com",
-  ouverte: true,
 };
 
 const ENLEVEMENT_INIT: Enlevement = {
@@ -80,7 +69,7 @@ const VISIBLE_PUBLIC_INIT: VisiblePublic = { telephone: "", email: "", localisat
 
 export default function MaBoutique({ first = false }: { first?: boolean }) {
   const { t } = useDashboardLangue();
-  const [identite, setIdentite] = useState(IDENTITE_INIT);
+  const { identite, setIdentite } = useDashboardBoutiqueIdentity();
   const [enlevement, setEnlevement] = useState(ENLEVEMENT_INIT);
   const [visiblePublic, setVisiblePublic] = useState(VISIBLE_PUBLIC_INIT);
   const { saving, done, trigger } = useMockSave();
@@ -134,7 +123,15 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
           <div className="absolute right-4 top-4">
             <button
               type="button"
-              onClick={() => trigger()}
+              onClick={() =>
+                trigger(() => {
+                  fetch(`/api/boutique/${identite.slug}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ identite: { ...identite, logo } }),
+                  }).catch(() => {});
+                })
+              }
               disabled={saving}
               className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md transition hover:bg-white/20 disabled:cursor-wait disabled:opacity-70"
             >
@@ -170,13 +167,13 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
               <div className="flex flex-wrap items-center gap-2">
                 <input
                   value={identite.nom}
-                  onChange={(e) => setIdentite((b) => ({ ...b, nom: e.target.value }))}
+                  onChange={(e) => setIdentite({ nom: e.target.value })}
                   aria-label={t("Nom de la boutique", "Shop name")}
                   className="min-w-0 max-w-full rounded-lg border border-transparent bg-transparent px-1 -mx-1 text-xl font-bold tracking-tight text-[var(--dashboard-text)] outline-none transition focus:border-brand-pink/40"
                 />
                 <button
                   type="button"
-                  onClick={() => setIdentite((b) => ({ ...b, ouverte: !b.ouverte }))}
+                  onClick={() => setIdentite({ ouverte: !identite.ouverte })}
                   aria-pressed={identite.ouverte}
                   className="shrink-0"
                 >
@@ -198,21 +195,35 @@ export default function MaBoutique({ first = false }: { first?: boolean }) {
               label={t("Secteur principal", "Main sector")}
               value={identite.secteur}
               options={SECTEURS}
-              onChange={(secteur) => setIdentite((b) => ({ ...b, secteur }))}
+              onChange={(secteur) => setIdentite({ secteur })}
             />
             <Champ
               icon={<GlobeIcon />}
-              label={t("Adresse de la boutique", "Shop address")}
-              value={identite.adresse}
-              onChange={(adresse) => setIdentite((b) => ({ ...b, adresse }))}
+              label={t("Lien de la boutique", "Shop link")}
+              value={identite.slug}
+              onChange={(slug) => setIdentite({ slug })}
             />
           </div>
+          {/* Aperçu du vrai lien public (routage par chemin en attendant un
+              sous-domaine <slug>.liivremoi.com — cf. proxy.ts, pas encore de
+              DNS wildcard configuré côté hébergeur) — cliquable, pour que
+              "Enregistrer" et le lien public restent visiblement la même
+              chose. */}
+          <a
+            href={`/boutique/${identite.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-semibold text-brand-pink transition hover:underline"
+          >
+            <FlecheDroiteIcon />
+            {texteAvecChiffres(`liivremoi.com/boutique/${identite.slug}`)}
+          </a>
           <div className="mt-3">
             <Champ
               label={t("Phrase de présentation", "Tagline")}
               value={identite.presentation}
               multiline
-              onChange={(presentation) => setIdentite((b) => ({ ...b, presentation }))}
+              onChange={(presentation) => setIdentite({ presentation })}
             />
           </div>
         </div>
