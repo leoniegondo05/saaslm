@@ -6,7 +6,7 @@ export default function HowItWorks() {
       data-section
       data-titre="Tout commence par une idée"
       data-sous="Donnez-lui un espace pour grandir."
-    >
+    >   
       <HowItWorksWave />
     </section>
   );
