@@ -11,4 +11,4 @@ export default function HowItWorks() {
     </section>
   );
 }
-//salut
+//salut les gas 
