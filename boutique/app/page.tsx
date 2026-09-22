@@ -18,7 +18,7 @@ import ScrollToTop from "@/app/components/ScrollToTop";
 // <style jsx global>) ; ce fichier reprend la même page, éclatée dans les
 // composants déjà en place, avec nos tokens de couleur (--color-brand-*)
 // à la place des valeurs hexadécimales brutes, et les vraies vidéos
-// (cerveau, porte) à la place des emplacements d'image de la référence.
+// (cerveau, porte) à la place des emplacements d'image de la référence
 export default function Home() {
   return (
     <div className="relative flex min-h-screen flex-col bg-brand-bg text-brand-white">
