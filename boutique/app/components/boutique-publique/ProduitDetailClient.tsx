@@ -192,36 +192,6 @@ export default function ProduitDetailClient({
               </span>
             )}
           </div>
-          {paiement.rangeeConfiance && confianceInfos.length > 0 && (
-            <div className="mt-3 flex items-center justify-between gap-2 border-t border-[var(--tx)]/8 pt-3">
-              {confianceInfos.map((it) => (
-                <div key={it.texte} className="flex items-center gap-1.5">
-                  <it.icon color="var(--ac)" size={16} />
-                  <span className="text-[11px] font-medium leading-tight text-[var(--tx)]/60">{it.texte}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {produit.description && (
-            <div className="mt-3">
-              <p className="text-[14px] leading-relaxed text-[var(--tx)]/75">{descriptionAffichee}</p>
-              {infos.description === "courte" && descriptionLongue && !descriptionEtendue && (
-                <button type="button" onClick={() => setDescriptionEtendue(true)} className="mt-1 text-[12.5px] font-semibold underline">
-                  Lire la suite
-                </button>
-              )}
-            </div>
-          )}
-          {infos.stockRestant && produit.stock > 0 && produit.stock <= infos.stockAfficherSousUnites && (
-            <div className="mt-3">
-              <p className="text-[12.5px] text-[var(--tx)]/60">{texteAvecChiffres(`Plus que ${produit.stock} en stock`)}</p>
-              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[var(--tx)]/8">
-                <div className="h-full rounded-full" style={{ width: `${Math.min(100, Math.round((produit.stock / infos.stockAfficherSousUnites) * 100))}%`, background: "var(--ac)" }} />
-              </div>
-            </div>
-          )}
-
           {rupture ? (
             <p className="mt-4 text-[13.5px] font-medium text-[var(--tx)]/60">Rupture de stock — indisponible pour le moment.</p>
           ) : (
@@ -268,6 +238,36 @@ export default function ProduitDetailClient({
                   {lienCopie && <span className="absolute right-0 top-[calc(100%+6px)] whitespace-nowrap rounded-lg bg-[#141220] px-2.5 py-1.5 text-[11px] font-semibold text-white">Lien copié</span>}
                 </div>
               )}
+            </div>
+          )}
+
+          {paiement.rangeeConfiance && confianceInfos.length > 0 && (
+            <div className="mt-3 flex items-center justify-between gap-2 border-t border-[var(--tx)]/8 pt-3">
+              {confianceInfos.map((it) => (
+                <div key={it.texte} className="flex items-center gap-1.5">
+                  <it.icon color="var(--ac)" size={16} />
+                  <span className="text-[11px] font-medium leading-tight text-[var(--tx)]/60">{it.texte}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {produit.description && (
+            <div className="mt-3">
+              <p className="text-[14px] leading-relaxed text-[var(--tx)]/75">{descriptionAffichee}</p>
+              {infos.description === "courte" && descriptionLongue && !descriptionEtendue && (
+                <button type="button" onClick={() => setDescriptionEtendue(true)} className="mt-1 text-[12.5px] font-semibold underline">
+                  Lire la suite
+                </button>
+              )}
+            </div>
+          )}
+          {infos.stockRestant && produit.stock > 0 && produit.stock <= infos.stockAfficherSousUnites && (
+            <div className="mt-3">
+              <p className="text-[12.5px] text-[var(--tx)]/60">{texteAvecChiffres(`Plus que ${produit.stock} en stock`)}</p>
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[var(--tx)]/8">
+                <div className="h-full rounded-full" style={{ width: `${Math.min(100, Math.round((produit.stock / infos.stockAfficherSousUnites) * 100))}%`, background: "var(--ac)" }} />
+              </div>
             </div>
           )}
         </div>
