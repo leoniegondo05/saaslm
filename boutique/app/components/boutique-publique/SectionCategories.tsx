@@ -64,11 +64,11 @@ export default function SectionCategories({
         className={`grid gap-3 pb-1 ${
           carrouselTelephone
             ? "grid-flow-col auto-cols-[42%] overflow-x-auto snap-x snap-mandatory"
-            : COLS_TEL[config.colonnesTelephone]
+            : COLS_TEL[config.colonnesTelephone] ?? COLS_TEL["2"]
         } ${
           carrouselOrdinateur
             ? "sm:grid-flow-col sm:auto-cols-[calc((100%_-_3*0.75rem)/var(--cols))] sm:overflow-x-auto sm:snap-x sm:snap-mandatory"
-            : `sm:grid-flow-row sm:auto-cols-auto sm:overflow-visible ${COLS_ORDI[config.colonnesOrdinateur]}`
+            : `sm:grid-flow-row sm:auto-cols-auto sm:overflow-visible ${COLS_ORDI[config.colonnesOrdinateur] ?? COLS_ORDI[4]}`
         }`}
         style={carrouselOrdinateur ? ({ "--cols": config.colonnesOrdinateur } as CSSProperties) : undefined}
       >
