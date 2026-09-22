@@ -11,4 +11,5 @@ export default function HowItWorks() {
     </section>
   );
 }
-//salut les gas luty
+
+//alut les gas luty
