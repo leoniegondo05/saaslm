@@ -25,27 +25,34 @@ export default function SectionConfiance({ confiance, chevaucheActif }: { confia
   const enLigne = confiance.style === "ligne";
 
   return (
-    <section className={`relative z-10 mx-auto max-w-5xl px-4 sm:px-6 ${chevaucheActif ? "-mt-8" : "py-6"}`}>
+    <section className={`relative z-10 mx-auto max-w-5xl px-4 sm:px-6 ${chevaucheActif ? "-mt-8 sm:-mt-9" : "py-6"}`}>
       <div
-        className={`bg-white px-2.5 ${enLigne ? "flex flex-wrap items-center justify-around gap-1.5 rounded-2xl py-3" : "grid gap-1.5 rounded-2xl py-4 sm:grid-cols-4"}`}
+        className={`bg-white ${
+          enLigne
+            ? "flex flex-wrap items-center justify-around gap-3 sm:gap-5 rounded-2xl sm:rounded-[20px] px-4 sm:px-6 py-3.5 sm:py-4"
+            : "grid gap-2.5 sm:gap-3 rounded-2xl sm:rounded-[20px] px-4 sm:px-6 py-4.5 sm:py-5 sm:grid-cols-4"
+        }`}
         style={{
           gridTemplateColumns: enLigne ? undefined : `repeat(${Math.min(items.length, 4)}, minmax(0,1fr))`,
-          boxShadow: chevaucheActif ? "0 18px 40px -14px rgba(11,14,28,0.3)" : "0 6px 20px -12px rgba(11,14,28,0.15)",
+          boxShadow: chevaucheActif ? "0 18px 40px -14px rgba(11,14,28,0.22)" : "0 6px 20px -12px rgba(11,14,28,0.12)",
           border: chevaucheActif ? "none" : "1px solid rgba(0,0,0,.06)",
         }}
       >
         {items.map((it, i) => (
-          <div key={i} className={enLigne ? "flex items-center gap-1.5 px-2" : "flex items-center gap-2 px-2 text-left"}>
+          <div key={i} className={enLigne ? "flex items-center gap-2.5 px-2" : "flex items-center gap-2.5 px-2 text-left"}>
             {confiance.icones === "pleines" ? (
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--ac)" }}>
-                <Icon path={it.icon} color="#fff" size={14} />
+              <span
+                className="flex h-8 w-8 sm:h-8.5 sm:w-8.5 shrink-0 items-center justify-center rounded-full"
+                style={{ background: "color-mix(in srgb, var(--ac) 12%, transparent)" }}
+              >
+                <Icon path={it.icon} color="var(--ac)" size={16} />
               </span>
             ) : (
-              <Icon path={it.icon} color="var(--ac)" size={18} />
+              <Icon path={it.icon} color="var(--ac)" size={19} />
             )}
             <span className={enLigne ? "contents" : "flex flex-col"}>
-              <span className="text-[11.5px] font-semibold leading-tight text-[#1a1a1a]">{it.label}</span>
-              {!enLigne && <span className="text-[9.5px] leading-tight text-black/40">{it.sub}</span>}
+              <span className="text-[12.5px] sm:text-[13px] font-semibold leading-tight text-[#1a1a1a]">{it.label}</span>
+              {!enLigne && <span className="mt-0.5 text-[10px] sm:text-[10.5px] leading-tight text-black/45">{it.sub}</span>}
             </span>
           </div>
         ))}
